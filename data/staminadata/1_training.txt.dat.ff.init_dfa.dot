@@ -1,0 +1,8 @@
+// produced with flexfringe // ./flexfringe data/staminadata/1_training.txt.dat --ini ini/edsm.ini 
+digraph DFA {
+	-1 [label="root" shape=box];
+		I -> -1;
+	0 [ label="0:#10244
+fin: 
+ path: 0:6302 , 1:3942 , " , penwidth=9.23455];
+}
