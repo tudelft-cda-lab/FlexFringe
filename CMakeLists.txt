@@ -28,10 +28,31 @@ target_link_libraries(flexfringe
         Source
         Util)
 
-# Need this so the plugin registration does not get stripped out
-target_link_libraries(flexfringe
+
+# MSVC option to add all object files in static lib
+if(MSVC)
+    target_link_libraries(flexfringe
+            Source
+            Util
+		    Evaluation)
+
+    set_target_properties(flexfringe PROPERTIES LINK_FLAGS "/WHOLEARCHIVE:Evaluation")
+
+elseif(APPLE)
+
+	target_link_libraries(flexfringe
         "-Wl,-force_load" Evaluation
         "-Wl")
+else()
+    target_link_libraries(flexfringe
+            Source
+            Util)
+
+    # Need this so the plugin registration does not get stripped out
+    target_link_libraries(flexfringe
+            "-Wl,--whole-archive" Evaluation
+            "-Wl,--no-whole-archive")
+endif()
 
 
 #find_package(GSL REQUIRED)
