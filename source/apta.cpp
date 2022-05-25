@@ -167,7 +167,7 @@ void apta_node::print_json(iostream& output){
     output << "\t\t\t\"isred\" :  " << is_red() << ",\n";
     output << "\t\t\t\"issink\" :  " << is_sink() << ",\n";
     output << "\t\t\t\"isblue\" :  " << is_blue() << ",\n";
-    //output << "\t\t\t\"trace\" :  \"" << access_trace->to_string() << "\",\n";
+    output << "\t\t\t\"trace\" :  \"" << access_trace->to_string() << "\",\n";
     json d;
     data->write_json(d);
     output << "\t\t\t\"data\" :  " << d;

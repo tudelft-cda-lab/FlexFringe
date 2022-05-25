@@ -95,7 +95,7 @@ void extend_refinement::initialize(state_merger* m, apta_node* r){
 }
 
 inline void refinement::print() const{
-    cerr << "score " << score << endl;
+    cout << "score " << score << endl;
 };
 
 inline void refinement::print_json(iostream& output) const{
@@ -105,7 +105,7 @@ inline void refinement::print_json(iostream& output) const{
 };
 
 inline void refinement::print_short() const{
-    cerr << score;
+    cout << score;
 };
 
 inline void refinement::doref(state_merger* m){
@@ -127,13 +127,13 @@ inline void refinement::erase(){
 
 inline void merge_refinement::print() const{
     if(STORE_ACCESS_STRINGS)
-        cerr << "merge( " << score << " " << red_trace->to_string() << " " << blue_trace->to_string() << " )" << endl;
+        cout << "merge( " << score << " " << red_trace->to_string() << " " << blue_trace->to_string() << " )" << endl;
     else
-        cerr << "merge( " << score << " " << red->get_number() << " " << blue->get_number() << " )" << endl;
+        cout << "merge( " << score << " " << red->get_number() << " " << blue->get_number() << " )" << endl;
 };
 	
 inline void merge_refinement::print_short() const{
-    cerr << "m" << score;
+    cout << "m" << score;
 };
 
 inline void merge_refinement::print_json(iostream& output) const{
@@ -200,13 +200,13 @@ inline void merge_refinement::erase(){
 
 inline void split_refinement::print() const{
     if(STORE_ACCESS_STRINGS)
-        cerr << "split( " << score << " q:" << red_trace->to_string() << " s:" << split_point->to_string() << " a:" << attribute << " )";
+        cout << "split( " << score << " q:" << red_trace->to_string() << " s:" << split_point->to_string() << " a:" << attribute << " )";
     else
-        cerr << "split( " << score << " q:" << red->get_number() << " s:" << split_point->to_string() << " a:" << attribute << " )";
+        cout << "split( " << score << " q:" << red->get_number() << " s:" << split_point->to_string() << " a:" << attribute << " )";
 };
 	
 inline void split_refinement::print_short() const{
-    cerr << "s" << score;
+    cout << "s" << score;
 };
 
 inline void split_refinement::print_json(iostream& output) const{
@@ -260,13 +260,13 @@ inline void split_refinement::erase(){
 
 inline void extend_refinement::print() const{
     if(STORE_ACCESS_STRINGS)
-        cerr << "extend( " << score << " " << red_trace->to_string() << " )" << endl;
+        cout << "extend( " << score << " " << red_trace->to_string() << " )" << endl;
     else
-        cerr << "extend( " << score << " " << red->get_number() << " )" << endl;
+        cout << "extend( " << score << " " << red->get_number() << " )" << endl;
 };
 	
 inline void extend_refinement::print_short() const{
-    cerr << "x" << size;
+    cout << "x" << size;
 };
 
 inline void extend_refinement::print_json(iostream& output) const{

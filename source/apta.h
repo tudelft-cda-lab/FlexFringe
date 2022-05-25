@@ -192,7 +192,6 @@ public:
      * set nodes to this depth in a hierarchical view */
     void set_json_depths() const;
 
-    friend class apta;
     friend class apta_guard;
     friend class APTA_iterator;
     friend class merged_APTA_iterator;
