@@ -1,0 +1,25 @@
+**********************************************************
+***						       ***
+***   			    PAutomaC   		       ***
+*** 		A PFA/HMM learning competition 	       ***
+*** http://ai.cs.umbc.edu/icgi2012/challenge/Pautomac/ ***
+***						       ***
+**********************************************************
+
+This archive contains the datasets that were used during the ICGI'12 competition, 
+namely the PAutomaC competition. 
+
+These data can freely be used in the context of academic research only. 
+For any other use, please contact us (pautomac@gmail.com).
+
+For each problem i, you find in this archive
+
+- i.pautomac.train : the train set used during the competition
+- i.pautomac.test : the test set to which probabilities had to be computed
+- i.pautomac_solution.txt : the file containing the probabilities in the target machine of the strings of the test set 
+- i.pautomac_model.txt : the description of the target machine
+
+For more details about how these elements were generated, see the paper with the results of 
+the competition: http://jmlr.csail.mit.edu/proceedings/papers/v21/verwer12a.html
+
+As academicians, all we are asking for is to be cited if you are using our work. Thanks!
