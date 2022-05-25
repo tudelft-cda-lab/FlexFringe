@@ -263,6 +263,8 @@ int main(int argc, char *argv[]){
     app.add_option("--output", OUTPUT_TYPE, "Switch between output in dot, json, or both (default) formats.");
     app.set_config("--ini", default_file_name, "Read an ini file", false);
     app.add_option("--mode", OPERATION_MODE, "batch (default), interactive, or stream depending on the mode of operation.");
+    app.add_option("--heuristic-name,--heuristic_name", HEURISTIC_NAME, "Name of the merge heuristic to use; default count_driven. Use any heuristic in the evaluation directory. It is often beneficial to write your own, as heuristics are very application specific.")->required();
+    app.add_option("--data-name,--data_name", DATA_NAME, "Name of the merge data class to use; default count_data. Use any heuristic in the evaluation directory.");
     app.add_option("--evalpar", EVALUATION_PARAMETERS, "string of key-value pairs for evaluation functions");
 
     app.add_option("--satsolver", SAT_SOLVER, "Name of the SAT solver executable. Default=glucose.");
