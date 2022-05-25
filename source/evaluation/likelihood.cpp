@@ -33,7 +33,7 @@ bool likelihoodratio::consistent(state_merger *merger, apta_node* left, apta_nod
 };
 
 void likelihoodratio::update_likelihood(double left_count, double right_count, double left_divider, double right_divider){
-    cerr << left_count << " " << right_count << " " << left_divider << " " << right_divider << endl;
+    //cerr << left_count << " " << right_count << " " << left_divider << " " << right_divider << endl;
     if (left_count == 0.0 && right_count == 0.0)
         return;
 
@@ -51,7 +51,7 @@ void likelihoodratio::update_likelihood(double left_count, double right_count, d
         if(right_count != 0.0 || left_count != 0.0)
             loglikelihood_merged += (left_count + right_count) * log((left_count + right_count) / (left_divider + right_divider));
     }
-    cerr << loglikelihood_orig << " " << loglikelihood_merged << endl;
+    //cerr << loglikelihood_orig << " " << loglikelihood_merged << endl;
 };
 
 void likelihoodratio::update_likelihood_pool(double left_count, double right_count, double left_divider, double right_divider){
