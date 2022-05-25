@@ -1,0 +1,1 @@
+add_library(Util STATIC loguru.cpp json.hpp)
