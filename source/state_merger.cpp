@@ -267,8 +267,9 @@ bool state_merger::merge_test(apta_node* left, apta_node* right){
 
 /* undo_merge merge, works for both forcing and standard merging, not needed for testing merge */
 void state_merger::undo_merge(apta_node* left, apta_node* right){
-    assert(left != right);
     if(left == nullptr || right == nullptr) return;
+    if(right->representative == nullptr) return;
+    assert(left != right);
     assert(right->representative == left);
     
     for(auto it = right->guards.rbegin();it != right->guards.rend(); ++it){
