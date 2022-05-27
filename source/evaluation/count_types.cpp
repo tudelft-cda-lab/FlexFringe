@@ -164,8 +164,9 @@ double count_data::predict_type_score(int t){
     double final_count = CORRECTION;
     double divider_correction = CORRECTION * (double)final_counts.size();
     if(divider_correction == 0.0) divider_correction += CORRECTION;
-
     if(final_counts.find(t) != final_counts.end() && final_counts[t] != 0.0) final_count = (double)final_counts[t] / (double)(total_final + divider_correction);
+
+    if(!PREDICT_TYPE_PATH) return final_count;
     double path_count = CORRECTION;
     divider_correction = CORRECTION * (double)path_counts.size();
     if(divider_correction == 0.0) divider_correction += CORRECTION;

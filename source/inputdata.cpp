@@ -139,6 +139,12 @@ inputdata::inputdata() {
     num_tails = 0;
 }
 
+inputdata::~inputdata() {
+    for(auto trace : all_traces){
+        delete trace;
+    }
+}
+
 trace* inputdata::read_csv_row(istream &input_stream) {
     string line, cell;
 
@@ -550,7 +556,6 @@ void inputdata::read_abbadingo_symbol(istream &input_stream, tail* new_tail){
     td->tail_nr = num_tails++;
 
     int num_symbol_attributes = inputdata::get_num_symbol_attributes();
-    td->attr = new double[get_num_symbol_attributes()];
     if(num_symbol_attributes > 0){
         l3.str(symbol_attr);
         for(int i = 0; i < num_symbol_attributes; ++i){
@@ -597,9 +602,9 @@ string tail::to_string(){
 
 tail::~tail(){
     if(split_from == nullptr){
-        delete td->attr;
         delete td;
     }
+    if(future_tail != nullptr) delete future_tail;
 }
 
 tail_data::tail_data() {
@@ -611,6 +616,9 @@ tail_data::tail_data() {
     }
     data = "";
     tail_nr = -1;
+}
+tail_data::~tail_data() {
+    delete[] attr;
 }
 
 void tail_data::initialize() {
@@ -635,6 +643,12 @@ trace::trace() {
     end_tail = nullptr;
     refs = 1;
 }
+
+trace::~trace(){
+    delete trace_attr;
+    delete head;
+}
+
 
 void trace::initialize() {
     sequence = -1;

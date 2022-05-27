@@ -99,6 +99,7 @@ bool PREDICT_REMAIN = false;
 bool PREDICT_ALIGN = false;
 bool PREDICT_MINIMUM = false;
 bool PREDICT_TYPE = false;
+bool PREDICT_TYPE_PATH = false;
 bool PREDICT_SYMBOL = false;
 bool PREDICT_TRACE = true;
 bool PREDICT_DATA = false;
