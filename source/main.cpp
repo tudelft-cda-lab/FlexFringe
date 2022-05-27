@@ -349,6 +349,7 @@ int main(int argc, char *argv[]){
     app.add_option("--predictalign", PREDICT_ALIGN, "When predicting and there is no outgoing transition, the model remaining trace is aligned to the model by jumping to any other state and skipping symbols. Default=0.");
     app.add_option("--predictminimum", PREDICT_MINIMUM, "Predict returns (or finds when aligning) the smallest probability of a symbol from a sequence. Default=0.");
     app.add_option("--predicttype", PREDICT_TYPE, "Predicting calls the predict type functions from the evaluation function. Default=0.");
+    app.add_option("--predicttypepath", PREDICT_TYPE_PATH, "Predictings are made based on paths in addition to final states (if implemented by evaluation function). Default=0.");
     app.add_option("--predictsymbol", PREDICT_SYMBOL, "Predicting calls the predict symbol functions from the evaluation function. Default=0.");
     app.add_option("--predicttrace", PREDICT_TRACE, "Predicting calls the predict trace functions from the evaluation function. Default=1.");
     app.add_option("--predictdata", PREDICT_TRACE, "Predicting calls the predict data functions from the evaluation function. Default=0.");

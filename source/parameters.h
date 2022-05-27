@@ -93,6 +93,7 @@ extern double CORRECTION_UNSEEN;
 extern double CORRECTION_PER_SEEN;
 
 extern bool PREDICT_TYPE;
+extern bool PREDICT_TYPE_PATH;
 extern bool PREDICT_SYMBOL;
 extern bool PREDICT_TRACE;
 

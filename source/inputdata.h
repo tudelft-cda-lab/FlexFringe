@@ -190,6 +190,8 @@ public:
 
     // to init counters etc
     inputdata();
+    // to delete input traces
+    ~inputdata();
 
     static inline int symbol_from_string(string symbol){
         if(r_alphabet.find(symbol) == r_alphabet.end()){
@@ -249,6 +251,7 @@ public:
     tail* end_tail;
 
     trace();
+    ~trace();
     void initialize();
 
     inline int get_type() const{ return type; }
@@ -275,6 +278,7 @@ public:
     int tail_nr;
 
     tail_data();
+    ~tail_data();
     void initialize();
 };
 
@@ -282,6 +286,7 @@ class tail{
 public:
     tail();
     tail(tail *ot);
+    ~tail();
     void initialize(tail* ot);
 
     tail_data* td;
@@ -293,7 +298,7 @@ public:
     tail* split_from;
     tail* split_to;
     
-    ~tail();
+
 
     void split(tail* t);
     void undo_split();

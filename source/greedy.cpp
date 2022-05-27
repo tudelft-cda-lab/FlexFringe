@@ -8,7 +8,7 @@ void greedy_run(state_merger* merger){
     cerr << "starting greedy merging" << endl;
     merger->get_eval()->initialize_after_adding_traces(merger);
 
-    auto* all_refs = new refinement_list();
+    //auto* all_refs = new refinement_list();
 
     refinement* best_ref = merger->get_best_refinement();
     int num = 1;
@@ -23,7 +23,8 @@ void greedy_run(state_merger* merger){
 
         best_ref->doref(merger);
 
-        all_refs->push_back(best_ref);
+        //all_refs->push_back(best_ref);
+        delete best_ref;
         best_ref = merger->get_best_refinement();
 
         num++;
