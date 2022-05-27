@@ -736,21 +736,27 @@ apta_node* tail_iterator::next_forward(){
 }
 
 apta::~apta(){
-    delete root;
+    state_set states;
+    for(APTA_iterator Ait = APTA_iterator(root); *Ait != 0; ++Ait){
+        states.insert(*Ait);
+    }
+    for(auto st : states){
+        delete st;
+    }
 }
 
 apta_node::~apta_node(){
+    if(access_trace != nullptr) delete access_trace;
     for(auto & guard : guards){
-        if(guard.second->target != nullptr && guard.second->target->source == this)
-            delete guard.second->target;
         delete guard.second;
     }
+    /* deleted in input_data
     tail* t = tails_head;
     while(t != nullptr){
         tail* n = t->next_in_list;
         delete t;
         t = n;
-    }
+    }*/
     delete data;
 }
 
