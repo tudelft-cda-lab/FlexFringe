@@ -1,7 +1,11 @@
+# IDE / output / build folders
 .idea/
 cmake-build-*/
 test-reports/
+
+# Binaries
 runtests
+flexfringe
 
 # Output files
 *.json
@@ -9,3 +13,6 @@ runtests
 *.swp
 *.png
 
+# Generated files
+source/gitversion.cpp
+source/evaluators.h
