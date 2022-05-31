@@ -1,0 +1,11 @@
+.idea/
+cmake-build-*/
+test-reports/
+runtests
+
+# Output files
+*.json
+*.dot
+*.swp
+*.png
+
