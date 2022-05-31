@@ -1,7 +1,8 @@
-# IDE / output / build folders
+# IDE / output / build stuff
 .idea/
 cmake-build-*/
 test-reports/
+*.o
 
 # Binaries
 runtests
