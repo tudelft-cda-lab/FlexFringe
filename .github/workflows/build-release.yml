@@ -51,7 +51,9 @@ jobs:
           make -j$(nproc)
 
       - name: rename-binary
-        run: mv flexfringe${{ matrix.extension }} flexfringe-${{ matrix.triplet }}${{ matrix.extension}}
+        run: |
+          cd build
+          mv flexfringe${{ matrix.extension }} flexfringe-${{ matrix.triplet }}${{ matrix.extension}}
 
       - uses: actions/upload-artifact@v3
         with:
