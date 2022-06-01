@@ -48,4 +48,5 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         with:
+          name: '$flexfringe-{{ matrix.triplet }}'
           path: '${{ runner.workspace }}/FlexFringe/build'
