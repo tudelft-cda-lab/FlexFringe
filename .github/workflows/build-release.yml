@@ -85,8 +85,10 @@ jobs:
     steps:
       - uses: actions/download-artifact@v3
 
-      - name: "Display dir"
-        run: ls -lah
+      - name: "Rename"
+        run: |
+          ls -lah
+          mv flexfringe-x64-windows flexfringe-x64-windows.exe 
 
       - name: "Publish"
         uses: "marvinpinto/action-automatic-releases@latest"
