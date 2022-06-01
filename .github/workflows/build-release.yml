@@ -1,0 +1,40 @@
+name: Build and test
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  job:
+    name: ${{ matrix.os }}-build-release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: windows-latest
+            triplet: x64-windows
+          - os: ubuntu-latest
+            triplet: x64-linux
+          - os: macos-latest
+            triplet: x64-osx
+
+    steps:
+      - uses: actions/checkout@v1
+      - uses: lukka/get-cmake@latest
+
+      - name: build
+        uses: lukka/run-cmake@main
+        id: runcmake
+        with:
+          cmakeGenerator: 'Ninja'
+          cmakeListsOrSettingsJson: 'CMakeListsTxtBasic'
+          cmakeListsTxtPath: '${{ github.workspace }}/CMakeLists.txt'
+          buildWithCMakeArgs: '-- -v'
+          buildDirectory: '${{ runner.workspace }}/b/${{ runner.os }}'
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: build-${{ steps.vars.outputs.sha_short }}
+          path: '${{ runner.workspace }}/b/'
