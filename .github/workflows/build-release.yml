@@ -76,3 +76,26 @@ jobs:
         with:
           name: 'flexfringe-${{ matrix.triplet }}'
           path: '${{ runner.workspace }}/FlexFringe/build/flexfringe-${{ matrix.triplet }}${{ matrix.extension}}'
+
+  release-nightly:
+    name: "Nightly release"
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      - uses: actions/download-artifact@v3
+
+      - name: "Display dir"
+        run: ls -lah
+
+      - name: "Publish"
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: false
+          title: "Development Build"
+          files: |
+            flexfringe-x64-linux
+            flexfringe-x64-osx
+            flexfringe-x64-windows.exe
