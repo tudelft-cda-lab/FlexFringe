@@ -28,6 +28,10 @@ jobs:
         with:
           cmake-version: '3.16.x'
 
+      - name: prepare-windows
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
       - name: build-windows
         if: runner.os == 'Windows'
         run: |
@@ -39,9 +43,9 @@ jobs:
         if: runner.os == 'Linux' || runner.os == 'macOS'
         run: |
           mkdir build && cd build
-          cmake ..
+          cmake .. -DCMAKE_BUILD_TYPE=Release
           make -j$(nproc)
 
       - uses: actions/upload-artifact@v3
         with:
-          path: '${{ runner.workspace }}/build'
+          path: '${{ runner.workspace }}/FlexFringe/build'
