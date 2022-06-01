@@ -22,19 +22,26 @@ jobs:
 
     steps:
       - uses: actions/checkout@v1
-      - uses: lukka/get-cmake@latest
 
-      - name: build
-        uses: lukka/run-cmake@main
-        id: runcmake
+      - name: Setup cmake
+        uses: jwlawson/actions-setup-cmake@v1.12
         with:
-          cmakeGenerator: 'Ninja'
-          cmakeListsOrSettingsJson: 'CMakeListsTxtBasic'
-          cmakeListsTxtPath: '${{ github.workspace }}/CMakeLists.txt'
-          buildWithCMakeArgs: '-- -v'
-          buildDirectory: '${{ runner.workspace }}/b/${{ runner.os }}'
+          cmake-version: '3.16.x'
+
+      - name: build-windows
+        if: runner.os == 'Windows'
+        run: |
+          mkdir build && cd build
+          cmake ..
+          cmake --build . --config Release
+
+      - name: build-unix
+        if: runner.os == 'Linux' || runner.os == 'macOS'
+        run: |
+          mkdir build && cd build
+          cmake ..
+          make -j$(nproc)
 
       - uses: actions/upload-artifact@v3
         with:
-          name: build-${{ steps.vars.outputs.sha_short }}
-          path: '${{ runner.workspace }}/b/'
+          path: '${{ runner.workspace }}/build'
