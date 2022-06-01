@@ -687,7 +687,7 @@ trace* inputdata::access_trace(tail* t){
         tail* tir = inputdata::access_tail(ti);
         tr->head = tir;
         tir->tr = tr;
-        tail* temp = nullptr;
+        tail* temp = tr->head;
         while(ti != t){
             length++;
             ti = ti->future();
@@ -703,7 +703,7 @@ trace* inputdata::access_trace(tail* t){
         tr->head = inputdata::access_tail(t);
         tr->refs = 1;
         tr->length = 1;
-        tr->end_tail = t;
+        tr->end_tail = tr->head;
     }
     return tr;
 }
