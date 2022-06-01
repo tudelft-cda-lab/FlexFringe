@@ -61,12 +61,14 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action@v1
         if: runner.os == 'Linux' && always()
         with:
+          check_name: "Unit Test Results (${{ matrix.triplet }})"
           files: "testresults-${{ matrix.triplet }}.xml"
 
       - name: publish-test-results-other
         uses: EnricoMi/publish-unit-test-result-action/composite@v1
         if: runner.os != 'Linux' && always()
         with:
+          check_name: "Unit Test Results (${{ matrix.triplet }})"
           files: "testresults-${{ matrix.triplet }}.xml"
 
       - name: upload-binary-artifact
