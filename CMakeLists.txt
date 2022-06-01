@@ -65,7 +65,7 @@ if(COMPILE_DOCS)
 endif()
 
 if(NOT SKIP_TESTS)
-    find_package(Catch2 REQUIRED)
+    add_subdirectory(source/utility/Catch2-2.13.9)
 
     add_executable(runtests
             tests/tests.cpp
