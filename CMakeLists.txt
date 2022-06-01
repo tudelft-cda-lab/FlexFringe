@@ -33,6 +33,10 @@ if(MSVC)
     set_target_properties(flexfringe PROPERTIES LINK_FLAGS
             "/WHOLEARCHIVE:Evaluation")
 
+    # Statically link msvc runtime so we don't need the redistributable
+    set_property(TARGET foo PROPERTY
+            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
 elseif(APPLE)
 	target_link_libraries(flexfringe
             "-Wl,-force_load" Evaluation
