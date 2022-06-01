@@ -1,0 +1,19 @@
+# IDE / output / build stuff
+.idea/
+cmake-build-*/
+test-reports/
+*.o
+
+# Binaries
+runtests
+flexfringe
+
+# Output files
+*.json
+*.dot
+*.swp
+*.png
+
+# Generated files
+source/gitversion.cpp
+source/evaluators.h
