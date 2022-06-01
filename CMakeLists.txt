@@ -34,7 +34,7 @@ if(MSVC)
             "/WHOLEARCHIVE:Evaluation")
 
     # Statically link msvc runtime so we don't need the redistributable
-    set_property(TARGET foo PROPERTY
+    set_property(TARGET flexfringe PROPERTY
             MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 elseif(APPLE)
