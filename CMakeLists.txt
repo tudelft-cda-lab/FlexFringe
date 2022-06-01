@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.16)
 project(flexfringe)
 
 set(CMAKE_CXX_STANDARD 14)
@@ -25,17 +25,12 @@ add_subdirectory(source)
 
 add_executable(flexfringe source/main.cpp)
 
-
 if(MSVC)
     target_link_libraries(flexfringe
             Evaluation)
     # MSVC option to add all object files in static lib
     set_target_properties(flexfringe PROPERTIES LINK_FLAGS
             "/WHOLEARCHIVE:Evaluation")
-
-    # Statically link msvc runtime so we don't need the redistributable
-    set_property(TARGET flexfringe PROPERTY
-            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 elseif(APPLE)
 	target_link_libraries(flexfringe
@@ -80,4 +75,10 @@ if(NOT SKIP_TESTS)
             Evaluation
             Source
             Util)
+endif()
+
+if(MSVC)
+    # Statically link msvc runtime so we don't need the redistributable
+    set_property(TARGET flexfringe Evaluation Source Util runtests PROPERTY
+            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
