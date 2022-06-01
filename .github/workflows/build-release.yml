@@ -16,15 +16,12 @@ jobs:
           - os: windows-latest
             triplet: x64-windows
             extension: ".exe"
-            publish-testresult-action: EnricoMi/publish-unit-test-result-action/composite@v1
           - os: ubuntu-latest
             triplet: x64-linux
             extension: ""
-            publish-testresult-action: EnricoMi/publish-unit-test-result-action@v1
           - os: macos-latest
             triplet: x64-osx
             extension: ""
-            publish-testresult-action: EnricoMi/publish-unit-test-result-action/composite@v1
 
     steps:
       - uses: actions/checkout@v1
@@ -60,9 +57,15 @@ jobs:
       - name: run-tests
         run: build/runtests${{ matrix.extension }} -r junit > testresults-${{ matrix.triplet }}.xml
 
-      - name: publish-test-results
-        uses: ${{ matrix.publish-testresult-action }}
-        if: always()
+      - name: publish-test-results-linux
+        uses: EnricoMi/publish-unit-test-result-action@v1
+        if: runner.os == 'Linux' && always()
+        with:
+          files: "testresults-${{ matrix.triplet }}.xml"
+
+      - name: publish-test-results-other
+        uses: EnricoMi/publish-unit-test-result-action/composite@v1
+        if: runner.os != 'Linux' && always()
         with:
           files: "testresults-${{ matrix.triplet }}.xml"
 
