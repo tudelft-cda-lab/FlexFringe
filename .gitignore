@@ -13,6 +13,7 @@ flexfringe
 *.dot
 *.swp
 *.png
+*.log
 
 # Generated files
 source/gitversion.cpp
