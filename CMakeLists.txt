@@ -68,13 +68,32 @@ if(NOT SKIP_TESTS)
 
     add_executable(runtests
             tests/tests.cpp
-            tests/tail.cpp)
+            tests/tail.cpp
+            tests/smoketest.cpp
+            source/main.cpp tests/input_data.h)
 
-    target_link_libraries(runtests PRIVATE
+    if(MSVC)
+        target_link_libraries(runtests
+                Evaluation)
+        set_target_properties(runtests PROPERTIES LINK_FLAGS
+                "/WHOLEARCHIVE:Evaluation")
+    elseif(APPLE)
+        target_link_libraries(runtests
+                "-Wl,-force_load" Evaluation
+                "-Wl")
+    else()
+        target_link_libraries(runtests
+                "-Wl,--whole-archive" Evaluation
+                "-Wl,--no-whole-archive")
+    endif()
+
+    target_link_libraries(runtests
             Catch2::Catch2
-            Evaluation
             Source
             Util)
+
+    target_compile_definitions(runtests PUBLIC
+            UNIT_TESTING)
 endif()
 
 if(MSVC)
