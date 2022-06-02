@@ -45,6 +45,9 @@ bool apta_node::is_path_identical(apta_node* other, int max_depth){
         l = l->find();
         r = r->find();
 
+        if(l->access_trace->get_end() == nullptr && l->access_trace->get_end() != nullptr) return false;
+        if(l->access_trace->get_end() != nullptr && l->access_trace->get_end() == nullptr) return false;
+        if(l->access_trace->get_end() == nullptr && l->access_trace->get_end() == nullptr) return true;
         if(l->access_trace->get_end()->get_symbol() != r->access_trace->get_end()->get_symbol()) return false;
 
         ngram--;
