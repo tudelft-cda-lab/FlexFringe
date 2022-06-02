@@ -2,7 +2,6 @@
 #include "catch.hpp"
 #include "inputdata.h"
 #include "evaluate.h"
-#include "input_data.h"
 #include "greedy.h"
 #include "evaluation_factory.h"
 #include "parameters.h"
@@ -18,7 +17,8 @@ TEST_CASE( "Smoke test: greedy alergia on stamina 1_training", "[smoke]" ) {
     evaluation_function *eval = get_evaluation();
     REQUIRE(eval != nullptr);
 
-    std::istringstream input_stream((std::string(stamina_1_training)));
+    ifstream input_stream("data/staminadata/1_training.txt");
+    REQUIRE(input_stream);
 
     auto* id = new inputdata();
     id->read_abbadingo_header(input_stream);
@@ -49,7 +49,8 @@ TEST_CASE( "Smoke test: greedy edsm on stamina 1_training", "[smoke]" ) {
     evaluation_function *eval = get_evaluation();
     REQUIRE(eval != nullptr);
 
-    std::istringstream input_stream((std::string(stamina_1_training)));
+    ifstream input_stream("data/staminadata/1_training.txt");
+    REQUIRE(input_stream);
 
     auto* id = new inputdata();
     id->read_abbadingo_header(input_stream);

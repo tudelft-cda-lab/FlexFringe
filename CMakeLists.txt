@@ -93,6 +93,10 @@ if(NOT SKIP_TESTS)
             Util
             ${CMAKE_THREAD_LIBS_INIT})
 
+    if(NOT WIN32)
+        target_link_libraries(runtests dl) # For ldl
+    endif()
+
     target_compile_definitions(runtests PUBLIC
             UNIT_TESTING)
 endif()
