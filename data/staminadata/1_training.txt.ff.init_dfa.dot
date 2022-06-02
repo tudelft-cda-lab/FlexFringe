@@ -1,9 +1,0 @@
-// produced with flexfringe // ./flexfringe data/staminadata/1_training.txt --ini ini/alergia.ini 
-digraph DFA {
-	-1 [label="root" shape=box];
-		I -> -1;
-	0 [ label="0:#1024
-fin: 
- path: 0:635 , 1:389 , 
-1024 0" , penwidth=6.93245];
-}
