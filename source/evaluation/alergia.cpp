@@ -11,10 +11,12 @@ REGISTER_DEF_TYPE(alergia);
 /** Computing to get the divider with correction and paired pooling for merge testing */
 
 void alergia::update_divider(double left_count, double right_count, double& left_divider, double& right_divider){
+    //cerr << "updating " << left_count << " " << right_count << " " << left_divider << " " << right_divider << endl;
     if(left_count == 0.0 && right_count == 0.0) return;
     if(left_count < SYMBOL_COUNT || right_count < SYMBOL_COUNT) return;
     left_divider += left_count + CORRECTION;
     right_divider += right_count + CORRECTION;
+    //cerr << "updating " << left_count << " " << right_count << " " << left_divider << " " << right_divider << endl;
 }
 
 void alergia::update_divider_pool(double left_pool, double right_pool, double& left_divider, double& right_divider){
@@ -232,6 +234,7 @@ tail* alergia_data::sample_tail(){
 /** computing the merge score and consistency */
 
 double alergia::alergia_check(double right_count, double left_count, double right_total, double left_total){
+    //cerr << "checking " << right_count << " " << left_count << " " << right_total << " " << left_total << endl;
     if(left_count == 0.0 && right_count == 0.0) return 0.0;
     if(left_total == 0.0 || right_total == 0.0) return 0.0;
 
@@ -262,6 +265,18 @@ bool alergia::compute_tests(num_map& left_map, int left_total, int left_final,
     * in this way, we can detect differences in distributions even if all counts are low (i.e. [0,0,1,1] vs [1,1,0,0]) */
     double l1_pool = 0.0; double r1_pool = 0.0; double l2_pool = 0.0; double r2_pool = 0.0;
 
+    /*
+    for(auto & it : left_map){
+        cerr << it.first << " : " << it.second << " , ";
+    }
+    cerr << endl;
+    for(auto & it : right_map) {
+        cerr << it.first << " : " << it.second << " , ";
+    }
+    cerr << endl;
+    */
+
+
     int matching_right = 0;
     for(auto & it : left_map){
         int type = it.first;
@@ -289,10 +304,10 @@ bool alergia::compute_tests(num_map& left_map, int left_total, int left_final,
     update_divider_pool(l1_pool, r1_pool, left_divider, right_divider);
     update_divider_pool(l2_pool, r2_pool, left_divider, right_divider);
 
-    if(!alergia_test_and_update(l1_pool, r1_pool, left_divider, right_divider)){
+    if((l1_pool != 0 || r1_pool != 0) && !alergia_test_and_update(l1_pool, r1_pool, left_divider, right_divider)){
         return false;
     }
-    if(!alergia_test_and_update(l2_pool, r2_pool, left_divider, right_divider)){
+    if((l2_pool != 0 || r2_pool != 0) && !alergia_test_and_update(l2_pool, r2_pool, left_divider, right_divider)){
         return false;
     }
 
