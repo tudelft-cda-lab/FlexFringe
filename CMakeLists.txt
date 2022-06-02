@@ -90,7 +90,8 @@ if(NOT SKIP_TESTS)
     target_link_libraries(runtests
             Catch2::Catch2
             Source
-            Util)
+            Util
+            ${CMAKE_THREAD_LIBS_INIT})
 
     target_compile_definitions(runtests PUBLIC
             UNIT_TESTING)
