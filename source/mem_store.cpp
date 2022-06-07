@@ -60,9 +60,9 @@ void mem_store::delete_trace(trace* tr){
     assert(tr != nullptr);
     tail* t = tr->head;
     while(t != 0){
+        mem_store::delete_tail(t);
         tail* t2 = t;
         t = t2->future();
-        mem_store::delete_tail(t2);
     }
     trace_store.push_front(tr);
 };
