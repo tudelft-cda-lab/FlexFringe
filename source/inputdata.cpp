@@ -604,7 +604,7 @@ tail::~tail(){
     if(split_from == nullptr){
         delete td;
     }
-    if(future_tail != nullptr) delete future_tail;
+    //if(future_tail != nullptr) delete future_tail;
 }
 
 tail_data::tail_data() {
