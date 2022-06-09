@@ -1,0 +1,28 @@
+# IDE / output / build stuff
+.idea/
+cmake-build-*/
+test-reports/
+*.o
+
+# Binaries
+runtests
+flexfringe
+
+# Output files
+*.json
+*.dot
+*.swp
+*.png
+*.log
+
+# Generated files
+source/gitversion.cpp
+source/evaluators.h
+
+# Files not relevant to the docker image
+.github/
+Dockerfile
+README.md
+build/
+.dockerignore
+.gitignore
