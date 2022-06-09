@@ -1,6 +1,7 @@
 # IDE / output / build stuff
 .idea/
 cmake-build-*/
+build/
 test-reports/
 *.o
 
