@@ -4,6 +4,10 @@ on:
   push:
     tags:
       - '*'
+  workflow_run:
+    workflows: [ "Build and test" ]
+    types:
+      - completed
 
 env:
   REGISTRY: ghcr.io
