@@ -9,6 +9,7 @@ execute_process(COMMAND "git" "rev-parse" "HEAD"
                 OUTPUT_VARIABLE Gitversion)
 if(Gitversion STREQUAL "")
     set(Gitversion "No commit info available")
+    message(${Gitversion})
 endif()
 string(REPLACE "\n" "" Gitversion ${Gitversion})
 file(WRITE "gitversion.cpp" "const char *gitversion = \"${Gitversion}\";")
