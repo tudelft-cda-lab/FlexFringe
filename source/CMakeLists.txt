@@ -3,14 +3,14 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/evaluation"
                     )
 
 ## create the gitversion.cpp
+## check version and append either version or "No commit info available\";"
 execute_process(COMMAND "git" "rev-parse" "HEAD"
                 WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
                 OUTPUT_VARIABLE Gitversion)
-if(NOT DEFINED Gitversion)
-    set(Gitversion "non-git build")
+if(Gitversion STREQUAL "")
+    set(Gitversion "No commit info available")
 endif()
 string(REPLACE "\n" "" Gitversion ${Gitversion})
-# TODO: check version and append either version or "No commit info available\";"
 file(WRITE "gitversion.cpp" "const char *gitversion = \"${Gitversion}\";")
 
 ## create the evaluators.h file
