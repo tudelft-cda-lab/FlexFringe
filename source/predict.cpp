@@ -11,6 +11,11 @@ int rownr = 1;
 map<int,double> sw_score_per_symbol;
 map<tail*,double> sw_individual_tail_score;
 
+double compute_jump_penalty(apta_node* old_node, apta_node* new_node){
+    if(ALIGN_DISTANCE_PENALTY != 0) return ALIGN_DISTANCE_PENALTY * (double)(old_node->merged_apta_distance(new_node, -1));
+    return 0.0;
+}
+
 double compute_score(apta_node* next_node, tail* next_tail){
     if(PREDICT_ALIGN){ return next_node->get_data()->align_score(next_tail); }
     return next_node->get_data()->predict_score(next_tail);
@@ -93,7 +98,8 @@ void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
                     //apta_node *next_child = jump_child->child(next_tail)->find();
                     //cerr << "jump: " << compute_score(score, next_node, next_tail) << endl;
                     Q.push(pair<double, pair<apta_node *, tail *>>(
-                            update_score(score, next_node, next_tail),
+                            update_score(score, next_node, next_tail) +
+                                    compute_jump_penalty(next_node, jump_child),
                             pair<apta_node *, tail *>(jump_child, next_tail)));
                 }
             }

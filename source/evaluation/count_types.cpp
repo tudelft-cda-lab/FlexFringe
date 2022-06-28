@@ -233,14 +233,19 @@ void count_driven::reset(state_merger *merger){
 int count_data::sink_type(){
     if(!USE_SINKS) return -1;
 
-    auto* d = reinterpret_cast<count_data*>(node->get_data());
-    
     int type = -1;
-    for(auto & path_count : d->path_counts){
+    for(auto & path_count : path_counts){
         int count = path_count.second;
         if(count != 0){
             if(type == -1) type = path_count.first;
-            else return -1;
+            else if(type != path_count.first) return -1;
+        }
+    }
+    for(auto & final_count : final_counts){
+        int count = final_count.second;
+        if(count != 0){
+            if(type == -1) type = final_count.first;
+            else if(type != final_count.first) return -1;
         }
     }
     return type;

@@ -97,6 +97,8 @@ extern bool PREDICT_TYPE_PATH;
 extern bool PREDICT_SYMBOL;
 extern bool PREDICT_TRACE;
 
+extern double ALIGN_DISTANCE_PENALTY;
+
 extern bool SLIDING_WINDOW_ADD_SHORTER;
 
 extern bool PREDICT_DATA;
