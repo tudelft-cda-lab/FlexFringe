@@ -402,6 +402,7 @@ bool state_merger::split(apta_node* new_node, apta_node* old_node, int depth, bo
         if (KSTATE != -1 && (new_node->size < KSTATE && old_node->size < KSTATE)) return true;
     }
 
+    /*
     for (auto it = old_node->guards.begin(); it != old_node->guards.end(); ++it) {
         if(it->second->target == nullptr) continue;
         if(it->second->target->size == 0) continue;
@@ -415,15 +416,21 @@ bool state_merger::split(apta_node* new_node, apta_node* old_node, int depth, bo
             new_child->depth = new_node->depth + 1;
         }
     }
+    */
 
     for (tail *t = new_node->tails_head; t != nullptr; t = t->next()) {
         if (t->get_index() == -1) continue;
         if (t->future() == nullptr) continue;
 
         int symbol = t->get_symbol();
-        //apta_node *old_child = old_node->child(symbol)->find();
+        apta_node *old_child = old_node->child(symbol)->find();
         apta_node *new_child = new_node->child(symbol);
-
+        if (new_child == nullptr) {
+            new_child = mem_store::create_node(old_child);
+            new_node->set_child(symbol, new_child);
+            new_child->source = new_node;
+            new_child->depth = new_node->depth + 1;
+        }
         new_child->size++;
         tail* future_tail = t->future();
         tail *new_tail = mem_store::create_tail(future_tail);
@@ -563,6 +570,11 @@ bool state_merger::split_init(apta_node* red, tail* t, int attr, int depth, bool
             new_child->data->add_tail(new_tail);
             new_child->size++;
         }
+    }
+
+    if(new_child->size == 0){
+        mem_store::delete_node(new_child);
+        return true;
     }
 
     if(evaluate){
@@ -936,7 +948,7 @@ refinement_set* state_merger::get_possible_refinements(){
             for(auto blue2 : blue_its){
                 if(blue == blue2) continue;
 
-                if(found_non_sink && blue2->is_sink()) continue;
+                if(blue2->is_sink()) continue;
 
                 refinement* ref = test_merge(blue2,blue);
                 if(ref != nullptr){

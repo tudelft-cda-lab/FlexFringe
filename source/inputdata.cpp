@@ -379,9 +379,9 @@ void inputdata::add_traces_to_apta(apta* the_apta){
 void inputdata::add_trace_to_apta(trace* tr, apta* the_apta){
     int depth = 0;
     apta_node* node = the_apta->root;
-    if(node->access_trace == nullptr){
+    /*if(node->access_trace == nullptr){
         node->access_trace = mem_store::create_trace();
-    }
+    }*/
 
     if(REVERSE_TRACES){
         tr->reverse();
@@ -406,7 +406,7 @@ void inputdata::add_trace_to_apta(trace* tr, apta* the_apta){
                 auto* next_node = mem_store::create_node(nullptr);
                 node->set_child(symbol, next_node);
                 next_node->source = node;
-                next_node->access_trace = inputdata::access_trace(t);
+                //next_node->access_trace = inputdata::access_trace(t);
                 next_node->depth  = depth;
                 next_node->number = ++(this->node_number);
             }
