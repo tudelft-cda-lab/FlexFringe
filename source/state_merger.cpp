@@ -1042,6 +1042,9 @@ void state_merger::print_dot(const string& file_name)
 {
     todot();
     ofstream output1(file_name.c_str());
+    if (output1.fail()) {
+        throw std::ofstream::failure("Unable to open file for writing: " + file_name);
+    }
     output1 << dot_output;
     output1.close();
 }
@@ -1050,6 +1053,9 @@ void state_merger::print_json(const string& file_name)
 {
     tojson();
     ofstream output1(file_name.c_str());
+    if (output1.fail()) {
+        throw std::ofstream::failure("Unable to open file for writing: " + file_name);
+    }
     output1 << json_output;
     output1.close();
 }
