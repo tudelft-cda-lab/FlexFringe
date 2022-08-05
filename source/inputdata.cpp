@@ -537,7 +537,8 @@ void inputdata::read_abbadingo_symbol(istream &input_stream, tail* new_tail){
 
     tail_data* td = new_tail->td;
 
-    input_stream >> temp;
+    input_stream >> std::ws;
+    temp = string(std::istreambuf_iterator<char>(input_stream), {});
     l1.str(temp);
     std::getline(l1,temp_symbol,'/');
     std::getline(l1,data);
