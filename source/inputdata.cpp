@@ -137,6 +137,15 @@ inputdata::inputdata() {
     max_sequences = 0;
     node_number = 0;
     num_tails = 0;
+
+    alphabet.clear();
+    r_alphabet.clear();
+
+    types.clear();
+    r_types.clear();
+
+    trace_attributes.clear();
+    symbol_attributes.clear();
 }
 
 inputdata::~inputdata() {
