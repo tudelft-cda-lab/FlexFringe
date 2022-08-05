@@ -326,6 +326,7 @@ void inputdata::read_csv_header(istream &input_stream) {
     string cell;
     int index = 0;
     while(std::getline(ls,cell, ',')){
+        cell.erase(0,cell.find_first_not_of(" \n\r\t"));
         if(cell.rfind("id", 0) == 0){ id_cols.insert(index); }
         else if(cell.rfind("type", 0) == 0){ type_cols.insert(index); }
         else if(cell.rfind("symb", 0) == 0){ symbol_cols.insert(index); }
