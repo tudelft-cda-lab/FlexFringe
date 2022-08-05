@@ -70,6 +70,7 @@ if(NOT SKIP_TESTS)
             tests/tests.cpp
             tests/tail.cpp
             tests/smoketest.cpp
+            tests/inputdata.cpp
             source/main.cpp tests/input_data.h)
 
     if(MSVC)
