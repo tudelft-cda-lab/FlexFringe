@@ -12,7 +12,7 @@
 #include "input/trace.h"
 #include "input/tail.h"
 #include "input/attribute.h"
-#include "inputdatalocator.h"
+#include "input/inputdatalocator.h"
 
 //#include "inputdata.h"
 
@@ -33,6 +33,9 @@ private:
     void read_abbadingo_type(std::istream &input_stream, Trace *new_trace);
     std::string string_from_symbol(int symbol);
 
+    char delim = ',';
+    bool strip_whitespace = true;
+
 public:
     using Iterator = std::list<Trace*>::iterator;
 
@@ -40,6 +43,16 @@ public:
 
     Trace* readRow(std::istream &input_stream);
     void readHeader(std::istream &input_stream);
+
+    // Config options
+    CSVInputData& setDelimiter(char d) {
+        delim = d;
+        return *this;
+    }
+    CSVInputData& stripWhitespace(bool strip) {
+        strip_whitespace = strip;
+        return *this;
+    }
 
     // Const getters for private data, for testing etc.
     const std::set<int> &getIdCols() const;

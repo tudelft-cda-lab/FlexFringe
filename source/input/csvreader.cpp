@@ -1,5 +1,6 @@
 #include "csvreader.h"
 #include "mem_store.h"
+#include "stringutil.h"
 
 using namespace std;
 
@@ -36,8 +37,10 @@ void CSVInputData::readHeader(istream &input_stream) {
     stringstream ls(line);
     string cell;
     int index = 0;
-    while(std::getline(ls,cell, ',')){
+    while(std::getline(ls,cell, delim)){
+
         cell.erase(0,cell.find_first_not_of(" \n\r\t"));
+
         if(cell.rfind("id", 0) == 0){ id_cols.insert(index); }
         else if(cell.rfind("type", 0) == 0){ type_cols.insert(index); }
         else if(cell.rfind("symb", 0) == 0){ symbol_cols.insert(index); }
@@ -83,10 +86,12 @@ Trace* CSVInputData::readRow(istream &input_stream) {
 
     stringstream ls2(line);
     vector<string> row;
-    while (std::getline(ls2, cell, ',')) {
+    while (std::getline(ls2, cell, delim)) {
+        if (strip_whitespace) { strutil::trim(cell); }
         row.push_back(cell);
     }
     std::getline(ls2, cell);
+    if (strip_whitespace) { strutil::trim(cell); }
     row.push_back(cell);
 
     string id;
