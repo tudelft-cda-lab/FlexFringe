@@ -7,9 +7,16 @@
 #include "inputdata.h"
 #include "state_merger.h"
 
+#include "input/i_inputdata.h"
+#include "input/trace.h"
+#include "input/tail.h"
+
 using namespace std;
 
 class mem_store {
+private:
+    static list<Trace*> traceStore;
+    static list<Tail*> tailStore;
 public:
     static list< apta_node* > node_store;
     static list< apta_guard* > guard_store;
@@ -41,6 +48,12 @@ public:
 
     static void delete_trace(trace*);
     static trace* create_trace();
+
+    static void deleteTrace(Trace*);
+    static Trace* createTrace(IInputData*);
+
+    static void deleteTail(Tail*);
+    static Tail* createTail(Tail* other_tail);
 };
 
 #endif

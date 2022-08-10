@@ -55,7 +55,17 @@ add_library(Source STATIC
             mem_store.h
         predict.cpp predict.h
         differencing.cpp differencing.h
-        ensemble.cpp ensemble.h)
+        ensemble.cpp ensemble.h
+        input/csvreader.h
+        input/csvreader.cpp
+        input/i_inputdata.h
+        input/trace.cpp
+        input/trace.h
+        input/inputdatalocator.cpp
+        input/inputdatalocator.h
+        input/tail.cpp input/tail.h
+        input/attribute.cpp
+        input/attribute.h)
 
 ## create CMakeLists.txt in evaluation directory
 set(cmakelists_eval "evaluation/CMakeLists.txt")

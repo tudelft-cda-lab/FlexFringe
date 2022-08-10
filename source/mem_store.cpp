@@ -1,5 +1,6 @@
 
 #include "mem_store.h"
+#include "input/inputdatalocator.h"
 #include <iostream>
 
 list< apta_node* > mem_store::node_store;
@@ -9,6 +10,9 @@ list< trace* > mem_store::trace_store;
 list< merge_refinement* > mem_store::mergeref_store;
 list< split_refinement* > mem_store::splitref_store;
 list< extend_refinement* > mem_store::extendref_store;
+
+list<Trace*> mem_store::traceStore;
+list<Tail*> mem_store::tailStore;
 
 void mem_store::delete_node(apta_node* node){
     assert(node != nullptr);
@@ -144,4 +148,49 @@ void mem_store::erase(){
         delete it;
     }
 
+}
+
+void mem_store::deleteTrace(Trace* trace) {
+    assert(trace != nullptr);
+    Tail* t = trace->head;
+    while(t != nullptr){
+        mem_store::deleteTail(t);
+        Tail* t2 = t;
+        t = t2->future();
+    }
+    delete[] trace->trace_attr;
+    traceStore.push_front(trace);
+}
+
+Trace *mem_store::createTrace(IInputData* inputData = nullptr) {
+    if (inputData == nullptr) {
+        // Will crash if no InputData can be located
+        inputData = InputDataLocator::get();
+    }
+
+    Trace* t;
+    if(!traceStore.empty()) {
+        t = traceStore.front();
+        traceStore.pop_front();
+        t->initialize(inputData);
+    } else {
+        t = new Trace(inputData);
+    }
+    return t;
+}
+
+void mem_store::deleteTail(Tail * t) {
+    assert(t != nullptr);
+    tailStore.push_front(t);
+}
+
+Tail* mem_store::createTail(Tail *other_tail) {
+    Tail* t = nullptr;
+    if(!tailStore.empty()){
+        Tail* t2 = tailStore.front();
+        if(t2->next_in_list == nullptr) { tail_store.pop_front(); t = t2; }
+        else { t = t2->next_in_list; t2->next_in_list = t->next_in_list; }
+        t->initialize(other_tail);
+    } else { t = new Tail(other_tail); }
+    return t;
 };
