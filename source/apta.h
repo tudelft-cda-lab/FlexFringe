@@ -200,6 +200,7 @@ public:
     friend class red_state_iterator;
     friend class tail_iterator;
     friend class inputdata;
+    friend class IInputData; // TODO: rename
     friend class state_merger;
 };
 
@@ -395,6 +396,7 @@ public:
     friend class red_state_iterator;
     friend class tail_iterator;
     friend class inputdata;
+    friend class IInputData; // TODO: rename
     friend class state_merger;
 };
 
