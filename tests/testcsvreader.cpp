@@ -18,8 +18,8 @@ TEST_CASE( "CSVReader: smoke test", "[parsing]" ) {
                                    "2022-08-04T11:00:14.707375+0200, 670edd28, Received symbol b";
     std::istringstream input_stream_whitespace(input_whitespace);
 
-    auto reader = CSVInputData();
-    InputDataLocator::provide(&reader);
+    auto reader = csv_inputdata();
+    inputdata_locator::provide(&reader);
 
     reader.read(input_stream_whitespace);
 

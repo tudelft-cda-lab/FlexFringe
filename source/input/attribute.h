@@ -12,7 +12,7 @@
  * such as alphabet functions, file transformations and data added to the APTA.
  *
  */
-class Attribute{
+class attribute{
 public:
     bool discrete;
     bool splittable;
@@ -24,7 +24,7 @@ public:
 
     std::string name;
 
-    Attribute(const std::string& input);
+    attribute(const std::string& input);
 
     inline double get_value(std::string val){
         if(discrete){

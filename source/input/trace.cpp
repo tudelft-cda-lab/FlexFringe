@@ -3,11 +3,11 @@
 #include "mem_store.h"
 #include "input/tail.h"
 
-Trace::Trace(IInputData* inputData) {
+trace::trace(inputdata* inputData) {
     initialize(inputData);
 }
 
-void Trace::initialize(IInputData* inputData) {
+void trace::initialize(inputdata* inputData) {
     this->inputData = inputData;
     sequence = -1;
     length = -1;
@@ -21,33 +21,33 @@ void Trace::initialize(IInputData* inputData) {
     refs = 1;
 }
 
-Trace::~Trace(){
+trace::~trace(){
     delete trace_attr;
     delete head;
 }
 
-void Trace::erase(){
+void trace::erase(){
     --refs;
     if(refs == 0) mem_store::deleteTrace(this);
 }
 
-void Trace::reverse(){
-    Tail* t = head;
+void trace::reverse(){
+    tail* t = head;
     while(t != end_tail){
-        Tail* temp_future = t->future_tail;
+        tail* temp_future = t->future_tail;
         t->future_tail = t->past_tail;
         t->past_tail = temp_future;
         t = temp_future;
     }
-    Tail* temp_head = head;
+    tail* temp_head = head;
     head = end_tail->past_tail;
     head->past_tail = nullptr;
     end_tail->past_tail = temp_head;
     temp_head->future_tail = end_tail;
 }
 
-string Trace::to_string(){
-    Tail* t = head;
+string trace::to_string(){
+    tail* t = head;
     if(t == nullptr) return "0 0";
     while(t->future() != nullptr) t = t->future();
     return "" + this->inputData->string_from_type(get_type()) + " " + std::to_string(get_length()) + " " + t->to_string() +"";

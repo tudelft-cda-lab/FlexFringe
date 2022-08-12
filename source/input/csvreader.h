@@ -17,9 +17,9 @@
 //#include "inputdata.h"
 
 
-class CSVInputData: public IInputData {
+class csv_inputdata: public inputdata {
 private:
-    std::unordered_map<std::string, Trace*> trace_map;
+    std::unordered_map<std::string, trace*> trace_map;
 
     std::set<int> id_cols;
     std::set<int> type_cols;
@@ -29,8 +29,8 @@ private:
     std::set<int> symbol_attr_cols;
 
     // TODO: refactor so these aren't needed anymore
-    void read_abbadingo_symbol(std::istream &input_stream, Tail *new_tail);
-    void read_abbadingo_type(std::istream &input_stream, Trace *new_trace);
+    void read_abbadingo_symbol(std::istream &input_stream, tail *new_tail);
+    void read_abbadingo_type(std::istream &input_stream, trace *new_trace);
     std::string string_from_symbol(int symbol);
 
     char delim = ',';
@@ -41,15 +41,15 @@ public:
 
     void read(std::istream &input_stream) override;
 
-    Trace* readRow(std::istream &input_stream);
+    trace* readRow(std::istream &input_stream);
     void readHeader(std::istream &input_stream);
 
     // Config options
-    CSVInputData& setDelimiter(char d) {
+    csv_inputdata& setDelimiter(char d) {
         delim = d;
         return *this;
     }
-    CSVInputData& stripWhitespace(bool strip) {
+    csv_inputdata& stripWhitespace(bool strip) {
         strip_whitespace = strip;
         return *this;
     }
@@ -62,8 +62,8 @@ public:
     const std::set<int> &getTraceAttrCols() const;
     const std::set<int> &getSymbolAttrCols() const;
 
-    const std::vector<Attribute> &getTraceAttributes() const;
-    const std::vector<Attribute> &getSymbolAttributes() const;
+    const std::vector<attribute> &getTraceAttributes() const;
+    const std::vector<attribute> &getSymbolAttributes() const;
 
 
 

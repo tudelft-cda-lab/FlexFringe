@@ -15,8 +15,8 @@ TEST_CASE("AbbadingoReader: smoke test", "[parsing]") {
                         "0 11 36 9 3 11 17 20 34 20 20 20 10\n";
     std::istringstream input_stream(input);
 
-    auto reader = AbbadingoInputData();
-    InputDataLocator::provide(&reader);
+    auto reader = abbadingo_inputdata();
+    inputdata_locator::provide(&reader);
 
     reader.read(input_stream);
 

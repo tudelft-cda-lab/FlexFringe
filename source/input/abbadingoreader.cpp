@@ -1,18 +1,18 @@
 #include "abbadingoreader.h"
 #include "mem_store.h"
 
-void AbbadingoInputData::read(std::istream &input_stream) {
+void abbadingo_inputdata::read(std::istream &input_stream) {
     read_abbadingo_header(input_stream);
 
     for(int line = 0; line < max_sequences; ++line){
-        Trace* new_trace = mem_store::createTrace(this);
+        trace* new_trace = mem_store::createTrace(this);
         read_abbadingo_sequence(input_stream, new_trace);
         new_trace->sequence = line;
         traces.push_back(new_trace);
     }
 }
 
-void AbbadingoInputData::read_abbadingo_sequence(istream &input_stream, Trace* new_trace) {
+void abbadingo_inputdata::read_abbadingo_sequence(istream &input_stream, trace* new_trace) {
     string temp, temp_symbol, data, type_string, type_attr, symbol_string, symbol_attr, val;
     int length;
     std::stringstream l1, l2, l3;
@@ -22,14 +22,14 @@ void AbbadingoInputData::read_abbadingo_sequence(istream &input_stream, Trace* n
     input_stream >> length;
     new_trace->length = length;
 
-    Tail* new_tail = mem_store::createTail(nullptr);
+    tail* new_tail = mem_store::createTail(nullptr);
     new_tail->tr = new_trace;
     new_trace->head = new_tail;
 
     for(int index = 0; index < length; ++index){
         read_abbadingo_symbol(input_stream, new_tail);
         new_tail->td->index = index;
-        Tail* old_tail = new_tail;
+        tail* old_tail = new_tail;
         new_tail = mem_store::createTail(nullptr);
         new_tail->tr = new_trace;
         old_tail->set_future(new_tail);
@@ -39,7 +39,7 @@ void AbbadingoInputData::read_abbadingo_sequence(istream &input_stream, Trace* n
     new_trace->sequence = num_sequences++;
 }
 
-void AbbadingoInputData::read_abbadingo_type(istream &input_stream, Trace* new_trace) {
+void abbadingo_inputdata::read_abbadingo_type(istream &input_stream, trace* new_trace) {
     string temp, type_string, type_attr, val;
     std::stringstream l1, l2;
 
@@ -67,11 +67,11 @@ void AbbadingoInputData::read_abbadingo_type(istream &input_stream, Trace* new_t
     new_trace->type = r_types[type_string];
 }
 
-void AbbadingoInputData::read_abbadingo_symbol(istream &input_stream, Tail* new_tail) {
+void abbadingo_inputdata::read_abbadingo_symbol(istream &input_stream, tail* new_tail) {
     string temp, temp_symbol, data, type_string, type_attr, symbol_string, symbol_attr, val;
     std::stringstream l1, l2, l3;
 
-    TailData* td = new_tail->td;
+    tail_data* td = new_tail->td;
 
     input_stream >> temp;
     l1.str(temp);
@@ -104,7 +104,7 @@ void AbbadingoInputData::read_abbadingo_symbol(istream &input_stream, Tail* new_
     }
 }
 
-void AbbadingoInputData::read_abbadingo_header(istream &input_stream) {
+void abbadingo_inputdata::read_abbadingo_header(istream &input_stream) {
     input_stream >> max_sequences;
 
     string tuple;

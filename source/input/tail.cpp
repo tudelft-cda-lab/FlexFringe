@@ -7,47 +7,47 @@
 
 using namespace std;
 
-/* Tail list functions, they are in two lists:
+/* tail list functions, they are in two lists:
  * 1) past_tail <-> current_tail <-> future_tail
  * 2) split_from <-> current_tail <-> split_to
  * 1 is used to get past and futures from the input data sequences
  * 2 is used to keep track of and be able to quickly undo_merge split refinements
  * */
-void Tail::split(Tail* t){
+void tail::split(tail* t){
     t->split_from = this;
     t->future_tail = future_tail;
     t->past_tail = past_tail;
     split_to = t;
 }
 
-void Tail::undo_split(){
+void tail::undo_split(){
     split_to = nullptr;
 }
 
-Tail* Tail::next() const{
+tail* tail::next() const{
     if(split_to == nullptr) return next_in_list;
     if(next_in_list == nullptr) return nullptr;
     return next_in_list->next();
 }
 
-Tail* Tail::split_to_end(){
+tail* tail::split_to_end(){
     if(split_to == nullptr) return this;
     return split_to->split_to_end();
 }
 
-Tail* Tail::future() const{
+tail* tail::future() const{
     if(future_tail == nullptr) return nullptr;
     if(split_to == nullptr) return future_tail->split_to_end();
     return split_to->future();
 }
 
-Tail* Tail::past() const{
+tail* tail::past() const{
     if(past_tail == nullptr) return nullptr;
     if(split_to == nullptr) return past_tail->split_to_end();
     return split_to->past();
 }
 
-void Tail::set_future(Tail* ft){
+void tail::set_future(tail* ft){
     future_tail = ft;
     ft->past_tail = this;
 }
@@ -55,8 +55,8 @@ void Tail::set_future(Tail* ft){
 /* tail constructors
  * copies values from existing tail but does not put into any list
  * initialize_after_adding_traces re-used a previously declared but erased tail */
-Tail::Tail(){
-    td = new TailData();
+tail::tail(){
+    td = new tail_data();
     past_tail = nullptr;
     future_tail = nullptr;
     next_in_list = nullptr;
@@ -66,12 +66,12 @@ Tail::Tail(){
     tr = nullptr;
 }
 
-Tail::Tail(Tail* ot){
+tail::tail(tail* ot){
     if(ot != nullptr){
         td = ot->td;
         tr = ot->tr;
     } else {
-        td = new TailData();
+        td = new tail_data();
         tr = nullptr;
     }
     past_tail = nullptr;
@@ -81,12 +81,12 @@ Tail::Tail(Tail* ot){
     split_to = nullptr;
 }
 
-void Tail::initialize(Tail* ot){
+void tail::initialize(tail* ot){
     if(ot != nullptr){
         td = ot->td;
         tr = ot->tr;
     } else {
-        td = new TailData();
+        td = new tail_data();
         tr = nullptr;
     }
     past_tail = nullptr;
@@ -97,11 +97,11 @@ void Tail::initialize(Tail* ot){
 }
 
 
-string Tail::to_string(){
+string tail::to_string(){
     auto inputdata = this->tr->inputData;
 
     ostringstream ostr;
-    Tail* t = this;
+    tail* t = this;
     while(t->past() != nullptr) t = t->past();
 
     while(t != this->future() && !t->is_final()){
@@ -125,7 +125,7 @@ string Tail::to_string(){
     return ostr.str();
 }
 
-Tail::~Tail(){
+tail::~tail(){
     if(split_from == nullptr){
         delete td;
     }
@@ -134,47 +134,47 @@ Tail::~Tail(){
 
 
 
-int Tail::get_index(){
+int tail::get_index(){
     return td->index;
 }
-int Tail::get_type(){
+int tail::get_type(){
     return tr->type;
 }
-int Tail::get_length(){
+int tail::get_length(){
     return tr->length;
 }
-int Tail::get_sequence(){
+int tail::get_sequence(){
     return tr->sequence;
 }
-int Tail::get_symbol(){
+int tail::get_symbol(){
     return td->symbol;
 }
-double Tail::get_symbol_value(int attr){
+double tail::get_symbol_value(int attr){
     return td->attr[attr];
 }
-double Tail::get_trace_value(int attr){
+double tail::get_trace_value(int attr){
     return tr->trace_attr[attr];
 }
-double Tail::get_value(int attr){
+double tail::get_value(int attr){
     int num_trace_attributes = this->tr->inputData->get_num_trace_attributes();
     if(attr < num_trace_attributes)
         return tr->trace_attr[attr];
     return td->attr[attr - num_trace_attributes];
 }
-std::string Tail::get_data(){
+std::string tail::get_data(){
     return td->data;
 }
-bool Tail::is_final(){
+bool tail::is_final(){
     return td->symbol == -1;
 }
 
-int Tail::get_nr(){
+int tail::get_nr(){
     return td->tail_nr;
 }
 
 // TODO
-TailData::TailData() {
-    auto inputdata = InputDataLocator::get();
+tail_data::tail_data() {
+    auto inputdata = inputdata_locator::get();
     index = -1;
     symbol = -1;
     attr = new double[inputdata->get_num_symbol_attributes()];
@@ -186,13 +186,13 @@ TailData::TailData() {
 }
 
 // TODO
-TailData::~TailData() {
+tail_data::~tail_data() {
 
 }
 
 // TODO
-void TailData::initialize() {
-    auto inputdata = InputDataLocator::get();
+void tail_data::initialize() {
+    auto inputdata = inputdata_locator::get();
     index = -1;
     symbol = -1;
     attr = new double[inputdata->get_num_symbol_attributes()];

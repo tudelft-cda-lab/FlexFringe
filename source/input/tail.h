@@ -5,9 +5,9 @@
 #include "input/trace.h"
 #include "trace.h"
 
-class Trace;
+class trace;
 
-class TailData{
+class tail_data{
 public:
     int index;
     int symbol;
@@ -17,33 +17,33 @@ public:
 
     int tail_nr;
 
-    TailData();
-    ~TailData();
+    tail_data();
+    ~tail_data();
     void initialize();
 };
 
-class Tail{
+class tail{
 public:
-    Tail();
-    Tail(Tail *ot);
-    ~Tail();
-    void initialize(Tail* ot);
+    tail();
+    tail(tail *ot);
+    ~tail();
+    void initialize(tail* ot);
 
-    TailData* td;
-    Trace* tr;
+    tail_data* td;
+    trace* tr;
 
-    Tail* future_tail;
-    Tail* past_tail;
-    Tail* next_in_list;
-    Tail* split_from;
-    Tail* split_to;
+    tail* future_tail;
+    tail* past_tail;
+    tail* next_in_list;
+    tail* split_from;
+    tail* split_to;
 
-    void split(Tail* t);
+    void split(tail* t);
     void undo_split();
-    Tail* next() const;
-    Tail* future() const;
-    Tail* past() const;
-    Tail* split_to_end();
+    tail* next() const;
+    tail* future() const;
+    tail* past() const;
+    tail* split_to_end();
 
     int get_index();
     int get_type();
@@ -57,7 +57,7 @@ public:
     bool is_final();
     int get_nr();
 
-    void set_future(Tail* ft);
+    void set_future(tail* ft);
     std::string to_string();
 };
 

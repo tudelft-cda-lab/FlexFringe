@@ -9,7 +9,7 @@ using namespace std;
  * if it contains f -> attribute is a distribution variable
  * if it contains t -> attribute is a target variable
  * */
-Attribute::Attribute(const string& input){
+attribute::attribute(const string& input){
     discrete = false;
     splittable = false;
     distributionable = false;

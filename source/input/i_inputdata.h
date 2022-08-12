@@ -11,9 +11,9 @@
 
 class apta;
 
-class IInputData {
+class inputdata {
 protected:
-    std::list<Trace*> traces;
+    std::list<trace*> traces;
 
     std::vector<std::string> alphabet;
     std::map<std::string, int> r_alphabet;
@@ -21,8 +21,8 @@ protected:
     std::vector<std::string> types;
     std::map<std::string, int> r_types;
 
-    std::vector<Attribute> trace_attributes;
-    std::vector<Attribute> symbol_attributes;
+    std::vector<attribute> trace_attributes;
+    std::vector<attribute> symbol_attributes;
 
     int max_sequences;
     int num_sequences;
@@ -31,12 +31,12 @@ protected:
 
 
 public:
-    using Iterator = std::list<Trace*>::iterator;
+    using Iterator = std::list<trace*>::iterator;
 
     virtual void read(std::istream &input_stream) = 0;
 
     void add_traces_to_apta(apta *the_apta);
-    void add_trace_to_apta(Trace *tr, apta *the_apta);
+    void add_trace_to_apta(trace *tr, apta *the_apta);
 
     std::string& get_symbol(int a);
     inline int get_reverse_symbol(std::string a);
@@ -44,9 +44,9 @@ public:
     inline int get_reverse_type(std::string a);
 
     /* gets an attribute, first symbol attributes, then trace attributes */
-    inline Attribute* get_trace_attribute(int attr);
-    inline Attribute* get_symbol_attribute(int attr);
-    inline Attribute* get_attribute(int attr);
+    inline attribute* get_trace_attribute(int attr);
+    inline attribute* get_symbol_attribute(int attr);
+    inline attribute* get_attribute(int attr);
 
     inline int get_num_symbol_attributes();
     inline int get_num_trace_attributes();
@@ -75,8 +75,8 @@ public:
     inline int type_from_string(std::string type);
     std::string string_from_type(int type);
 
-    Trace* access_trace(Tail *t);
-    Tail* access_tail(Tail *t);
+    trace* access_trace(tail *t);
+    tail* access_tail(tail *t);
 
     Iterator begin() {return traces.begin();}
     Iterator end() {return traces.end();}

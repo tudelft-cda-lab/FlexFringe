@@ -3,13 +3,13 @@
 
 #include "input/i_inputdata.h"
 
-class InputDataLocator {
+class inputdata_locator {
 private:
-    static IInputData* reader_;
+    static inputdata* reader_;
 
 public:
-    static void provide(IInputData* reader);
-    static IInputData* get();
+    static void provide(inputdata* reader);
+    static inputdata* get();
 };
 
 

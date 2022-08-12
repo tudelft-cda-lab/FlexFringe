@@ -3,37 +3,37 @@
 
 using namespace std;
 
-string &IInputData::get_symbol(int a) {
+string &inputdata::get_symbol(int a) {
     return alphabet[a];
 }
 
-int IInputData::get_reverse_symbol(string a) {
+int inputdata::get_reverse_symbol(string a) {
     return r_alphabet[a];
 }
 
-std::string &IInputData::get_type(int a) {
+std::string &inputdata::get_type(int a) {
     return types[a];
 }
 
-int IInputData::get_reverse_type(std::string a) {
+int inputdata::get_reverse_type(std::string a) {
     return r_types[a];
 }
 
-Attribute *IInputData::get_trace_attribute(int attr) {
+attribute *inputdata::get_trace_attribute(int attr) {
     if(attr < trace_attributes.size()){
         return &trace_attributes[attr];
     }
     return nullptr;
 }
 
-Attribute *IInputData::get_symbol_attribute(int attr) {
+attribute *inputdata::get_symbol_attribute(int attr) {
     if(attr < symbol_attributes.size()){
         return &symbol_attributes[attr];
     }
     return nullptr;
 }
 
-Attribute *IInputData::get_attribute(int attr) {
+attribute *inputdata::get_attribute(int attr) {
     if(attr < symbol_attributes.size()){
         return &symbol_attributes[attr];
     }
@@ -44,43 +44,43 @@ Attribute *IInputData::get_attribute(int attr) {
     return nullptr;
 }
 
-int IInputData::get_num_symbol_attributes() {
+int inputdata::get_num_symbol_attributes() {
     return symbol_attributes.size();
 }
 
-int IInputData::get_num_trace_attributes() {
+int inputdata::get_num_trace_attributes() {
     return trace_attributes.size();
 }
 
-int IInputData::get_num_attributes() {
+int inputdata::get_num_attributes() {
     return get_num_trace_attributes() + get_num_symbol_attributes();
 }
 
-bool IInputData::is_splittable(int attr) {
+bool inputdata::is_splittable(int attr) {
     return get_attribute(attr)->splittable;
 }
 
-bool IInputData::is_distributionable(int attr) {
+bool inputdata::is_distributionable(int attr) {
     return get_attribute(attr)->distributionable;
 }
 
-bool IInputData::is_discrete(int attr) {
+bool inputdata::is_discrete(int attr) {
     return get_attribute(attr)->discrete;
 }
 
-bool IInputData::is_target(int attr) {
+bool inputdata::is_target(int attr) {
     return get_attribute(attr)->target;
 }
 
-int IInputData::get_types_size() {
+int inputdata::get_types_size() {
     return types.size();
 }
 
-int IInputData::get_alphabet_size() {
+int inputdata::get_alphabet_size() {
     return alphabet.size();
 }
 
-int IInputData::symbol_from_string(std::string symbol) {
+int inputdata::symbol_from_string(std::string symbol) {
     if(r_alphabet.find(symbol) == r_alphabet.end()){
         r_alphabet[symbol] = alphabet.size();
         alphabet.push_back(symbol);
@@ -88,13 +88,13 @@ int IInputData::symbol_from_string(std::string symbol) {
     return r_alphabet[symbol];
 }
 
-std::string IInputData::string_from_symbol(int symbol) {
+std::string inputdata::string_from_symbol(int symbol) {
     if(symbol == -1) return "fin";
     if(alphabet.size() < symbol) return "_";
     return alphabet[symbol];
 }
 
-int IInputData::type_from_string(std::string type) {
+int inputdata::type_from_string(std::string type) {
     if(r_types.find(type) == r_types.end()){
         r_types[type] = types.size();
         types.push_back(type);
@@ -102,18 +102,18 @@ int IInputData::type_from_string(std::string type) {
     return r_types[type];
 }
 
-std::string IInputData::string_from_type(int type) {
+std::string inputdata::string_from_type(int type) {
     return types[type];
 }
 
-void IInputData::add_traces_to_apta(apta *the_apta) {
+void inputdata::add_traces_to_apta(apta *the_apta) {
     for(auto* tr : traces){
         add_trace_to_apta(tr, the_apta);
         if(!ADD_TAILS) tr->erase();
     }
 }
 
-void IInputData::add_trace_to_apta(Trace *tr, apta *the_apta) {
+void inputdata::add_trace_to_apta(trace *tr, apta *the_apta) {
     int depth = 0;
     apta_node* node = the_apta->root;
     /*if(node->access_trace == nullptr){
@@ -124,7 +124,7 @@ void IInputData::add_trace_to_apta(Trace *tr, apta *the_apta) {
         tr->reverse();
     }
 
-    Tail* t = tr->head;
+    tail* t = tr->head;
 
     // TODO: re enable after rename
 //    while(t != nullptr){
@@ -154,21 +154,21 @@ void IInputData::add_trace_to_apta(Trace *tr, apta *the_apta) {
 //    }
 }
 
-Trace *IInputData::access_trace(Tail *t) {
+trace *inputdata::access_trace(tail *t) {
     t = t->split_to_end();
     int length = 1;
-    Trace* tr = mem_store::createTrace(this);
+    trace* tr = mem_store::createTrace(this);
     tr->sequence = t->tr->sequence;
     tr->type = t->tr->type;
     for(int i = 0; i < this->get_num_trace_attributes(); ++i){
         tr->trace_attr[i] = t->tr->trace_attr[i];
     }
     if(STORE_ACCESS_STRINGS){
-        Tail* ti = t->tr->head->split_to_end();
-        Tail* tir = this->access_tail(ti);
+        tail* ti = t->tr->head->split_to_end();
+        tail* tir = this->access_tail(ti);
         tr->head = tir;
         tir->tr = tr;
-        Tail* temp = tr->head;
+        tail* temp = tr->head;
         while(ti != t){
             length++;
             ti = ti->future();
@@ -189,8 +189,8 @@ Trace *IInputData::access_trace(Tail *t) {
     return tr;
 }
 
-Tail *IInputData::access_tail(Tail *t) {
-    Tail* res = mem_store::createTail(nullptr);
+tail *inputdata::access_tail(tail *t) {
+    tail* res = mem_store::createTail(nullptr);
     res->td->index = t->td->index;
     res->td->symbol = t->td->symbol;
     for(int i = 0; i < this->get_num_symbol_attributes(); ++i){

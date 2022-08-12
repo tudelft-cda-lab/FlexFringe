@@ -1,13 +1,13 @@
 #include <cassert>
 #include "inputdatalocator.h"
 
-IInputData* InputDataLocator::reader_;
+inputdata* inputdata_locator::reader_;
 
-void InputDataLocator::provide(IInputData *reader) {
-    InputDataLocator::reader_ = reader;
+void inputdata_locator::provide(inputdata *reader) {
+    inputdata_locator::reader_ = reader;
 }
 
-IInputData* InputDataLocator::get() {
-    assert(InputDataLocator::reader_ != nullptr);
-    return InputDataLocator::reader_;
+inputdata* inputdata_locator::get() {
+    assert(inputdata_locator::reader_ != nullptr);
+    return inputdata_locator::reader_;
 }

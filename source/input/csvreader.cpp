@@ -4,11 +4,11 @@
 
 using namespace std;
 
-void CSVInputData::read(istream &input_stream) {
+void csv_inputdata::read(istream &input_stream) {
     this->readHeader(input_stream);
 
     while(!input_stream.eof()) {
-        Trace *tr = this->readRow(input_stream);
+        trace *tr = this->readRow(input_stream);
 
         if (tr != nullptr && tr->get_end()->is_final()) {
             traces.push_back(tr);
@@ -16,9 +16,9 @@ void CSVInputData::read(istream &input_stream) {
     }
 
     while(!trace_map.empty()) {
-        Trace *tr = trace_map.begin()->second;
-        Tail* old_tail = tr->end_tail;
-        Tail* end_tail = mem_store::createTail(nullptr);
+        trace *tr = trace_map.begin()->second;
+        tail* old_tail = tr->end_tail;
+        tail* end_tail = mem_store::createTail(nullptr);
         end_tail->td->index = old_tail->get_index() + 1;
         end_tail->tr = tr;
         old_tail->set_future(end_tail);
@@ -31,7 +31,7 @@ void CSVInputData::read(istream &input_stream) {
     }
 }
 
-void CSVInputData::readHeader(istream &input_stream) {
+void csv_inputdata::readHeader(istream &input_stream) {
     string line;
     getline(input_stream,line);
     stringstream ls(line);
@@ -77,7 +77,7 @@ struct RowData {
     vector<string> data;
 };
 
-Trace* CSVInputData::readRow(istream &input_stream) {
+trace* csv_inputdata::readRow(istream &input_stream) {
     string line, cell;
     RowData rowData;
 
@@ -141,23 +141,23 @@ Trace* CSVInputData::readRow(istream &input_stream) {
 
     auto it = trace_map.find(id);
     if (it == trace_map.end()) {
-        Trace* new_trace = mem_store::createTrace(dynamic_cast<IInputData *>(this));
-        trace_map.insert(pair<string,Trace*>(id,new_trace));
+        trace* new_trace = mem_store::createTrace(dynamic_cast<inputdata *>(this));
+        trace_map.insert(pair<string,trace*>(id, new_trace));
     }
     it = trace_map.find(id);
-    Trace* tr = it->second;
+    trace* tr = it->second;
     tr->sequence = this->num_sequences++;
 
-    Tail* new_tail = mem_store::createTail(nullptr);
+    tail* new_tail = mem_store::createTail(nullptr);
     istringstream abbadingo_symbol_stream(abbadingo_symbol);
     read_abbadingo_symbol(abbadingo_symbol_stream, new_tail);
 
     it = trace_map.find(id);
-    Trace* new_tr = it->second;
+    trace* new_tr = it->second;
     istringstream abbadingo_type_stream(abbadingo_type);
     read_abbadingo_type(abbadingo_type_stream, new_tr);
 
-    Tail* old_tail = new_tr->end_tail;
+    tail* old_tail = new_tr->end_tail;
     if(old_tail == nullptr){
         new_tr->head = new_tail;
         new_tr->end_tail = new_tail;
@@ -182,12 +182,12 @@ Trace* CSVInputData::readRow(istream &input_stream) {
             }
             tr->type = r_types[type_string];
         }
-        Trace* new_window = mem_store::createTrace(dynamic_cast<IInputData *>(this));
+        trace* new_window = mem_store::createTrace(dynamic_cast<inputdata *>(this));
         new_window->type = tr->type;
         new_window->sequence = this->num_sequences;
-        Tail* t = tr->get_head();
+        tail* t = tr->get_head();
         int index = 0;
-        Tail* new_window_tail = nullptr;
+        tail* new_window_tail = nullptr;
         while(t != nullptr){
             if(index >= SLIDING_WINDOW_STRIDE){
                 if(new_window_tail == nullptr){
@@ -196,7 +196,7 @@ Trace* CSVInputData::readRow(istream &input_stream) {
                     new_window->end_tail = new_window_tail;
                     new_window->length = 1;
                 } else {
-                    Tail* old_tail = new_window_tail;
+                    tail* old_tail = new_window_tail;
                     new_window_tail = mem_store::createTail(nullptr);
                     old_tail->set_future(new_window_tail);
                     new_window->length++;
@@ -209,8 +209,8 @@ Trace* CSVInputData::readRow(istream &input_stream) {
             t = t->future();
             index++;
         }
-        Tail* old_tail = tr->end_tail;
-        Tail* end_tail = mem_store::createTail(nullptr);
+        tail* old_tail = tr->end_tail;
+        tail* end_tail = mem_store::createTail(nullptr);
         end_tail->td->index = old_tail->get_index() + 1;
         end_tail->tr = tr;
         old_tail->set_future(end_tail);
@@ -222,13 +222,13 @@ Trace* CSVInputData::readRow(istream &input_stream) {
     return tr;
 }
 
-string CSVInputData::string_from_symbol(int symbol) {
+string csv_inputdata::string_from_symbol(int symbol) {
     if(symbol == -1) return "fin";
     if(alphabet.size() < symbol) return "_";
     return alphabet[symbol];
 }
 
-void CSVInputData::read_abbadingo_type(istream &input_stream, Trace* new_trace){
+void csv_inputdata::read_abbadingo_type(istream &input_stream, trace* new_trace){
     string temp, type_string, type_attr, val;
     std::stringstream l1, l2;
 
@@ -256,11 +256,11 @@ void CSVInputData::read_abbadingo_type(istream &input_stream, Trace* new_trace){
     new_trace->type = r_types[type_string];
 }
 
-void CSVInputData::read_abbadingo_symbol(istream &input_stream, Tail* new_tail){
+void csv_inputdata::read_abbadingo_symbol(istream &input_stream, tail* new_tail){
     string temp, temp_symbol, data, type_string, type_attr, symbol_string, symbol_attr, val;
     std::stringstream l1, l2, l3;
 
-    TailData* td = new_tail->td;
+    tail_data* td = new_tail->td;
 
     input_stream >> std::ws;
     temp = string(std::istreambuf_iterator<char>(input_stream), {});
@@ -294,34 +294,34 @@ void CSVInputData::read_abbadingo_symbol(istream &input_stream, Tail* new_tail){
     }
 }
 
-const set<int> &CSVInputData::getIdCols() const {
+const set<int> &csv_inputdata::getIdCols() const {
     return id_cols;
 }
 
-const set<int> &CSVInputData::getTypeCols() const {
+const set<int> &csv_inputdata::getTypeCols() const {
     return type_cols;
 }
 
-const set<int> &CSVInputData::getSymbolCols() const {
+const set<int> &csv_inputdata::getSymbolCols() const {
     return symbol_cols;
 }
 
-const set<int> &CSVInputData::getDataCols() const {
+const set<int> &csv_inputdata::getDataCols() const {
     return data_cols;
 }
 
-const set<int> &CSVInputData::getTraceAttrCols() const {
+const set<int> &csv_inputdata::getTraceAttrCols() const {
     return trace_attr_cols;
 }
 
-const set<int> &CSVInputData::getSymbolAttrCols() const {
+const set<int> &csv_inputdata::getSymbolAttrCols() const {
     return symbol_attr_cols;
 }
 
-const vector<Attribute> &CSVInputData::getTraceAttributes() const {
+const vector<attribute> &csv_inputdata::getTraceAttributes() const {
     return trace_attributes;
 }
 
-const vector<Attribute> &CSVInputData::getSymbolAttributes() const {
+const vector<attribute> &csv_inputdata::getSymbolAttributes() const {
     return symbol_attributes;
 }

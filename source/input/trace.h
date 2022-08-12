@@ -4,22 +4,22 @@
 //#import "inputdata.h"
 #include <string>
 
-class IInputData;
-class Tail;
+class inputdata;
+class tail;
 
-class Trace {
+class trace {
 private:
     friend class Tail;
-    IInputData* inputData;
+    inputdata* inputData;
 
     // Only mem store is allowed to create and destroy
     friend class mem_store;
-    explicit Trace(IInputData*);
-    ~Trace();
+    explicit trace(inputdata*);
+    ~trace();
 
 public:
 
-    Trace() = delete;
+    trace() = delete;
 
     int sequence;
     int length;
@@ -28,16 +28,16 @@ public:
 
     int refs;
 
-    Tail* head;
-    Tail* end_tail;
+    tail* head;
+    tail* end_tail;
 
-    void initialize(IInputData *inputData);
+    void initialize(inputdata *inputData);
 
     inline int get_type() const{ return type; }
     inline int get_length(){ return length; }
     inline int get_sequence(){ return sequence; }
-    inline Tail* get_head(){ return head; }
-    inline Tail* get_end(){ return end_tail; }
+    inline tail* get_head(){ return head; }
+    inline tail* get_end(){ return end_tail; }
     inline void inc_refs(){ ++refs; }
     void erase();
 
