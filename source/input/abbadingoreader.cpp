@@ -5,7 +5,7 @@ void abbadingo_inputdata::read(std::istream &input_stream) {
     read_abbadingo_header(input_stream);
 
     for(int line = 0; line < max_sequences; ++line){
-        trace* new_trace = mem_store::createTrace(this);
+        trace* new_trace = mem_store::create_trace(this);
         read_abbadingo_sequence(input_stream, new_trace);
         new_trace->sequence = line;
         traces.push_back(new_trace);
@@ -22,7 +22,7 @@ void abbadingo_inputdata::read_abbadingo_sequence(istream &input_stream, trace* 
     input_stream >> length;
     new_trace->length = length;
 
-    tail* new_tail = mem_store::createTail(nullptr);
+    tail* new_tail = mem_store::create_tail(nullptr);
     new_tail->tr = new_trace;
     new_trace->head = new_tail;
 
@@ -30,7 +30,7 @@ void abbadingo_inputdata::read_abbadingo_sequence(istream &input_stream, trace* 
         read_abbadingo_symbol(input_stream, new_tail);
         new_tail->td->index = index;
         tail* old_tail = new_tail;
-        new_tail = mem_store::createTail(nullptr);
+        new_tail = mem_store::create_tail(nullptr);
         new_tail->tr = new_trace;
         old_tail->set_future(new_tail);
     }

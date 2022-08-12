@@ -28,7 +28,7 @@ trace::~trace(){
 
 void trace::erase(){
     --refs;
-    if(refs == 0) mem_store::deleteTrace(this);
+    if(refs == 0) mem_store::delete_trace(this);
 }
 
 void trace::reverse(){

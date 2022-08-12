@@ -393,8 +393,8 @@ bool state_merger::split(apta_node* new_node, apta_node* old_node, int depth, bo
 
     tail_iterator it = tail_iterator(old_node);
     tail* t = *it;
-    new_node->access_trace = inputdata::access_trace(new_node->tails_head->past());
-    if(t != nullptr) old_node->access_trace = inputdata::access_trace(t->past());
+    new_node->access_trace = inputdata_locator::get()->access_trace(new_node->tails_head->past());
+    if(t != nullptr) old_node->access_trace = inputdata_locator::get()->access_trace(t->past());
 
     if(test) {
         // test early stopping conditions

@@ -18,7 +18,7 @@ void csv_inputdata::read(istream &input_stream) {
     while(!trace_map.empty()) {
         trace *tr = trace_map.begin()->second;
         tail* old_tail = tr->end_tail;
-        tail* end_tail = mem_store::createTail(nullptr);
+        tail* end_tail = mem_store::create_tail(nullptr);
         end_tail->td->index = old_tail->get_index() + 1;
         end_tail->tr = tr;
         old_tail->set_future(end_tail);
@@ -141,14 +141,14 @@ trace* csv_inputdata::readRow(istream &input_stream) {
 
     auto it = trace_map.find(id);
     if (it == trace_map.end()) {
-        trace* new_trace = mem_store::createTrace(dynamic_cast<inputdata *>(this));
+        trace* new_trace = mem_store::create_trace(dynamic_cast<inputdata *>(this));
         trace_map.insert(pair<string,trace*>(id, new_trace));
     }
     it = trace_map.find(id);
     trace* tr = it->second;
     tr->sequence = this->num_sequences++;
 
-    tail* new_tail = mem_store::createTail(nullptr);
+    tail* new_tail = mem_store::create_tail(nullptr);
     istringstream abbadingo_symbol_stream(abbadingo_symbol);
     read_abbadingo_symbol(abbadingo_symbol_stream, new_tail);
 
@@ -182,7 +182,7 @@ trace* csv_inputdata::readRow(istream &input_stream) {
             }
             tr->type = r_types[type_string];
         }
-        trace* new_window = mem_store::createTrace(dynamic_cast<inputdata *>(this));
+        trace* new_window = mem_store::create_trace(dynamic_cast<inputdata *>(this));
         new_window->type = tr->type;
         new_window->sequence = this->num_sequences;
         tail* t = tr->get_head();
@@ -191,13 +191,13 @@ trace* csv_inputdata::readRow(istream &input_stream) {
         while(t != nullptr){
             if(index >= SLIDING_WINDOW_STRIDE){
                 if(new_window_tail == nullptr){
-                    new_window_tail = mem_store::createTail(nullptr);
+                    new_window_tail = mem_store::create_tail(nullptr);
                     new_window->head = new_window_tail;
                     new_window->end_tail = new_window_tail;
                     new_window->length = 1;
                 } else {
                     tail* old_tail = new_window_tail;
-                    new_window_tail = mem_store::createTail(nullptr);
+                    new_window_tail = mem_store::create_tail(nullptr);
                     old_tail->set_future(new_window_tail);
                     new_window->length++;
                     new_window->end_tail = new_window_tail;
@@ -210,7 +210,7 @@ trace* csv_inputdata::readRow(istream &input_stream) {
             index++;
         }
         tail* old_tail = tr->end_tail;
-        tail* end_tail = mem_store::createTail(nullptr);
+        tail* end_tail = mem_store::create_tail(nullptr);
         end_tail->td->index = old_tail->get_index() + 1;
         end_tail->tr = tr;
         old_tail->set_future(end_tail);

@@ -9,8 +9,9 @@
 
 #include "parameters.h"
 #include "evaluation_factory.h"
-
+#include "evaluate.h"
 #include "utility/loguru.hpp"
+#include "input/abbadingoreader.h"
 
 using namespace std;
 
@@ -134,16 +135,16 @@ void apta::print_dot(iostream& output){
 
             output << "\t\t" << n->number << " -> " << child->number << " [label=\"";
 
-            output << inputdata::get_symbol(it->first) << endl;
+            output << inputdata_locator::get()->get_symbol(it->first) << endl;
 
             n->data->print_transition_label(output, it->first);
             
             
             for(auto & min_attribute_value : g->min_attribute_values){
-                output << " " << inputdata::get_attribute(min_attribute_value.first) << " >= " << min_attribute_value.second;
+                output << " " << inputdata_locator::get()->get_attribute(min_attribute_value.first) << " >= " << min_attribute_value.second;
             }
             for(auto & max_attribute_value : g->max_attribute_values){
-                output << " " << inputdata::get_attribute(max_attribute_value.first) << " < " << max_attribute_value.second;
+                output << " " << inputdata_locator::get()->get_attribute(max_attribute_value.first) << " < " << max_attribute_value.second;
             }
 
             output << "\" ";
@@ -192,7 +193,7 @@ void apta_node::print_json_transitions(iostream& output){
         output << "\t\t\t\"source\" : \"" << number << "\",\n";
         output << "\t\t\t\"target\" : \"" << child->number << "\",\n";
 
-        output << "\t\t\t\"name\": \"" << inputdata::get_symbol(guard.first) << "\",\n";
+        output << "\t\t\t\"name\": \"" << inputdata_locator::get()->get_symbol(guard.first) << "\",\n";
         output << "\t\t\t\"appearances\": \"";
         data->print_transition_label_json(output, guard.first);
         output << "\"}\n";
@@ -210,15 +211,15 @@ void apta::print_json(iostream& output){
 
     output << "{\n";
     output << "\t\"types\" : [\n";
-    for (int i = 0; i < inputdata::get_types_size(); ++i) {
+    for (int i = 0; i < inputdata_locator::get()->get_types_size(); ++i) {
         if(i != 0) output << ",\n";
-        output << "\"" << inputdata::string_from_type(i) << "\"";
+        output << "\"" << inputdata_locator::get()->string_from_type(i) << "\"";
     }
     output << "\n\t],\n";
     output << "\t\"alphabet\" : [\n";
-    for (int i = 0; i < inputdata::get_alphabet_size(); ++i) {
+    for (int i = 0; i < inputdata_locator::get()->get_alphabet_size(); ++i) {
         if(i != 0) output << ",\n";
-        output << "\"" << inputdata::string_from_symbol(i)<< "\"";
+        output << "\"" << inputdata_locator::get()->string_from_symbol(i)<< "\"";
     }
     output << "\n\t],\n";
     output << "\t\"nodes\" : [\n";
@@ -325,15 +326,15 @@ void apta::print_sinks_json(iostream& output) const{
 
 void apta::read_json(istream& input_stream){
     json read_apta = json::parse(input_stream);
-    inputdata idat;
+    abbadingo_inputdata idat;
 
     map<int, apta_node*> states;
     //for each json line
     for (auto & i : read_apta["types"]) {
-        inputdata::type_from_string(i);
+        inputdata_locator::get()->type_from_string(i);
     }
     for (auto & i : read_apta["alphabet"]) {
-        inputdata::symbol_from_string(i);
+        inputdata_locator::get()->symbol_from_string(i);
     }
     for (int i = 0; i < read_apta["nodes"].size(); ++i) {
         json n = read_apta["nodes"][i];
@@ -366,7 +367,7 @@ void apta::read_json(istream& input_stream){
 
         string symbol = e["name"];
         //if symbol not in alphabet, add it
-        int symbol_nr = inputdata::symbol_from_string(symbol);
+        int symbol_nr = idat.symbol_from_string(symbol);
 
         string source_string = e["source"];
         string target_string = e["target"];
@@ -423,7 +424,7 @@ void apta_node::add_tail(tail* t){
 
     if(access_trace == nullptr){
         if(t->past() != nullptr)
-            access_trace = inputdata::access_trace(t->past());
+            access_trace = inputdata_locator::get()->access_trace(t->past());
         else
             access_trace = mem_store::create_trace();
     }
@@ -768,6 +769,16 @@ apta_node::~apta_node(){
         t = n;
     }*/
     delete data;
+}
+
+bool apta_node::is_sink() const {
+    if(sink != -1) return true;
+    return data->sink_type() != -1;
+}
+
+int apta_node::sink_type() const {
+    if(sink != -1) return sink;
+    return data->sink_type();
 }
 
 void apta::set_json_depths() const {

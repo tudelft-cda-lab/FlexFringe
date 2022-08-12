@@ -11,9 +11,6 @@ list< merge_refinement* > mem_store::mergeref_store;
 list< split_refinement* > mem_store::splitref_store;
 list< extend_refinement* > mem_store::extendref_store;
 
-list<trace*> mem_store::trace_store;
-list<tail*> mem_store::tail_store;
-
 void mem_store::delete_node(apta_node* node){
     assert(node != nullptr);
     node_store.push_front(node);
@@ -162,7 +159,7 @@ void mem_store::delete_trace(trace* trace) {
     trace_store.push_front(trace);
 }
 
-trace *mem_store::create_trace(inputdata* inputData = nullptr) {
+trace *mem_store::create_trace(inputdata* inputData) {
     if (inputData == nullptr) {
         // Will crash if no InputData can be located
         inputData = inputdata_locator::get();

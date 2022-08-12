@@ -64,7 +64,7 @@ void overlap4logs_data::print_state_style(iostream& output){
     } else {
         int stype = sink_type();
         output << " shape=box style=filled fillcolor=" << colors[stype] << " tooltip=\"";
-        for(int i = 0; i < inputdata::get_alphabet_size(); ++i){
+        for(int i = 0; i < inputdata_locator::get()->get_alphabet_size(); ++i){
             if(node->get_child(i) != 0 && node->get_child(i)->get_data()->sink_type() == stype){
                 apta_node* c = node->get_child(i);
                 for(set<string>::iterator it3 = reinterpret_cast<overlap4logs_data*>(c->get_data())->trace_ids.begin(); it3 != reinterpret_cast<overlap4logs_data*>(c->get_data())->trace_ids.end(); ++it3){
@@ -77,7 +77,7 @@ void overlap4logs_data::print_state_style(iostream& output){
 
 void overlap4logs_data::print_transition_label(iostream& output, int symbol){
     if(node->get_child(symbol) != 0){
-        output << " " << inputdata::get_symbol(symbol).c_str() << "\n";
+        output << " " << inputdata_locator::get()->get_symbol(symbol).c_str() << "\n";
 
         long minDelay = LONG_MAX;
         long maxDelay = -1;
@@ -335,7 +335,7 @@ int overlap4logs_data::num_sink_types(){
 /*** Output logic ***/
 int overlap4logs::print_labels(iostream& output, apta* aut, overlap4logs_data* data, int symbol) {
     int total = data->pos(symbol); // old: + data->neg(symbol);
-    output << " " << inputdata::get_symbol(symbol).c_str() << " (" << total << "=" << (((double)total*100)/(double)aut->get_root()->find()->get_size()) << "%)\n";
+    output << " " << inputdata_locator::get()->get_symbol(symbol).c_str() << " (" << total << "=" << (((double)total*100)/(double)aut->get_root()->find()->get_size()) << "%)\n";
 
     long minDelay = LONG_MAX;
     long maxDelay = -1;

@@ -5,6 +5,7 @@
 #include "greedy.h"
 #include "evaluation_factory.h"
 #include "parameters.h"
+#include "input/abbadingoreader.h"
 
 //TODO: refactor: These should probably be taken out of main.cpp
 evaluation_function* get_evaluation();
@@ -18,24 +19,27 @@ TEST_CASE( "Smoke test: greedy alergia on stamina 1_training", "[smoke]" ) {
     REQUIRE(eval != nullptr);
 
     ifstream input_stream("data/staminadata/1_training.txt");
+    if (!input_stream) {
+        cerr << "Error: " << strerror(errno);
+    }
     REQUIRE(input_stream);
 
-    auto* id = new inputdata();
-    id->read_abbadingo_header(input_stream);
+    auto* id = new abbadingo_inputdata();
+    inputdata_locator::provide(id);
+    id->read(input_stream);
 
     apta* the_apta = new apta();
     auto* merger = new state_merger(id, eval, the_apta);
     the_apta->set_context(merger);
     eval->set_context(merger);
 
-    id->read_abbadingo_file(input_stream);
     eval->initialize_before_adding_traces();
     id->add_traces_to_apta(the_apta);
     eval->initialize_after_adding_traces(merger);
 
     greedy_run(merger);
 
-    //print_current_automaton(merger, "/tmp/flexfringe_test_out", ".final");
+//    print_current_automaton(merger, "/tmp/flexfringe_test_out", ".final");
 
     //TODO: verify learned state machine is reasonable
 
@@ -52,15 +56,15 @@ TEST_CASE( "Smoke test: greedy edsm on stamina 1_training", "[smoke]" ) {
     ifstream input_stream("data/staminadata/1_training.txt");
     REQUIRE(input_stream);
 
-    auto* id = new inputdata();
-    id->read_abbadingo_header(input_stream);
+    auto* id = new abbadingo_inputdata();
+    inputdata_locator::provide(id);
+    id->read(input_stream);
 
     apta* the_apta = new apta();
     auto* merger = new state_merger(id, eval, the_apta);
     the_apta->set_context(merger);
     eval->set_context(merger);
 
-    id->read_abbadingo_file(input_stream);
     eval->initialize_before_adding_traces();
     id->add_traces_to_apta(the_apta);
     eval->initialize_after_adding_traces(merger);

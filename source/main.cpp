@@ -107,6 +107,7 @@ void run() {
     } else {
         id = new abbadingo_inputdata();
     }
+    inputdata_locator::provide(id);
     id->read(input_stream);
 
     apta* the_apta = new apta();

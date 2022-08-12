@@ -9,7 +9,9 @@ class tail;
 
 class trace {
 private:
-    friend class Tail;
+    friend class tail;
+    friend class apta_node;
+
     inputdata* inputData;
 
     // Only mem store is allowed to create and destroy

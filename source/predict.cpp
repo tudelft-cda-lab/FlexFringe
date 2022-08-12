@@ -419,22 +419,22 @@ void predict_trace(state_merger* m, ofstream& output, trace* tr){
 
     if(ending_state != nullptr){
         if(PREDICT_TYPE){
-            output << "; " << inputdata::string_from_type(tr->get_type());
+            output << "; " << inputdata_locator::get()->string_from_type(tr->get_type());
             output << "; " << ending_state->get_data()->predict_type_score(tr->get_head());
 
             int type_predict = ending_state->get_data()->predict_type(ending_tail);
-            output << "; " << inputdata::string_from_type(type_predict);
+            output << "; " << inputdata_locator::get()->string_from_type(type_predict);
             output << "; " << ending_state->get_data()->predict_type_score(type_predict);
         }
 
         if(PREDICT_SYMBOL) {
             if (ending_tail != nullptr) {
-                output << "; " << inputdata::string_from_symbol(ending_tail->get_symbol());
+                output << "; " << inputdata_locator::get()->string_from_symbol(ending_tail->get_symbol());
                 output << "; " << ending_state->get_data()->predict_symbol_score(ending_tail);
             } else output << "; 0; 0";
 
             int symbol_predict = ending_state->get_data()->predict_symbol(ending_tail);
-            output << "; " << inputdata::string_from_symbol(symbol_predict);
+            output << "; " << inputdata_locator::get()->string_from_symbol(symbol_predict);
             output << "; " << ending_state->get_data()->predict_symbol_score(symbol_predict);
         }
 
@@ -475,26 +475,27 @@ void predict_csv(state_merger* m, istream& input, ofstream& output){
     if(PREDICT_SYMBOL) output << "; next trace symbol; next symbol probability; predicted symbol; predicted symbol probability";
     output << endl;
 
-    while(!input.eof()) {
-        rownr += 1;
-        trace* tr = id->read_csv_row(input);
-        if(tr == nullptr) continue;
-        if(!tr->get_end()->is_final()){
-            continue;
-        }
-        predict_trace(m, output, tr);
-        tail* tail_it = tr->get_head();
-        //cerr << "predicted " << tr->to_string() << " " << tail_it->get_nr() << " " << tail_it->tr->get_sequence() << endl;
-        for(int i = 0; i < SLIDING_WINDOW_STRIDE; i++){
-            tail* tail_to_delete = tail_it;
-            while(tail_to_delete->split_from != nullptr) tail_to_delete = tail_to_delete->split_from;
-            if(tail_to_delete->get_index() < SLIDING_WINDOW_SIZE - SLIDING_WINDOW_STRIDE) continue;
-            add_visits(m, tail_to_delete->tr);
-            //cerr << "deleting " << tail_to_delete->tr->to_string() << " " << tail_to_delete->get_nr() << " " << tail_to_delete->tr->get_sequence() << endl;
-            tail_to_delete->tr->erase();
-            tail_it = tail_it->future();
-        }
-    }
+    //TODO fix
+//    while(!input.eof()) {
+//        rownr += 1;
+//        trace* tr = id->read_csv_row(input);
+//        if(tr == nullptr) continue;
+//        if(!tr->get_end()->is_final()){
+//            continue;
+//        }
+//        predict_trace(m, output, tr);
+//        tail* tail_it = tr->get_head();
+//        //cerr << "predicted " << tr->to_string() << " " << tail_it->get_nr() << " " << tail_it->tr->get_sequence() << endl;
+//        for(int i = 0; i < SLIDING_WINDOW_STRIDE; i++){
+//            tail* tail_to_delete = tail_it;
+//            while(tail_to_delete->split_from != nullptr) tail_to_delete = tail_to_delete->split_from;
+//            if(tail_to_delete->get_index() < SLIDING_WINDOW_SIZE - SLIDING_WINDOW_STRIDE) continue;
+//            add_visits(m, tail_to_delete->tr);
+//            //cerr << "deleting " << tail_to_delete->tr->to_string() << " " << tail_to_delete->get_nr() << " " << tail_to_delete->tr->get_sequence() << endl;
+//            tail_to_delete->tr->erase();
+//            tail_it = tail_it->future();
+//        }
+//    }
 }
 
 void predict(state_merger* m, istream& input, ofstream& output){
@@ -506,14 +507,15 @@ void predict(state_merger* m, istream& input, ofstream& output){
     if(PREDICT_SYMBOL) output << "; next trace symbol; next symbol probability; predicted symbol; predicted symbol probability";
     output << endl;
 
-    rownr=-1;
-    inputdata* id = m->get_dat();
-    for(int i = 0; i < id->get_max_sequences(); ++i) {
-        rownr += 1;
-        trace* tr = mem_store::create_trace();
-        id->read_abbadingo_sequence(input, tr);
-        predict_trace(m, output, tr);
-        add_visits(m, tr);
-        tr->erase();
-    }
+    // TODO fix
+//    rownr=-1;
+//    inputdata* id = m->get_dat();
+//    for(int i = 0; i < id->get_max_sequences(); ++i) {
+//        rownr += 1;
+//        trace* tr = mem_store::create_trace();
+//        id->read_abbadingo_sequence(input, tr);
+//        predict_trace(m, output, tr);
+//        add_visits(m, tr);
+//        tr->erase();
+//    }
 }

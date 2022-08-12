@@ -47,7 +47,7 @@ void merge_refinement::initialize(state_merger* m, double s, apta_node* l, apta_
 }
 
 split_refinement::split_refinement(state_merger* m, double s, apta_node* r, tail* t, int a){
-    split_point = inputdata::access_tail(t);
+    split_point = inputdata_locator::get()->access_tail(t);
     red = r;
     red_trace = m->get_trace_from_state(r);
     red_trace->inc_refs();

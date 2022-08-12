@@ -15,6 +15,7 @@ class tail;
 
 #include "evaluation_factory.h"
 #include "utility/loguru.hpp"
+#include "state_merger.h"
 
 using json = nlohmann::json;
 using namespace std;

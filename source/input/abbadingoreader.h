@@ -5,13 +5,13 @@
 #include "input/i_inputdata.h"
 
 class abbadingo_inputdata: public inputdata {
-private:
+public:
+    void read(std::istream &input_stream);
+
     void read_abbadingo_header(std::istream &input_stream);
     void read_abbadingo_sequence(std::istream &input_stream, trace*);
     void read_abbadingo_type(std::istream &input_stream, trace*);
     void read_abbadingo_symbol(std::istream &input_stream, tail*);
-public:
-    void read(std::istream &input_stream);
 };
 
 

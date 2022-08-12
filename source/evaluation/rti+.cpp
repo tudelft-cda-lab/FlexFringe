@@ -18,8 +18,8 @@ REGISTER_DEF_TYPE(rtiplus);
 vector< vector<double> > rtiplus::attribute_quantiles;
 
 rtiplus_data::rtiplus_data() : likelihood_data::likelihood_data() {
-    for(int i = 0; i < inputdata::get_num_attributes(); ++i){
-        if(inputdata::is_distributionable(i)) quantile_counts.push_back(vector<int>(4,0));
+    for(int i = 0; i < inputdata_locator::get()->get_num_attributes(); ++i){
+        if(inputdata_locator::get()->is_distributionable(i)) quantile_counts.push_back(vector<int>(4,0));
     }
     loglikelihood = 0.0;
 };
@@ -27,8 +27,8 @@ rtiplus_data::rtiplus_data() : likelihood_data::likelihood_data() {
 void rtiplus_data::initialize() {
     likelihood_data::initialize();
     int modifier = 0;
-    for(int i = 0; i < inputdata::get_num_attributes(); ++i){
-        if(!inputdata::is_distributionable(i)){
+    for(int i = 0; i < inputdata_locator::get()->get_num_attributes(); ++i){
+        if(!inputdata_locator::get()->is_distributionable(i)){
             ++modifier;
             continue;
         }
@@ -41,8 +41,8 @@ void rtiplus_data::add_tail(tail* t){
     alergia_data::add_tail(t);
     int modifier = 0;
 
-    for(int i = 0; i < inputdata::get_num_attributes(); ++i) {
-        if(!inputdata::is_distributionable(i)){
+    for(int i = 0; i < inputdata_locator::get()->get_num_attributes(); ++i) {
+        if(!inputdata_locator::get()->is_distributionable(i)){
             ++modifier;
             continue;
         }
@@ -65,8 +65,8 @@ void rtiplus_data::del_tail(tail* t){
     alergia_data::del_tail(t);
     int modifier = 0;
 
-    for(int i = 0; i < inputdata::get_num_attributes(); ++i) {
-        if(!inputdata::is_distributionable(i)){
+    for(int i = 0; i < inputdata_locator::get()->get_num_attributes(); ++i) {
+        if(!inputdata_locator::get()->is_distributionable(i)){
             ++modifier;
             continue;
         }
@@ -100,7 +100,7 @@ void rtiplus_data::update(evaluation_data* right){
     likelihood_data::update(right);
     rtiplus_data* other = (rtiplus_data*)right;
     for(int i = 0; i < quantile_counts.size(); ++i) {
-        if(!inputdata::is_distributionable(i)) continue;
+        if(!inputdata_locator::get()->is_distributionable(i)) continue;
         for(int j = 0; j < rtiplus::attribute_quantiles[i].size()+1; ++j){
             quantile_counts[i][j] += other->quantile_counts[i][j];
         }
@@ -111,7 +111,7 @@ void rtiplus_data::undo(evaluation_data* right){
     likelihood_data::undo(right);
     rtiplus_data* other = (rtiplus_data*)right;
     for(int i = 0; i < quantile_counts.size(); ++i) {
-        if(!inputdata::is_distributionable(i)) continue;
+        if(!inputdata_locator::get()->is_distributionable(i)) continue;
         for(int j = 0; j < rtiplus::attribute_quantiles[i].size()+1; ++j){
             quantile_counts[i][j] -= other->quantile_counts[i][j];
         }
@@ -311,8 +311,8 @@ void rtiplus::initialize_before_adding_traces(){
         if(!merger->get_dat()->is_distributionable(a)) continue;
         rtiplus::attribute_quantiles.push_back(vector<double>(3,0.0));
         multiset<double> values;
-        for(list<trace*>::iterator it = merger->get_dat()->traces_start();
-            it != merger->get_dat()->traces_end(); ++it){
+        for(list<trace*>::iterator it = merger->get_dat()->begin();
+            it != merger->get_dat()->end(); ++it){
             for(tail* t = (*it)->get_head(); t != (*it)->get_end(); t = t->future()){
                 values.insert(t->get_value(a));
             }

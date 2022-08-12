@@ -40,6 +40,7 @@ typedef map<int, double> bound_map;
 
 #include "parameters.h"
 #include "inputdata.h"
+#include "evaluate.h"
 
 typedef list< pair< tail*, int > > split_list;
 
@@ -354,14 +355,8 @@ public:
     inline bool is_white(){
         return source != 0 && is_red() == false && !source->find()->is_red();
     }
-    inline bool is_sink() const{
-        if(sink != -1) return true;
-        return data->sink_type() != -1;
-    }
-    inline int sink_type() const{
-        if(sink != -1) return sink;
-        return data->sink_type();
-    }
+    bool is_sink() const;
+    int sink_type() const;
 
     /** constructors and intializers */
     apta_node();

@@ -127,7 +127,7 @@ void alergia_data::read_json(json& data){
     for (auto& symbol : d.items()){
         string sym = symbol.key();
         string val = symbol.value();
-        symbol_counts[inputdata::symbol_from_string(sym)] = stoi(val);
+        symbol_counts[inputdata_locator::get()->symbol_from_string(sym)] = stoi(val);
     }
 };
 
@@ -139,7 +139,7 @@ void alergia_data::write_json(json& data){
     for(auto & symbol_count : symbol_counts) {
         int symbol = symbol_count.first;
         int value = symbol_count.second;
-        data["trans_counts"][inputdata::string_from_symbol(symbol)] = to_string(value);
+        data["trans_counts"][inputdata_locator::get()->string_from_symbol(symbol)] = to_string(value);
     }
 };
 

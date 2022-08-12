@@ -126,38 +126,37 @@ void inputdata::add_trace_to_apta(trace *tr, apta *the_apta) {
 
     tail* t = tr->head;
 
-    // TODO: re enable after rename
-//    while(t != nullptr){
-//        node->size = node->size + 1;
-//        if(ADD_TAILS) node->add_tail(t);
-//        node->data->add_tail(t);
-//
-//        depth++;
-//        if(t->is_final()){
-//            node->final = node->final + 1;
-//        } else {
-//            int symbol = t->get_symbol();
-//            if(node->child(symbol) == nullptr){
-//                if(node->size < PARENT_SIZE_THRESHOLD){
-//                    break;
-//                }
-//                auto* next_node = mem_store::create_node(nullptr);
-//                node->set_child(symbol, next_node);
-//                next_node->source = node;
-//                //next_node->access_trace = inputdata::access_trace(t);
-//                next_node->depth  = depth;
-//                next_node->number = ++(this->node_number);
-//            }
-//            node = node->child(symbol)->find();
-//        }
-//        t = t->future();
-//    }
+    while(t != nullptr){
+        node->size = node->size + 1;
+        if(ADD_TAILS) node->add_tail(t);
+        node->data->add_tail(t);
+
+        depth++;
+        if(t->is_final()){
+            node->final = node->final + 1;
+        } else {
+            int symbol = t->get_symbol();
+            if(node->child(symbol) == nullptr){
+                if(node->size < PARENT_SIZE_THRESHOLD){
+                    break;
+                }
+                auto* next_node = mem_store::create_node(nullptr);
+                node->set_child(symbol, next_node);
+                next_node->source = node;
+                //next_node->access_trace = inputdata::access_trace(t);
+                next_node->depth  = depth;
+                next_node->number = ++(this->node_number);
+            }
+            node = node->child(symbol)->find();
+        }
+        t = t->future();
+    }
 }
 
 trace *inputdata::access_trace(tail *t) {
     t = t->split_to_end();
     int length = 1;
-    trace* tr = mem_store::createTrace(this);
+    trace* tr = mem_store::create_trace(this);
     tr->sequence = t->tr->sequence;
     tr->type = t->tr->type;
     for(int i = 0; i < this->get_num_trace_attributes(); ++i){
@@ -190,7 +189,7 @@ trace *inputdata::access_trace(tail *t) {
 }
 
 tail *inputdata::access_tail(tail *t) {
-    tail* res = mem_store::createTail(nullptr);
+    tail* res = mem_store::create_tail(nullptr);
     res->td->index = t->td->index;
     res->td->symbol = t->td->symbol;
     for(int i = 0; i < this->get_num_symbol_attributes(); ++i){
@@ -198,4 +197,12 @@ tail *inputdata::access_tail(tail *t) {
     }
     res->td->data = t->td->data;
     return res;
+}
+
+int inputdata::get_num_sequences() {
+    return num_sequences;
+}
+
+int inputdata::get_max_sequences() {
+    return max_sequences;
 }

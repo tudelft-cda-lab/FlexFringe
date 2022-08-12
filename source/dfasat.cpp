@@ -1003,7 +1003,7 @@ dfasat::dfasat(state_merger* m, int best_solution){
     //ag->add_conflicts(merger);
     //ag->extract_types(50);
 
-    alphabet_size = inputdata::get_alphabet_size();
+    alphabet_size = inputdata_locator::get()->get_alphabet_size();
 
     red_states = merger->get_red_states();
     non_red_states = merger->get_candidate_states();

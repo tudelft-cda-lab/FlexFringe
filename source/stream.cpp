@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include "parameters.h"
+#include "input/abbadingoreader.h"
 
 // TODO: remove global objects, make them local
 int STREAM_COUNT = 0;
@@ -61,7 +62,7 @@ void greedyrun(state_merger* merger){
  * @param id Input-data wrapper object. 
  * @return int 
  */
-int stream_mode(state_merger* merger, ifstream& input_stream, inputdata* id) {
+int stream_mode(state_merger* merger, ifstream& input_stream, abbadingo_inputdata* id) {
     currentrun = new refinement_list();
     nextrun = new refinement_list();
        // first line has alphabet size and

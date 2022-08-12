@@ -28,11 +28,11 @@ void count_data::print_transition_label(iostream& output, int symbol){
 void count_data::print_state_label(iostream& output){
     output << "fin: ";
     for(auto & final_count : final_counts){
-        if(final_count.second > 0) output << inputdata::string_from_type(final_count.first) << ":" << final_count.second << " , ";
+        if(final_count.second > 0) output << inputdata_locator::get()->string_from_type(final_count.first) << ":" << final_count.second << " , ";
     }
     output << "\n path: ";
     for(auto & path_count : path_counts){
-        if(path_count.second > 0) output << inputdata::string_from_type(path_count.first) << ":" << path_count.second << " , ";
+        if(path_count.second > 0) output << inputdata_locator::get()->string_from_type(path_count.first) << ":" << path_count.second << " , ";
     }
 };
 
@@ -177,7 +177,7 @@ double count_data::predict_type_score(int t){
 int count_data::predict_type(tail*){
     int t = 0;
     double max_count = -1;
-    for(int i = 0; i < inputdata::get_types_size(); ++i){
+    for(int i = 0; i < inputdata_locator::get()->get_types_size(); ++i){
         double prob = predict_type_score(i);
         if(max_count == -1 || max_count < prob){
             max_count = prob;
@@ -258,6 +258,6 @@ bool count_data::sink_consistent(int type){
 
 int count_data::num_sink_types(){
     if(!USE_SINKS) return 0;
-    return inputdata::get_types_size();
+    return inputdata_locator::get()->get_types_size();
 };
 
