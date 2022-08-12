@@ -11,8 +11,8 @@ using Catch::Matchers::Equals;
 TEST_CASE("AbbadingoReader: smoke test", "[parsing]") {
 
     std::string input = "2 50\n"
-                        "1 2 12 26\n"
-                        "0 14 36 9 3 11 17 20 34 20 20 20 10\n";
+                        "1 3 12 26 29\n"
+                        "0 11 36 9 3 11 17 20 34 20 20 20 10\n";
     std::istringstream input_stream(input);
 
     auto reader = AbbadingoInputData();
@@ -20,8 +20,15 @@ TEST_CASE("AbbadingoReader: smoke test", "[parsing]") {
 
     reader.read(input_stream);
 
-    for (auto trace: reader) {
-        std::cout << trace->to_string() << std::endl;
-    }
+    std::list<std::string> expected_traces = {
+            "1 3 12 26 29",
+            "0 11 36 9 3 11 17 20 34 20 20 20 10"
+    };
 
+    for (auto trace: reader) {
+        auto expected = expected_traces.front();
+        auto actual = trace->to_string();
+        REQUIRE_THAT(actual, Equals(expected));
+        expected_traces.pop_front();
+    }
 }

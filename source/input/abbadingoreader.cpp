@@ -9,8 +9,6 @@ void AbbadingoInputData::read(std::istream &input_stream) {
         read_abbadingo_sequence(input_stream, new_trace);
         new_trace->sequence = line;
         traces.push_back(new_trace);
-        //add_trace_to_apta(new_trace, the_apta);
-        //if(!ADD_TAILS) new_trace->erase();
     }
 }
 
@@ -75,8 +73,7 @@ void AbbadingoInputData::read_abbadingo_symbol(istream &input_stream, Tail* new_
 
     TailData* td = new_tail->td;
 
-    input_stream >> std::ws;
-    temp = string(std::istreambuf_iterator<char>(input_stream), {});
+    input_stream >> temp;
     l1.str(temp);
     std::getline(l1,temp_symbol,'/');
     std::getline(l1,data);

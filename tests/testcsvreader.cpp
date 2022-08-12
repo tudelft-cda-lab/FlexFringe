@@ -23,8 +23,16 @@ TEST_CASE( "CSVReader: smoke test", "[parsing]" ) {
 
     reader.read(input_stream_whitespace);
 
+    std::list<std::string> expected_traces = {
+            "0 1 Received symbol b",
+            "0 2 Received symbol b Received symbol b"
+    };
+
     for (auto trace: reader) {
-        std::cout << trace->to_string() << std::endl;
+        auto expected = expected_traces.front();
+        auto actual = trace->to_string();
+        REQUIRE_THAT(actual, Equals(expected));
+        expected_traces.pop_front();
     }
 
 }
