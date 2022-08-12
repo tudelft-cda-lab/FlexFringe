@@ -59,13 +59,16 @@ add_library(Source STATIC
         input/csvreader.h
         input/csvreader.cpp
         input/i_inputdata.h
+        input/i_inputdata.cpp
         input/trace.cpp
         input/trace.h
         input/inputdatalocator.cpp
         input/inputdatalocator.h
         input/tail.cpp input/tail.h
         input/attribute.cpp
-        input/attribute.h)
+        input/attribute.h
+        input/abbadingoreader.cpp
+        input/abbadingoreader.h)
 
 ## create CMakeLists.txt in evaluation directory
 set(cmakelists_eval "evaluation/CMakeLists.txt")

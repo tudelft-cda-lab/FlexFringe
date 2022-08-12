@@ -153,3 +153,49 @@ void IInputData::add_trace_to_apta(Trace *tr, apta *the_apta) {
 //        t = t->future();
 //    }
 }
+
+Trace *IInputData::access_trace(Tail *t) {
+    t = t->split_to_end();
+    int length = 1;
+    Trace* tr = mem_store::createTrace(this);
+    tr->sequence = t->tr->sequence;
+    tr->type = t->tr->type;
+    for(int i = 0; i < this->get_num_trace_attributes(); ++i){
+        tr->trace_attr[i] = t->tr->trace_attr[i];
+    }
+    if(STORE_ACCESS_STRINGS){
+        Tail* ti = t->tr->head->split_to_end();
+        Tail* tir = this->access_tail(ti);
+        tr->head = tir;
+        tir->tr = tr;
+        Tail* temp = tr->head;
+        while(ti != t){
+            length++;
+            ti = ti->future();
+            temp = this->access_tail(ti);
+            tir->set_future(temp);
+            tir = temp;
+            tir->tr = tr;
+        }
+        tr->refs = 1;
+        tr->length = length;
+        tr->end_tail = temp;
+    } else {
+        tr->head = this->access_tail(t);
+        tr->refs = 1;
+        tr->length = 1;
+        tr->end_tail = tr->head;
+    }
+    return tr;
+}
+
+Tail *IInputData::access_tail(Tail *t) {
+    Tail* res = mem_store::createTail(nullptr);
+    res->td->index = t->td->index;
+    res->td->symbol = t->td->symbol;
+    for(int i = 0; i < this->get_num_symbol_attributes(); ++i){
+        res->td->attr[i] = t->td->attr[i];
+    }
+    res->td->data = t->td->data;
+    return res;
+}

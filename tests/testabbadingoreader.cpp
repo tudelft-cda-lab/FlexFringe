@@ -1,27 +1,24 @@
 
 #include "catch.hpp"
-#include "input/csvreader.h"
+#include "input/abbadingoreader.h"
+#include "input/inputdatalocator.h"
 #include <cstdio>
 #include <sstream>
 #include <iostream>
 
 using Catch::Matchers::Equals;
 
-TEST_CASE( "AbbadingoReader: smoke test", "[parsing]" ) {
-    // This tests makes sure that having spaces in front of the column names in the header
-    // does not break things, as it caused issues recognizing the special column types before
-    // (e.g. [timestamp, id, symb] vs [timestamp,id,symb])
+TEST_CASE("AbbadingoReader: smoke test", "[parsing]") {
 
-    std::string input_whitespace = "timestamp, id, symb\n"
-                                   "2022-08-04T11:00:14.707375+0200, 670edd27, Received symbol b\n"
-                                   "2022-08-04T11:00:14.707375+0200, 670edd27, Received symbol b\n"
-                                   "2022-08-04T11:00:14.707375+0200, 670edd28, Received symbol b";
-    std::istringstream input_stream_whitespace(input_whitespace);
+    std::string input = "2 50\n"
+                        "1 2 12 26\n"
+                        "0 14 36 9 3 11 17 20 34 20 20 20 10\n";
+    std::istringstream input_stream(input);
 
     auto reader = AbbadingoInputData();
     InputDataLocator::provide(&reader);
 
-    reader.read(input_stream_whitespace);
+    reader.read(input_stream);
 
     for (auto trace: reader) {
         std::cout << trace->to_string() << std::endl;

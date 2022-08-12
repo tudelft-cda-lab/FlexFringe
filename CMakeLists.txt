@@ -72,6 +72,7 @@ if(NOT SKIP_TESTS)
             tests/smoketest.cpp
             tests/inputdata.cpp
             tests/testcsvreader.cpp
+            tests/testabbadingoreader.cpp
             source/main.cpp tests/input_data.h)
 
     if(MSVC)

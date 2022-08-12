@@ -31,12 +31,14 @@ protected:
 
 
 public:
+    using Iterator = std::list<Trace*>::iterator;
+
     virtual void read(std::istream &input_stream) = 0;
 
     void add_traces_to_apta(apta *the_apta);
     void add_trace_to_apta(Trace *tr, apta *the_apta);
 
-    inline std::string& get_symbol(int a);
+    std::string& get_symbol(int a);
     inline int get_reverse_symbol(std::string a);
     inline std::string& get_type(int a);
     inline int get_reverse_type(std::string a);
@@ -71,10 +73,13 @@ public:
     inline int symbol_from_string(std::string symbol);
     inline std::string string_from_symbol(int symbol);
     inline int type_from_string(std::string type);
-    inline std::string string_from_type(int type);
+    std::string string_from_type(int type);
 
-    Trace* access_trace(tail *t);
-    Tail* access_tail(tail *t);
+    Trace* access_trace(Tail *t);
+    Tail* access_tail(Tail *t);
+
+    Iterator begin() {return traces.begin();}
+    Iterator end() {return traces.end();}
 };
 
 #endif //FLEXFRINGE_IREADER_H

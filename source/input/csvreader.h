@@ -37,7 +37,7 @@ private:
     bool strip_whitespace = true;
 
 public:
-    using Iterator = std::list<Trace*>::iterator;
+
 
     void read(std::istream &input_stream) override;
 
@@ -65,8 +65,7 @@ public:
     const std::vector<Attribute> &getTraceAttributes() const;
     const std::vector<Attribute> &getSymbolAttributes() const;
 
-    Iterator begin() {return traces.begin();}
-    Iterator end() {return traces.end();}
+
 
 };
 
