@@ -49,6 +49,7 @@ extern bool TYPE_CONSISTENT;
 extern bool MERGE_ROOT;
 extern bool PRINT_WHITE;
 extern bool PRINT_BLUE;
+extern bool PRINT_RED;
 
 extern double EXTEND_SCORE;
 
@@ -97,6 +98,7 @@ extern bool PREDICT_TYPE_PATH;
 extern bool PREDICT_SYMBOL;
 extern bool PREDICT_TRACE;
 
+extern double ALIGN_SKIP_PENALTY;
 extern double ALIGN_DISTANCE_PENALTY;
 
 extern bool SLIDING_WINDOW_ADD_SHORTER;
@@ -127,4 +129,6 @@ extern int ENSEMBLE_RUNS;
 extern bool PERFORM_SYMBOL_CHECK;
 extern int IDENTICAL_KTAIL;
 
+extern bool STAR_FREE;
+extern bool SINK_TYPE;
 #endif

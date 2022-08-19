@@ -305,6 +305,9 @@ void inputdata::read_csv_file(istream &input_stream) {
         while(!tail_map.empty()) {
             trace *tr = tail_map.begin()->second;
             tail* old_tail = tr->end_tail;
+            tail_map.erase(tail_map.begin());
+            if(old_tail == nullptr) continue;
+
             tail *end_tail = mem_store::create_tail(nullptr);
             end_tail->td->index = old_tail->get_index() + 1;
             end_tail->tr = tr;
@@ -313,7 +316,6 @@ void inputdata::read_csv_file(istream &input_stream) {
 
             all_traces.push_back(tr);
             //add_trace_to_apta(tr, the_apta);
-            tail_map.erase(tail_map.begin());
             //if (!ADD_TAILS) tr->erase();
         }
     }
@@ -371,6 +373,7 @@ void trace::reverse(){
 
 void inputdata::add_traces_to_apta(apta* the_apta){
     for(auto* tr : all_traces){
+        //cerr << tr->to_string() << endl;
         add_trace_to_apta(tr, the_apta);
         if(!ADD_TAILS) tr->erase();
     }
@@ -389,6 +392,8 @@ void inputdata::add_trace_to_apta(trace* tr, apta* the_apta){
 
     tail* t = tr->head;
 
+    cerr << tr->to_string() << endl;
+
     while(t != nullptr){
         node->size = node->size + 1;
         if(ADD_TAILS) node->add_tail(t);
@@ -401,7 +406,7 @@ void inputdata::add_trace_to_apta(trace* tr, apta* the_apta){
             int symbol = t->get_symbol();
             if(node->child(symbol) == nullptr){
                 if(node->size < PARENT_SIZE_THRESHOLD){
-                    break;
+                    //break;
                 }
                 auto* next_node = mem_store::create_node(nullptr);
                 node->set_child(symbol, next_node);

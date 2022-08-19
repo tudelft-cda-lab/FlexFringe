@@ -18,47 +18,6 @@ inline void apta_node::set_child(tail* t, apta_node* node){
     set_child(t->get_symbol(), node);
 };
 
-bool apta_node::is_tree_identical(apta_node* other, int max_depth){
-    if(max_depth == 0) return true;
-    if(other == nullptr) return false;
-    other = other->find();
-
-    for(auto & guard : other->guards) {
-        if(guard.second->target != nullptr){
-            if(child(guard.first) == nullptr) return false;
-            if(!child(guard.first)->find()->is_tree_identical(guard.second->target->find(), max_depth - 1)) return false;
-        }
-    }
-    for(auto & guard : guards) {
-        if(guard.second->target != nullptr){
-            if(other->child(guard.first) == nullptr) return false;
-        }
-    }
-    return true;
-}
-
-bool apta_node::is_path_identical(apta_node* other, int max_depth){
-    int ngram = max_depth;
-    apta_node* l = this;
-    apta_node* r = other;
-    while(ngram != 0 && l != nullptr && r != nullptr){
-        l = l->find();
-        r = r->find();
-
-        if(l->access_trace->get_end() == nullptr && r->access_trace->get_end() != nullptr) return false;
-        if(l->access_trace->get_end() != nullptr && r->access_trace->get_end() == nullptr) return false;
-        if(l->access_trace->get_end() == nullptr && r->access_trace->get_end() == nullptr) return true;
-        if(l->access_trace->get_end()->get_symbol() != r->access_trace->get_end()->get_symbol()) return false;
-
-        ngram--;
-        l = l->source;
-        r = r->source;
-        if(l == nullptr && r == nullptr) return true;
-        if(l == nullptr || r == nullptr) return false;
-    }
-    return true;
-}
-
 bool apta_guard::bounds_satisfy(tail* t){
     for(auto & min_attribute_value : min_attribute_values){
         if(t->get_value(min_attribute_value.first) < min_attribute_value.second) return false;
@@ -68,7 +27,6 @@ bool apta_guard::bounds_satisfy(tail* t){
     }
     return true;
 }
-
 
 /* constructors and destructors */
 apta::apta(){
@@ -95,6 +53,8 @@ void apta::print_dot(iostream& output){
         if (!n->data->print_state_true()) {
             continue;
         }
+
+        if(!PRINT_RED && n->red) continue;
 
         if (!PRINT_WHITE && !n->red) {
             if (n->source != nullptr) {
@@ -124,6 +84,8 @@ void apta::print_dot(iostream& output){
             apta_guard* g = it->second;
             apta_node* child = it->second->target->find();
             if(DEBUGGING) child = it->second->target;
+
+            if(!PRINT_RED && n->red) continue;
 
             if (!PRINT_WHITE && !child->red) {
                 if (!n->red)
@@ -226,6 +188,8 @@ void apta::print_json(iostream& output){
     for(merged_APTA_iterator Ait = merged_APTA_iterator(root); *Ait != nullptr; ++Ait) {
         apta_node *n = *Ait;
 
+        if(!PRINT_RED && n->red) continue;
+
         if (!PRINT_WHITE && !n->red) {
             if (n->source != nullptr) {
                 if (!n->source->find()->red)
@@ -248,6 +212,8 @@ void apta::print_json(iostream& output){
     first = true;
     for(merged_APTA_iterator Ait = merged_APTA_iterator(root); *Ait != nullptr; ++Ait) {
         apta_node *n = *Ait;
+
+        if(!PRINT_RED && n->red) continue;
 
         if (!PRINT_WHITE && !n->red) {
             if (n->source != nullptr) {
@@ -540,54 +506,21 @@ apta_guard* apta_node::guard(tail* t){
     return nullptr;
 }
 
-int apta_node::apta_distance(apta_node* right, int bound){
-    int dist = 0;
-    apta_node* l = this;
-    apta_node* r = right;
-    while(l != nullptr && r != nullptr){
-        if(l == r) break;
-
-        if(r->depth > l->depth) r = r->source;
-        else l = l->source;
-        dist++;
-        if(bound != -1 && dist >= bound) return dist;
-    }
-    return dist;
-}
-
-int apta_node::merged_apta_distance(apta_node* right, int bound){
-    int dist = 0;
-    apta_node* l = this;
-    apta_node* r = right;
-    while(l != nullptr && r != nullptr){
-        l = l->find();
-        r = r->find();
-        if(l == r) break;
-
-        if(r->depth > l->depth) r = r->source;
-        else l = l->source;
-        dist++;
-        if(bound != -1 && dist >= bound) return bound;
-    }
-    return dist;
-}
-
-int apta_node::num_distinct_sources(){
-    set<apta_node*> sources;
-    sources.insert(find());
+set<apta_node*>* apta_node::get_sources(){
+    auto* sources = new set<apta_node*>();
+    sources->insert(find());
     if(source != nullptr){
-        sources.insert(source->find());
+        sources->insert(source->find());
         for(apta_node* n = representative_of; n != nullptr; n = n->next_merged_node){
             if(n->source != nullptr){
-                sources.insert(n->source->find());
+                sources->insert(n->source->find());
             }
         }
     }
-    return (int) sources.size();
+    return sources;
 }
 
 /* iterators for the APTA and merged APTA */
-
 APTA_iterator::APTA_iterator(apta_node* start){
     base = start;
     current = start;
@@ -771,10 +704,15 @@ apta_node::~apta_node(){
 }
 
 void apta::set_json_depths() const {
-    for(merged_APTA_iterator Ait = merged_APTA_iterator(root); *Ait != nullptr; ++Ait){
-        apta_node* n = *Ait;
-        if(n->source == nullptr) n->depth = 0;
-        else n->depth = n->source->find()->depth + n->num_distinct_sources();
+    for(merged_APTA_iterator Ait = merged_APTA_iterator(root); *Ait != nullptr; ++Ait) {
+        apta_node *n = *Ait;
+        if (n->source == nullptr){
+            n->depth = 0;
+        } else {
+            set<apta_node*>* sources = n->get_sources();
+            n->depth = n->source->find()->depth + sources->size();
+            delete sources;
+        }
     }
     set<int> depths;
     for(merged_APTA_iterator Ait = merged_APTA_iterator(root); *Ait != nullptr; ++Ait){
