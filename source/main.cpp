@@ -139,10 +139,12 @@ void run() {
 
         print_current_automaton(merger, OUTPUT_FILE, ".final");
     } else if(OPERATION_MODE == "stream") {
-       cout << "stream mode selected" << endl;
-       LOG_S(INFO) << "Stream mode selected, starting run";
+        cout << "stream mode selected" << endl;
+        LOG_S(INFO) << "Stream mode selected, starting run";
 
-        //stream_mode(merger, param, input_stream, &id);
+        stream_object stream_obj;
+        stream_obj.stream_mode(merger, input_stream, id);
+
         print_current_automaton(merger, OUTPUT_FILE, ".final");
     } else if(OPERATION_MODE == "search") {
         cout << "search mode selected" << endl;
@@ -369,7 +371,7 @@ int main(int argc, char *argv[]){
     app.add_option("--numoftables", NROWS_SKETCHES, "Number of rows of sketches upon initialization.");
     app.add_option("--vectordimension", NCOLUMNS_SKETCHES, "Number of columns of sketches upon initialization.");
     app.add_option("--distancemetric", DISTANCE_METRIC_SKETCHES, "The distance metric when comparing the sketches. 1 hoeffding-bound and cosine-similarity for score, 2 hoeffding bound in both, 3 like 1 but pooled. Default: 1");
-    app.add_option("--randominitialization", RANDOM_INITIALIZATION_SKETCHES, "If 0 (zero), then initialize LSH deterministically. Elsewise, LSH becomes random. Default: 0.");
+    app.add_option("--randominitialization", RANDOM_INITIALIZATION_SKETCHES, "If 0 (zero), then initialize CMS deterministically. Elsewise, CMS becomes random. Default: 0.");
     app.add_option("--futuresteps", NSTEPS_SKETCHES, "Number of steps into future when storing future in sketches. Default: 2.");
 
     CLI11_PARSE(app, argc, argv)
