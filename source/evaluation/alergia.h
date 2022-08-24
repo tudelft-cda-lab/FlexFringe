@@ -38,10 +38,6 @@ public:
     virtual void update(evaluation_data* right);
     virtual void undo(evaluation_data* right);
 
-    virtual bool is_low_count_sink();
-    virtual int sink_type();
-    virtual bool sink_consistent(int type);
-
     virtual void initialize();
 
     virtual void del_tail(tail *t);
@@ -81,7 +77,6 @@ public:
 
     virtual bool consistent(state_merger *merger, apta_node* left, apta_node* right);
 
-    virtual int num_sink_types();
     virtual double compute_score(state_merger*, apta_node* left, apta_node* right);
     virtual void reset(state_merger *merger);
 

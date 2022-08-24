@@ -3,6 +3,7 @@
 //
 
 #include "predict.h"
+#include "dfa_properties.h"
 #include <queue>
 
 struct tail_state_compare{ bool operator()(const pair<double, pair<apta_node*, tail*>> &a, const pair<double, pair<apta_node*, tail*>> &b) const{ return a.first < b.first; } };
@@ -11,8 +12,13 @@ int rownr = 1;
 map<int,double> sw_score_per_symbol;
 map<tail*,double> sw_individual_tail_score;
 
+double compute_skip_penalty(apta_node* node){
+    if(ALIGN_SKIP_PENALTY != 0) return ALIGN_SKIP_PENALTY;
+    return 0.0;
+}
+
 double compute_jump_penalty(apta_node* old_node, apta_node* new_node){
-    if(ALIGN_DISTANCE_PENALTY != 0) return ALIGN_DISTANCE_PENALTY * (double)(old_node->merged_apta_distance(new_node, -1));
+    if(ALIGN_DISTANCE_PENALTY != 0) return ALIGN_DISTANCE_PENALTY * (double)(merged_apta_distance(old_node, new_node, -1));
     return 0.0;
 }
 
@@ -107,10 +113,10 @@ void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
             // SKIP TO ALIGN
             // UNCLEAR whether this is needed.
             //cerr << "skip: " << compute_score(score, next_node, next_tail) << endl;
-            /* Q.push(pair<double, pair<apta_node *, tail *>>(
-                    compute_score(score, next_node, next_tail),
+            Q.push(pair<double, pair<apta_node *, tail *>>(
+                    update_score(score, next_node, next_tail) +
+                        compute_skip_penalty(next_node),
                     pair<apta_node *, tail *>(next_node, next_tail->future())));
-            */
         }
     }
 
@@ -166,8 +172,9 @@ void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
                             advance = true;
                             break;
                         }
-                    } /* else if (node == next_node) {
-                        double score = compute_score(old_score, node, current_tail);
+                    } else if (node == next_node) {
+                        double score = update_score(old_score, node, current_tail) +
+                                       compute_skip_penalty(node);
                         //cerr << "skip symbol " << old_score << " " << score << endl;
                         if (score == current_score) {
                             max_score = old_score;
@@ -175,11 +182,12 @@ void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
                             advance = true;
                             break;
                         }
-                    } */
+                    }
                 }
                 if (vm.find(index+1) != vm.end() && !current_tail->is_final()){
                     double old_score = vm[index+1];
-                    double score = update_score(old_score, node, current_tail->future());
+                    double score = update_score(old_score, node, current_tail->future())
+                            + compute_jump_penalty(node, next_node);
                     //cerr << "jump " << old_score << " " << score << endl;
                     if (score == current_score) {
                         max_score = old_score;

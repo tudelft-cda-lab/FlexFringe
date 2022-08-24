@@ -361,29 +361,6 @@ double alergia::compute_score(state_merger *merger, apta_node* left, apta_node* 
     return sum_diffs;
 };
 
-/* When is an APTA node a sink state?
- * sink states are not considered merge candidates */
-bool alergia_data::is_low_count_sink(){
-    return num_paths() + num_final() < SINK_COUNT;
-}
-
-int alergia_data::sink_type(){
-    if(!USE_SINKS) return -1;
-    if (is_low_count_sink()) return 0;
-    return -1;
-};
-
-bool alergia_data::sink_consistent(int type){
-    if(!USE_SINKS) return true;
-    if(type == 0) return is_low_count_sink();
-    return true;
-};
-
-int alergia::num_sink_types(){
-    if(!USE_SINKS) return 0;
-    return 1;
-};
-
 void alergia::reset(state_merger *merger){
     inconsistency_found = false;
     sum_diffs = 0.0;
