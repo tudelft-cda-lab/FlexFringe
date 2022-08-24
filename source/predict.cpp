@@ -23,6 +23,7 @@ double compute_jump_penalty(apta_node* old_node, apta_node* new_node){
 }
 
 double compute_score(apta_node* next_node, tail* next_tail){
+    if(PREDICT_ALIGN){ cerr << next_node->get_data()->align_score(next_tail) << endl; }
     if(PREDICT_ALIGN){ return next_node->get_data()->align_score(next_tail); }
     return next_node->get_data()->predict_score(next_tail);
 }
@@ -64,7 +65,7 @@ void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
         next_node = next.second.first;
         next_tail = next.second.second;
 
-        //cerr << score << endl;
+        cerr << score << endl;
 
         if (next_tail == nullptr) {
             break;
