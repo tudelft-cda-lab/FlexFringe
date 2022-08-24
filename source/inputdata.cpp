@@ -396,7 +396,7 @@ void inputdata::add_trace_to_apta(trace* tr, apta* the_apta){
 
     while(t != nullptr){
         node->size = node->size + 1;
-        if(ADD_TAILS) node->add_tail(t);
+        node->add_tail(t);
         node->data->add_tail(t);
 
         depth++;
