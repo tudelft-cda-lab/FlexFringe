@@ -371,11 +371,14 @@ void trace::reverse(){
 }
 
 
-void inputdata::add_traces_to_apta(apta* the_apta){
-    for(auto* tr : all_traces){
+void inputdata::add_traces_to_apta(apta* the_apta) {
+    for (auto *tr: all_traces) {
         //cerr << tr->to_string() << endl;
         add_trace_to_apta(tr, the_apta);
-        if(!ADD_TAILS) tr->erase();
+        if (!ADD_TAILS) tr->erase();
+    }
+    if (!ADD_TAILS) {
+        all_traces.clear();
     }
 }
 
