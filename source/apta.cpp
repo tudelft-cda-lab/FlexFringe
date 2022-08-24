@@ -384,8 +384,10 @@ void apta_guard::initialize(apta_guard* g){
 }
 
 void apta_node::add_tail(tail* t){
-    t->next_in_list = tails_head;
-    tails_head = t;
+    if(ADD_TAILS){
+        t->next_in_list = tails_head;
+        tails_head = t;
+    }
 
     if(access_trace == nullptr){
         if(t->past() != nullptr)
