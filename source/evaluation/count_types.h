@@ -107,6 +107,9 @@ public:
     virtual int predict_type(tail*);
 
     virtual double predict_type_score(int t);
+
+    int get_type_sink();
+    bool is_low_count_sink();
 };
 
 class count_driven: public evaluation_function {

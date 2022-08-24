@@ -39,16 +39,19 @@ void print_current_automaton(state_merger* merger, const string& output_file, co
         merger->print_json(output_file + append_string + ".json");
     }
     if(OUTPUT_SINKS && !PRINT_WHITE){
+        bool red_undo = PRINT_RED;
+        PRINT_RED = false;
         bool white_undo = PRINT_WHITE;
         PRINT_WHITE= true;
         bool blue_undo = PRINT_BLUE;
         PRINT_BLUE = true;
         if (OUTPUT_TYPE == "dot" || OUTPUT_TYPE == "both") {
-            merger->print_dot(output_file + append_string + ".dot");
+            merger->print_dot(output_file + append_string + "sinks.dot");
         }
         if (OUTPUT_TYPE == "json" || OUTPUT_TYPE == "both") {
-            merger->print_json(output_file + append_string + ".json");
+            merger->print_json(output_file + append_string + "sinks.json");
         }
+        PRINT_RED = red_undo;
         PRINT_WHITE = white_undo;
         PRINT_BLUE = blue_undo;
     }
@@ -356,6 +359,7 @@ int main(int argc, char *argv[]){
     app.add_option("--predictdata", PREDICT_TRACE, "Predicting calls the predict data functions from the evaluation function. Default=0.");
 
     app.add_option("--aligndistancepenalty", ALIGN_DISTANCE_PENALTY, "A penalty for jumping during alignment multiplied by the merged prefix tree distance. Default: 0.0.");
+    app.add_option("--alignskippenalty", ALIGN_SKIP_PENALTY, "A penalty for skipping during alignment. Default: 0.0.");
 
     app.add_option("--diffsize", DIFF_SIZE, "Behavioral differencing works by sampling diffsize traces and using these to compute KL-Divergence. Default=1000.");
     app.add_option("--diffmaxlength", DIFF_MAX_LENGTH, "The maximum length of traces sampled for differencing. Default=50.");

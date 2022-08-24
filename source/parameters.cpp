@@ -49,6 +49,7 @@ int MARKOVIAN_MODEL = 0;
 bool MERGE_ROOT = true;
 bool MERGE_WHEN_TESTING = true;
 bool MERGE_DATA = true;
+bool STAR_FREE = false;
 
 bool USE_SINKS = 0;
 int SINK_COUNT = 10;
@@ -59,6 +60,7 @@ bool SEARCH_SINKS = false;
 bool MERGE_IDENTICAL_SINKS = false;
 bool CONVERT_SINK_STATES = false;
 bool EXTEND_SINKS = true;
+bool SINK_TYPE = false;
 
 bool FINAL_PROBABILITIES = 0;
 bool USE_LOWER_BOUND = 0;
@@ -83,6 +85,7 @@ bool FORCING = 0;
 
 bool PRINT_WHITE = false;
 bool PRINT_BLUE = false;
+bool PRINT_RED = true;
 bool OUTPUT_SINKS = false;
 
 bool PERFORM_SYMBOL_CHECK = false;
@@ -112,6 +115,7 @@ int DISTANCE_METRIC_SKETCHES = 1;
 int RANDOM_INITIALIZATION_SKETCHES = 0;
 int NSTEPS_SKETCHES = 2;
 
+double ALIGN_SKIP_PENALTY = 0.0;
 double ALIGN_DISTANCE_PENALTY = 0.0;
 
 int DIFF_SIZE = 1000;

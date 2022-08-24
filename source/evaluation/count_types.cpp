@@ -161,10 +161,11 @@ void count_data::undo(evaluation_data* right){
 };
 
 double count_data::predict_type_score(int t){
-    double final_count = CORRECTION;
+    double final_count = 0.0;
     double divider_correction = CORRECTION * (double)final_counts.size();
     if(divider_correction == 0.0) divider_correction += CORRECTION;
     if(final_counts.find(t) != final_counts.end() && final_counts[t] != 0.0) final_count = (double)final_counts[t] / (double)(total_final + divider_correction);
+    final_count += (double)(CORRECTION) / (double)(total_final + divider_correction);
 
     if(!PREDICT_TYPE_PATH) return final_count;
     double path_count = CORRECTION;
@@ -230,7 +231,11 @@ void count_driven::reset(state_merger *merger){
 
 
 // sinks for evaluation data type
-int count_data::sink_type(){
+bool count_data::is_low_count_sink(){
+    return num_paths() + num_final() < SINK_COUNT;
+}
+
+int count_data::get_type_sink(){
     if(!USE_SINKS) return -1;
 
     int type = -1;
@@ -249,15 +254,30 @@ int count_data::sink_type(){
         }
     }
     return type;
-};
+}
 
-bool count_data::sink_consistent(int type){
-    if(!USE_SINKS) return true;
-    return sink_type() == type;
-};
+bool count_data::sink_consistent(int type) {
+    if (!USE_SINKS) return true;
+    if (SINK_TYPE && get_type_sink() == type) return true;
+    if (type == 0 && SINK_COUNT > 0 && is_low_count_sink()) return true;
+    return false;
+}
 
 int count_data::num_sink_types(){
     if(!USE_SINKS) return 0;
-    return inputdata::get_types_size();
-};
+    int result = 0;
+    if(SINK_TYPE) result += inputdata::get_types_size();
+    if(SINK_COUNT > 0) result += 1;
+    return result;
+}
+
+int count_data::sink_type(){
+    if(!USE_SINKS) return -1;
+    if(SINK_TYPE){
+        int result = get_type_sink();
+        if(result != -1) return result + 1;
+    }
+    if(SINK_COUNT > 0 && is_low_count_sink()) return 0;
+    return -1;
+}
 
