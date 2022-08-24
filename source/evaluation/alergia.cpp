@@ -208,7 +208,7 @@ double alergia_data::predict_symbol_score(int t){
 }
 
 double alergia_data::align_score(tail* t){
-    return log(predict_score(t));
+    return predict_score(t);
 }
 
 tail* alergia_data::sample_tail(){
