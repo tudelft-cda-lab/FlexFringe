@@ -400,7 +400,10 @@ void inputdata::add_trace_to_apta(trace* tr, apta* the_apta){
         } else {
             int symbol = t->get_symbol();
             if(node->child(symbol) == nullptr){
-                if(node->size < PARENT_SIZE_THRESHOLD){
+                if(RED_BLUE_THRESHOLD==0 and node->size < PARENT_SIZE_THRESHOLD){
+                    break;
+                }
+                if(RED_BLUE_THRESHOLD!=0 && !node->is_red() && !node->is_blue()){
                     break;
                 }
                 auto* next_node = mem_store::create_node(nullptr);
