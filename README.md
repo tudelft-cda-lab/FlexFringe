@@ -2,6 +2,12 @@
 
 flexfringe (formerly DFASAT), a flexible state-merging framework written in C++.
 
+## For this branch specifically ##
+
+This branch represents the publication "Learning state machines via efficient hashing of future traces", see https://arxiv.org/abs/2207.01516. 
+
+The experiments can be run via the 'perplexity_eval.sh' shell-script from a Linux command line. Only the ini-file in the first line has to be changed to switch from Alergia to CMS and back. It will produce a file called 'perplexities.txt', which can then be plotted by the 'plot_results.py' python script. The scrip can take multiple '.txt' files as produced by the shell script as well. 
+
 ## What this repositor contains ##
 
 This repository contains the latest release version of flexfringe.
