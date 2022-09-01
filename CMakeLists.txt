@@ -15,6 +15,8 @@ set(CMAKE_CXX_FLAGS "-Wall")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
+
 add_compile_definitions(LOGURU_WITH_STREAMS=1)
 
 include_directories("${PROJECT_SOURCE_DIR}"
