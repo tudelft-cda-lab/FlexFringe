@@ -22,6 +22,7 @@ string COMMAND_LINE = "";
 
 bool DEBUGGING = false;
 bool ADD_TAILS = true;
+bool RED_BLUE_THRESHOLD = false;
 double RANDOMIZE_SCORES = 0.0;
 int ENSEMBLE_RUNS = 1;
 int PARENT_SIZE_THRESHOLD = -1;
@@ -106,6 +107,13 @@ bool PREDICT_TYPE_PATH = false;
 bool PREDICT_SYMBOL = false;
 bool PREDICT_TRACE = true;
 bool PREDICT_DATA = false;
+
+// the count-min-sketches
+int NROWS_SKETCHES = 0;
+int NCOLUMNS_SKETCHES = 0;
+int DISTANCE_METRIC_SKETCHES = 1;
+int RANDOM_INITIALIZATION_SKETCHES = 0;
+int NSTEPS_SKETCHES = 2;
 
 double ALIGN_SKIP_PENALTY = 0.0;
 double ALIGN_DISTANCE_PENALTY = 0.0;

@@ -67,6 +67,7 @@ extern double RANDOMIZE_SCORES;
 
 extern bool ADD_TAILS;
 extern int PARENT_SIZE_THRESHOLD;
+extern bool RED_BLUE_THRESHOLD;
 
 extern bool PERFORM_DEPTH_CHECK;
 extern int DEPTH_CHECK_MAX_DEPTH;
@@ -110,6 +111,13 @@ extern double DIFF_MIN;
 extern int DIFF_MAX_LENGTH;
 
 extern bool STORE_ACCESS_STRINGS;
+
+// Count-min-sketches
+extern int NROWS_SKETCHES;
+extern int NCOLUMNS_SKETCHES;
+extern int DISTANCE_METRIC_SKETCHES;
+extern int RANDOM_INITIALIZATION_SKETCHES;
+extern int NSTEPS_SKETCHES;
 
 extern string HEURISTIC_NAME;
 extern string DATA_NAME;
