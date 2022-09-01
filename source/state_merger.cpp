@@ -718,10 +718,12 @@ void state_merger::add_trace(trace* tr){
     tail* t = tr->get_head();
     apta_node* n = aut->get_root();
     while(t != nullptr){
+        n->size = n->size + 1;
         n->add_tail(t);
         n->get_data()->add_tail(t);
         apta_node* r = n->rep();
         while(r != nullptr){
+            r->size = r->size + 1;
             r->get_data()->add_tail(t);
             r = r->rep();
         }
