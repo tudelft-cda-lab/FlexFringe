@@ -523,7 +523,7 @@ void apta_node::set_child(tail* t, apta_node* node){
             guards.erase(it);
     } else {
         apta_guard* g = new apta_guard();
-        guards.insert(pair<int,apta_guard*>(i,g));
+        guards.insert(pair<int,apta_guard*>(t->get_symbol(),g));
         g->target = node;
     }
 };
