@@ -70,8 +70,6 @@ public:
 
 
 class inputdata{
-    // TODO: not all public. Can we circumvent this class to have cleaner code?
-    // static json all_data;
     unordered_map<string, trace*> tail_map;
     list<trace*> all_traces;
 
