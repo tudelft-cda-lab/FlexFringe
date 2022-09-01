@@ -74,6 +74,9 @@ public:
     void perform_split(apta_node*, tail*, int);
     void undo_perform_split(apta_node*, tail*, int);
 
+    /* adding a trace to apta when merged, ensures that merges can be undone */
+    void add_trace(trace*);
+
     /* creating new red states */
     void extend(apta_node* blue);
     void undo_extend(apta_node* blue);

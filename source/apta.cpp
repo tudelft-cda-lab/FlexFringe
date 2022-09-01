@@ -14,9 +14,9 @@
 
 using namespace std;
 
-inline void apta_node::set_child(tail* t, apta_node* node){
+/*inline void apta_node::set_child(tail* t, apta_node* node){
     set_child(t->get_symbol(), node);
-};
+};*/
 
 bool apta_guard::bounds_satisfy(tail* t){
     for(auto & min_attribute_value : min_attribute_values){
@@ -444,7 +444,6 @@ void apta_node::initialize(apta_node* n){
     if(performed_splits != nullptr) performed_splits->clear();
 }
 
-
 apta_node* apta_node::child(tail* t){
         int symbol = t->get_symbol();
         for(auto it = guards.lower_bound(symbol); it != guards.upper_bound(symbol); ++it){
@@ -507,6 +506,27 @@ apta_guard* apta_node::guard(tail* t){
     }
     return nullptr;
 }
+
+void apta_node::set_child(tail* t, apta_node* node){
+    int symbol = t->get_symbol();
+    auto it = guards.lower_bound(symbol);
+    auto it_end = guards.upper_bound(symbol);
+    for(;it != it_end; ++it){
+        if(it->second->bounds_satisfy(t)){
+            break;
+        }
+    }
+    if(it != guards.end()){
+        if(node != 0)
+            it->second->target = node;
+        else
+            guards.erase(it);
+    } else {
+        apta_guard* g = new apta_guard();
+        guards.insert(pair<int,apta_guard*>(i,g));
+        g->target = node;
+    }
+};
 
 set<apta_node*>* apta_node::get_sources(){
     auto* sources = new set<apta_node*>();

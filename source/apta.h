@@ -305,6 +305,7 @@ public:
     apta_node* child(tail* t);
     apta_guard* guard(int i, apta_guard* g);
     apta_guard* guard(tail* t);
+    void set_child(tail* t, apta_node* node);
 
     /** getting target states via symbols only */
     inline apta_node* child(int i){
@@ -337,7 +338,6 @@ public:
             g->target = node;
         }
     };
-    inline void set_child(tail* t, apta_node* node);
     inline apta_node* get_child(int c){
         apta_node* rep = find();
         if(rep->child(c) != 0) return rep->child(c)->find();
