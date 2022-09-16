@@ -331,7 +331,7 @@ bool alergia::compute_tests(num_map& left_map, int left_total, int left_final,
 
 /* ALERGIA, consistency based on Hoeffding bound, only uses positive (type=1) data, pools infrequent counts */
 bool alergia::consistent(state_merger *merger, apta_node* left, apta_node* right){
-    if(inconsistency_found) return false;
+    //if(inconsistency_found) return false;
     auto* l = (alergia_data*) left->get_data();
     auto* r = (alergia_data*) right->get_data();
 

@@ -38,14 +38,14 @@ apta::apta(){
 }
 
 void apta::print_dot(iostream& output){
+    int ncounter = 0;
+    /*for(APTA_iterator Ait = APTA_iterator(root); *Ait != 0; ++Ait){
+        (*Ait)->number = ncounter++;
+    }*/
+
     output << "digraph DFA {\n";
     output << "\t" << root->find()->number << " [label=\"root\" shape=box];\n";
     output << "\t\tI -> " << root->find()->number << ";\n";
-    int ncounter = 0;
-    for(APTA_iterator Ait = APTA_iterator(root); *Ait != 0; ++Ait){
-        apta_node* n = *Ait;
-        n->number = ncounter++;
-    }
     for(APTA_iterator Ait = APTA_iterator(root); *Ait != 0; ++Ait){
         apta_node *n = *Ait;
         if(!DEBUGGING && n->rep() != nullptr) continue;
@@ -70,11 +70,15 @@ void apta::print_dot(iostream& output){
             output << n << ":#" << "\n";
             output << "rep#" << n->representative << "\n";
         }
-        output << n->number << ":#" << n->size << "\n";
-        n->data->print_state_label(output);
-        output << "\" ";
-        n->data->print_state_style(output);
-        if (!n->red) output << " style=dotted";
+        output << n->number << " #" << n->size << "\" ";
+        //n->data->print_state_label(output);
+        //output << "\" ";
+        //n->data->print_state_style(output);
+        if (n->is_red()) output << ", style=filled, fillcolor=\"firebrick1\"";
+        else if (n->is_blue()) output << ", style=filled, fillcolor=\"dodgerblue1\"";
+        else if (n->is_white()) output << ", style=filled, fillcolor=\"ghostwhite\"";
+        output << ", width=" << log(1 + log(1 + n->size));
+        output << ", height=" << log(1 + log(1 + n->size));
         output << ", penwidth=" << log(1 + n->size);
         output << "];\n";
 
@@ -98,7 +102,7 @@ void apta::print_dot(iostream& output){
 
             output << inputdata::get_symbol(it->first) << endl;
 
-            n->data->print_transition_label(output, it->first);
+            //n->data->print_transition_label(output, it->first);
             
             
             for(auto & min_attribute_value : g->min_attribute_values){
@@ -109,6 +113,7 @@ void apta::print_dot(iostream& output){
             }
 
             output << "\" ";
+            output << ", penwidth=" << log(1 + n->size);
             output << " ];\n";
         }
     }
