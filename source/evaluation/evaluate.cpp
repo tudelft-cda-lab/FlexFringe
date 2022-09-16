@@ -154,8 +154,9 @@ double evaluation_data::align_score(tail* t){
 };
 
 bool evaluation_data::align_consistent(tail* t){
-    if(node->child(t) != nullptr) return true;
-    return false;
+    if(t->is_final()) return false;
+    if(node->child(t) == nullptr) return false;
+    return true;
 };
 
 tail* evaluation_data::sample_tail() {

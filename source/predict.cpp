@@ -13,17 +13,17 @@ map<int,double> sw_score_per_symbol;
 map<tail*,double> sw_individual_tail_score;
 
 double compute_skip_penalty(apta_node* node){
-    if(ALIGN_SKIP_PENALTY != 0) return ALIGN_SKIP_PENALTY;
-    return 0.0;
+    if(ALIGN_SKIP_PENALTY != 0) return 1.0 + ALIGN_SKIP_PENALTY;
+    return 1.0;
 }
 
 double compute_jump_penalty(apta_node* old_node, apta_node* new_node){
-    if(ALIGN_DISTANCE_PENALTY != 0) return ALIGN_DISTANCE_PENALTY * (double)(merged_apta_distance(old_node, new_node, -1));
-    return 0.0;
+    if(ALIGN_DISTANCE_PENALTY != 0) return 1.0 + (ALIGN_DISTANCE_PENALTY * (double)(merged_apta_distance(old_node, new_node, -1)));
+    return 1.0;
 }
 
 double compute_score(apta_node* next_node, tail* next_tail){
-    if(PREDICT_ALIGN){ cerr << next_node->get_data()->align_score(next_tail) << endl; }
+    //if(PREDICT_ALIGN){ cerr << next_node->get_data()->align_score(next_tail) << endl; }
     if(PREDICT_ALIGN){ return next_node->get_data()->align_score(next_tail); }
     return next_node->get_data()->predict_score(next_tail);
 }
@@ -45,16 +45,17 @@ void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
 
     double score;
 
-    priority_queue<pair<double, pair<apta_node *, tail *>>,
-            vector<pair<double, pair<apta_node *, tail *>>>, tail_state_compare> Q;
+    priority_queue<pair<double, pair<apta_node*, tail *>>,
+            vector<pair<double, pair<apta_node*, tail *>>>, tail_state_compare> Q;
     map<apta_node *, map<int, double> > V;
+    map<apta_node *, apta_node*> T;
 
     state_set *states = m->get_all_states();
 
-    Q.push(pair<double, pair<apta_node *, tail *>>(log(1.0),
-                                                        pair<apta_node *, tail *>(n, t)));
+    Q.push(pair<double, pair<apta_node*, tail *>>(log(1.0),
+                                                        pair<apta_node*, tail *>(n, t)));
 
-    apta_node *next_node = nullptr;
+    apta_node* next_node = nullptr;
     tail *next_tail = nullptr;
 
     while (!Q.empty()) {
@@ -65,7 +66,7 @@ void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
         next_node = next.second.first;
         next_tail = next.second.second;
 
-        cerr << score << endl;
+        //cerr << score << " " << Q.size() << endl;
 
         if (next_tail == nullptr) {
             break;
@@ -75,17 +76,19 @@ void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
         }
 
         int index = next_tail->get_index();
+        //cerr << index << " " << next_node->get_number() << endl;
+
         if (V.find(next_node) != V.end() && V[next_node].rbegin()->first >= index) continue;
         V[next_node][index] = score;
 
-        //cerr << index << endl;
+        //cerr << index << " " << next_node->get_number() << endl;
 
         if (next_tail->is_final()) {
             // STOP RUN
             //cerr << "final: " << compute_score(score, next_node, next_tail) << endl;
             Q.push(pair<double, pair<apta_node *, tail *>>(
                     update_score(score, next_node, next_tail),
-                    pair<apta_node *, tail *>(pair<apta_node *, tail *>(next_node, 0))));
+                    pair<apta_node*, tail *>(next_node, 0)));
         } else {
             // FOLLOW TRANSITION
             apta_node *child = next_node->child(next_tail);
@@ -101,11 +104,12 @@ void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
 
             // JUMP TO ALIGN -- calling align consistent
             for(auto jump_child : *states){
+                if (jump_child == next_node) continue;
                 if (jump_child->get_data()->align_consistent(next_tail)) {
                     //apta_node *next_child = jump_child->child(next_tail)->find();
                     //cerr << "jump: " << compute_score(score, next_node, next_tail) << endl;
                     Q.push(pair<double, pair<apta_node *, tail *>>(
-                            update_score(score, next_node, next_tail) +
+                            update_score(score, next_node, next_tail) *
                                     compute_jump_penalty(next_node, jump_child),
                             pair<apta_node *, tail *>(jump_child, next_tail)));
                 }
@@ -115,7 +119,7 @@ void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
             // UNCLEAR whether this is needed.
             //cerr << "skip: " << compute_score(score, next_node, next_tail) << endl;
             Q.push(pair<double, pair<apta_node *, tail *>>(
-                    update_score(score, next_node, next_tail) +
+                    update_score(score, next_node, next_tail) *
                         compute_skip_penalty(next_node),
                     pair<apta_node *, tail *>(next_node, next_tail->future())));
         }
@@ -174,7 +178,7 @@ void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
                             break;
                         }
                     } else if (node == next_node) {
-                        double score = update_score(old_score, node, current_tail) +
+                        double score = update_score(old_score, node, current_tail) *
                                        compute_skip_penalty(node);
                         //cerr << "skip symbol " << old_score << " " << score << endl;
                         if (score == current_score) {
@@ -186,18 +190,25 @@ void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
                     }
                 }
                 if (vm.find(index+1) != vm.end() && !current_tail->is_final()){
-                    double old_score = vm[index+1];
-                    double score = update_score(old_score, node, current_tail->future())
-                            + compute_jump_penalty(node, next_node);
-                    //cerr << "jump " << old_score << " " << score << endl;
-                    if (score == current_score) {
-                        max_score = old_score;
-                        prev_node = node;
-                        advance = false;
+                    if (node->child(current_tail->future()) == nullptr
+                    && next_node->get_data()->align_consistent(current_tail->future()))
+                    {
+                        double old_score = vm[index+1];
+                        double score = update_score(old_score, node, current_tail->future())
+                            * compute_jump_penalty(node, next_node);
+                        //cerr << "jump " << old_score << " " << score << endl;
+                        if (score == current_score) {
+                            max_score = old_score;
+                            prev_node = node;
+                            advance = false;
+                            break;
+                        }
                     }
                 }
             }
         }
+        
+        //cerr << prev_node << endl;
 
         if(prev_node != nullptr) {
             state_sequence.push_front(next_node->get_number());

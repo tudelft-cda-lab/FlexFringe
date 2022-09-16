@@ -209,7 +209,7 @@ bool state_merger::merge(apta_node* left, apta_node* right, int depth, bool eval
         bool early_stop = false;
 
         if(early_stop_merge(left, right, depth, early_stop)) return early_stop;
-        if (evaluate && !eval->consistent(this, left, right)) return false;
+        if(evaluate && !eval->consistent(this, left, right)) return false;
     }
     
     if(perform){
@@ -251,7 +251,7 @@ bool state_merger::merge(apta_node* left, apta_node* right, int depth, bool eval
     if(evaluate) {
         eval->update_score_after_recursion(this, left, right);
     }
-    return result;
+    return true;
 }
 
 bool state_merger::merge(apta_node* left, apta_node* right) {
@@ -710,38 +710,6 @@ void state_merger::perform_merge(apta_node* left, apta_node* right){
 void state_merger::undo_perform_merge(apta_node* left, apta_node* right){
     undo_merge(left, right);
     num_merges--;
-}
-
-/* adds the trace to the unmerged apta, and performs merge updates
- * such that the current merges can be undone */
-void state_merger::add_trace(trace* tr){
-    tail* t = tr->get_head();
-    apta_node* n = aut->get_root();
-    while(t != nullptr){
-        n->size = n->size + 1;
-        n->add_tail(t);
-        n->get_data()->add_tail(t);
-        apta_node* r = n->rep();
-        while(r != nullptr){
-            r->size = r->size + 1;
-            r->get_data()->add_tail(t);
-            r = r->rep();
-        }
-
-        apta_node* c = n->child(t);
-        if(c == nullptr){
-            c = mem_store::create_node(nullptr);
-            n->set_child(t, c);
-            r = n->rep();
-            while(r != nullptr){
-                r->set_child(t, c);
-                r = r->rep();
-            }
-        }
-
-        n = c;
-        t = t->future();
-    }
 }
 
 void state_merger::depth_check_init(){
