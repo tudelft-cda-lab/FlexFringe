@@ -235,11 +235,6 @@ void run() {
 #ifndef UNIT_TESTING
 int main(int argc, char *argv[]){
 
-    loguru::g_stderr_verbosity = loguru::Verbosity_OFF;
-    loguru::init(argc, argv);
-    loguru::add_file("flexfringe.log", loguru::Append, loguru::Verbosity_MAX);
-    LOG_S(INFO) << "Starting flexfringe run";
-
     for(int i = 0; i < argc; i++) {
       COMMAND_LINE += string(argv[i]) + string(" ");
     }
@@ -266,6 +261,7 @@ int main(int argc, char *argv[]){
     app.add_option("tracefile", INPUT_FILE, "Name of the input file containing the traces, either in Abbadingo or JSON format.")->required();
     app.add_option("--outputfile", OUTPUT_FILE, "The prefix of the output file name. Default is same as input.");
     app.add_option("--output", OUTPUT_TYPE, "Switch between output in dot, json, or both (default) formats.");
+    app.add_option("--logpath", LOG_PATH, "The path to write the flexfringe log file to. Defaults to \"flexfringe.log\"");
     app.set_config("--ini", default_file_name, "Read an ini file", false);
     app.add_option("--mode", OPERATION_MODE, "batch (default), interactive, or stream depending on the mode of operation.");
     app.add_option("--heuristic-name,--heuristic_name", HEURISTIC_NAME, "Name of the merge heuristic to use; default count_driven. Use any heuristic in the evaluation directory. It is often beneficial to write your own, as heuristics are very application specific.")->required();
@@ -375,6 +371,12 @@ int main(int argc, char *argv[]){
     app.add_option("--futuresteps", NSTEPS_SKETCHES, "Number of steps into future when storing future in sketches. Default: 2.");
 
     CLI11_PARSE(app, argc, argv)
+
+    loguru::g_stderr_verbosity = loguru::Verbosity_OFF;
+    loguru::init(argc, argv);
+    loguru::add_file(LOG_PATH.c_str(), loguru::Append, loguru::Verbosity_MAX);
+
+    LOG_S(INFO) << "Starting flexfringe run";
 
     run();
 
