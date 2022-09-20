@@ -9,6 +9,7 @@ test-reports/
 # Binaries
 runtests
 flexfringe
+tests/tests
 
 # Output files
 *.json
