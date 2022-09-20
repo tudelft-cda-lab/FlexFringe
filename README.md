@@ -86,9 +86,14 @@ Logging is incomplete. *flexfringe* uses the loguru framework (see the [https://
 
 ## Who to talk to ##
 
-*  Sofia Tsoni (scientific programmer, maintainer)
-*  Christian Hammerschmidt (author of the online/streaming mode, interactive mode, and the flexible evaluation function mechanism)
-*  Sicco Verwer (original author; best to reach out to for questions on batch mode, RTI+ implementation, and SAT reduction)
+* Tom Catshoek (scientific programmer and maintainer)
+* Christian Hammerschmidt (author of the online/streaming mode, interactive mode, and the flexible evaluation function mechanism)
+* Sicco Verwer (original author; best to reach out to for questions on batch mode, RTI+ implementation, and SAT reduction)
+* Robert Baumgartner
+
+Former contributors include:
+*  Sofia Tsoni (formerly scientific programmer and maintainer)
+
 
 ## Badges ##
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/2f63a8167ec14bbe8122c3432b3ccfd5)](https://www.codacy.com/bb/chrshmmmr/dfasat/dashboard?utm_source=chrshmmmr@bitbucket.org&amp;utm_medium=referral&amp;utm_content=chrshmmmr/dfasat&amp;utm_campaign=Badge_Grade)
