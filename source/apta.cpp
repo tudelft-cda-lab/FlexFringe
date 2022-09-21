@@ -34,6 +34,7 @@ apta::apta(){
     LOG_S(INFO) << "Creating APTA data structure";
     root = new apta_node();
     root->red = true;
+    root->number = 0;
     merger = nullptr;
 }
 
