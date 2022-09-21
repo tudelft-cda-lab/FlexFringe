@@ -24,6 +24,13 @@ state_merger::state_merger(inputdata* d, evaluation_function* e, apta* a){
     right_depth_map = nullptr;
 }
 
+void state_merger::renumber_states(){
+    int ncounter = 0;
+    for(merged_APTA_iterator Ait = merged_APTA_iterator(aut->get_root()); *Ait != 0; ++Ait){
+        (*Ait)->number = ncounter++;
+    }
+}
+
 /**
  * @brief TODO
  * 

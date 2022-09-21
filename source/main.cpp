@@ -32,6 +32,7 @@ bool debugging_enabled = false;
  */
 
 void print_current_automaton(state_merger* merger, const string& output_file, const string& append_string){
+    merger->renumber_states();
     if (OUTPUT_TYPE == "dot" || OUTPUT_TYPE == "both") {
         merger->print_dot(output_file + append_string + ".dot");
     }

@@ -139,6 +139,8 @@ public:
     bool early_stop_merge(apta_node *left, apta_node *right, int depth, bool &val);
 
     void undo_split_single(apta_node *new_node, apta_node *old_node, tail *t);
+
+    void renumber_states();
 };
 
 #endif /* _STATE_MERGER_H_ */
