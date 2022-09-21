@@ -36,7 +36,7 @@ double update_score(double old_score, apta_node* next_node, tail* next_tail){
 
 list<int> state_sequence;
 list<double> score_sequence;
-list<bool> align_sequence;
+list<int> align_sequence;
 apta_node* ending_state = nullptr;
 tail* ending_tail = nullptr;
 
@@ -175,6 +175,7 @@ void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
                             max_score = old_score;
                             prev_node = node;
                             advance = true;
+                            align_sequence.push_front(1);
                             break;
                         }
                     } else if (node == next_node) {
@@ -185,6 +186,7 @@ void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
                             max_score = old_score;
                             prev_node = node;
                             advance = true;
+                            align_sequence.push_front(-2);
                             break;
                         }
                     }
@@ -201,6 +203,7 @@ void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
                             max_score = old_score;
                             prev_node = node;
                             advance = false;
+                            align_sequence.push_front(-1);
                             break;
                         }
                     }
@@ -211,9 +214,8 @@ void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
         //cerr << prev_node << endl;
 
         if(prev_node != nullptr) {
-            state_sequence.push_front(next_node->get_number());
+            if(!current_tail->is_final()) state_sequence.push_front(next_node->get_number());
             score_sequence.push_front(prev_node->get_data()->align_score(current_tail));
-            align_sequence.push_front(advance);
             current_score = max_score;
             next_node = prev_node;
             if(advance) current_tail = current_tail->past();
@@ -419,7 +421,7 @@ void predict_trace(state_merger* m, ofstream& output, trace* tr){
         output << "; ";
         write_list(align_sequence, output);
         int nr_misaligned = 0;
-        for(bool b : align_sequence){ if(!b) nr_misaligned++; }
+        for(int b : align_sequence){ if(b != 1) nr_misaligned++; }
         output << "; " << nr_misaligned;
     }
 
