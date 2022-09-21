@@ -102,7 +102,7 @@ void apta::print_dot(iostream& output){
 
             output << inputdata::get_symbol(it->first) << endl;
 
-            //n->data->print_transition_label(output, it->first);
+            n->data->print_transition_label(output, it->first);
             
             
             for(auto & min_attribute_value : g->min_attribute_values){
@@ -170,10 +170,10 @@ void apta::print_json(iostream& output){
     set_json_depths();
     int count = 0;
     root->depth = 0;
-    for(merged_APTA_iterator Ait = merged_APTA_iterator(root); *Ait != nullptr; ++Ait){
+    /*for(merged_APTA_iterator Ait = merged_APTA_iterator(root); *Ait != nullptr; ++Ait){
         apta_node* n = *Ait;
         n->number = count++;
-    }
+    }*/
 
     output << "{\n";
     output << "\t\"types\" : [\n";
