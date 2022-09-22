@@ -215,7 +215,7 @@ void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
 
         if(prev_node != nullptr) {
             if(!current_tail->is_final()) state_sequence.push_front(next_node->get_number());
-            score_sequence.push_front(prev_node->get_data()->align_score(current_tail));
+            score_sequence.push_front(current_score - max_score);
             current_score = max_score;
             next_node = prev_node;
             if(advance) current_tail = current_tail->past();
