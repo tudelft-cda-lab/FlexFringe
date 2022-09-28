@@ -66,7 +66,7 @@ void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
         next_node = next.second.first;
         next_tail = next.second.second;
 
-        //cerr << score << " " << Q.size() << endl;
+        cerr << score << " " << Q.size() << endl;
 
         if (next_tail == nullptr) {
             break;
@@ -145,10 +145,8 @@ void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
     //current_tail = current_tail->past();
 
     while(current_tail != nullptr){
-        //cerr << "current score : " << current_score << endl;
+        cerr << index << " current score : " << current_score << endl;
         int index = current_tail->get_index();
-
-        //cerr << index << endl;
 
         apta_node* prev_node = nullptr;
         double max_score = -1;
@@ -160,7 +158,7 @@ void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
                     double old_score = vm[index];
                     if (current_tail->is_final()){
                         double score = update_score(old_score, node, current_tail);
-                        //cerr << "final " << old_score << " " << score << endl;
+                        cerr << "final " << old_score << " " << score << endl;
                         if (score == current_score) {
                             max_score = old_score;
                             prev_node = node;
@@ -170,7 +168,7 @@ void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
                     }
                     if (node->child(current_tail) != 0 && node->child(current_tail)->find() == next_node) {
                         double score = update_score(old_score, node, current_tail);
-                        //cerr << "take transition " << old_score << " " << score << endl;
+                        cerr << "take transition " << old_score << " " << score << endl;
                         if (score == current_score) {
                             max_score = old_score;
                             prev_node = node;
@@ -181,7 +179,7 @@ void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
                     } else if (node == next_node) {
                         double score = update_score(old_score, node, current_tail) *
                                        compute_skip_penalty(node);
-                        //cerr << "skip symbol " << old_score << " " << score << endl;
+                        cerr << "skip symbol " << old_score << " " << score << endl;
                         if (score == current_score) {
                             max_score = old_score;
                             prev_node = node;
@@ -198,13 +196,28 @@ void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
                         double old_score = vm[index+1];
                         double score = update_score(old_score, node, current_tail->future())
                             * compute_jump_penalty(node, next_node);
-                        //cerr << "jump " << old_score << " " << score << endl;
+                        cerr << "jump " << old_score << " " << score << endl;
                         if (score == current_score) {
-                            max_score = old_score;
-                            prev_node = node;
-                            advance = false;
-                            align_sequence.push_front(-1);
-                            break;
+                            bool looping_state = false;
+                            if(old_score == current_score){
+                                int num_steps_equal = 0;
+                                for(auto sc : score_sequence){ if(sc == current_score) num_steps_equal++; }
+                                for(auto st : state_sequence){
+                                    num_steps_equal--;
+                                    if(num_steps_equal < 0) break;
+                                    if(st == next_node->get_number()){
+                                        looping_state = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            if(!looping_state){
+                                max_score = old_score;
+                                prev_node = node;
+                                advance = false;
+                                align_sequence.push_front(-1);
+                                break;
+                            }
                         }
                     }
                 }
