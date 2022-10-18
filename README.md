@@ -95,7 +95,7 @@ Former contributors include:
 *   Sofia Tsoni (formerly scientific programmer and maintainer)
 
 ## Badges ##
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/2f63a8167ec14bbe8122c3432b3ccfd5)](https://www.codacy.com/bb/chrshmmmr/dfasat/dashboard?utm_source=chrshmmmr@bitbucket.org&amp;utm_medium=referral&amp;utm_content=chrshmmmr/dfasat&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/ae975ed72f9c4e1bb19b18dc44aacf1f)](https://app.codacy.com/gh/tudelft-cda-lab/FlexFringe?utm_source=github.com&utm_medium=referral&utm_content=tudelft-cda-lab/FlexFringe&utm_campaign=Badge_Grade_Settings)
 
 ## Credits and Licences ##
 
