@@ -114,30 +114,27 @@ trace* csv_inputdata::readRow(istream &input_stream) {
     }
     if(symbol.empty()) symbol = "0";
 
-    string trace_attr;
+    vector<string> trace_attrs;
     for (auto i : trace_attr_cols){
-        if (!trace_attr.empty()) trace_attr.append(",");
-        trace_attr.append(row[i]);
+        trace_attrs.emplace_back(row[i]);
     }
 
-    string symbol_attr;
+    vector<string> symbol_attrs;
     for (auto i : symbol_attr_cols){
-        if (!symbol_attr.empty()) symbol_attr.append(",");
-        symbol_attr.append(row[i]);
+        symbol_attrs.emplace_back(row[i]);
     }
 
-    string data;
+    vector<string> data;
     for (auto i : data_cols) {
-        if (!data.empty()) data.append(",");
-        data.append(row[i]);
+        data.emplace_back(row[i]);
     }
 
-    string abbadingo_type = type;
-    abbadingo_type.append(":" + trace_attr);
-
-    string abbadingo_symbol = symbol;
-    abbadingo_symbol.append(":" + symbol_attr);
-    abbadingo_symbol.append("/" + data);
+//    string abbadingo_type = type;
+//    abbadingo_type.append(":" + trace_attr);
+//
+//    string abbadingo_symbol = symbol;
+//    abbadingo_symbol.append(":" + symbol_attr);
+//    abbadingo_symbol.append("/" + data);
 
     auto it = trace_map.find(id);
     if (it == trace_map.end()) {
@@ -256,6 +253,38 @@ void csv_inputdata::read_abbadingo_type(istream &input_stream, trace* new_trace)
     new_trace->type = r_types[type_string];
 }
 
+
+tail* csv_inputdata::make_tail(const string& id,
+                               const string& symbol,
+                               const string& type,
+                               const vector<string>& trace_attrs,
+                               const vector<string>& symbol_attrs,
+                               const vector<string>& data) {
+
+    tail* new_tail = mem_store::create_tail(nullptr);
+    tail_data* td = new_tail->td;
+
+    // Add symbol to the alphabet if it isn't in there already
+    if(r_alphabet.find(symbol) == r_alphabet.end()){
+        r_alphabet[symbol] = (int)alphabet.size();
+        alphabet.push_back(symbol);
+    }
+
+    // Fill in tail data
+    td->symbol = r_alphabet[symbol];
+    td->data = strutil::join(data, reinterpret_cast<const char *const>(','));
+    td->tail_nr = num_tails++;
+
+    auto num_symbol_attributes = this->symbol_attributes.size();
+    if(num_symbol_attributes > 0){
+        for(int i = 0; i < num_symbol_attributes; ++i){
+            string val = symbol_attrs.at(i);
+            td->attr[i] = symbol_attributes[i].get_value(val);
+        }
+    }
+}
+
+[[deprecated]]
 void csv_inputdata::read_abbadingo_symbol(istream &input_stream, tail* new_tail){
     string temp, temp_symbol, data, type_string, type_attr, symbol_string, symbol_attr, val;
     std::stringstream l1, l2, l3;

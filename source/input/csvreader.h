@@ -36,6 +36,13 @@ private:
     char delim = ',';
     bool strip_whitespace = true;
 
+    tail *make_tail(const string &id,
+                    const string &symbol,
+                    const string &type,
+                    const vector<string> &trace_attrs,
+                    const vector<string> &symbol_attrs,
+                    const vector<string> &data);
+
 public:
 
 
@@ -64,9 +71,6 @@ public:
 
     const std::vector<attribute> &getTraceAttributes() const;
     const std::vector<attribute> &getSymbolAttributes() const;
-
-
-
 };
 
 #endif //FLEXFRINGE_CSVREADER_H
