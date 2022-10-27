@@ -145,14 +145,14 @@ trace* csv_inputdata::readRow(istream &input_stream) {
     trace* tr = it->second;
     tr->sequence = this->num_sequences++;
 
-    tail* new_tail = mem_store::create_tail(nullptr);
-    istringstream abbadingo_symbol_stream(abbadingo_symbol);
-    read_abbadingo_symbol(abbadingo_symbol_stream, new_tail);
+    tail* new_tail = this->make_tail(id, symbol, type, trace_attrs, symbol_attrs, data);
 
     it = trace_map.find(id);
     trace* new_tr = it->second;
-    istringstream abbadingo_type_stream(abbadingo_type);
-    read_abbadingo_type(abbadingo_type_stream, new_tr);
+//    istringstream abbadingo_type_stream(abbadingo_type);
+//    read_abbadingo_type(abbadingo_type_stream, new_tr);
+    this->add_type_to_trace(new_tr, type, trace_attrs);
+
 
     tail* old_tail = new_tr->end_tail;
     if(old_tail == nullptr){
@@ -225,6 +225,27 @@ string csv_inputdata::string_from_symbol(int symbol) {
     return alphabet[symbol];
 }
 
+// Replaces read_abbadingo_type
+void csv_inputdata::add_type_to_trace(trace* new_trace,
+                                      const string& type,
+                                      const vector<string>& trace_attrs) {
+    // Add to type map
+    if(r_types.find(type) == r_types.end()){
+        r_types[type] = (int)types.size();
+        types.push_back(type);
+    }
+
+    auto num_trace_attributes = this->trace_attributes.size();
+    if(num_trace_attributes > 0){
+        for(int i = 0; i < num_trace_attributes; ++i){
+            const string& val = trace_attrs.at(i);
+            new_trace->trace_attr[i] = trace_attributes[i].get_value(val);
+        }
+    }
+    new_trace->type = r_types[type];
+}
+
+[[deprecated]]
 void csv_inputdata::read_abbadingo_type(istream &input_stream, trace* new_trace){
     string temp, type_string, type_attr, val;
     std::stringstream l1, l2;
@@ -253,7 +274,7 @@ void csv_inputdata::read_abbadingo_type(istream &input_stream, trace* new_trace)
     new_trace->type = r_types[type_string];
 }
 
-
+// replaces read_abbadingo_symbol
 tail* csv_inputdata::make_tail(const string& id,
                                const string& symbol,
                                const string& type,
@@ -278,10 +299,12 @@ tail* csv_inputdata::make_tail(const string& id,
     auto num_symbol_attributes = this->symbol_attributes.size();
     if(num_symbol_attributes > 0){
         for(int i = 0; i < num_symbol_attributes; ++i){
-            string val = symbol_attrs.at(i);
+            const string& val = symbol_attrs.at(i);
             td->attr[i] = symbol_attributes[i].get_value(val);
         }
     }
+
+    return new_tail;
 }
 
 [[deprecated]]

@@ -73,7 +73,8 @@ public:
     int get_alphabet_size();
 
     int symbol_from_string(std::string symbol);
-    std::string string_from_symbol(int symbol);
+
+    virtual std::string string_from_symbol(int symbol);
     int type_from_string(std::string type);
     std::string string_from_type(int type);
 

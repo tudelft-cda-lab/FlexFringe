@@ -31,17 +31,20 @@ private:
     // TODO: refactor so these aren't needed anymore
     void read_abbadingo_symbol(std::istream &input_stream, tail *new_tail);
     void read_abbadingo_type(std::istream &input_stream, trace *new_trace);
-    std::string string_from_symbol(int symbol);
 
     char delim = ',';
     bool strip_whitespace = true;
 
-    tail *make_tail(const string &id,
-                    const string &symbol,
-                    const string &type,
-                    const vector<string> &trace_attrs,
-                    const vector<string> &symbol_attrs,
-                    const vector<string> &data);
+    tail *make_tail(const std::string &id,
+                    const std::string &symbol,
+                    const std::string &type,
+                    const std::vector<std::string> &trace_attrs,
+                    const std::vector<std::string> &symbol_attrs,
+                    const std::vector<std::string> &data);
+
+    void add_type_to_trace(trace *new_trace,
+                           const std::string &type,
+                           const std::vector<std::string> &trace_attrs);
 
 public:
 
@@ -71,6 +74,10 @@ public:
 
     const std::vector<attribute> &getTraceAttributes() const;
     const std::vector<attribute> &getSymbolAttributes() const;
+
+    std::string string_from_symbol(int symbol);
+
+
 };
 
 #endif //FLEXFRINGE_CSVREADER_H
