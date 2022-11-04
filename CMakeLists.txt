@@ -11,9 +11,11 @@ endif()
 
 option(COMPILE_DOCS "This is settable from the command line" OFF)
 
-set(CMAKE_CXX_FLAGS "-Wall")
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+if (MSVC)
+    add_compile_options("/W4" "$<$<CONFIG:RELEASE>:/O2>")
+else()
+    add_compile_options("-Wall" "-Wextra" "-Werror" "$<$<CONFIG:RELEASE>:-O3>")
+endif()
 
 add_compile_definitions(LOGURU_WITH_STREAMS=1)
 
