@@ -74,8 +74,12 @@ double CORRECTION_UNSEEN = 0.0;
 double CORRECTION_PER_SEEN = 0.0;
 float CHECK_PARAMETER = 0.05;
 bool TYPE_DISTRIBUTIONS = false;
+bool PATH_DISTRIBUTIONS = false;
 bool SYMBOL_DISTRIBUTIONS = true;
 bool TYPE_CONSISTENT = true;
+
+bool QUANTILE_DISTRIBUTIONS = true;
+bool NORMAL_DISTRIBUTIONS = false;
 
 int OFFSET = 1;
 int EXTRA_STATES = 0;
@@ -86,7 +90,13 @@ bool FORCING = 0;
 bool PRINT_WHITE = false;
 bool PRINT_BLUE = false;
 bool PRINT_RED = true;
+bool PRINT_EVAL_LABEL = true;
 bool OUTPUT_SINKS = false;
+
+int MIN_SPLIT_SIZE = 20;
+int MAX_SPLITS = -1;
+int MAX_SPLIT_DEPTH = 3;
+int MAX_SPLIT_TREE_SIZE = 5;
 
 bool PERFORM_SYMBOL_CHECK = false;
 bool PERFORM_DEPTH_CHECK = false;

@@ -91,11 +91,11 @@ public:
     apta_node* current;
 
     queue<apta_node*> q;
-    
+
     APTA_iterator(apta_node* start);
 
     virtual void increment();
-    
+
     apta_node* operator*() const { return current; }
     APTA_iterator& operator++() { increment(); return *this; }
 };
@@ -110,14 +110,14 @@ public:
     merged_APTA_iterator(apta_node* start);
 
     virtual void increment();
-    
+
     apta_node* operator*() const { return current; }
     merged_APTA_iterator& operator++() { increment(); return *this; }
 };
 
 class blue_state_iterator : public merged_APTA_iterator {
 public:
-    
+
     blue_state_iterator(apta_node* start);
 
     virtual void increment();
@@ -125,7 +125,7 @@ public:
 
 class red_state_iterator : public merged_APTA_iterator {
 public:
-    
+
     red_state_iterator(apta_node* start);
 
     virtual void increment();
@@ -133,7 +133,7 @@ public:
 
 class merged_APTA_iterator_func : public merged_APTA_iterator {
 public:
-    
+
     bool(*check_function)(apta_node*);
 
     merged_APTA_iterator_func(apta_node* start, bool(*)(apta_node*));
@@ -146,13 +146,13 @@ public:
     apta_node* base;
     apta_node* current;
     tail* current_tail;
-    
+
     tail_iterator(apta_node* start);
-    
+
     apta_node* next_forward();
     virtual void increment();
     void next_node();
-    
+
     tail* operator*() const { return current_tail; }
     tail_iterator& operator++() { increment(); return *this; }
 };
@@ -251,6 +251,9 @@ private:
     /** extra information for merging heuristics and consistency checks
      * gets overloaded with evaluation functions such as Alergia, EDSM, ... */
     evaluation_data* data;
+
+    /* storing the merges caused by the merge of this state, for undoing without recursion */
+    list<pair<apta_node*, apta_node*>> caused_merges;
 
 public:
     inline trace* get_access_trace(){ return access_trace; }

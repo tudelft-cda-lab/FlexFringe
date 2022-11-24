@@ -43,13 +43,23 @@ extern int MARKOVIAN_MODEL;
 extern bool MERGE_SINKS_WITH_CORE;
 
 extern bool TYPE_DISTRIBUTIONS;
+extern bool PATH_DISTRIBUTIONS;
 extern bool SYMBOL_DISTRIBUTIONS;
 extern bool TYPE_CONSISTENT;
+
+extern bool QUANTILE_DISTRIBUTIONS;
+extern bool NORMAL_DISTRIBUTIONS;
 
 extern bool MERGE_ROOT;
 extern bool PRINT_WHITE;
 extern bool PRINT_BLUE;
 extern bool PRINT_RED;
+extern bool PRINT_EVAL_LABEL;
+
+extern int MIN_SPLIT_SIZE;
+extern int MAX_SPLITS;
+extern int MAX_SPLIT_DEPTH;
+extern int MAX_SPLIT_TREE_SIZE;
 
 extern double EXTEND_SCORE;
 

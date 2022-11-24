@@ -23,6 +23,7 @@ void greedy_run(state_merger* merger){
         ss << std::setw(4) << std::setfill('0') << num;
         std::string s = ss.str();
 
+        merger->renumber_states();
         merger->print_dot("test" + ss.str() + ".dot");
 
         best_ref->doref(merger);

@@ -71,7 +71,7 @@ protected:
     static void update_left_pool(double left_count, double right_count, double &left_pool, double &right_pool);
     static void update_right_pool(double left_count, double right_count, double &left_pool, double &right_pool);
 
-    bool alergia_test_and_update(double right_count, double left_count, double right_total, double left_total);
+    virtual bool test_and_update(double right_count, double left_count, double right_total, double left_total);
 
 public:
 
@@ -82,7 +82,9 @@ public:
 
     static double alergia_check(double right_count, double left_count, double right_total, double left_total);
 
-    bool compute_tests(num_map& left_map, int left_total, int left_final, num_map& right_map, int right_total, int right_final);
+    bool pool_and_compute_tests(num_map& left_map, int left_total, int left_final, num_map& right_map, int right_total, int right_final);
+
+    bool prob_consistency(alergia_data *l, alergia_data *r);
 };
 
 #endif

@@ -141,6 +141,10 @@ public:
     void undo_split_single(apta_node *new_node, apta_node *old_node, tail *t);
 
     void renumber_states();
+
+    bool merge_no_recursion(apta_node *left, apta_node *right, int depth, bool evaluate, bool perform, bool test);
+
+    void undo_merge_no_recursion(apta_node *first_left, apta_node *first_right);
 };
 
 #endif /* _STATE_MERGER_H_ */

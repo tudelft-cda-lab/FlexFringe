@@ -149,7 +149,14 @@ void alergia_data::print_transition_label(iostream& output, int symbol){
 
 void alergia_data::print_state_label(iostream& output){
     count_data::print_state_label(output);
-    output << "\n" << num_paths() << " " << num_final();
+    output << "\n" << num_paths() << " " << num_final() << endl;
+    output << "[";
+    for(auto & symbol_count : symbol_counts) {
+        int symbol = symbol_count.first;
+        int value = symbol_count.second;
+        output << value << ",";
+    }
+    output << "]";
 };
 
 /** Merging update and undo_merge routines */
@@ -247,7 +254,7 @@ double alergia::alergia_check(double right_count, double left_count, double righ
     return bound - gamma;
 }
 
-bool alergia::alergia_test_and_update(double right_count, double left_count, double right_total, double left_total){
+bool alergia::test_and_update(double right_count, double left_count, double right_total, double left_total){
     double result = alergia_check(right_count, left_count, right_total, left_total);
     if(result < 0.0) return false;
     num_tests++;
@@ -255,7 +262,7 @@ bool alergia::alergia_test_and_update(double right_count, double left_count, dou
     return true;
 }
 
-bool alergia::compute_tests(num_map& left_map, int left_total, int left_final,
+bool alergia::pool_and_compute_tests(num_map& left_map, int left_total, int left_final,
                             num_map& right_map, int right_total, int right_final){
 
     /* computing the dividers (denominator) */
@@ -304,10 +311,10 @@ bool alergia::compute_tests(num_map& left_map, int left_total, int left_final,
     update_divider_pool(l1_pool, r1_pool, left_divider, right_divider);
     update_divider_pool(l2_pool, r2_pool, left_divider, right_divider);
 
-    if((l1_pool != 0 || r1_pool != 0) && !alergia_test_and_update(l1_pool, r1_pool, left_divider, right_divider)){
+    if((l1_pool != 0 || r1_pool != 0) && !test_and_update(l1_pool, r1_pool, left_divider, right_divider)){
         return false;
     }
-    if((l2_pool != 0 || r2_pool != 0) && !alergia_test_and_update(l2_pool, r2_pool, left_divider, right_divider)){
+    if((l2_pool != 0 || r2_pool != 0) && !test_and_update(l2_pool, r2_pool, left_divider, right_divider)){
         return false;
     }
 
@@ -322,19 +329,14 @@ bool alergia::compute_tests(num_map& left_map, int left_total, int left_final,
         if(hit != right_map.end()) right_count = hit->second;
         matching_right += right_count;
 
-        if(!alergia_test_and_update(left_count, right_count, left_divider, right_divider)){
+        if(!test_and_update(left_count, right_count, left_divider, right_divider)){
             return false;
         }
     }
     return true;
 }
 
-/* ALERGIA, consistency based on Hoeffding bound, only uses positive (type=1) data, pools infrequent counts */
-bool alergia::consistent(state_merger *merger, apta_node* left, apta_node* right){
-    //if(inconsistency_found) return false;
-    auto* l = (alergia_data*) left->get_data();
-    auto* r = (alergia_data*) right->get_data();
-
+bool alergia::prob_consistency(alergia_data* l, alergia_data* r){
     if(FINAL_PROBABILITIES){
         if(r->num_paths() + r->num_final() < STATE_COUNT || l->num_paths() + l->num_final() < STATE_COUNT) return true;
     } else {
@@ -342,19 +344,29 @@ bool alergia::consistent(state_merger *merger, apta_node* left, apta_node* right
     }
 
     if(SYMBOL_DISTRIBUTIONS){
-        if(!compute_tests(l->get_symbol_counts(), l->num_paths(), l->num_final(), r->get_symbol_counts(), r->num_paths(), r->num_final())){
+        if(!pool_and_compute_tests(l->get_symbol_counts(), l->num_paths(), l->num_final(), r->get_symbol_counts(), r->num_paths(), r->num_final())){
+            inconsistency_found = true; return false;
+        }
+    }
+    if(PATH_DISTRIBUTIONS){
+        if(!pool_and_compute_tests(l->path_counts, l->num_paths(), 0, r->path_counts, r->num_paths(), 0)){
             inconsistency_found = true; return false;
         }
     }
     if(TYPE_DISTRIBUTIONS){
-        if(!compute_tests(l->path_counts, l->num_paths(), 0, r->path_counts, r->num_paths(), 0)){
-            inconsistency_found = true; return false;
-        }
-        if(!compute_tests(l->final_counts, l->num_final(), 0, r->final_counts, r->num_final(), 0)){
+        if(!pool_and_compute_tests(l->final_counts, l->num_final(), 0, r->final_counts, r->num_final(), 0)){
             inconsistency_found = true; return false;
         }
     }
     return true;
+}
+
+/* ALERGIA, consistency based on Hoeffding bound, only uses positive (type=1) data, pools infrequent counts */
+bool alergia::consistent(state_merger *merger, apta_node* left, apta_node* right){
+    if(inconsistency_found) return false;
+    auto* l = (alergia_data*) left->get_data();
+    auto* r = (alergia_data*) right->get_data();
+    return prob_consistency(l, r);
 };
 
 double alergia::compute_score(state_merger *merger, apta_node* left, apta_node* right){

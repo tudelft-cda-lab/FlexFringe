@@ -11,23 +11,26 @@ public:
     double undo_loglikelihood_orig;
     double undo_loglikelihood_merged;
     int undo_extra_parameters;
+    int undo_total_count;
 
     likelihood_data();
     virtual void initialize();
+
+    virtual void print_state_label(iostream& output);
 };
 
 class likelihoodratio: public alergia {
 
 protected:
   REGISTER_DEC_TYPE(likelihoodratio);
-  
+
+  virtual bool test_and_update(double right_count, double left_count, double right_total, double left_total);
 
 public:
-  void update_likelihood(double,double,double,double);
-
   double loglikelihood_orig;
   double loglikelihood_merged;
   double extra_parameters;
+  int total_count;
 
   virtual bool consistent(state_merger *merger, apta_node* left, apta_node* right);
   virtual void update_score(state_merger *merger, apta_node* left, apta_node* right);

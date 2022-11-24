@@ -328,6 +328,7 @@ int main(int argc, char *argv[]){
     app.add_option("--correction_per_seen", CORRECTION_PER_SEEN, "Additional correction, adds this correction to counts per seen value to both seen and unseen values.");
     app.add_option("--confidence_bound", CHECK_PARAMETER, "Extra parameter used during statistical tests, the significance level for the likelihood ratio test, the alpha value for ALERGIA; default=0.5. Advice: look up the statistical test performed, this parameter is not always the same as a p-value.");
     app.add_option("--typedist", TYPE_DISTRIBUTIONS, "Whether to perform tests on the type distributions of states. Default = 0.");
+    app.add_option("--pathdist", PATH_DISTRIBUTIONS, "Whether to perform tests on the type distributions of states using paths instead of ending scores. Default=0.");
     app.add_option("--symboldist", SYMBOL_DISTRIBUTIONS, "Whether to perform tests on the symbol distributions of states. Default = 1.");
     app.add_option("--typeconsistent", TYPE_CONSISTENT, "Whether to enforce type consistency for states, i.e., to not merge positive states with negative ones. Default=1.");
 
@@ -345,6 +346,11 @@ int main(int argc, char *argv[]){
     app.add_option("--symbolcheck", PERFORM_SYMBOL_CHECK, "In addition to standard state merging checks, perform a check symbol-by-symbol in the prefix tree. This is a try to get more information out of infrequent traces and aims to capture long-term dependencies. Default=0.");
     app.add_option("--depthcheckmaxdepth", DEPTH_CHECK_MAX_DEPTH, "In case of performing depth or symbol checks, this parameter gives the maximum depth to compute these tests for. Default=-1 (bounded by the prefix tree).");
     app.add_option("--mergecheck", PERFORM_MERGE_CHECK, "Perform the standard merge check from the core state-merging algorithm. When set to false, all merges evaluate to true except for other constraints such as locality, markovian, etc. Default=1.");
+
+    app.add_option("--minsplitsize", MIN_SPLIT_SIZE, "The minimum state size of a state after splitting. Default=0.");
+    app.add_option("--maxsplits", MAX_SPLITS, "The maximum number of splits that can be performed on a state. Default=-1 (inactive).");
+    app.add_option("--maxsplitdepth", MAX_SPLIT_DEPTH, "The maximum number of conditions (guards) that can be put on a transition by splitting. Default=-1 (inactive).");
+    app.add_option("--maxsplitsize", MAX_SPLIT_TREE_SIZE, "The maximum size of the \"decision tree\" of conditions created by splitting. Default=-1 (inactive).");
 
     app.add_option("--searchdeep", SEARCH_DEEP, "Search using a greedy call until no more merges can be performed. Default=0.");
     app.add_option("--searchlocal", SEARCH_LOCAL, "Search using the local heuristic from the evaluation function. Default=0.");

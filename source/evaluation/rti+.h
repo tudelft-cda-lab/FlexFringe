@@ -3,7 +3,7 @@
 
 #include "likelihood.h"
 
-typedef vector< vector<int> > quantile_map;
+typedef vector< vector<double> > quantile_map;
 
 /* The data contained in every node of the prefix tree or DFA */
 class rtiplus_data: public likelihood_data {
@@ -12,7 +12,7 @@ protected:
 
 public:
 
-    quantile_map quantile_counts;
+    quantile_map statistics;
     double loglikelihood;
     
     rtiplus_data();

@@ -6,6 +6,8 @@ REGISTER_DEF_DATATYPE(gini_data);
 REGISTER_DEF_TYPE(gini);
 
 void gini::split_update_score_before(state_merger*, apta_node* left, apta_node* right, tail* t){
+    if(!t->is_final()) return;
+
     gini_data* l = (gini_data*) left->get_data();
     gini_data* r = (gini_data*) right->get_data();
 
@@ -42,6 +44,8 @@ void gini::split_update_score_before(state_merger*, apta_node* left, apta_node* 
 }
 
 void gini::split_update_score_after(state_merger*, apta_node* left, apta_node* right, tail* t){
+    if(!t->is_final()) return;
+
     gini_data* l = (gini_data*) left->get_data();
     gini_data* r = (gini_data*) right->get_data();
 
@@ -82,11 +86,11 @@ bool gini::split_compute_consistency(state_merger *, apta_node* left, apta_node*
 }
 
 double gini::split_compute_score(state_merger *, apta_node* left, apta_node* right){
-    //cerr << "split: " << split_score << " " << num_split << endl;
+    cerr << "split: " << split_score << " " << num_split << endl;
     if(num_split == 0) return - CHECK_PARAMETER;
+    cerr << (split_score / num_split) - (CHECK_PARAMETER) << endl;
     return (split_score / num_split) - (CHECK_PARAMETER);
 }
-
 
 /* GINI impurity based state merging, computes GINI improvement for merges and splits*/
 bool gini::consistent(state_merger *merger, apta_node* left, apta_node* right){
@@ -133,19 +137,24 @@ void gini::update_score(state_merger *merger, apta_node* left, apta_node* right)
     double left_pos_prob = l->pos_final() / total_left;
     double left_neg_prob = l->neg_final() / total_left;
 
+    if(total_left == 0 || total_right == 0) return;
+
     if(total_count != 0)
         merge_score -= total_count * (1.0 - ((total_pos_prob * total_pos_prob) + (total_neg_prob * total_neg_prob)));
     if(total_right != 0)
-        merge_score += total_right * (1.0 - ((right_pos_prob * right_pos_prob) + (right_neg_prob * right_neg_prob)));
+        merge_score += (total_right / total_count) * (1.0 - ((right_pos_prob * right_pos_prob) + (right_neg_prob * right_neg_prob)));
     if(total_left != 0)
-        merge_score += total_left * (1.0 - ((left_pos_prob * left_pos_prob) + (left_neg_prob * left_neg_prob)));
+        merge_score += (total_left / total_count) * (1.0 - ((left_pos_prob * left_pos_prob) + (left_neg_prob * left_neg_prob)));
     if(total_count != 0)
-        num_merge += total_count;
+        num_merge += 1;//total_count;
+
+    //cerr << "m " << num_merge << endl;
 };
 
 double gini::compute_score(state_merger *merger, apta_node* left, apta_node* right){
     //cerr << "split: " << split_score << " " << num_split << " merge: " << merge_score << " " << num_merge << endl;
     if(num_split == 0 && num_merge == 0) return -1.0;
+    cerr << (merge_score / num_merge) + (CHECK_PARAMETER) << endl;
     return (merge_score / num_merge) + (CHECK_PARAMETER);
     //return (split_score / num_split) + (merge_score / num_merge) + (CHECK_PARAMETER);
 };

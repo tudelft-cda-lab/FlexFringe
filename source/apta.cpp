@@ -71,9 +71,13 @@ void apta::print_dot(iostream& output){
             output << n << ":#" << "\n";
             output << "rep#" << n->representative << "\n";
         }
-        output << n->number << " #" << n->size << "\" ";
-        //n->data->print_state_label(output);
-        //output << "\" ";
+        if(PRINT_EVAL_LABEL){
+            output << n->number << " #" << n->size << "\n";
+            n->data->print_state_label(output);
+            output << "\" ";
+        } else {
+            output << n->number << " #" << n->size << "\", ";
+        }
         //n->data->print_state_style(output);
         if (n->is_red()) output << ", style=filled, fillcolor=\"firebrick1\"";
         else if (n->is_blue()) output << ", style=filled, fillcolor=\"dodgerblue1\"";
@@ -107,10 +111,10 @@ void apta::print_dot(iostream& output){
             
             
             for(auto & min_attribute_value : g->min_attribute_values){
-                output << " " << inputdata::get_attribute(min_attribute_value.first) << " >= " << min_attribute_value.second;
+                output << " " << inputdata::get_attribute(min_attribute_value.first)->get_name() << " >= " << min_attribute_value.second;
             }
             for(auto & max_attribute_value : g->max_attribute_values){
-                output << " " << inputdata::get_attribute(max_attribute_value.first) << " < " << max_attribute_value.second;
+                output << " " << inputdata::get_attribute(max_attribute_value.first)->get_name() << " < " << max_attribute_value.second;
             }
 
             output << "\" ";

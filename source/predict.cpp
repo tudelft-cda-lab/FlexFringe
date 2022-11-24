@@ -163,6 +163,7 @@ void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
                             max_score = old_score;
                             prev_node = node;
                             advance = true;
+                            align_sequence.push_front(0);
                             break;
                         }
                     }
@@ -316,7 +317,11 @@ void predict_trace_update_sequences(state_merger* m, tail* t){
         score_sequence.push_back(score);
 
         n = single_step(n, t, m->get_aut());
-        if(n == nullptr) break;
+        if(n == nullptr){
+            state_sequence.push_back(-1);
+            align_sequence.push_back(false);
+            break;
+        }
 
         t = t->future();
         state_sequence.push_back(n->get_number());
