@@ -363,8 +363,12 @@ void rtiplus::initialize_after_adding_traces(state_merger* merger){
 };
 
 void rtiplus::initialize_before_adding_traces(){
+    int corr = 0;
     for(int a = 0; a < merger->get_dat()->get_num_attributes(); ++a){
-        if(!merger->get_dat()->is_distributionable(a)) continue;
+        if(!merger->get_dat()->is_distributionable(a)){
+            corr += 1;
+            continue;
+        } 
         rtiplus::attribute_quantiles.emplace_back(3,0.0);
         multiset<double> values;
         for(auto it = merger->get_dat()->traces_start();
@@ -390,9 +394,9 @@ void rtiplus::initialize_before_adding_traces(){
             count = count + 1;
         }
         
-        rtiplus::attribute_quantiles[a][0] = V1;
-        rtiplus::attribute_quantiles[a][1] = V2;
-        rtiplus::attribute_quantiles[a][2] = V3;
+        rtiplus::attribute_quantiles[a-corr][0] = V1;
+        rtiplus::attribute_quantiles[a-corr][1] = V2;
+        rtiplus::attribute_quantiles[a-corr][2] = V3;
     }
 }
 
