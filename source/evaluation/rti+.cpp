@@ -127,7 +127,7 @@ void rtiplus_data::update(evaluation_data* right){
     likelihood_data::update(right);
     rtiplus_data* other = (rtiplus_data*)right;
     for(int i = 0; i < statistics.size(); ++i) {
-        if(!inputdata::is_distributionable(i)) continue;
+        //if(!inputdata::is_distributionable(i)) continue;
         for(int j = 0; j < rtiplus::attribute_quantiles[i].size()+1; ++j){
             statistics[i][j] += other->statistics[i][j];
         }
@@ -138,7 +138,7 @@ void rtiplus_data::undo(evaluation_data* right){
     likelihood_data::undo(right);
     rtiplus_data* other = (rtiplus_data*)right;
     for(int i = 0; i < statistics.size(); ++i) {
-        if(!inputdata::is_distributionable(i)) continue;
+        //if(!inputdata::is_distributionable(i)) continue;
         for(int j = 0; j < rtiplus::attribute_quantiles[i].size()+1; ++j){
             statistics[i][j] -= other->statistics[i][j];
         }
@@ -365,16 +365,17 @@ void rtiplus::initialize_after_adding_traces(state_merger* merger){
 void rtiplus::initialize_before_adding_traces(){
     int corr = 0;
     for(int a = 0; a < merger->get_dat()->get_num_attributes(); ++a){
-        if(!merger->get_dat()->is_distributionable(a)){
+        /*if(!merger->get_dat()->is_distributionable(a)){
             corr += 1;
             continue;
-        } 
+        }*/
         rtiplus::attribute_quantiles.emplace_back(3,0.0);
         multiset<double> values;
         for(auto it = merger->get_dat()->traces_start();
             it != merger->get_dat()->traces_end(); ++it){
             for(tail* t = (*it)->get_head(); t != (*it)->get_end(); t = t->future()){
                 values.insert(t->get_value(a));
+                //cerr << " " << t->get_value(a);
             }
         }
 
@@ -393,6 +394,8 @@ void rtiplus::initialize_before_adding_traces(){
             if(count == Q3) V3 = value;
             count = count + 1;
         }
+
+        //cerr << V1 << " " << V2 << " " << V3 << endl;
         
         rtiplus::attribute_quantiles[a-corr][0] = V1;
         rtiplus::attribute_quantiles[a-corr][1] = V2;
