@@ -24,7 +24,6 @@ rtiplus_data::rtiplus_data() : likelihood_data::likelihood_data() {
             else if(NORMAL_DISTRIBUTIONS) statistics.push_back(vector<double>(3, 0));
         }
     }
-    loglikelihood = 0.0;
 };
 
 void rtiplus_data::initialize() {
@@ -36,9 +35,8 @@ void rtiplus_data::initialize() {
             continue;
         }
         if(QUANTILE_DISTRIBUTIONS) statistics[i - modifier].assign(4, 0);
-        if(NORMAL_DISTRIBUTIONS) statistics[i - modifier].assign(3, 0);
+        else if(NORMAL_DISTRIBUTIONS) statistics[i - modifier].assign(3, 0);
     }
-    loglikelihood = 0.0;
 };
 
 void rtiplus_data::add_tail(tail* t){
@@ -65,7 +63,7 @@ void rtiplus_data::add_tail(tail* t){
                 statistics[attr][rtiplus::attribute_quantiles[attr].size()] = statistics[attr][rtiplus::attribute_quantiles[attr].size()] + 1;
             }
         }
-        if(NORMAL_DISTRIBUTIONS){
+        else if(NORMAL_DISTRIBUTIONS){
             // NUMBER OF ITEMS
             statistics[attr][0] = statistics[attr][0] + 1;
             // SUM OF VALUES
@@ -100,7 +98,7 @@ void rtiplus_data::del_tail(tail* t){
                 statistics[attr][rtiplus::attribute_quantiles[attr].size()] = statistics[attr][rtiplus::attribute_quantiles[attr].size()] - 1;
             }
         }
-        if(NORMAL_DISTRIBUTIONS){
+        else if(NORMAL_DISTRIBUTIONS){
             // NUMBER OF ITEMS
             statistics[attr][0] = statistics[attr][0] - 1;
             // SUM OF VALUES
@@ -114,12 +112,21 @@ void rtiplus_data::del_tail(tail* t){
 void rtiplus_data::print_state_label(iostream& output){
     likelihood_data::print_state_label(output);
     output << endl;
-     for(int i = 0; i < statistics.size(); ++i) {
-        output << "attr(" << i << "):[";
-        for(int j = 0; j < rtiplus::attribute_quantiles[i].size()+1; ++j){
-            output << statistics[i][j] << ",";
+    if(QUANTILE_DISTRIBUTIONS){
+        for(int i = 0; i < statistics.size(); ++i) {
+            output << inputdata::get_attribute(i)->get_name() << ":[";
+            for(int j = 0; j < rtiplus::attribute_quantiles[i].size()+1; ++j){
+                output << statistics[i][j] << ",";
+            }
+            output << "]" << endl;
         }
-        output << "]" << endl;
+    } else if(NORMAL_DISTRIBUTIONS){
+        for(int i = 0; i < statistics.size(); ++i) {
+            output << inputdata::get_attribute(i)->get_name() << ":[";
+            double mean = statistics[i][1] / statistics[i][0];
+            double var = statistics[i][2] / statistics[i][0] - (mean * mean);
+            output << mean << "," << sqrt(var) << "]" << endl;
+        }
     }
 };
 
@@ -127,7 +134,6 @@ void rtiplus_data::update(evaluation_data* right){
     likelihood_data::update(right);
     rtiplus_data* other = (rtiplus_data*)right;
     for(int i = 0; i < statistics.size(); ++i) {
-        //if(!inputdata::is_distributionable(i)) continue;
         for(int j = 0; j < rtiplus::attribute_quantiles[i].size()+1; ++j){
             statistics[i][j] += other->statistics[i][j];
         }
@@ -138,7 +144,6 @@ void rtiplus_data::undo(evaluation_data* right){
     likelihood_data::undo(right);
     rtiplus_data* other = (rtiplus_data*)right;
     for(int i = 0; i < statistics.size(); ++i) {
-        //if(!inputdata::is_distributionable(i)) continue;
         for(int j = 0; j < rtiplus::attribute_quantiles[i].size()+1; ++j){
             statistics[i][j] -= other->statistics[i][j];
         }
@@ -151,79 +156,6 @@ void rtiplus_data::split_update(evaluation_data* right){
 
 void rtiplus_data::split_undo(evaluation_data* right){
     update(right);
-};
-
-void rtiplus_data::set_loglikelihood(){
-    loglikelihood = 0.0;
-
-    double divider = 0.0;
-    double pool = 0.0;
-    for(num_map::iterator it = counts_begin(); it != counts_end(); ++it){
-        double count = it->second;
-        if(count >= SYMBOL_COUNT) divider += count + CORRECTION;
-        else pool += count;
-    }
-
-    if(FINAL_PROBABILITIES){
-        double count = num_final();
-        if(count >= SYMBOL_COUNT) divider += count + CORRECTION;
-        else pool += count;
-    }
-
-    if(pool > 0.0) divider += pool + CORRECTION;
-
-    for(num_map::iterator it = counts_begin(); it != counts_end(); it++){
-        double count = it->second;
-        if(count < SYMBOL_COUNT) ;
-        else if(count > 0) loglikelihood += (count + CORRECTION) * log((count + CORRECTION) / divider);
-    }
-
-    if(FINAL_PROBABILITIES){
-        double count = num_final();
-        if(count < SYMBOL_COUNT) ;
-        else if(count > 0) loglikelihood += (count + CORRECTION) * log((count + CORRECTION) / divider);
-    }
-
-    if(pool > 0) loglikelihood += (pool + CORRECTION) * log((pool + CORRECTION) / divider);
-
-    divider = 0.0;
-    pool = 0.0;
-    for(int i = 0; i < statistics.size(); ++i) {
-        for (int j = 0; j < rtiplus::attribute_quantiles[i].size() + 1; ++j) {
-            double count = statistics[i][j];
-            if (count >= SYMBOL_COUNT) divider += count + CORRECTION;
-            else pool += count;
-        }
-    }
-    if(pool > 0) divider += pool + CORRECTION;
-
-    for(int i = 0; i < statistics.size(); ++i) {
-        for(int j = 0; j < rtiplus::attribute_quantiles[i].size() + 1; ++j){
-            double count = statistics[i][j];
-            if (count >= SYMBOL_COUNT) loglikelihood += (count + CORRECTION) * log((count + CORRECTION) / divider);
-        }
-    }
-    if(pool > 0) loglikelihood += (pool + CORRECTION) * log((pool + CORRECTION) / divider);
-};
-
-int rtiplus_data::num_parameters(){
-    int result = 1;
-    for(num_map::iterator it = counts_begin(); it != counts_end(); it++){
-        double count = it->second;
-        if(count != 0) result++;
-    }
-
-    if(FINAL_PROBABILITIES) {
-        result += 1;
-    }
-
-    for(int i = 0; i < statistics.size(); ++i) {
-        for(int j = 0; j < rtiplus::attribute_quantiles[i].size() + 1; ++j){
-            double count = statistics[i][j];
-            if(count != 0) result++;
-        }
-    }
-    return result;
 };
 
 /* Likelihood Ratio (LR), computes an LR-test (used in RTI) and uses the p-value as score and consistency */
@@ -282,8 +214,7 @@ void rtiplus::update_score(state_merger *merger, apta_node* left, apta_node* rig
             update_likelihood_pool(l2_pool, r2_pool, left_divider, right_divider);
         }
     }
-
-    if(NORMAL_DISTRIBUTIONS){
+    else if(NORMAL_DISTRIBUTIONS){
         for(int i = 0; i < l->statistics.size(); ++i) {
             double mean_left = l->statistics[i][1] / l->statistics[i][0];
             double var_left  = l->statistics[i][2] / l->statistics[i][0] - (mean_left * mean_left);
@@ -293,6 +224,10 @@ void rtiplus::update_score(state_merger *merger, apta_node* left, apta_node* rig
 
             double mean_total = (l->statistics[i][1] + r->statistics[i][1]) / (l->statistics[i][0] + r->statistics[i][0]);
             double var_total  = (l->statistics[i][2] + r->statistics[i][2]) / (l->statistics[i][0] + r->statistics[i][0]) - (mean_total * mean_total);
+
+            if(var_right == 0) continue;
+            if(var_left == 0) continue;
+            if(var_total == 0) continue;
 
             loglikelihood_orig   += l->statistics[i][0] * (log(M_PI*var_left)) / 2.0;
             loglikelihood_orig   += r->statistics[i][0] * (log(M_PI*var_right)) / 2.0;
@@ -309,6 +244,7 @@ void rtiplus::update_score(state_merger *merger, apta_node* left, apta_node* rig
                 diff = (*it)->get_value(i) - mean_total;
                 loglikelihood_merged += (diff * diff) / (2.0 * var_total);
             }
+            extra_parameters += 2;
         }
     }
 
@@ -355,20 +291,16 @@ double rtiplus::split_compute_score(state_merger *, apta_node* left, apta_node* 
 };
 
 void rtiplus::initialize_after_adding_traces(state_merger* merger){
-    for(merged_APTA_iterator it = merged_APTA_iterator(merger->get_aut()->get_root()); *it != 0; ++it){
-        apta_node* node = *it;
-        rtiplus_data* n = (rtiplus_data*)node->get_data();
-        n->set_loglikelihood();
-    }
 };
 
 void rtiplus::initialize_before_adding_traces(){
     int corr = 0;
     for(int a = 0; a < merger->get_dat()->get_num_attributes(); ++a){
-        /*if(!merger->get_dat()->is_distributionable(a)){
+        if(!merger->get_dat()->is_distributionable(a)){
             corr += 1;
             continue;
-        }*/
+        }
+
         rtiplus::attribute_quantiles.emplace_back(3,0.0);
         multiset<double> values;
         for(auto it = merger->get_dat()->traces_start();
@@ -395,8 +327,6 @@ void rtiplus::initialize_before_adding_traces(){
             count = count + 1;
         }
 
-        //cerr << V1 << " " << V2 << " " << V3 << endl;
-        
         rtiplus::attribute_quantiles[a-corr][0] = V1;
         rtiplus::attribute_quantiles[a-corr][1] = V2;
         rtiplus::attribute_quantiles[a-corr][2] = V3;

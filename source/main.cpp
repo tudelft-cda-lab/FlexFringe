@@ -331,6 +331,8 @@ int main(int argc, char *argv[]){
     app.add_option("--pathdist", PATH_DISTRIBUTIONS, "Whether to perform tests on the type distributions of states using paths instead of ending scores. Default=0.");
     app.add_option("--symboldist", SYMBOL_DISTRIBUTIONS, "Whether to perform tests on the symbol distributions of states. Default = 1.");
     app.add_option("--typeconsistent", TYPE_CONSISTENT, "Whether to enforce type consistency for states, i.e., to not merge positive states with negative ones. Default=1.");
+    app.add_option("--quantiledist", QUANTILE_DISTRIBUTIONS, "Whether to perform tests on attributes using quantiles. Default = 1.");
+    app.add_option("--normaldist", NORMAL_DISTRIBUTIONS, "Whether to perform tests on attributes using normal distributions. Default = 0.");
 
     app.add_option("--satoffset", OFFSET, "DFASAT runs a SAT solver to find a solution of size at most the size of the partially learned DFA + E; default=5. Advice: larger values greatly increases run-time. Setting it to 0 is frequently sufficient (when the merge heuristic works well).");
     app.add_option("--satplus", EXTRA_STATES, "With every iteration, DFASAT tries to find solutions of size at most the best solution found + P, default=0. Advice: current setting only searches for better solutions. If a few extra states is OK, set it higher.");

@@ -13,7 +13,6 @@ protected:
 public:
 
     quantile_map statistics;
-    double loglikelihood;
     
     rtiplus_data();
 
@@ -27,10 +26,6 @@ public:
     virtual void split_undo(evaluation_data* other);
     
     virtual void del_tail(tail* t);
-
-    virtual void set_loglikelihood();
-    
-    int num_parameters();
 
     virtual void print_state_label(iostream& output);
 };
