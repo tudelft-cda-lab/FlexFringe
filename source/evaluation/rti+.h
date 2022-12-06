@@ -28,6 +28,11 @@ public:
     virtual void del_tail(tail* t);
 
     virtual void print_state_label(iostream& output);
+
+    virtual void read_json(json& node);
+    virtual void write_json(json& node);
+
+    virtual double predict_score(tail* t);
 };
 
 class rtiplus: public likelihoodratio {

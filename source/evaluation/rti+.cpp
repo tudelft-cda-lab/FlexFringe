@@ -130,6 +130,57 @@ void rtiplus_data::print_state_label(iostream& output){
     }
 };
 
+double rtiplus_data::predict_score(tail* t){
+    double result = alergia_data::predict_symbol_score(t->get_symbol());
+    int modifier = 0;
+    double divider = (double) num_paths();
+    if(divider == 0) return result;
+
+    for(int i = 0; i < inputdata::get_num_attributes(); ++i) {
+        if (!inputdata::is_distributionable(i)) {
+            ++modifier;
+            continue;
+        }
+        int attr = i - modifier;
+        double val = t->get_value(i);
+        if (QUANTILE_DISTRIBUTIONS) {
+            bool found = false;
+            for(int j = 0; j < rtiplus::attribute_quantiles[attr].size(); ++j){
+                if(val < rtiplus::attribute_quantiles[attr][j]){
+                    result += log(((double) statistics[attr][j]) / divider);
+                    found = true;
+                    break;
+                }
+            }
+            if(!found){
+                result += log(((double) statistics[attr][rtiplus::attribute_quantiles[attr].size()-1]) / divider);
+            }
+        } else if (NORMAL_DISTRIBUTIONS) {
+            double mean = statistics[attr][1] / statistics[attr][0];
+            double var = statistics[attr][2] / statistics[attr][0] - (mean * mean);
+            double prob = stats::pnorm(val,mean,sqrt(var), true);
+            result += prob;
+        }
+    }
+    return result;
+};
+
+void rtiplus_data::read_json(json& data){
+    alergia_data::read_json(data);
+
+    json& d = data["rti_statistics"];
+    for(int i = 0; i < statistics.size(); ++i) {
+        for(int j = 0; j < statistics[0].size(); ++j) {
+            statistics[i][j] = d[i][j];
+        }
+    }
+};
+
+void rtiplus_data::write_json(json& data){
+    alergia_data::write_json(data);
+    data["rti_statistics"] = statistics;
+};
+
 void rtiplus_data::update(evaluation_data* right){
     likelihood_data::update(right);
     rtiplus_data* other = (rtiplus_data*)right;

@@ -158,13 +158,28 @@ void apta_node::print_json_transitions(iostream& output){
         if(!first) output << ",\n";
         else first = false;
 
-
         output << "\t\t{\n";
         output << "\t\t\t\"id\" : \"" << number << "_" << child->number << "\",\n";
         output << "\t\t\t\"source\" : \"" << number << "\",\n";
         output << "\t\t\t\"target\" : \"" << child->number << "\",\n";
 
         output << "\t\t\t\"name\": \"" << inputdata::get_symbol(guard.first) << "\",\n";
+        output << "\t\t\t\"min_vals\": [";
+        bool first_val = true;
+        for(auto val : guard.second->min_attribute_values){
+            if(!first_val) output << ",\n";
+            else first_val = false;
+            output << "[" << val.first << "," << val.second << "]";
+        }
+        output << "],\n";
+        output << "\t\t\t\"max_vals\": [";
+        first_val = true;
+        for(auto val : guard.second->max_attribute_values){
+            if(!first_val) output << ",\n";
+            else first_val = false;
+            output << "[" << val.first << "," << val.second << "]";
+        }
+        output << "],\n";
         output << "\t\t\t\"appearances\": \"";
         data->print_transition_label_json(output, guard.first);
         output << "\"}\n";
@@ -347,6 +362,14 @@ void apta::read_json(istream& input_stream){
         string source_string = e["source"];
         string target_string = e["target"];
 
+        auto* g = new apta_guard();
+        for(auto & attr : e["min_vals"]){
+            g->min_attribute_values[attr[0]] = attr[1];
+        }
+        for(auto & attr : e["max_vals"]){
+            g->max_attribute_values[attr[0]] = attr[1];
+        }
+
         int source_nr = std::stoi(source_string);
         int target_nr = std::stoi(target_string);
 
@@ -356,14 +379,17 @@ void apta::read_json(istream& input_stream){
         apta_node* source = states[source_nr];
         apta_node* target = states[target_nr];
 
+        source->guards.insert(pair<int, apta_guard*>(symbol_nr, g));
         if(target->source == source) {
-            source->set_child(symbol_nr, target);
+            //source->set_child(symbol_nr, target);
+            g->target = target;
         } else {
             auto* new_target = new apta_node();
             new_target->source = source;
             new_target->red = false;
             new_target->size = 0;
-            source->set_child(symbol_nr, new_target);
+            //source->set_child(symbol_nr, new_target);
+            g->target = new_target;
             new_target->merge_with(target);
         }
     }
