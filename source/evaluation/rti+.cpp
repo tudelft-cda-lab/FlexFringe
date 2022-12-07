@@ -121,11 +121,17 @@ void rtiplus_data::print_state_label(iostream& output){
             output << "]" << endl;
         }
     } else if(NORMAL_DISTRIBUTIONS){
-        for(int i = 0; i < statistics.size(); ++i) {
-            output << inputdata::get_attribute(i)->get_name() << ":[";
-            double mean = statistics[i][1] / statistics[i][0];
-            double var = statistics[i][2] / statistics[i][0] - (mean * mean);
-            output << mean << "," << sqrt(var) << "]" << endl;
+        int modifier = 0;
+        for(int i = 0; i < inputdata::get_num_attributes(); ++i) {
+            if (!inputdata::is_distributionable(i)) {
+                ++modifier;
+                continue;
+            }
+            int attr = i - modifier;
+            output << inputdata::get_attribute(i)->get_name() << ":";
+            double mean = statistics[attr][1] / statistics[attr][0];
+            double var = statistics[attr][2] / statistics[attr][0] - (mean * mean);
+            output << " m(" << mean << ") sd(" << sqrt(var) << ")" << endl;
         }
     }
 };
@@ -158,8 +164,8 @@ double rtiplus_data::predict_score(tail* t){
         } else if (NORMAL_DISTRIBUTIONS) {
             double mean = statistics[attr][1] / statistics[attr][0];
             double var = statistics[attr][2] / statistics[attr][0] - (mean * mean);
-            double prob = stats::pnorm(val,mean,sqrt(var), true);
-            result += prob;
+            double prob = stats::dnorm(val,mean,sqrt(var), false);
+            result += log(prob);
         }
     }
     return result;
@@ -266,35 +272,61 @@ void rtiplus::update_score(state_merger *merger, apta_node* left, apta_node* rig
         }
     }
     else if(NORMAL_DISTRIBUTIONS){
-        for(int i = 0; i < l->statistics.size(); ++i) {
-            double mean_left = l->statistics[i][1] / l->statistics[i][0];
-            double var_left  = l->statistics[i][2] / l->statistics[i][0] - (mean_left * mean_left);
+        int modifier = 0;
+        for(int i = 0; i < inputdata::get_num_attributes(); ++i) {
+            if(!inputdata::is_distributionable(i)){
+                ++modifier;
+                continue;
+            }
+            int attr = i-modifier;
 
-            double mean_right = r->statistics[i][1] / r->statistics[i][0];
-            double var_right  = r->statistics[i][2] / r->statistics[i][0] - (mean_right * mean_right);
+            double mean_left = l->statistics[attr][1] / l->statistics[attr][0];
+            double var_left  = l->statistics[attr][2] / l->statistics[attr][0] - (mean_left * mean_left);
 
-            double mean_total = (l->statistics[i][1] + r->statistics[i][1]) / (l->statistics[i][0] + r->statistics[i][0]);
-            double var_total  = (l->statistics[i][2] + r->statistics[i][2]) / (l->statistics[i][0] + r->statistics[i][0]) - (mean_total * mean_total);
+            double mean_right = r->statistics[attr][1] / r->statistics[attr][0];
+            double var_right  = r->statistics[attr][2] / r->statistics[attr][0] - (mean_right * mean_right);
+
+            double mean_total = (l->statistics[attr][1] + r->statistics[attr][1]) / (l->statistics[attr][0] + r->statistics[attr][0]);
+            double var_total  = (l->statistics[attr][2] + r->statistics[attr][2]) / (l->statistics[attr][0] + r->statistics[attr][0]) - (mean_total * mean_total);
 
             if(var_right == 0) continue;
             if(var_left == 0) continue;
             if(var_total == 0) continue;
 
-            loglikelihood_orig   += l->statistics[i][0] * (log(M_PI*var_left)) / 2.0;
-            loglikelihood_orig   += r->statistics[i][0] * (log(M_PI*var_right)) / 2.0;
-            loglikelihood_merged += (l->statistics[i][0] + r->statistics[i][0]) * (log(M_PI*var_total)) / 2.0;
+            for(auto it = tail_iterator(left); *it != nullptr; ++it) {
+                //cerr << (*it)->get_value(i) << endl;
+                //cerr << log(stats::dnorm((*it)->get_value(i), mean_left, sqrt(var_left))) << endl;
+                //cerr << log(stats::dnorm((*it)->get_value(i), mean_total, sqrt(var_total))) << endl;
+                loglikelihood_orig    += log(stats::dnorm((*it)->get_value(i), mean_left, sqrt(var_left)));
+                loglikelihood_merged  += log(stats::dnorm((*it)->get_value(i), mean_total, sqrt(var_total)));
+                //cerr << loglikelihood_orig << " " << loglikelihood_merged << endl;
+            }
+            for(auto it = tail_iterator(right); *it != nullptr; ++it) {
+                //cerr << (*it)->get_value(i) << endl;
+                //cerr << log(stats::dnorm((*it)->get_value(i), mean_right, sqrt(var_right))) << endl;
+                //cerr << log(stats::dnorm((*it)->get_value(i), mean_total, sqrt(var_total))) << endl;
+                loglikelihood_orig    += log(stats::dnorm((*it)->get_value(i), mean_right, sqrt(var_right)));
+                loglikelihood_merged  += log(stats::dnorm((*it)->get_value(i), mean_total, sqrt(var_total)));
+                //cerr << loglikelihood_orig << " " << loglikelihood_merged << endl;
+            }
+            //cerr << "*****" << endl;
+            /*
+            loglikelihood_orig   -= l->statistics[i][0] * (log(2.0 * M_PI*var_left)) / 2.0;
+            loglikelihood_orig   -= r->statistics[i][0] * (log(2.0 * M_PI*var_right)) / 2.0;
+            loglikelihood_merged -= (l->statistics[i][0] + r->statistics[i][0]) * (log(M_PI*var_total)) / 2.0;
             for(auto it = tail_iterator(left); *it != nullptr; ++it){
                 double diff = (*it)->get_value(i) - mean_left;
-                loglikelihood_orig  += (diff * diff) / (2.0 * var_left);
+                loglikelihood_orig  -= (diff * diff) / (2.0 * var_left);
                 diff = (*it)->get_value(i) - mean_total;
-                loglikelihood_merged += (diff * diff) / (2.0 * var_total);
+                loglikelihood_merged -= (diff * diff) / (2.0 * var_total);
             }
             for(auto it = tail_iterator(right); *it != nullptr; ++it){
                 double diff = (*it)->get_value(i) - mean_right;
-                loglikelihood_orig  += (diff * diff) / (2.0 * var_right);
+                loglikelihood_orig  -= (diff * diff) / (2.0 * var_right);
                 diff = (*it)->get_value(i) - mean_total;
-                loglikelihood_merged += (diff * diff) / (2.0 * var_total);
+                loglikelihood_merged -= (diff * diff) / (2.0 * var_total);
             }
+             */
             extra_parameters += 2;
         }
     }
