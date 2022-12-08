@@ -147,6 +147,7 @@ double rtiplus_data::predict_score(tail* t){
             ++modifier;
             continue;
         }
+
         int attr = i - modifier;
         double val = t->get_value(i);
         if (QUANTILE_DISTRIBUTIONS) {
@@ -164,7 +165,9 @@ double rtiplus_data::predict_score(tail* t){
         } else if (NORMAL_DISTRIBUTIONS) {
             double mean = statistics[attr][1] / statistics[attr][0];
             double var = statistics[attr][2] / statistics[attr][0] - (mean * mean);
+            if(var < 0.1) var = 0.1;
             double prob = stats::dnorm(val,mean,sqrt(var), false);
+            cerr << val << " " << mean << " " << sqrt(var) << " " << prob << endl;
             result += log(prob);
         }
     }
@@ -280,6 +283,9 @@ void rtiplus::update_score(state_merger *merger, apta_node* left, apta_node* rig
             }
             int attr = i-modifier;
 
+            if(l->statistics[attr][0] == 0) continue;
+            if(r->statistics[attr][0] == 0) continue;
+
             double mean_left = l->statistics[attr][1] / l->statistics[attr][0];
             double var_left  = l->statistics[attr][2] / l->statistics[attr][0] - (mean_left * mean_left);
 
@@ -289,9 +295,9 @@ void rtiplus::update_score(state_merger *merger, apta_node* left, apta_node* rig
             double mean_total = (l->statistics[attr][1] + r->statistics[attr][1]) / (l->statistics[attr][0] + r->statistics[attr][0]);
             double var_total  = (l->statistics[attr][2] + r->statistics[attr][2]) / (l->statistics[attr][0] + r->statistics[attr][0]) - (mean_total * mean_total);
 
-            if(var_right == 0) continue;
-            if(var_left == 0) continue;
-            if(var_total == 0) continue;
+            if(var_right < 0.1) var_right = 0.1;
+            if(var_left < 0.1) var_left = 0.1;
+            if(var_total < 0.1) var_total = 0.1;
 
             for(auto it = tail_iterator(left); *it != nullptr; ++it) {
                 //cerr << (*it)->get_value(i) << endl;
@@ -299,7 +305,7 @@ void rtiplus::update_score(state_merger *merger, apta_node* left, apta_node* rig
                 //cerr << log(stats::dnorm((*it)->get_value(i), mean_total, sqrt(var_total))) << endl;
                 loglikelihood_orig    += log(stats::dnorm((*it)->get_value(i), mean_left, sqrt(var_left)));
                 loglikelihood_merged  += log(stats::dnorm((*it)->get_value(i), mean_total, sqrt(var_total)));
-                //cerr << loglikelihood_orig << " " << loglikelihood_merged << endl;
+                cerr << loglikelihood_orig << " " << loglikelihood_merged << endl;
             }
             for(auto it = tail_iterator(right); *it != nullptr; ++it) {
                 //cerr << (*it)->get_value(i) << endl;
@@ -307,9 +313,9 @@ void rtiplus::update_score(state_merger *merger, apta_node* left, apta_node* rig
                 //cerr << log(stats::dnorm((*it)->get_value(i), mean_total, sqrt(var_total))) << endl;
                 loglikelihood_orig    += log(stats::dnorm((*it)->get_value(i), mean_right, sqrt(var_right)));
                 loglikelihood_merged  += log(stats::dnorm((*it)->get_value(i), mean_total, sqrt(var_total)));
-                //cerr << loglikelihood_orig << " " << loglikelihood_merged << endl;
+                cerr << loglikelihood_orig << " " << loglikelihood_merged << endl;
             }
-            //cerr << "*****" << endl;
+            cerr << "*****" << endl;
             /*
             loglikelihood_orig   -= l->statistics[i][0] * (log(2.0 * M_PI*var_left)) / 2.0;
             loglikelihood_orig   -= r->statistics[i][0] * (log(2.0 * M_PI*var_right)) / 2.0;
