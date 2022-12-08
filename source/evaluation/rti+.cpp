@@ -160,7 +160,7 @@ double rtiplus_data::predict_score(tail* t){
                 }
             }
             if(!found){
-                result += log(((double) statistics[attr][rtiplus::attribute_quantiles[attr].size()-1]) / divider);
+                result += log(((double) statistics[attr][rtiplus::attribute_quantiles[attr].size()]) / divider);
             }
         } else if (NORMAL_DISTRIBUTIONS) {
             double mean = statistics[attr][1] / statistics[attr][0];
@@ -428,3 +428,22 @@ void rtiplus::reset_split(state_merger *merger, apta_node* node){
     loglikelihood_merged = 0;
     extra_parameters = 0;
 };
+
+void rtiplus::read_json(json& data){
+    alergia::read_json(data);
+
+    if(QUANTILE_DISTRIBUTIONS){
+        json& d = data["rti_quantiles"];
+        for(int i = 0; i < d.size(); ++i) {
+            attribute_quantiles.push_back(d[i]);
+        }
+    }
+};
+
+void rtiplus::write_json(json& data){
+    alergia::write_json(data);
+    if(QUANTILE_DISTRIBUTIONS){
+        data["rti_quantiles"] = attribute_quantiles;
+    }
+};
+

@@ -335,3 +335,9 @@ double evaluation_function::compute_partial_score(state_merger* merger) {
 void evaluation_function::set_context(state_merger* m){
     merger = m;
 }
+
+void evaluation_function::read_json(json &data){
+};
+
+void evaluation_function::write_json(json &data){
+};

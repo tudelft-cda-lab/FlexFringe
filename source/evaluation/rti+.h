@@ -38,24 +38,31 @@ public:
 class rtiplus: public likelihoodratio {
 
 protected:
-  REGISTER_DEC_TYPE(rtiplus);
-  
+    REGISTER_DEC_TYPE(rtiplus);
+
 public:
-    
-  static vector< vector<double> > attribute_quantiles;
 
-  virtual void update_score(state_merger *merger, apta_node* left, apta_node* right);
-  //virtual void update_score_after(state_merger *merger, apta_node* left, apta_node* right);
+    static vector<vector<double> > attribute_quantiles;
 
-  virtual void split_update_score_before(state_merger*, apta_node* left, apta_node* right, tail* t);
-  virtual void split_update_score_after(state_merger*, apta_node* left, apta_node* right, tail* t);
-    
-  virtual bool split_compute_consistency(state_merger *, apta_node* left, apta_node* right);
-  virtual double split_compute_score(state_merger *, apta_node* left, apta_node* right);
-    
-  virtual void initialize_after_adding_traces(state_merger* merger);
-  virtual void initialize_before_adding_traces();
-  virtual void reset_split(state_merger *, apta_node *);
+    virtual void update_score(state_merger *merger, apta_node *left, apta_node *right);
+    //virtual void update_score_after(state_merger *merger, apta_node* left, apta_node* right);
+
+    virtual void split_update_score_before(state_merger *, apta_node *left, apta_node *right, tail *t);
+
+    virtual void split_update_score_after(state_merger *, apta_node *left, apta_node *right, tail *t);
+
+    virtual bool split_compute_consistency(state_merger *, apta_node *left, apta_node *right);
+
+    virtual double split_compute_score(state_merger *, apta_node *left, apta_node *right);
+
+    virtual void initialize_after_adding_traces(state_merger *merger);
+
+    virtual void initialize_before_adding_traces();
+
+    virtual void reset_split(state_merger *, apta_node *);
+
+    virtual void read_json(json &data);
+    virtual void write_json(json &data);
 };
 
 #endif

@@ -208,6 +208,9 @@ void apta::print_json(iostream& output){
         output << "\"" << inputdata::string_from_symbol(i)<< "\"";
     }
     output << "\n\t],\n";
+    json d;
+    merger->get_eval()->write_json(d);
+    output << "\t\t\t\"eval\" :  " << d << ",\n";
     output << "\t\"nodes\" : [\n";
     bool first = true;
     for(merged_APTA_iterator Ait = merged_APTA_iterator(root); *Ait != nullptr; ++Ait) {
@@ -326,6 +329,7 @@ void apta::read_json(istream& input_stream){
     for (auto & i : read_apta["alphabet"]) {
         inputdata::symbol_from_string(i);
     }
+    merger->get_eval()->read_json(read_apta["eval"]);
     for (int i = 0; i < read_apta["nodes"].size(); ++i) {
         json n = read_apta["nodes"][i];
         auto *node = new apta_node();

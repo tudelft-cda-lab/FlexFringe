@@ -258,6 +258,9 @@ public:
     void set_context(state_merger*);
 
     virtual bool pre_consistent(state_merger *merger, apta_node *left, apta_node *right);
+
+    virtual void read_json(json &data);
+    virtual void write_json(json &data);
 };
 
 
