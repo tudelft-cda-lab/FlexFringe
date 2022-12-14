@@ -984,6 +984,7 @@ refinement* state_merger::test_splits(apta_node* blue){
 
         float prev_val = (*(sorted_tails.begin())).first;
         for(auto & sorted_tail : sorted_tails){
+            //cerr << "testing " << prev_val << endl;
             if(sorted_tail.first > prev_val){
                 if(blue->get_size() > MIN_SPLIT_SIZE && new_node->get_size() > MIN_SPLIT_SIZE){
                     score = eval->split_compute_score(this, blue, new_node);

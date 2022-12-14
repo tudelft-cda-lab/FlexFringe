@@ -24,6 +24,9 @@ rtiplus_data::rtiplus_data() : likelihood_data::likelihood_data() {
             else if(NORMAL_DISTRIBUTIONS) statistics.push_back(vector<double>(3, 0));
         }
     }
+    undo_RSS_after = 0.0;
+    undo_RSS_before = 0.0;
+    undo_num_RSS = 0;
 };
 
 void rtiplus_data::initialize() {
@@ -37,6 +40,9 @@ void rtiplus_data::initialize() {
         if(QUANTILE_DISTRIBUTIONS) statistics[i - modifier].assign(4, 0);
         else if(NORMAL_DISTRIBUTIONS) statistics[i - modifier].assign(3, 0);
     }
+    undo_RSS_after = 0.0;
+    undo_RSS_before = 0.0;
+    undo_num_RSS = 0;
 };
 
 void rtiplus_data::add_tail(tail* t){
@@ -167,7 +173,7 @@ double rtiplus_data::predict_score(tail* t){
             double var = statistics[attr][2] / statistics[attr][0] - (mean * mean);
             if(var < 0.1) var = 0.1;
             double prob = stats::dnorm(val,mean,sqrt(var), false);
-            cerr << val << " " << mean << " " << sqrt(var) << " " << prob << endl;
+            //cerr << val << " " << mean << " " << sqrt(var) << " " << prob << endl;
             result += log(prob);
         }
     }
@@ -223,6 +229,10 @@ void rtiplus::update_score(state_merger *merger, apta_node* left, apta_node* rig
     double temp_loglikelihood_orig = loglikelihood_orig;
     double temp_loglikelihood_merged = loglikelihood_merged;
     int temp_extra_parameters = extra_parameters;
+
+    double temp_RSS_before = RSS_before;
+    double temp_RSS_after = RSS_after;
+    int temp_num_RSS = num_RSS;
 
     likelihoodratio::update_score(merger, left, right);
 
@@ -286,6 +296,10 @@ void rtiplus::update_score(state_merger *merger, apta_node* left, apta_node* rig
             if(l->statistics[attr][0] == 0) continue;
             if(r->statistics[attr][0] == 0) continue;
 
+            double num_right = r->statistics[attr][0];
+            double num_left  = l->statistics[attr][0];
+            double num_total = num_right + num_left;
+
             double mean_left = l->statistics[attr][1] / l->statistics[attr][0];
             double var_left  = l->statistics[attr][2] / l->statistics[attr][0] - (mean_left * mean_left);
 
@@ -295,27 +309,52 @@ void rtiplus::update_score(state_merger *merger, apta_node* left, apta_node* rig
             double mean_total = (l->statistics[attr][1] + r->statistics[attr][1]) / (l->statistics[attr][0] + r->statistics[attr][0]);
             double var_total  = (l->statistics[attr][2] + r->statistics[attr][2]) / (l->statistics[attr][0] + r->statistics[attr][0]) - (mean_total * mean_total);
 
-            if(var_right < 0.1) var_right = 0.1;
-            if(var_left < 0.1) var_left = 0.1;
-            if(var_total < 0.1) var_total = 0.1;
+            var_right += 0.1;
+            var_left += 0.1;
+            var_total += 0.05;
 
-            for(auto it = tail_iterator(left); *it != nullptr; ++it) {
+            num_RSS += num_total;
+            RSS_after += var_total * num_total;
+            RSS_before += var_left * num_left;
+            RSS_before += var_right * num_right;
+
+            //cerr << num_left * log(var_left) << " " << num_right * log(var_right) << " " << num_total * log(var_total) << endl;
+            //cerr << var_left << " " << var_right << " " << var_total << endl;
+            //cerr << num_left << " " << mean_left << " " << num_right << " " << mean_right << " " << num_total << " " << mean_total << endl;
+
+            /*for(auto it = tail_iterator(left); *it != nullptr; ++it) {
+                cerr << (*it)->get_value(i) << " ";
+            }
+            cerr << endl;
+            for(auto it = tail_iterator(right); *it != nullptr; ++it) {
+                cerr << (*it)->get_value(i) << " ";
+            }
+            cerr << endl;*/
+
+            //loglikelihood_orig    -= num_left * log(var_left) * 0.5;
+            //loglikelihood_orig    -= num_right * log(var_right) * 0.5;
+            //loglikelihood_merged  -= num_total * log(var_total) * 0.5;
+            //for(auto it = tail_iterator(left); *it != nullptr; ++it) {
                 //cerr << (*it)->get_value(i) << endl;
                 //cerr << log(stats::dnorm((*it)->get_value(i), mean_left, sqrt(var_left))) << endl;
                 //cerr << log(stats::dnorm((*it)->get_value(i), mean_total, sqrt(var_total))) << endl;
-                loglikelihood_orig    += log(stats::dnorm((*it)->get_value(i), mean_left, sqrt(var_left)));
-                loglikelihood_merged  += log(stats::dnorm((*it)->get_value(i), mean_total, sqrt(var_total)));
-                cerr << loglikelihood_orig << " " << loglikelihood_merged << endl;
-            }
-            for(auto it = tail_iterator(right); *it != nullptr; ++it) {
+                //RSS_before += ((*it)->get_value(i) - mean_left) * ((*it)->get_value(i) - mean_left);
+                //RSS_after += ((*it)->get_value(i) - mean_total) * ((*it)->get_value(i) - mean_total);
+                //loglikelihood_orig    += log(stats::dnorm((*it)->get_value(i), mean_left, sqrt(var_left)));
+                //loglikelihood_merged  += log(stats::dnorm((*it)->get_value(i), mean_total, sqrt(var_total)));
+                //cerr << loglikelihood_orig << " " << loglikelihood_merged << endl;
+            //}
+            //for(auto it = tail_iterator(right); *it != nullptr; ++it) {
                 //cerr << (*it)->get_value(i) << endl;
                 //cerr << log(stats::dnorm((*it)->get_value(i), mean_right, sqrt(var_right))) << endl;
                 //cerr << log(stats::dnorm((*it)->get_value(i), mean_total, sqrt(var_total))) << endl;
-                loglikelihood_orig    += log(stats::dnorm((*it)->get_value(i), mean_right, sqrt(var_right)));
-                loglikelihood_merged  += log(stats::dnorm((*it)->get_value(i), mean_total, sqrt(var_total)));
-                cerr << loglikelihood_orig << " " << loglikelihood_merged << endl;
-            }
-            cerr << "*****" << endl;
+                //RSS_before += ((*it)->get_value(i) - mean_right) * ((*it)->get_value(i) - mean_right);
+                //RSS_after += ((*it)->get_value(i) - mean_total) * ((*it)->get_value(i) - mean_total);
+                //loglikelihood_orig    += log(stats::dnorm((*it)->get_value(i), mean_right, sqrt(var_right)));
+                //loglikelihood_merged  += log(stats::dnorm((*it)->get_value(i), mean_total, sqrt(var_total)));
+                //cerr << loglikelihood_orig << " " << loglikelihood_merged << endl;
+            //}
+            //cerr << "*****" << endl;*/
             /*
             loglikelihood_orig   -= l->statistics[i][0] * (log(2.0 * M_PI*var_left)) / 2.0;
             loglikelihood_orig   -= r->statistics[i][0] * (log(2.0 * M_PI*var_right)) / 2.0;
@@ -333,13 +372,17 @@ void rtiplus::update_score(state_merger *merger, apta_node* left, apta_node* rig
                 loglikelihood_merged -= (diff * diff) / (2.0 * var_total);
             }
              */
-            extra_parameters += 2;
+            extra_parameters += 1;
         }
     }
 
     r->undo_loglikelihood_orig = loglikelihood_orig - temp_loglikelihood_orig;
     r->undo_loglikelihood_merged = loglikelihood_merged - temp_loglikelihood_merged;
     r->undo_extra_parameters = extra_parameters - temp_extra_parameters;
+
+    r->undo_RSS_before = RSS_before - temp_RSS_before;
+    r->undo_RSS_after = RSS_after - temp_RSS_after;
+    r->undo_num_RSS = num_RSS - temp_num_RSS;
 };
 
 void rtiplus::split_update_score_before(state_merger* merger, apta_node* left, apta_node* right, tail* t) {
@@ -350,9 +393,17 @@ void rtiplus::split_update_score_before(state_merger* merger, apta_node* left, a
     loglikelihood_merged -= r->undo_loglikelihood_merged;
     extra_parameters -= r->undo_extra_parameters;
 
+    RSS_after -= r->undo_RSS_after;
+    RSS_before -= r->undo_RSS_before;
+    num_RSS -= r->undo_num_RSS;
+
     r->undo_loglikelihood_orig = 0.0;
     r->undo_loglikelihood_merged = 0.0;
     r->undo_extra_parameters = 0;
+
+    r->undo_RSS_after = 0.0;
+    r->undo_RSS_before = 0.0;
+    r->undo_num_RSS = 0;
 };
 
 void rtiplus::split_update_score_after(state_merger* merger, apta_node* left, apta_node* right, tail* t) {
@@ -360,8 +411,20 @@ void rtiplus::split_update_score_after(state_merger* merger, apta_node* left, ap
 };
 
 bool rtiplus::split_compute_consistency(state_merger *, apta_node* left, apta_node* right){
+    //cerr << "test A: " << 2.0 * (loglikelihood_orig - loglikelihood_merged) << endl;
+    if(num_RSS != 0.0){
+        loglikelihood_merged -= 0.5 * num_RSS*(log(RSS_after/num_RSS));
+        loglikelihood_orig   -= 0.5 * num_RSS*(log(RSS_before/num_RSS));
+        num_RSS = 0.0;
+    }
+    //cerr << "test B: " << 2.0 * (loglikelihood_orig - loglikelihood_merged) << endl;
+
+    //cerr << num_RSS << " " << RSS_before << " " << RSS_after << endl;
+
     double test_statistic = 2.0 * (loglikelihood_orig - loglikelihood_merged);
     double p_value = 1.0 - stats::pchisq(test_statistic, extra_parameters, false);
+
+    //cerr << "p_val: " << p_value << endl;
 
     if(left->get_size() <= STATE_COUNT || right->get_size() <= STATE_COUNT) return false;
     if(USE_SINKS && (left->get_size() <= SINK_COUNT || right->get_size() <= SINK_COUNT)) return false;
@@ -373,11 +436,42 @@ bool rtiplus::split_compute_consistency(state_merger *, apta_node* left, apta_no
 };
 
 double rtiplus::split_compute_score(state_merger *, apta_node* left, apta_node* right){
+    //cerr << "test A: " << 2.0 * (loglikelihood_orig - loglikelihood_merged) << endl;
+    if(num_RSS != 0.0){
+        loglikelihood_merged -= 0.5 * num_RSS*(log(RSS_after));
+        loglikelihood_orig   -= 0.5 * num_RSS*(log(RSS_before));
+        num_RSS = 0.0;
+    }
+    //cerr << "test B: " << 2.0 * (loglikelihood_orig - loglikelihood_merged) << endl;
+
+    //cerr << num_RSS << " " << RSS_before << " " << RSS_after << endl;
+
     double test_statistic = 2.0 * (loglikelihood_orig - loglikelihood_merged);
     double p_value = 1.0 - stats::pchisq(test_statistic, extra_parameters, false);
 
+    //cerr << "p_val: " << p_value << endl;
+
     return 1.0 + CHECK_PARAMETER - p_value;
 };
+
+bool rtiplus::compute_consistency(state_merger *merger, apta_node* left, apta_node* right){
+    if(num_RSS != 0.0){
+        loglikelihood_merged -= 0.5 * num_RSS*(log(RSS_after));
+        loglikelihood_orig   -= 0.5 * num_RSS*(log(RSS_before));
+        num_RSS = 0.0;
+    }
+    return likelihoodratio::compute_consistency(merger, left, right);
+};
+
+double  rtiplus::compute_score(state_merger*, apta_node* left, apta_node* right){
+    if(num_RSS != 0.0){
+        loglikelihood_merged -= 0.5 * num_RSS*(log(RSS_after));
+        loglikelihood_orig   -= 0.5 * num_RSS*(log(RSS_before));
+        num_RSS = 0.0;
+    }
+    return likelihoodratio::compute_score(merger, left, right);
+}
+
 
 void rtiplus::initialize_after_adding_traces(state_merger* merger){
 };
@@ -423,10 +517,17 @@ void rtiplus::initialize_before_adding_traces(){
 }
 
 void rtiplus::reset_split(state_merger *merger, apta_node* node){
-    inconsistency_found = false;
-    loglikelihood_orig = 0;
-    loglikelihood_merged = 0;
-    extra_parameters = 0;
+    likelihoodratio::reset(merger);
+    RSS_before = 0;
+    RSS_after = 0;
+    num_RSS = 0;
+};
+
+void rtiplus::reset(state_merger *merger){
+    likelihoodratio::reset(merger);
+    RSS_before = 0;
+    RSS_after = 0;
+    num_RSS = 0;
 };
 
 void rtiplus::read_json(json& data){

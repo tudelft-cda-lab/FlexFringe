@@ -117,6 +117,8 @@ void likelihoodratio::split_update_score_after(state_merger* merger, apta_node* 
 };
 
 bool likelihoodratio::compute_consistency(state_merger *merger, apta_node* left, apta_node* right){
+    //cerr << "test: " << 2.0 * (loglikelihood_orig - loglikelihood_merged) << endl;
+
     double test_statistic = 2.0 * (loglikelihood_orig - loglikelihood_merged);
     double p_value = 1.0 - stats::pchisq(test_statistic, extra_parameters, false);
 

@@ -11,6 +11,9 @@ protected:
   REGISTER_DEC_DATATYPE(rtiplus_data);
 
 public:
+    double undo_RSS_before;
+    double undo_RSS_after;
+    int undo_num_RSS;
 
     quantile_map statistics;
     
@@ -42,6 +45,10 @@ protected:
 
 public:
 
+    double RSS_before;
+    double RSS_after;
+    int num_RSS;
+
     static vector<vector<double> > attribute_quantiles;
 
     virtual void update_score(state_merger *merger, apta_node *left, apta_node *right);
@@ -55,11 +62,15 @@ public:
 
     virtual double split_compute_score(state_merger *, apta_node *left, apta_node *right);
 
+    virtual bool compute_consistency(state_merger *merger, apta_node* left, apta_node* right);
+    virtual double  compute_score(state_merger*, apta_node* left, apta_node* right);
+
     virtual void initialize_after_adding_traces(state_merger *merger);
 
     virtual void initialize_before_adding_traces();
 
     virtual void reset_split(state_merger *, apta_node *);
+    virtual void reset(state_merger *merger);
 
     virtual void read_json(json &data);
     virtual void write_json(json &data);
