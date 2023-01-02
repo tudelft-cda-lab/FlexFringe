@@ -245,35 +245,6 @@ void csv_inputdata::add_type_to_trace(trace* new_trace,
     new_trace->type = r_types[type];
 }
 
-[[deprecated]]
-void csv_inputdata::read_abbadingo_type(istream &input_stream, trace* new_trace){
-    string temp, type_string, type_attr, val;
-    std::stringstream l1, l2;
-
-    input_stream >> temp;
-    l1.str(temp);
-    std::getline(l1,type_string,':');
-    std::getline(l1,type_attr);
-    l1.clear();
-
-    if(r_types.find(type_string) == r_types.end()){
-        r_types[type_string] = (int)types.size();
-        types.push_back(type_string);
-    }
-
-    auto num_trace_attributes = this->trace_attributes.size();
-    if(num_trace_attributes > 0){
-        l2.str(type_attr);
-        for(int i = 0; i < num_trace_attributes; ++i){
-            if(i < num_trace_attributes - 1) std::getline(l2,val,',');
-            else std::getline(l2,val);
-            new_trace->trace_attr[i] = trace_attributes[i].get_value(val);
-        }
-        l2.clear();
-    }
-    new_trace->type = r_types[type_string];
-}
-
 // replaces read_abbadingo_symbol
 tail* csv_inputdata::make_tail(const string& id,
                                const string& symbol,
@@ -305,45 +276,6 @@ tail* csv_inputdata::make_tail(const string& id,
     }
 
     return new_tail;
-}
-
-[[deprecated]]
-void csv_inputdata::read_abbadingo_symbol(istream &input_stream, tail* new_tail){
-    string temp, temp_symbol, data, type_string, type_attr, symbol_string, symbol_attr, val;
-    std::stringstream l1, l2, l3;
-
-    tail_data* td = new_tail->td;
-
-    input_stream >> std::ws;
-    temp = string(std::istreambuf_iterator<char>(input_stream), {});
-    l1.str(temp);
-    std::getline(l1,temp_symbol,'/');
-    std::getline(l1,data);
-    l1.clear();
-    l2.str(temp_symbol);
-    std::getline(l2,symbol_string,':');
-    std::getline(l2,symbol_attr);
-    l2.clear();
-
-    if(r_alphabet.find(symbol_string) == r_alphabet.end()){
-        r_alphabet[symbol_string] = (int)alphabet.size();
-        alphabet.push_back(symbol_string);
-    }
-
-    td->symbol = r_alphabet[symbol_string];
-    td->data = data;
-    td->tail_nr = num_tails++;
-
-    auto num_symbol_attributes = this->symbol_attributes.size();
-    if(num_symbol_attributes > 0){
-        l3.str(symbol_attr);
-        for(int i = 0; i < num_symbol_attributes; ++i){
-            if(i < num_symbol_attributes - 1) std::getline(l3,val,',');
-            else std::getline(l3,val);
-            td->attr[i] = symbol_attributes[i].get_value(val);
-        }
-        l3.clear();
-    }
 }
 
 const set<int> &csv_inputdata::getIdCols() const {

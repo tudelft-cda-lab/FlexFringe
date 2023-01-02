@@ -28,10 +28,6 @@ private:
     std::set<int> trace_attr_cols;
     std::set<int> symbol_attr_cols;
 
-    // TODO: refactor so these aren't needed anymore
-    void read_abbadingo_symbol(std::istream &input_stream, tail *new_tail);
-    void read_abbadingo_type(std::istream &input_stream, trace *new_trace);
-
     char delim = ',';
     bool strip_whitespace = true;
 
