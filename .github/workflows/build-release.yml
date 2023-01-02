@@ -52,6 +52,7 @@ jobs:
       - name: rename-binary
         run: |
           cd build
+          ls
           mv flexfringe${{ matrix.extension }} flexfringe-${{ matrix.triplet }}${{ matrix.extension}}
 
       - name: run-tests

@@ -1,7 +1,7 @@
 CC	=	g++
 CFLAGS	=	-O4
 SOURCES = 	source/*.cpp 
-LFLAGS 	= -w -std=c++11 -L/opt/local/lib -I/opt/local/include -I./source -I./source/evaluation -I./source/utility -lm -lpthread -ldl
+LFLAGS 	= -w -std=c++17 -L/opt/local/lib -I/opt/local/include -I./source -I./source/evaluation -I./source/utility -lm -lpthread -ldl
 
 EVALFILES := $(wildcard source/evaluation/*.cpp)
 EVALOBJS := $(addprefix source/evaluation/,$(notdir $(EVALFILES:.cpp=.o)))

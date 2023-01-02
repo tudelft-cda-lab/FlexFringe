@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
+set(CMAKE_OSX_SYSROOT "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk")
 project(flexfringe)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -10,9 +11,13 @@ endif()
 
 option(COMPILE_DOCS "This is settable from the command line" OFF)
 
-set(CMAKE_CXX_FLAGS "-Wall")
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+if (MSVC)
+    add_compile_options("/W4" "$<$<CONFIG:RELEASE>:/O2>")
+else()
+    add_compile_options("-Wall" "-Wextra"
+                        "$<$<CONFIG:RELEASE>:-O3>"
+                        "$<$<CONFIG:DEBUG>:-g>")
+endif()
 
 add_compile_definitions(LOGURU_WITH_STREAMS=1)
 

@@ -208,7 +208,7 @@ double alergia_data::predict_symbol_score(int t){
 }
 
 double alergia_data::align_score(tail* t){
-    return log(predict_score(t));
+    return predict_score(t);
 }
 
 tail* alergia_data::sample_tail(){
@@ -331,7 +331,7 @@ bool alergia::compute_tests(num_map& left_map, int left_total, int left_final,
 
 /* ALERGIA, consistency based on Hoeffding bound, only uses positive (type=1) data, pools infrequent counts */
 bool alergia::consistent(state_merger *merger, apta_node* left, apta_node* right){
-    if(inconsistency_found) return false;
+    //if(inconsistency_found) return false;
     auto* l = (alergia_data*) left->get_data();
     auto* r = (alergia_data*) right->get_data();
 
@@ -359,29 +359,6 @@ bool alergia::consistent(state_merger *merger, apta_node* left, apta_node* right
 
 double alergia::compute_score(state_merger *merger, apta_node* left, apta_node* right){
     return sum_diffs;
-};
-
-/* When is an APTA node a sink state?
- * sink states are not considered merge candidates */
-bool alergia_data::is_low_count_sink(){
-    return num_paths() + num_final() < SINK_COUNT;
-}
-
-int alergia_data::sink_type(){
-    if(!USE_SINKS) return -1;
-    if (is_low_count_sink()) return 0;
-    return -1;
-};
-
-bool alergia_data::sink_consistent(int type){
-    if(!USE_SINKS) return true;
-    if(type == 0) return is_low_count_sink();
-    return true;
-};
-
-int alergia::num_sink_types(){
-    if(!USE_SINKS) return 0;
-    return 1;
 };
 
 void alergia::reset(state_merger *merger){

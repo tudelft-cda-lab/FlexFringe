@@ -41,16 +41,19 @@ void print_current_automaton(state_merger* merger, const string& output_file, co
         merger->print_json(output_file + append_string + ".json");
     }
     if(OUTPUT_SINKS && !PRINT_WHITE){
+        bool red_undo = PRINT_RED;
+        PRINT_RED = false;
         bool white_undo = PRINT_WHITE;
         PRINT_WHITE= true;
         bool blue_undo = PRINT_BLUE;
         PRINT_BLUE = true;
         if (OUTPUT_TYPE == "dot" || OUTPUT_TYPE == "both") {
-            merger->print_dot(output_file + append_string + ".dot");
+            merger->print_dot(output_file + append_string + "sinks.dot");
         }
         if (OUTPUT_TYPE == "json" || OUTPUT_TYPE == "both") {
-            merger->print_json(output_file + append_string + ".json");
+            merger->print_json(output_file + append_string + "sinks.json");
         }
+        PRINT_RED = red_undo;
         PRINT_WHITE = white_undo;
         PRINT_BLUE = blue_undo;
     }
@@ -143,10 +146,12 @@ void run() {
 
         print_current_automaton(merger, OUTPUT_FILE, ".final");
     } else if(OPERATION_MODE == "stream") {
-       cout << "stream mode selected" << endl;
-       LOG_S(INFO) << "Stream mode selected, starting run";
+        cout << "stream mode selected" << endl;
+        LOG_S(INFO) << "Stream mode selected, starting run";
 
-        //stream_mode(merger, param, input_stream, &id);
+        stream_object stream_obj;
+        stream_obj.stream_mode(merger, input_stream, id);
+
         print_current_automaton(merger, OUTPUT_FILE, ".final");
     } else if(OPERATION_MODE == "search") {
         cout << "search mode selected" << endl;
@@ -237,11 +242,6 @@ void run() {
 #ifndef UNIT_TESTING
 int main(int argc, char *argv[]){
 
-    loguru::g_stderr_verbosity = loguru::Verbosity_OFF;
-    loguru::init(argc, argv);
-    loguru::add_file("flexfringe.log", loguru::Append, loguru::Verbosity_MAX);
-    LOG_S(INFO) << "Starting flexfringe run";
-
     for(int i = 0; i < argc; i++) {
       COMMAND_LINE += string(argv[i]) + string(" ");
     }
@@ -268,6 +268,7 @@ int main(int argc, char *argv[]){
     app.add_option("tracefile", INPUT_FILE, "Name of the input file containing the traces, either in Abbadingo or JSON format.")->required();
     app.add_option("--outputfile", OUTPUT_FILE, "The prefix of the output file name. Default is same as input.");
     app.add_option("--output", OUTPUT_TYPE, "Switch between output in dot, json, or both (default) formats.");
+    app.add_option("--logpath", LOG_PATH, "The path to write the flexfringe log file to. Defaults to \"flexfringe.log\"");
     app.set_config("--ini", default_file_name, "Read an ini file", false);
     app.add_option("--mode", OPERATION_MODE, "batch (default), interactive, or stream depending on the mode of operation.");
     app.add_option("--heuristic-name,--heuristic_name", HEURISTIC_NAME, "Name of the merge heuristic to use; default count_driven. Use any heuristic in the evaluation directory. It is often beneficial to write your own, as heuristics are very application specific.")->required();
@@ -289,6 +290,7 @@ int main(int argc, char *argv[]){
     app.add_option("--swstride", SLIDING_WINDOW_STRIDE, "The stride (jump size) between two sliding windows, when --slidingwindow is set to 1. Default=5.");
     app.add_option("--swtype", SLIDING_WINDOW_TYPE, "Whether the sliding window should use the last element as the sliding window type. Default = 0.");
     app.add_option("--swaddshorter", SLIDING_WINDOW_ADD_SHORTER, "Whether sliding windows shorter than swsize should be added to the apta. Default = 0.");
+    app.add_option("--redbluethreshold", RED_BLUE_THRESHOLD, "Boolean. If set to 1, then states will only be appended to red- or blue states. Only makes sense in stream mode. Default=0.");
 
     app.add_option("--extend", EXTEND_ANY_RED, "When set to 1, any merge candidate (blue) that cannot be merged with any target (red) is immediately changed into a (red) target; default=1. If set to 0, a merge candidate is only changed into a target when no more merges are possible. Advice: unclear which strategy is best, when using statistical (or count-based) consistency checks, keep in mind that merge consistency between states may change due to other performed merges. This will especially influence low frequency states. When there are a lot of those, we therefore recommend setting x=0.");
     app.add_option("--shallowfirst", DEPTH_FIRST, "When set to 1, the ordering of the nodes is changed from most frequent first (default) to most shallow (smallest depth) first; default=0. Advice: use depth-first when learning from characteristic samples.");
@@ -362,12 +364,26 @@ int main(int argc, char *argv[]){
     app.add_option("--predictdata", PREDICT_TRACE, "Predicting calls the predict data functions from the evaluation function. Default=0.");
 
     app.add_option("--aligndistancepenalty", ALIGN_DISTANCE_PENALTY, "A penalty for jumping during alignment multiplied by the merged prefix tree distance. Default: 0.0.");
+    app.add_option("--alignskippenalty", ALIGN_SKIP_PENALTY, "A penalty for skipping during alignment. Default: 0.0.");
 
     app.add_option("--diffsize", DIFF_SIZE, "Behavioral differencing works by sampling diffsize traces and using these to compute KL-Divergence. Default=1000.");
     app.add_option("--diffmaxlength", DIFF_MAX_LENGTH, "The maximum length of traces sampled for differencing. Default=50.");
     app.add_option("--diffmin", DIFF_MIN, "The minimum score for the behavioral difference of a sampled trace. Default=-100.");
 
+    // parameters specifically for CMS heuristic
+    app.add_option("--numoftables", NROWS_SKETCHES, "Number of rows of sketches upon initialization.");
+    app.add_option("--vectordimension", NCOLUMNS_SKETCHES, "Number of columns of sketches upon initialization.");
+    app.add_option("--distancemetric", DISTANCE_METRIC_SKETCHES, "The distance metric when comparing the sketches. 1 hoeffding-bound and cosine-similarity for score, 2 hoeffding bound in both, 3 like 1 but pooled. Default: 1");
+    app.add_option("--randominitialization", RANDOM_INITIALIZATION_SKETCHES, "If 0 (zero), then initialize CMS deterministically. Elsewise, CMS becomes random. Default: 0.");
+    app.add_option("--futuresteps", NSTEPS_SKETCHES, "Number of steps into future when storing future in sketches. Default: 2.");
+
     CLI11_PARSE(app, argc, argv)
+
+    loguru::g_stderr_verbosity = loguru::Verbosity_OFF;
+    loguru::init(argc, argv);
+    loguru::add_file(LOG_PATH.c_str(), loguru::Append, loguru::Verbosity_MAX);
+
+    LOG_S(INFO) << "Starting flexfringe run";
 
     run();
 
