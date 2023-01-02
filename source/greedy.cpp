@@ -19,7 +19,13 @@ void greedy_run(state_merger* merger){
         cout << " ";
         std::cout.flush();
 
-        //merger->print_dot("test" + to_string(num) + ".dot");
+        std::stringstream ss;
+        ss << std::setw(4) << std::setfill('0') << num;
+        std::string s = ss.str();
+
+        if (DEBUGGING) {
+            merger->print_dot("test" + ss.str() + ".dot");
+        }
 
         best_ref->doref(merger);
 

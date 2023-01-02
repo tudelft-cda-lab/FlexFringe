@@ -7,7 +7,7 @@ void apta_graph::add_conflicts(state_merger* merger){
 	for(node_set::iterator it = nodes.begin(); it != nodes.end(); ++it){
 		graph_node* left = *it;
 		node_set::iterator next_it = it;
-		next_it++;
+		++next_it;
 		for(node_set::iterator it2 = next_it;
 				it2 != nodes.end();
 				++it2){

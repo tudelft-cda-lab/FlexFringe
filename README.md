@@ -86,24 +86,28 @@ Logging is incomplete. *flexfringe* uses the loguru framework (see the [https://
 
 ## Who to talk to ##
 
-*  Sofia Tsoni (scientific programmer, maintainer)
-*  Christian Hammerschmidt (author of the online/streaming mode, interactive mode, and the flexible evaluation function mechanism)
-*  Sicco Verwer (original author; best to reach out to for questions on batch mode, RTI+ implementation, and SAT reduction)
+*   Tom Catshoek (scientific programmer and maintainer)
+*   Christian Hammerschmidt (author of the online/streaming mode, interactive mode, and the flexible evaluation function mechanism)
+*   Sicco Verwer (original author; best to reach out to for questions on batch mode, RTI+ implementation, and SAT reduction)
+*   Robert Baumgartner
+
+Former contributors include:
+*   Sofia Tsoni (formerly scientific programmer and maintainer)
 
 ## Badges ##
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/2f63a8167ec14bbe8122c3432b3ccfd5)](https://www.codacy.com/bb/chrshmmmr/dfasat/dashboard?utm_source=chrshmmmr@bitbucket.org&amp;utm_medium=referral&amp;utm_content=chrshmmmr/dfasat&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/ae975ed72f9c4e1bb19b18dc44aacf1f)](https://app.codacy.com/gh/tudelft-cda-lab/FlexFringe?utm_source=github.com&utm_medium=referral&utm_content=tudelft-cda-lab/FlexFringe&utm_campaign=Badge_Grade_Settings)
 
 ## Credits and Licences ##
 
 *flexfinge* relies on a number of open source packages and libraries. You can find the respective LICENCE files in the source/utility subdirectory.
 Most notable, we use
 
-*  CLI11 for command line parsing
-*  Catch for unit testing
-*  StatsLib C++ and GCE-Math C++ library by Keith O'Hara (Apache Version 2.0)
-*  JSON for Modern C++ (version 3.1.2) by Niels Lohmann <http://nlohmann.me> from https://github.com/nlohmann/json
+*   CLI11 for command line parsing
+*   Catch for unit testing
+*   StatsLib C++ and GCE-Math C++ library by Keith O'Hara (Apache Version 2.0)
+*   JSON for Modern C++ (version 3.1.2) by Niels Lohmann <http://nlohmann.me> from https://github.com/nlohmann/json
 
-## Documentation
+## Building Doxygen Documentation
 
 The documentation of this project can be build using the
 
@@ -112,24 +116,24 @@ COMPILE_DOCS=ON
 flag along with the cmake command. We are using Doxygen and Sphinx. Requirements for compiling the documentation
 are
 
-* Doxygen (tested with version 1.8.20)
-* Sphinx (tested with version 3.3.1). We are using the rtd-theme, installation see below.
-* breathe (tested with version 4.24.0)
+*   Doxygen (tested with version 1.8.20)
+*   Sphinx (tested with version 3.3.1). We are using the rtd-theme, installation see below.
+*   breathe (tested with version 4.24.0)
 
 They can be installed on Linux using the commands
 
-```
+```shell
 apt-get install doxygen
 ```
 ,
 
-```
+```shell
 pip install sphinx_rtd_theme
 ```
 
 , and
 
-```
+```shell
 pip install breathe
 ```
 .

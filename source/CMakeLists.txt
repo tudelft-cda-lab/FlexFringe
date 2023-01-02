@@ -41,8 +41,8 @@ add_library(Source STATIC
             interactive.h
             parameters.cpp
             parameters.h
-        greedy.cpp
-        greedy.h
+            greedy.cpp
+            greedy.h
             refinement.cpp
             refinement.h
             searcher.cpp
@@ -56,6 +56,7 @@ add_library(Source STATIC
         predict.cpp predict.h
         differencing.cpp differencing.h
         ensemble.cpp ensemble.h
+        dfa_properties.cpp dfa_properties.h
         input/csvreader.h
         input/csvreader.cpp
         input/i_inputdata.h

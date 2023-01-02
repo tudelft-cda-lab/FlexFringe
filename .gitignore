@@ -4,10 +4,12 @@ cmake-build-*/
 build/
 test-reports/
 *.o
+*.a
 
 # Binaries
 runtests
 flexfringe
+tests/tests
 
 # Output files
 *.json
@@ -16,6 +18,7 @@ flexfringe
 *.png
 *.log
 *.result
+*.png
 
 # Generated files
 source/gitversion.cpp

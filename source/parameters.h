@@ -26,6 +26,7 @@ extern bool TARGET_REJECTING;
 extern bool SYMMETRY_BREAKING;
 extern bool FORCING;
 extern string OUTPUT_TYPE;
+extern string LOG_PATH;
 extern bool MERGE_MOST_VISITED;
 extern bool MERGE_BLUE_BLUE;
 extern bool RED_FIXED;
@@ -49,6 +50,7 @@ extern bool TYPE_CONSISTENT;
 extern bool MERGE_ROOT;
 extern bool PRINT_WHITE;
 extern bool PRINT_BLUE;
+extern bool PRINT_RED;
 
 extern double EXTEND_SCORE;
 
@@ -66,6 +68,7 @@ extern double RANDOMIZE_SCORES;
 
 extern bool ADD_TAILS;
 extern int PARENT_SIZE_THRESHOLD;
+extern bool RED_BLUE_THRESHOLD;
 
 extern bool PERFORM_DEPTH_CHECK;
 extern int DEPTH_CHECK_MAX_DEPTH;
@@ -97,6 +100,7 @@ extern bool PREDICT_TYPE_PATH;
 extern bool PREDICT_SYMBOL;
 extern bool PREDICT_TRACE;
 
+extern double ALIGN_SKIP_PENALTY;
 extern double ALIGN_DISTANCE_PENALTY;
 
 extern bool SLIDING_WINDOW_ADD_SHORTER;
@@ -108,6 +112,13 @@ extern double DIFF_MIN;
 extern int DIFF_MAX_LENGTH;
 
 extern bool STORE_ACCESS_STRINGS;
+
+// Count-min-sketches
+extern int NROWS_SKETCHES;
+extern int NCOLUMNS_SKETCHES;
+extern int DISTANCE_METRIC_SKETCHES;
+extern int RANDOM_INITIALIZATION_SKETCHES;
+extern int NSTEPS_SKETCHES;
 
 extern string HEURISTIC_NAME;
 extern string DATA_NAME;
@@ -127,4 +138,6 @@ extern int ENSEMBLE_RUNS;
 extern bool PERFORM_SYMBOL_CHECK;
 extern int IDENTICAL_KTAIL;
 
+extern bool STAR_FREE;
+extern bool SINK_TYPE;
 #endif

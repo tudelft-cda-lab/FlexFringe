@@ -257,6 +257,8 @@ private:
 public:
     inline trace* get_access_trace(){ return access_trace; }
     inline apta_node* get_source(){ return source; }
+    inline apta_node* get_merged_head(){ return representative_of; }
+    inline apta_node* get_next_merged(){ return next_merged_node; }
     inline evaluation_data* get_data(){ return data; }
     inline int get_number(){ return number; }
     inline int get_size(){ return size; }
@@ -305,6 +307,7 @@ public:
     apta_node* child(tail* t);
     apta_guard* guard(int i, apta_guard* g);
     apta_guard* guard(tail* t);
+    void set_child(tail* t, apta_node* node);
 
     /** getting target states via symbols only */
     inline apta_node* child(int i){
@@ -337,7 +340,6 @@ public:
             g->target = node;
         }
     };
-    inline void set_child(tail* t, apta_node* node);
     inline apta_node* get_child(int c){
         apta_node* rep = find();
         if(rep->child(c) != 0) return rep->child(c)->find();
@@ -369,19 +371,6 @@ public:
 
     /** below are functions use by special heuristics/settings and output printing */
 
-    /** returns number of states targeting this state */
-    int num_distinct_sources();
-    /** distances in nr of transitions to nodes in the apta and merged apta (approximation) */
-    int apta_distance(apta_node *right, int bound);
-    int merged_apta_distance(apta_node *right, int bound);
-
-    /** subtree is identical up to max_depth k, only using symbols
-     * used in ktails implementations */
-    bool is_tree_identical(apta_node *other, int max_depth);
-    /** path via sources is identical up to max_depth k, only using symbols
-     * used in markovian and ngram implementations */
-    bool is_path_identical(apta_node *other, int max_depth);
-
     friend class apta;
     friend class apta_guard;
     friend class APTA_iterator;
@@ -393,6 +382,8 @@ public:
     friend class inputdata;
     friend class IInputData; // TODO: rename
     friend class state_merger;
+
+    set<apta_node *> *get_sources();
 };
 
 struct size_compare

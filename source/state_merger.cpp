@@ -7,6 +7,7 @@
 #include <cstdio>
 
 #include "parameters.h"
+#include "dfa_properties.h"
 
 /**
  * @brief Construct a new state merger::state merger object.
@@ -181,19 +182,21 @@ void state_merger::undo_pre_split(apta_node* left, apta_node* right){
     }
 }
 
-bool state_merger::early_stop_merge(apta_node* left, apta_node* right, int depth, bool& result){
-    result = true;
+bool state_merger::early_stop_merge(apta_node* left, apta_node* right, int depth, bool& keep_merging){
+    keep_merging = true;
     if (KTAIL != -1 && depth > KTAIL) return true;
     if (KSTATE != -1 && (left->size < KSTATE || right->size < KSTATE)) return true;
 
-    result = false;
+    keep_merging = false;
+    if(left->red && STAR_FREE && counting_path_occurs(left, right)) return true;
     if ((left->red && RED_FIXED) || ALL_FIXED) {
         for (auto & guard : right->guards) {
             apta_node *child = guard.second->target;
             if (child == nullptr) continue;
-            if (left->child(guard.first) == nullptr) return false;
+            if (left->child(guard.first) == nullptr) return true;
         }
     }
+
     return false;
 }
 
@@ -206,7 +209,7 @@ bool state_merger::merge(apta_node* left, apta_node* right, int depth, bool eval
         bool early_stop = false;
 
         if(early_stop_merge(left, right, depth, early_stop)) return early_stop;
-        if (evaluate && !eval->consistent(this, left, right)) return false;
+        if(evaluate && !eval->consistent(this, left, right)) return false;
     }
     
     if(perform){
@@ -248,7 +251,7 @@ bool state_merger::merge(apta_node* left, apta_node* right, int depth, bool eval
     if(evaluate) {
         eval->update_score_after_recursion(this, left, right);
     }
-    return result;
+    return true;
 }
 
 bool state_merger::merge(apta_node* left, apta_node* right) {
@@ -783,16 +786,19 @@ bool state_merger::pre_consistent(apta_node* left, apta_node* right){
     if(!MERGE_ROOT && left->source == nullptr) return false;
     if(!MERGE_SINKS && (left->is_sink() || right->is_sink())) return false;
     if(!MERGE_SINKS_WITH_CORE && ((left->is_red() && !left->is_sink()) && right->is_sink())) return false;
-    if(MARKOVIAN_MODEL > -1 && !left->is_path_identical(right, MARKOVIAN_MODEL)) return false;
-    if(IDENTICAL_KTAIL > -1 && !left->is_tree_identical(right, IDENTICAL_KTAIL)) return false;
+    if(MARKOVIAN_MODEL > -1 && !is_path_identical(left, right, MARKOVIAN_MODEL)) return false;
+    if(IDENTICAL_KTAIL > -1 && !is_tree_identical(left, right, IDENTICAL_KTAIL)) return false;
     if(left->is_sink()) {
         bool sink_check = false;
         if (CONVERT_SINK_STATES && eval->sink_convert_consistency(this, left, right)) sink_check = true;
-        if (MERGE_IDENTICAL_SINKS && left->is_tree_identical(right,-1)) sink_check = true;
+        if (MERGE_IDENTICAL_SINKS && is_tree_identical(left, right,-1)) sink_check = true;
         if ((CONVERT_SINK_STATES || MERGE_IDENTICAL_SINKS) && !sink_check) return false;
     }
-    if(MERGE_LOCAL > 0 && left->merged_apta_distance(right,-1) > MERGE_LOCAL){
-        if(MERGE_LOCAL_COLLECTOR_COUNT == -1 || left->num_distinct_sources() < MERGE_LOCAL_COLLECTOR_COUNT) return false;
+    if(MERGE_LOCAL > 0 && merged_apta_distance(left, right,-1) > MERGE_LOCAL){
+        if(MERGE_LOCAL_COLLECTOR_COUNT == -1 || num_distinct_sources(left) < MERGE_LOCAL_COLLECTOR_COUNT) return false;
+    }
+    if(STAR_FREE && counting_path_occurs(left, right)){
+        return false;
     }
     return true;
 }
