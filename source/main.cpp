@@ -150,7 +150,8 @@ void run() {
         LOG_S(INFO) << "Stream mode selected, starting run";
 
         stream_object stream_obj;
-        stream_obj.stream_mode(merger, input_stream, id);
+        throw std::logic_error("Streaming mode is currently broken");
+//        stream_obj.stream_mode(merger, input_stream, id);
 
         print_current_automaton(merger, OUTPUT_FILE, ".final");
     } else if(OPERATION_MODE == "search") {
