@@ -70,10 +70,9 @@ if(NOT SKIP_TESTS)
             tests/tests.cpp
             tests/tail.cpp
             tests/smoketest.cpp
-            tests/inputdata.cpp
             tests/testcsvreader.cpp
             tests/testabbadingoreader.cpp
-            source/main.cpp tests/input_data.h)
+            source/main.cpp)
 
     if(MSVC)
         target_link_libraries(runtests
