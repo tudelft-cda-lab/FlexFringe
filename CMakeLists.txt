@@ -77,6 +77,8 @@ if(NOT SKIP_TESTS)
             tests/smoketest.cpp
             tests/testcsvreader.cpp
             tests/testabbadingoreader.cpp
+            tests/testcsvheaderparser.cpp
+            tests/testcsvparser.cpp
             source/main.cpp)
 
     if(MSVC)
