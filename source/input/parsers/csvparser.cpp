@@ -4,9 +4,9 @@
 
 #include "csvparser.h"
 #include "stringutil.h"
+#include "mem_store.h"
 
-void csv_parser::parse() {
-    int row_idx = 0;
+void csv_parser::parse(inputdata *pInputdata) {
     for (csv::CSVRow &row: *reader) {
         ID id = get_str_from_row("id", row);
 
@@ -20,7 +20,8 @@ void csv_parser::parse() {
         std::vector<std::string> symbol_attrs = get_vec_from_row("attr", row);
         std::vector<std::string> data = get_vec_from_row("eval", row);
 
-        row_idx++;
+        trace* tr = get_or_create_trace(id, pInputdata);
+        pInputdata->num_sequences
     }
 }
 
@@ -80,6 +81,14 @@ std::vector<trace *> csv_parser::get_traces() {
         result.push_back(trace);
     }
     return result;
+}
+
+trace *csv_parser::get_or_create_trace(std::string id, inputdata* inputData) {
+    if (!trace_map.contains(id)) {
+        trace* new_trace = mem_store::create_trace(inputData);
+        trace_map.insert(std::make_pair(id, new_trace));
+    }
+    return trace_map.at(id);
 }
 
 
