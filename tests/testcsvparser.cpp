@@ -18,5 +18,5 @@ TEST_CASE("csv_parser: smoke test", "[parsing]") {
             std::make_unique<csv::CSVReader>(inputstream)
     );
 
-    parser.parse();
+    parser.parse(nullptr);
 }

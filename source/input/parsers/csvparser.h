@@ -5,9 +5,9 @@
 #ifndef FLEXFRINGE_CSVPARSER_H
 #define FLEXFRINGE_CSVPARSER_H
 
+#include "i_parser.h"
 #include "csv.hpp"
 #include "input/trace.h"
-#include "i_parser.h"
 
 class csv_header_parser {
     using TypeName = std::string;
@@ -48,6 +48,7 @@ private:
                      const std::vector<std::string>& symbol_attrs,
                      const std::vector<std::string>& data);
 
+    trace* get_or_create_trace(std::string id, inputdata* inputData);
 
 
 public:
@@ -58,7 +59,7 @@ public:
         header_parser = std::make_unique<csv_header_parser>(col_names);
     }
 
-    void parse();
+    void parse(inputdata *pInputdata);
     std::vector<trace*> get_traces();
 
     std::string get_str_from_row(const std::string &label, const csv::CSVRow &row);

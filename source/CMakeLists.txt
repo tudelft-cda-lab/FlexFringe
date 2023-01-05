@@ -57,8 +57,8 @@ add_library(Source STATIC
         differencing.cpp differencing.h
         ensemble.cpp ensemble.h
         dfa_properties.cpp dfa_properties.h
-        input/csvreader.h
-        input/csvreader.cpp
+#        input/csvreader.h
+#        input/csvreader.cpp
         input/i_inputdata.h
         input/i_inputdata.cpp
         input/trace.cpp
@@ -68,8 +68,8 @@ add_library(Source STATIC
         input/tail.cpp input/tail.h
         input/attribute.cpp
         input/attribute.h
-        input/abbadingoreader.cpp
-        input/abbadingoreader.h
+#        input/abbadingoreader.cpp
+#        input/abbadingoreader.h
         input/parsers/csvparser.h
         input/parsers/csvparser.cpp
         input/parsers/i_parser.h
