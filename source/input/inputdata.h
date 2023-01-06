@@ -11,8 +11,11 @@
 #include "input/parsers/i_parser.h"
 
 class apta;
+class csv_parser;
+class parser;
 
 class inputdata {
+    friend class csv_parser;
 protected:
     std::unique_ptr<parser> parser_;
 
@@ -36,11 +39,13 @@ protected:
 public:
     using Iterator = std::list<trace*>::iterator;
 
-    inputdata(std::unique_ptr<parser> parser)
-    : parser_(std::move(parser))
-    {
-        parser_->parse(this);
-    }
+//    inputdata(std::unique_ptr<parser> parser)
+//    : parser_(std::move(parser))
+//    {
+////        parser_->parse(this);
+//    }
+//stub
+    virtual void read(std::istream &input_stream) = 0;
 
     void add_traces_to_apta(apta *the_apta);
     void add_trace_to_apta(trace *tr, apta *the_apta);

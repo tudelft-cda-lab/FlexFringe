@@ -6,26 +6,24 @@
 #include "stringutil.h"
 #include "mem_store.h"
 
-void csv_parser::parse(inputdata *pInputdata) {
-    for (csv::CSVRow &row: *reader) {
-        ID id = get_str_from_row("id", row);
+std::optional<symbol_info> csv_parser::next() {
+    csv::CSVRow row;
+    bool row_read = reader->read_row(row);
 
-        std::string type = get_str_from_row("type", row);
-        if (type.empty()) type = "0";
-
-        std::string symbol = get_str_from_row("symbol", row);
-        if (symbol.empty()) symbol = "0";
-
-        std::vector<std::string> trace_attrs = get_vec_from_row("tattr", row);
-        std::vector<std::string> symbol_attrs = get_vec_from_row("attr", row);
-        std::vector<std::string> data = get_vec_from_row("eval", row);
-
-        trace* tr = get_or_create_trace(id, pInputdata);
-        pInputdata->num_sequences
+    if(!row_read) {
+        return std::nullopt;
     }
+
+    symbol_info cur_symbol;
+
+    for (auto label: header_parser->get_column_type_names()) {
+        cur_symbol.set(label, get_vec_from_row(label, row));
+    }
+
+    return cur_symbol;
 }
 
-std::string csv_parser::get_str_from_row(const std::string &label, const csv::CSVRow &row) {
+[[maybe_unused]] std::string csv_parser::get_str_from_row(const std::string &label, const csv::CSVRow &row) {
     std::string result;
     for (auto i: header_parser->get(label)) {
         if (!result.empty()) {
@@ -43,54 +41,6 @@ std::vector<std::string> csv_parser::get_vec_from_row(const std::string &label, 
     }
     return result;
 }
-
-trace *csv_parser::make_tail(const std::string &id,
-                             const std::string &symbol,
-                             const std::string &type,
-                             const std::vector<std::string> &trace_attrs,
-                             const std::vector<std::string> &symbol_attrs,
-                             const std::vector<std::string> &data) {
-    tail* new_tail = mem_store::create_tail(nullptr);
-    tail_data* td = new_tail->td;
-
-    // Add symbol to the alphabet if it isn't in there already
-    if(r_alphabet.find(symbol) == r_alphabet.end()){
-        r_alphabet[symbol] = (int)alphabet.size();
-        alphabet.push_back(symbol);
-    }
-
-    // Fill in tail data
-    td->symbol = r_alphabet[symbol];
-    td->data = strutil::join(data, reinterpret_cast<const char *const>(','));
-    td->tail_nr = num_tails++;
-
-    auto num_symbol_attributes = this->symbol_attributes.size();
-    if(num_symbol_attributes > 0){
-        for(int i = 0; i < num_symbol_attributes; ++i){
-            const string& val = symbol_attrs.at(i);
-            td->attr[i] = symbol_attributes[i].get_value(val);
-        }
-    }
-
-    return new_tail;
-}
-
-std::vector<trace *> csv_parser::get_traces() {
-    std::vector<trace *> result(trace_map.size());
-    for (const auto & [id, trace]: trace_map) {
-        result.push_back(trace);
-    }
-    return result;
-}
-
-trace *csv_parser::get_or_create_trace(std::string id, inputdata* inputData) {
-    if (!trace_map.contains(id)) {
-        trace* new_trace = mem_store::create_trace(inputData);
-        trace_map.insert(std::make_pair(id, new_trace));
-    }
-    return trace_map.at(id);
-}
-
 
 const std::set<std::string> csv_header_parser::default_col_type_names = {
         "id", "type", "symb", "eval", "attr", "tattr"

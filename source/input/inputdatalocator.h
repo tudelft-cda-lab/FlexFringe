@@ -1,7 +1,7 @@
 #ifndef FLEXFRINGE_INPUTDATALOCATOR_H
 #define FLEXFRINGE_INPUTDATALOCATOR_H
 
-#include "input/i_inputdata.h"
+#include "input/inputdata.h"
 
 class inputdata_locator {
 private:
