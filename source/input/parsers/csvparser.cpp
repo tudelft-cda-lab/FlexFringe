@@ -36,6 +36,7 @@ std::optional<symbol_info> csv_parser::next() {
 
 std::vector<std::string> csv_parser::get_vec_from_row(const std::string &label, const csv::CSVRow &row) {
     std::vector<std::string> result;
+    auto col_ids = header_parser->get(label);
     for (auto i: header_parser->get(label)) {
         result.emplace_back(row[i].get());
     }
@@ -60,7 +61,7 @@ csv_header_parser::csv_header_parser(const std::vector<std::string> &headers,
 }
 
 void csv_header_parser::setup_col_maps() {
-    for (const auto &col_type_name: col_type_names) {
+    for (auto& col_type_name: col_type_names) {
         col_types.emplace(col_type_name, std::set<int>{});
         col_names.emplace(col_type_name, std::vector<std::string>{});
     }
@@ -68,7 +69,7 @@ void csv_header_parser::setup_col_maps() {
 
 void csv_header_parser::parse(const std::vector<std::string> &headers) {
     int idx = 0;
-    for (auto header: headers) {
+    for (const auto& header: headers) {
         // Do we have a : ?
         auto delim_pos = header.find(':');
 
@@ -82,19 +83,20 @@ void csv_header_parser::parse(const std::vector<std::string> &headers) {
         std::string type = header.substr(0, delim_pos);
         std::string name = header.substr(delim_pos + 1);
 
+        // Not sure if we should allow implicit labels or not...
         // Add the current column idx to the corresponding type idx list
-        if (!col_types.contains(type)) {
-            col_types.emplace(type, std::set<int>{idx});
-        } else {
+//        if (!col_types.contains(type)) {
+//            col_types.emplace(type, std::set<int>{idx});
+//        } else {
             col_types.at(type).emplace(idx);
-        }
+//        }
 
         // Add the names of the columns to the corresponding attribute map
-        if (!col_names.contains(type)) {
-            col_names.emplace(type, std::vector<std::string>{name});
-        } else {
+//        if (!col_names.contains(type)) {
+//            col_names.emplace(type, std::vector<std::string>{name});
+//        } else {
             col_names.at(type).emplace_back(name);
-        }
+//        }
 
         idx++;
     }
