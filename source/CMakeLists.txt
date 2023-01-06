@@ -74,7 +74,7 @@ add_library(Source STATIC
         input/parsers/csvparser.cpp
         input/parsers/i_parser.h
         input/inputdata.h
-        input/inputdata.cpp input/parsers/symbol_info.cpp input/parsers/symbol_info.h)
+        input/inputdata.cpp input/parsers/symbol_info.cpp input/parsers/symbol_info.h input/parsers/abbadingoparser.cpp input/parsers/abbadingoparser.h)
 
 ## create CMakeLists.txt in evaluation directory
 set(cmakelists_eval "evaluation/CMakeLists.txt")
