@@ -6,14 +6,15 @@
 #define FLEXFRINGE_I_PARSER_H
 
 #include "input/inputdata.h"
-#include <vector>
 #include "input/trace.h"
+#include "input/parsers/symbol_info.h"
+#include <vector>
+#include <optional>
 
 
 class parser {
 public:
-    virtual void parse(inputdata *pInputdata) = 0;
-    virtual std::vector<trace*> get_traces() = 0;
+    virtual std::optional<symbol_info> next() = 0;
 };
 
 #endif //FLEXFRINGE_I_PARSER_H

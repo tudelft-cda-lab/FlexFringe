@@ -57,10 +57,10 @@ add_library(Source STATIC
         differencing.cpp differencing.h
         ensemble.cpp ensemble.h
         dfa_properties.cpp dfa_properties.h
-#        input/csvreader.h
-#        input/csvreader.cpp
-        input/i_inputdata.h
-        input/i_inputdata.cpp
+        input/csvreader.h
+        input/csvreader.cpp
+#        input/i_inputdata.h
+#        input/i_inputdata.cpp
         input/trace.cpp
         input/trace.h
         input/inputdatalocator.cpp
@@ -68,13 +68,13 @@ add_library(Source STATIC
         input/tail.cpp input/tail.h
         input/attribute.cpp
         input/attribute.h
-#        input/abbadingoreader.cpp
-#        input/abbadingoreader.h
+        input/abbadingoreader.cpp
+        input/abbadingoreader.h
         input/parsers/csvparser.h
         input/parsers/csvparser.cpp
         input/parsers/i_parser.h
         input/inputdata.h
-        input/inputdata.cpp)
+        input/inputdata.cpp input/parsers/symbol_info.cpp input/parsers/symbol_info.h)
 
 ## create CMakeLists.txt in evaluation directory
 set(cmakelists_eval "evaluation/CMakeLists.txt")

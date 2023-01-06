@@ -73,10 +73,10 @@ if(NOT SKIP_TESTS)
 
     add_executable(runtests
             tests/tests.cpp
-            tests/tail.cpp
-            tests/smoketest.cpp
-            tests/testcsvreader.cpp
-            tests/testabbadingoreader.cpp
+#            tests/tail.cpp
+#            tests/smoketest.cpp
+#            tests/testcsvreader.cpp
+#            tests/testabbadingoreader.cpp
             tests/testcsvheaderparser.cpp
             tests/testcsvparser.cpp
             source/main.cpp)

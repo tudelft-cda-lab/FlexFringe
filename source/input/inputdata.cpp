@@ -1,4 +1,4 @@
-#include "inputdata.h"
+#include "input/inputdata.h"
 #include "apta.h"
 
 using namespace std;
