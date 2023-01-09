@@ -75,6 +75,11 @@ void csv_header_parser::parse(const std::vector<std::string> &headers) {
 
         // If there is no delimiter, skip this header
         if (delim_pos == std::string::npos) {
+            // Unless the header itself is a label
+            if (col_type_names.contains(header)) {
+                col_types.at(header).emplace(idx);
+                col_names.at(header).emplace_back(header);
+            }
             idx++;
             continue;
         }
@@ -83,20 +88,8 @@ void csv_header_parser::parse(const std::vector<std::string> &headers) {
         std::string type = header.substr(0, delim_pos);
         std::string name = header.substr(delim_pos + 1);
 
-        // Not sure if we should allow implicit labels or not...
-        // Add the current column idx to the corresponding type idx list
-//        if (!col_types.contains(type)) {
-//            col_types.emplace(type, std::set<int>{idx});
-//        } else {
-            col_types.at(type).emplace(idx);
-//        }
-
-        // Add the names of the columns to the corresponding attribute map
-//        if (!col_names.contains(type)) {
-//            col_names.emplace(type, std::vector<std::string>{name});
-//        } else {
-            col_names.at(type).emplace_back(name);
-//        }
+        col_types.at(type).emplace(idx);
+        col_names.at(type).emplace_back(name);
 
         idx++;
     }
