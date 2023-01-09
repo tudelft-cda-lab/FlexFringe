@@ -1,7 +1,64 @@
 #include "input/inputdata.h"
 #include "apta.h"
+#include "stringutil.h"
 
 using namespace std;
+
+void inputdata::read(parser* input_parser) {
+    std::unordered_map<std::string, trace*> trace_map;
+
+    while(true) {
+        auto cur_symbol_maybe = input_parser->next();
+        if (!cur_symbol_maybe.has_value()) {
+            break;
+        }
+
+        auto cur_symbol = cur_symbol_maybe.value();
+
+        // Build expected trace / tail strings from symbol info
+        auto id = cur_symbol.get_str("id");
+
+        auto symbol = cur_symbol.get_str("symb");
+        if (symbol.empty()) symbol = "0";
+
+        auto type = cur_symbol.get_str("type");
+        if (type.empty()) type = "0";
+
+        auto trace_attrs = cur_symbol.get("tattr");
+        auto symbol_attrs = cur_symbol.get("attr");
+        auto data = cur_symbol.get("eval");
+
+        // Get or create the trace for this trace id
+        if (!trace_map.contains(id)) {
+            trace_map.emplace(id, mem_store::create_trace(this));
+        }
+        trace* tr = trace_map.at(id);
+
+        tail* new_tail = make_tail(id, symbol, type, trace_attrs, symbol_attrs, data);
+
+        add_type_to_trace(tr, type, trace_attrs);
+
+        tail* old_tail = tr->end_tail;
+        if(old_tail == nullptr){
+            tr->head = new_tail;
+            tr->end_tail = new_tail;
+            tr->length = 1;
+            new_tail->tr = tr;
+        } else {
+            new_tail->td->index = old_tail->get_index() + 1;
+            old_tail->set_future(new_tail);
+            tr->end_tail = new_tail;
+            tr->length++;
+            new_tail->tr = tr;
+        }
+
+        //TODO: sliding window
+    }
+
+    for (const auto &[id, trace]: trace_map) {
+        traces.push_back(trace);
+    }
+}
 
 string &inputdata::get_symbol(int a) {
     return alphabet[a];
@@ -206,3 +263,56 @@ int inputdata::get_num_sequences() {
 int inputdata::get_max_sequences() {
     return max_sequences;
 }
+
+tail *inputdata::make_tail(const string& id,
+                           const string& symbol,
+                           const string& type,
+                           const vector<string>& trace_attrs,
+                           const vector<string>& symbol_attrs,
+                           const vector<string>& data) {
+
+    tail* new_tail = mem_store::create_tail(nullptr);
+    tail_data* td = new_tail->td;
+
+    // Add symbol to the alphabet if it isn't in there already
+    if(r_alphabet.find(symbol) == r_alphabet.end()){
+        r_alphabet[symbol] = (int)alphabet.size();
+        alphabet.push_back(symbol);
+    }
+
+    // Fill in tail data
+    td->symbol = r_alphabet[symbol];
+    td->data = strutil::join(data, ",");
+    td->tail_nr = num_tails++;
+
+    auto num_symbol_attributes = this->symbol_attributes.size();
+    if(num_symbol_attributes > 0){
+        for(int i = 0; i < num_symbol_attributes; ++i){
+            const string& val = symbol_attrs.at(i);
+            td->attr[i] = symbol_attributes[i].get_value(val);
+        }
+    }
+
+    return new_tail;
+}
+
+void inputdata::add_type_to_trace(trace* new_trace,
+                                  const string& type,
+                                  const vector<string>& trace_attrs) {
+    // Add to type map
+    if(r_types.find(type) == r_types.end()){
+        r_types[type] = (int)types.size();
+        types.push_back(type);
+    }
+
+    auto num_trace_attributes = this->trace_attributes.size();
+    if(num_trace_attributes > 0){
+        for(int i = 0; i < num_trace_attributes; ++i){
+            const string& val = trace_attrs.at(i);
+            new_trace->trace_attr[i] = trace_attributes[i].get_value(val);
+        }
+    }
+    new_trace->type = r_types[type];
+}
+
+
