@@ -39,7 +39,7 @@ public:
     const std::set<std::string> &get_column_type_names() const;
 };
 
-class csv_parser : parser {
+class csv_parser : public parser {
     using ID = std::string;
 
 private:
@@ -53,6 +53,14 @@ public:
         std::vector<std::string> col_names = this->reader->get_col_names();
 
         // TODO: maybe DI this?
+        header_parser = std::make_unique<csv_header_parser>(col_names);
+    }
+
+    template<typename... Args>
+    explicit csv_parser(Args&&... args)
+    : reader(std::make_unique<csv::CSVReader>(std::forward<Args>(args)...))
+    {
+        std::vector<std::string> col_names = this->reader->get_col_names();
         header_parser = std::make_unique<csv_header_parser>(col_names);
     }
 
