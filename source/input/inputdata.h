@@ -15,7 +15,6 @@ class csv_parser;
 class parser;
 
 class inputdata {
-    friend class csv_parser;
 protected:
     std::unique_ptr<parser> parser_;
 
@@ -35,17 +34,22 @@ protected:
     int node_number;
     int num_tails;
 
+    tail *make_tail(const std::string &id,
+                    const std::string &symbol,
+                    const std::string &type,
+                    const std::vector<std::string> &trace_attrs,
+                    const std::vector<std::string> &symbol_attrs,
+                    const std::vector<std::string> &data);
+
+    void add_type_to_trace(trace *new_trace,
+                           const std::string &type,
+                           const std::vector<std::string> &trace_attrs);
+
 
 public:
     using Iterator = std::list<trace*>::iterator;
 
-//    inputdata(std::unique_ptr<parser> parser)
-//    : parser_(std::move(parser))
-//    {
-////        parser_->parse(this);
-//    }
-//stub
-    virtual void read(std::istream &input_stream) = 0;
+    void read(parser* input_parser);
 
     void add_traces_to_apta(apta *the_apta);
     void add_trace_to_apta(trace *tr, apta *the_apta);
