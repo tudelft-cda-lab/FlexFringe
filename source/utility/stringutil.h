@@ -4,6 +4,7 @@
 #include <cctype>
 #include <locale>
 #include <iterator>
+#include <sstream>
 
 namespace strutil {
     // trim from start (in place)
