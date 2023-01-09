@@ -79,6 +79,7 @@ if(NOT SKIP_TESTS)
 #            tests/testabbadingoreader.cpp
             tests/testcsvheaderparser.cpp
             tests/testcsvparser.cpp
+            tests/testabbadingoparser.cpp
             source/main.cpp)
 
     if(MSVC)
