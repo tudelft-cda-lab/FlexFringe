@@ -70,3 +70,12 @@ TEST_CASE( "CSVHeaderParser: id and symbol", "[parsing]" ) {
     REQUIRE(parser.get("id") == std::set<int> {0});
     REQUIRE(parser.get("symb") == std::set<int> {1});
 }
+
+TEST_CASE( "CSVHeaderParser: no :, just label", "[parsing]" ) {
+    std::vector<std::string> input = {"id", "symb"};
+
+    auto parser = csv_header_parser(input);
+
+    REQUIRE(parser.get("id") == std::set<int> {0});
+    REQUIRE(parser.get("symb") == std::set<int> {1});
+}
