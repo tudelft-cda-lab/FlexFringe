@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cctype>
 #include <locale>
+#include <iterator>
 
 namespace strutil {
     // trim from start (in place)
