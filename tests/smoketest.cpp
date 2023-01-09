@@ -1,11 +1,13 @@
 
 #include "catch.hpp"
-#include "inputdata.h"
+
 #include "evaluate.h"
 #include "greedy.h"
 #include "evaluation_factory.h"
 #include "parameters.h"
-#include "input/abbadingoreader.h"
+#include "input/inputdata.h"
+#include "input/inputdatalocator.h"
+#include "input/parsers/abbadingoparser.h"
 
 //TODO: refactor: These should probably be taken out of main.cpp
 evaluation_function* get_evaluation();
@@ -24,17 +26,18 @@ TEST_CASE( "Smoke test: greedy alergia on stamina 1_training", "[smoke]" ) {
     }
     REQUIRE(input_stream);
 
-    auto* id = new abbadingo_inputdata();
-    inputdata_locator::provide(id);
-    id->read(input_stream);
+    inputdata id;
+    inputdata_locator::provide(&id);
+    auto parser = abbadingoparser(input_stream);
+    id.read(&parser);
 
     apta* the_apta = new apta();
-    auto* merger = new state_merger(id, eval, the_apta);
+    auto* merger = new state_merger(&id, eval, the_apta);
     the_apta->set_context(merger);
     eval->set_context(merger);
 
     eval->initialize_before_adding_traces();
-    id->add_traces_to_apta(the_apta);
+    id.add_traces_to_apta(the_apta);
     eval->initialize_after_adding_traces(merger);
 
     greedy_run(merger);
@@ -43,7 +46,7 @@ TEST_CASE( "Smoke test: greedy alergia on stamina 1_training", "[smoke]" ) {
 
     //TODO: verify learned state machine is reasonable
 
-    delete merger;
+//    delete merger;
 }
 
 TEST_CASE( "Smoke test: greedy edsm on stamina 1_training", "[smoke]" ) {
@@ -56,17 +59,18 @@ TEST_CASE( "Smoke test: greedy edsm on stamina 1_training", "[smoke]" ) {
     ifstream input_stream("data/staminadata/1_training.txt");
     REQUIRE(input_stream);
 
-    auto* id = new abbadingo_inputdata();
-    inputdata_locator::provide(id);
-    id->read(input_stream);
+    inputdata id;
+    inputdata_locator::provide(&id);
+    auto parser = abbadingoparser(input_stream);
+    id.read(&parser);
 
     apta* the_apta = new apta();
-    auto* merger = new state_merger(id, eval, the_apta);
+    auto* merger = new state_merger(&id, eval, the_apta);
     the_apta->set_context(merger);
     eval->set_context(merger);
 
     eval->initialize_before_adding_traces();
-    id->add_traces_to_apta(the_apta);
+    id.add_traces_to_apta(the_apta);
     eval->initialize_after_adding_traces(merger);
 
     greedy_run(merger);
@@ -75,5 +79,5 @@ TEST_CASE( "Smoke test: greedy edsm on stamina 1_training", "[smoke]" ) {
 
     //TODO: verify learned state machine is reasonable
 
-    delete merger;
+//    delete merger;
 }
