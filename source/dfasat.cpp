@@ -19,6 +19,7 @@
 
 #include "parameters.h"
 #include "conflict_graph.h"
+#include "input/inputdatalocator.h"
 
 void dfasat::reset_literals(bool init){
     int v, i, j, a, t; // TODO: aren't there better names for those?

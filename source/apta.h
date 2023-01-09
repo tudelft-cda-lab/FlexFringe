@@ -11,6 +11,8 @@
 #include <string>
 #include <queue>
 
+#include "input/trace.h"
+
 class apta;
 class apta_node;
 class APTA_iterator;

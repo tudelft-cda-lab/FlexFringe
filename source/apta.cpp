@@ -12,6 +12,7 @@
 #include "evaluate.h"
 #include "utility/loguru.hpp"
 #include "input/abbadingoreader.h"
+#include "input/inputdatalocator.h"
 
 using namespace std;
 

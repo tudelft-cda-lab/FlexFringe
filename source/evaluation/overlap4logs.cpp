@@ -10,6 +10,7 @@
 
 #include "overlap4logs.h"
 #include "parameters.h"
+#include "input/inputdatalocator.h"
 
 REGISTER_DEF_DATATYPE(overlap4logs_data);
 REGISTER_DEF_TYPE(overlap4logs);

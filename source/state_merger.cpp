@@ -8,6 +8,7 @@
 
 #include "parameters.h"
 #include "dfa_properties.h"
+#include "input/inputdatalocator.h"
 
 /**
  * @brief Construct a new state merger::state merger object.

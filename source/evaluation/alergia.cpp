@@ -4,6 +4,7 @@
 #include "evaluate.h"
 #include "alergia.h"
 #include "parameters.h"
+#include "input/inputdatalocator.h"
 
 REGISTER_DEF_DATATYPE(alergia_data);
 REGISTER_DEF_TYPE(alergia);

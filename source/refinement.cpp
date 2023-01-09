@@ -3,7 +3,8 @@
 #include "refinement.h"
 #include "parameters.h"
 #include "apta.h"
-#include "inputdata.h"
+#include "input/inputdata.h"
+#include "input/inputdatalocator.h"
 #include "state_merger.h"
 
 using namespace std;
