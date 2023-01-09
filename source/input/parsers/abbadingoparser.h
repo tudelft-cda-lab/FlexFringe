@@ -9,7 +9,7 @@
 #include <deque>
 #include "i_parser.h"
 
-class abbadingoparser: parser {
+class abbadingoparser: public parser {
 private:
     std::istream& inputstream;
     ssize_t max_sequences;
