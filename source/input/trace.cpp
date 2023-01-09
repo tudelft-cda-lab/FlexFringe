@@ -1,5 +1,5 @@
 #include "input/trace.h"
-#include "input/i_inputdata.h"
+#include "input/inputdata.h"
 #include "mem_store.h"
 #include "input/tail.h"
 

@@ -11,6 +11,7 @@
 #include "evaluate.h"
 #include "rti+.h"
 #include "parameters.h"
+#include "input/inputdatalocator.h"
 
 REGISTER_DEF_DATATYPE(rtiplus_data);
 REGISTER_DEF_TYPE(rtiplus);

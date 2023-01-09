@@ -2,7 +2,7 @@
 
 #include "input/tail.h"
 #include "input/trace.h"
-#include "input/i_inputdata.h"
+#include "input/inputdata.h"
 #include "input/inputdatalocator.h"
 
 using namespace std;

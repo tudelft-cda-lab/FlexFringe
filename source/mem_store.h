@@ -4,10 +4,9 @@
 #include <list>
 #include "refinement.h"
 #include "apta.h"
-#include "inputdata.h"
 #include "state_merger.h"
 
-#include "input/i_inputdata.h"
+#include "input/inputdata.h"
 #include "input/trace.h"
 #include "input/tail.h"
 

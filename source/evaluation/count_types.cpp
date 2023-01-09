@@ -5,6 +5,7 @@
 #include <set>
 #include "parameters.h"
 #include "count_types.h"
+#include "input/inputdatalocator.h"
 
 REGISTER_DEF_TYPE(count_driven);
 REGISTER_DEF_DATATYPE(count_data);

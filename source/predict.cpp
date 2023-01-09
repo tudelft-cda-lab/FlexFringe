@@ -5,6 +5,7 @@
 #include "predict.h"
 #include "dfa_properties.h"
 #include <queue>
+#include "input/inputdatalocator.h"
 
 struct tail_state_compare{ bool operator()(const pair<double, pair<apta_node*, tail*>> &a, const pair<double, pair<apta_node*, tail*>> &b) const{ return a.first < b.first; } };
 
