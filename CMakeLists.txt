@@ -73,14 +73,11 @@ if(NOT SKIP_TESTS)
 
     add_executable(runtests
             tests/tests.cpp
-#            tests/tail.cpp
-#            tests/smoketest.cpp
-#            tests/testcsvreader.cpp
-#            tests/testabbadingoreader.cpp
+            tests/smoketest.cpp
             tests/testcsvheaderparser.cpp
             tests/testcsvparser.cpp
             tests/testabbadingoparser.cpp
-            source/main.cpp)
+            source/main.cpp tests/testinputdata.cpp)
 
     if(MSVC)
         target_link_libraries(runtests
