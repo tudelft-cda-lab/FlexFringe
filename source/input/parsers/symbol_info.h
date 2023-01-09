@@ -20,6 +20,7 @@ private:
     std::unordered_map<std::string, std::vector<std::string>> properties;
 public:
     void set(const std::string& name, const std::vector<std::string>& property_list);
+    void set(const std::string& name, const std::string& property);
 
     const std::vector<std::string>& get(const std::string& name) const;
 };
