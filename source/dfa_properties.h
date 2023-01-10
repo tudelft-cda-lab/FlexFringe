@@ -6,7 +6,7 @@
 #define FLEXFRINGE_DFA_PROPERTIES_H
 
 #include "apta.h"
-#include "inputdata.h"
+#include "input/inputdata.h"
 
 bool is_counting_path(string str);
 bool counting_path_occurs(apta_node* n1, apta_node* n2);

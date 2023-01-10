@@ -41,8 +41,8 @@ typedef multimap<int, apta_guard*> guard_map;
 typedef map<int, double> bound_map;
 
 #include "parameters.h"
-#include "inputdata.h"
 #include "evaluate.h"
+#include "input/inputdata.h"
 
 typedef list< pair< tail*, int > > split_list;
 

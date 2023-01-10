@@ -5,7 +5,7 @@
 #define FLEXFRINGE_DIFFERENCING_H
 
 #include "apta.h"
-#include "inputdata.h"
+#include "input/inputdata.h"
 
 double difference(apta*, apta*);
 double symmetric_difference(apta*, apta*);

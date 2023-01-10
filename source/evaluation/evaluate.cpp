@@ -1,9 +1,7 @@
 #include "state_merger.h"
 #include "evaluate.h"
-#include <map>
 #include "parameters.h"
 #include "apta.h"
-#include "inputdata.h"
 
 evaluation_data::evaluation_data(){
     node_type = -1;
