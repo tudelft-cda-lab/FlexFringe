@@ -56,7 +56,7 @@ public:
     void read_slidingwindow(parser* input_parser,
                             ssize_t sliding_window_size     = 10,
                             ssize_t sliding_window_stride   = 1,
-                            bool sliding_window_type        = true);
+                            bool sliding_window_type        = false);
 
     void add_traces_to_apta(apta *the_apta);
     void add_trace_to_apta(trace *tr, apta *the_apta);
