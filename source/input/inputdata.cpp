@@ -4,7 +4,46 @@
 
 using namespace std;
 
+/**
+ * Read symbols from a parser and construct inputdata from them.
+ * @param input_parser the input parser to read from
+ */
 void inputdata::read(parser* input_parser) {
+    std::unordered_map<std::string, trace*> trace_map;
+
+    while(true) {
+        // Do we have another symbol from the parser?
+        auto cur_symbol_maybe = input_parser->next();
+        if (!cur_symbol_maybe.has_value()) {
+            break;
+        }
+
+        // Process it!
+        auto cur_symbol = cur_symbol_maybe.value();
+        process_symbol_info(cur_symbol, trace_map);
+    }
+
+    // Add all collected traces to the list of traces
+    for (const auto &[id, trace]: trace_map) {
+        traces.push_back(trace);
+    }
+}
+
+/**
+ * Reads the input symbols from the given parser, but creates sliding windows over the input.
+ * e.g. a trace [a, b, c, d] with sliding window size 3 turns into two actual traces in the inputdata:
+ * [a, b, c] and [b, c, d]
+ *
+ * @param input_parser input parser to read symbols from
+ * @param sliding_window_size sliding window size
+ * @param sliding_window_stride sliding window stride
+ * @param sliding_window_type add types to the sliding window traces
+ */
+void inputdata::read_slidingwindow(parser* input_parser,
+                                   ssize_t sliding_window_size,
+                                   ssize_t sliding_window_stride,
+                                   bool sliding_window_type) {
+
     std::unordered_map<std::string, trace*> trace_map;
 
     while(true) {
@@ -15,50 +54,97 @@ void inputdata::read(parser* input_parser) {
 
         auto cur_symbol = cur_symbol_maybe.value();
 
-        // Build expected trace / tail strings from symbol info
-        auto id = cur_symbol.get_str("id");
+        auto [tr, new_tail] = process_symbol_info(cur_symbol, trace_map);
 
-        auto symbol = cur_symbol.get_str("symb");
-        if (symbol.empty()) symbol = "0";
+        // Sliding window stuff.
+        // Definitely some more refactoring potential in here
+        if(tr->get_length() == sliding_window_size){
+            if(sliding_window_type){
+                string type_string = inputdata::string_from_symbol(new_tail->get_symbol());
+                if(r_types.find(type_string) == r_types.end()){
+                    r_types[type_string] = (int)types.size();
+                    types.push_back(type_string);
+                }
+                tr->type = r_types[type_string];
+            }
+            trace* new_window = mem_store::create_trace();
+            new_window->type = tr->type;
+            new_window->sequence = inputdata::num_sequences;
+            tail* t = tr->get_head();
+            int index = 0;
+            tail* new_window_tail = nullptr;
+            while(t != nullptr){
+                if(index >= sliding_window_stride){
+                    if(new_window_tail == nullptr){
+                        new_window_tail = mem_store::create_tail(nullptr);
+                        new_window->head = new_window_tail;
+                        new_window->end_tail = new_window_tail;
+                        new_window->length = 1;
+                    } else {
+                        tail* old_tail = new_window_tail;
+                        new_window_tail = mem_store::create_tail(nullptr);
+                        old_tail->set_future(new_window_tail);
+                        new_window->length++;
+                        new_window->end_tail = new_window_tail;
+                    }
+                    new_window_tail->tr = new_window;
+                    new_window_tail->td = t->td;
+                    new_window_tail->split_from = t;
+                }
+                t = t->future();
+                index++;
+            }
+            tail* old_tail = tr->end_tail;
+            tail *end_tail = mem_store::create_tail(nullptr);
+            end_tail->td->index = old_tail->get_index() + 1;
+            end_tail->tr = tr;
+            old_tail->set_future(end_tail);
+            tr->end_tail = end_tail;
 
-        auto type = cur_symbol.get_str("type");
-        if (type.empty()) type = "0";
-
-        auto trace_attrs = cur_symbol.get("tattr");
-        auto symbol_attrs = cur_symbol.get("attr");
-        auto data = cur_symbol.get("eval");
-
-        // Get or create the trace for this trace id
-        if (!trace_map.contains(id)) {
-            trace_map.emplace(id, mem_store::create_trace(this));
+            traces.push_back(new_window);
         }
-        trace* tr = trace_map.at(id);
-
-        tail* new_tail = make_tail(id, symbol, type, trace_attrs, symbol_attrs, data);
-
-        add_type_to_trace(tr, type, trace_attrs);
-
-        tail* old_tail = tr->end_tail;
-        if(old_tail == nullptr){
-            tr->head = new_tail;
-            tr->end_tail = new_tail;
-            tr->length = 1;
-            new_tail->tr = tr;
-        } else {
-            new_tail->td->index = old_tail->get_index() + 1;
-            old_tail->set_future(new_tail);
-            tr->end_tail = new_tail;
-            tr->length++;
-            new_tail->tr = tr;
-        }
-
-        //TODO: sliding window
-    }
-
-    for (const auto &[id, trace]: trace_map) {
-        traces.push_back(trace);
     }
 }
+
+std::pair<trace*, tail*> inputdata::process_symbol_info(symbol_info &cur_symbol,
+                                                        std::unordered_map<std::string, trace*> &trace_map) {
+    // Build expected trace / tail strings from symbol info
+    auto id = cur_symbol.get_str("id");
+    auto symbol = cur_symbol.get_str("symb");
+    if (symbol.empty()) symbol = "0";
+    auto type = cur_symbol.get_str("type");
+    if (type.empty()) type = "0";
+    auto trace_attrs = cur_symbol.get("tattr");
+    auto symbol_attrs = cur_symbol.get("attr");
+    auto data = cur_symbol.get("eval");
+
+    // Get or create the trace for this trace id
+    if (!trace_map.contains(id)) {
+        trace_map.emplace(id, mem_store::create_trace(this));
+    }
+    trace* tr = trace_map.at(id);
+
+    tail* new_tail = make_tail(id, symbol, type, trace_attrs, symbol_attrs, data);
+
+    add_type_to_trace(tr, type, trace_attrs);
+
+    tail* old_tail = tr->end_tail;
+    if(old_tail == nullptr){
+        tr->head = new_tail;
+        tr->end_tail = new_tail;
+        tr->length = 1;
+        new_tail->tr = tr;
+    } else {
+        new_tail->td->index = old_tail->get_index() + 1;
+        old_tail->set_future(new_tail);
+        tr->end_tail = new_tail;
+        tr->length++;
+        new_tail->tr = tr;
+    }
+
+    return std::make_pair(tr, new_tail);
+}
+
 
 string &inputdata::get_symbol(int a) {
     return alphabet[a];
@@ -314,5 +400,10 @@ void inputdata::add_type_to_trace(trace* new_trace,
     }
     new_trace->type = r_types[type];
 }
+
+
+
+
+
 
 
