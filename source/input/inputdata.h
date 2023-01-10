@@ -6,6 +6,7 @@
 #include <map>
 #include <istream>
 #include <memory>
+#include <unordered_map>
 #include "input/trace.h"
 #include "input/attribute.h"
 #include "input/parsers/i_parser.h"
@@ -13,6 +14,7 @@
 class apta;
 class csv_parser;
 class parser;
+class symbol_info;
 
 class inputdata {
 protected:
@@ -45,11 +47,16 @@ protected:
                            const std::string &type,
                            const std::vector<std::string> &trace_attrs);
 
-
+    std::pair<trace*, tail*> process_symbol_info(symbol_info &symbolinfo,
+                                                 std::unordered_map<std::string, trace*> &trace_map);
 public:
     using Iterator = std::list<trace*>::iterator;
 
     void read(parser* input_parser);
+    void read_slidingwindow(parser* input_parser,
+                            ssize_t sliding_window_size     = 10,
+                            ssize_t sliding_window_stride   = 1,
+                            bool sliding_window_type        = true);
 
     void add_traces_to_apta(apta *the_apta);
     void add_trace_to_apta(trace *tr, apta *the_apta);
