@@ -3,6 +3,7 @@
 #include "input/parsers/abbadingoparser.h"
 #include <cstdio>
 #include <iostream>
+#include <sstream>
 
 TEST_CASE("abbadingo_parser: smoke test", "[parsing]") {
     std::string input = "2 2\n"
