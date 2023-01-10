@@ -9,6 +9,7 @@
 
 #include <cstdio>
 #include <iostream>
+#include <sstream>
 
 using Catch::Matchers::Equals;
 

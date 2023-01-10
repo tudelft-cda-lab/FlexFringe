@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <sstream>
 #include <iostream>
+#include <sstream>
 
 TEST_CASE("csv_parser: smoke test", "[parsing]") {
     std::string input = "id:id, symb:symbol\n"
@@ -40,7 +41,8 @@ TEST_CASE("csv_parser: smoke test - only labels", "[parsing]") {
                             "670edd28, Received symbol b";
     std::istringstream input(input_str);
 
-    auto parser = csv_parser(input,csv::CSVFormat().trim({' '}));
+    auto parser = csv_parser(input,
+                             csv::CSVFormat().trim({' '}));
 
     auto first = parser.next().value();
     REQUIRE(first.get("id") == std::vector<std::string>{"670edd27"});
