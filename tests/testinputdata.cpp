@@ -103,7 +103,7 @@ TEST_CASE("CSVReader: Special characters", "[parsing]") {
     }
 }
 
-TEST_CASE("CSVReader: Sliding window", "[parsing]") {
+TEST_CASE("CSVReader: Sliding window csv", "[parsing]") {
     // check if we can parse csv files with the abbadingo delimiter symbols
 
     std::string input_whitespace = "id, symb\n"
@@ -119,6 +119,35 @@ TEST_CASE("CSVReader: Sliding window", "[parsing]") {
     auto parser = csv_parser(input,
                              csv::CSVFormat().trim({' '}));
 
+    input_data.read_slidingwindow(&parser,
+                                  4,
+                                  1,
+                                  false);
+
+    std::list<std::string> expected_traces = {
+            "0 3 a b c",
+            "0 3 b c d"
+    };
+
+    for (auto trace: input_data) {
+        auto expected = expected_traces.back();
+        auto actual = trace->to_string();
+        REQUIRE_THAT(actual, Equals(expected));
+        expected_traces.pop_back();
+    }
+}
+
+TEST_CASE("CSVReader: Sliding window abbadingo", "[parsing]") {
+    // check if we can parse csv files with the abbadingo delimiter symbols
+
+    std::string input_whitespace = "1 4\n"
+                                   "0 4 a b c d";
+    std::istringstream input(input_whitespace);
+
+    auto input_data = inputdata();
+    inputdata_locator::provide(&input_data);
+
+    auto parser = abbadingoparser(input);
     input_data.read_slidingwindow(&parser,
                                   4,
                                   1,
