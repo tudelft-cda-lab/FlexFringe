@@ -5,6 +5,86 @@
 #include <iostream>
 #include <sstream>
 
+#include <lexy/action/parse.hpp>
+#include <lexy/callback.hpp>
+#include <lexy/dsl.hpp>
+#include <lexy_ext/report_error.hpp>
+#include <lexy/input/string_input.hpp>
+#include <lexy/action/match.hpp>
+#include "input/parsers/grammar/abbadingoheader.h"
+
+TEST_CASE("abbadingo header parser: number", "[parsing]") {
+    auto input = lexy::zstring_input("123");
+    auto result = lexy::parse<grammar::number>(input, lexy_ext::report_error);
+    CHECK(result.has_value());
+}
+
+TEST_CASE("abbadingo header parser: attribute types", "[parsing]") {
+    auto input = lexy::zstring_input("dsft");
+    auto result = lexy::parse<grammar::attr_types>(input, lexy_ext::report_error);
+    CHECK(result.has_value());
+    std::cout << "value: " << result.value() << "\n";
+}
+
+TEST_CASE("abbadingo header parser: illegal attribute types", "[parsing]") {
+    auto input = lexy::zstring_input("abcd");
+    REQUIRE_FALSE(
+        lexy::match<grammar::attr_types>(input, lexy_ext::report_error)
+    );
+}
+
+TEST_CASE("abbadingo header parser: single attribute type/name", "[parsing]") {
+    auto input = lexy::zstring_input("dsft/thisisthename");
+    auto result = lexy::parse<grammar::attr_def>(input, lexy_ext::report_error);
+
+    REQUIRE(result.has_value());
+    auto value = result.value();
+
+    REQUIRE(value.name == "thisisthename");
+    REQUIRE(value.type == std::set<char> {'d', 's', 'f', 't'});
+}
+
+TEST_CASE("abbadingo header parser: attribute list", "[parsing]") {
+    auto input = lexy::zstring_input(":ds/name1,ft/name2");
+    auto result = lexy::parse<grammar::attr_list>(input, lexy_ext::report_error);
+
+    REQUIRE(result.has_value());
+    std::vector<abbadingo_attribute> value = result.value();
+
+    REQUIRE(value.front().type == std::set<char> {'d', 's'});
+    REQUIRE(value.front().name == "name1");
+
+    REQUIRE(value.back().type == std::set<char> {'f', 't'});
+    REQUIRE(value.back().name == "name2");
+}
+
+TEST_CASE("abbadingo header parser: header part", "[parsing]") {
+    auto input = lexy::zstring_input("50:dsft/name1,dsft/name2");
+    auto result = lexy::parse<grammar::abbadingo_header_part_p>(input, lexy_ext::report_error);
+    REQUIRE(result.has_value());
+    auto value = result.value();
+    //TODO check value
+    std::cout << "value: " << value << "\n";
+}
+
+TEST_CASE("abbadingo header parser: header part, no attributes", "[parsing]") {
+    auto input = lexy::zstring_input("50");
+    auto result = lexy::parse<grammar::abbadingo_header_part_p>(input, lexy_ext::report_error);
+    REQUIRE(result.has_value());
+    auto value = result.value();
+    //TODO check value
+    std::cout << "value: " << value << "\n";
+}
+
+TEST_CASE("abbadingo header parser: whole thing", "[parsing]") {
+    auto input = lexy::zstring_input("50:ds/name1,ft/name2 8:d/n1,f/n2");
+    auto result = lexy::parse<grammar::abbadingo_header_p>(input, lexy_ext::report_error);
+    REQUIRE(result);
+    auto value = result.value();
+    //TODO check value
+    std::cout << "value: " << value << "\n";
+}
+
 TEST_CASE("abbadingo_parser: smoke test", "[parsing]") {
     std::string input = "2 2\n"
                         "0 2 a b\n"
