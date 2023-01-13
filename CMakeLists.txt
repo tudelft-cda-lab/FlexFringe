@@ -11,6 +11,10 @@ endif()
 
 option(COMPILE_DOCS "This is settable from the command line" OFF)
 
+include(FetchContent)
+FetchContent_Declare(lexy URL https://lexy.foonathan.net/download/lexy-src.zip)
+FetchContent_MakeAvailable(lexy)
+
 if (MSVC)
     add_compile_options("/W4" "$<$<CONFIG:RELEASE>:/O2>")
 else()
@@ -51,7 +55,8 @@ endif()
 
 target_link_libraries(flexfringe
         Source
-        Util)
+        Util
+        foonathan::lexy)
 
 
 find_package(Threads)
@@ -98,6 +103,7 @@ if(NOT SKIP_TESTS)
             Catch2::Catch2
             Source
             Util
+            foonathan::lexy
             ${CMAKE_THREAD_LIBS_INIT})
 
     if(NOT WIN32)
