@@ -89,10 +89,10 @@ namespace {
 
         struct attr_types {
             static constexpr auto rule = [] {
-                auto discrete = dsl::lit<"d">;
-                auto splittable = dsl::lit<"s">;
-                auto distributionable = dsl::lit<"f">;
-                auto target = dsl::lit<"t">;
+                auto discrete = LEXY_LIT("d");
+                auto splittable = LEXY_LIT("s");
+                auto distributionable = LEXY_LIT("f");
+                auto target = LEXY_LIT("t");
 
                 auto item = dsl::capture(dsl::literal_set(
                         discrete, splittable, distributionable, target
@@ -110,19 +110,19 @@ namespace {
         };
 
         struct attr_def {
-            static constexpr auto rule = dsl::p<attr_types> + dsl::lit<"/"> + dsl::p<attr_name>;
+            static constexpr auto rule = dsl::p<attr_types> + LEXY_LIT("/") + dsl::p<attr_name>;
             static constexpr auto value = lexy::construct<abbadingo_attribute>;
         };
 
         struct attr_list {
-            static constexpr auto rule = dsl::lit<":"> + dsl::list(dsl::p<attr_def>, dsl::sep(dsl::comma));
+            static constexpr auto rule = LEXY_LIT(":") + dsl::list(dsl::p<attr_def>, dsl::sep(dsl::comma));
             static constexpr auto value = lexy::as_list<std::vector<abbadingo_attribute>>;
         };
 
         struct abbadingo_header_part_p {
             static constexpr auto rule = [] {
                 // Do we have a : before the next whitespace?
-                auto attr_lookahead = dsl::lookahead(dsl::lit<':'>, dsl::lit<' '>);
+                auto attr_lookahead = dsl::lookahead(LEXY_LIT(":"), LEXY_LIT(" "));
                 return (attr_lookahead >> (dsl::p<number> + dsl::p<attr_list>) | dsl::else_ >> dsl::p<number>);
             }();
 
