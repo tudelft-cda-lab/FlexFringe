@@ -84,12 +84,41 @@ TEST_CASE("abbadingo header parser: whole thing", "[parsing]") {
 
 TEST_CASE("abbadingo symbol parser", "[parsing]") {
     auto input = lexy::zstring_input("10.1");
-    auto result = lexy::parse<symbol_grammar::attr_val>(input, lexy_ext::report_error);
+    auto result = lexy::parse<symbol_grammar::attr_val_double>(input, lexy_ext::report_error);
     REQUIRE(result.has_value());
     auto value = result.value();
     REQUIRE(value == 10.1);
 }
 
+TEST_CASE("abbadingo symbol parser 1", "[parsing]") {
+    auto input = lexy::zstring_input("10:1.23/asdf");
+    auto result = lexy::parse<symbol_grammar::symbol>(input, lexy_ext::report_error);
+    REQUIRE(result.has_value());
+    auto value = result.value();
+    REQUIRE(value.number == 10);
+    REQUIRE(value.attribute_values.value() == std::vector<std::string>{"1.23"});
+    REQUIRE(value.data.value() == "asdf");
+}
+
+TEST_CASE("abbadingo symbol parser: only attr", "[parsing]") {
+    auto input = lexy::zstring_input("10:1.23");
+    auto result = lexy::parse<symbol_grammar::symbol>(input, lexy_ext::report_error);
+    REQUIRE(result.has_value());
+    auto value = result.value();
+    REQUIRE(value.number == 10);
+    REQUIRE(value.attribute_values.value() == std::vector<std::string>{"1.23"});
+    REQUIRE(!value.data.has_value());
+}
+
+TEST_CASE("abbadingo symbol parser: only data", "[parsing]") {
+    auto input = lexy::zstring_input("10/blabla");
+    auto result = lexy::parse<symbol_grammar::symbol>(input, lexy_ext::report_error);
+    REQUIRE(result.has_value());
+    auto value = result.value();
+    REQUIRE(value.number == 10);
+    REQUIRE(!value.attribute_values.has_value());
+    REQUIRE(value.data.value() == "blabla");
+}
 
 TEST_CASE("abbadingo_parser: smoke test", "[parsing]") {
     std::string input = "2 2\n"
