@@ -2,15 +2,34 @@
 // Created by tom on 1/6/23.
 //
 
-#include <sstream>
-#include "abbadingoparser.h"
+
+
+#include "input/parsers/abbadingoparser.h"
 #include "stringutil.h"
+#include "input/parsers/grammar/abbadingoheader.h"
+
+#include <lexy/action/parse.hpp>
+#include <lexy_ext/report_error.hpp>
+#include <lexy/input/string_input.hpp>
+
+#include <sstream>
 
 void abbadingoparser::parse_header() {
     std::string line;
     std::getline(inputstream, line);
-    std::istringstream iss(line);
-    iss >> max_sequences >> alphabet_size;
+
+    auto input = lexy::string_input(line);
+    auto parsed_header_maybe = lexy::parse<grammar::abbadingo_header_p>(input, lexy_ext::report_error);
+
+    if (!parsed_header_maybe.has_value()){
+        throw std::runtime_error("Could not parse abbadingo header");
+    }
+
+    auto parsed_header = parsed_header_maybe.value();
+    max_sequences = parsed_header.traces.number;
+    alphabet_size = parsed_header.symbols.number;
+
+    //TODO: attributes etc.
 }
 
 bool abbadingoparser::read_abbadingo_trace() {

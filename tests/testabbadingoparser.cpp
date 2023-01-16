@@ -3,15 +3,12 @@
 #include "input/parsers/abbadingoparser.h"
 #include <cstdio>
 #include <iostream>
-#include <sstream>
-
 #include <lexy/action/parse.hpp>
-#include <lexy/callback.hpp>
-#include <lexy/dsl.hpp>
 #include <lexy_ext/report_error.hpp>
 #include <lexy/input/string_input.hpp>
 #include <lexy/action/match.hpp>
 #include "input/parsers/grammar/abbadingoheader.h"
+#include "input/parsers/grammar/abbadingosymbol.h"
 
 TEST_CASE("abbadingo header parser: number", "[parsing]") {
     auto input = lexy::zstring_input("123");
@@ -84,6 +81,15 @@ TEST_CASE("abbadingo header parser: whole thing", "[parsing]") {
     //TODO check value
     std::cout << "value: " << value << "\n";
 }
+
+TEST_CASE("abbadingo symbol parser", "[parsing]") {
+    auto input = lexy::zstring_input("10.1");
+    auto result = lexy::parse<symbol_grammar::attr_val>(input, lexy_ext::report_error);
+    REQUIRE(result.has_value());
+    auto value = result.value();
+    REQUIRE(value == 10.1);
+}
+
 
 TEST_CASE("abbadingo_parser: smoke test", "[parsing]") {
     std::string input = "2 2\n"

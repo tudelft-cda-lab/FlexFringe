@@ -12,10 +12,10 @@
 class abbadingoparser: public parser {
 private:
     std::istream& inputstream;
-    ssize_t max_sequences;
-    ssize_t alphabet_size;
+    size_t max_sequences;
+    size_t alphabet_size;
 
-    ssize_t num_lines_processed;
+    size_t num_lines_processed;
     std::deque<symbol_info> symbols;
 
 public:
