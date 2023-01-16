@@ -83,6 +83,18 @@ namespace {
                 };
             });
         };
+
+        struct symbol_list {
+            static constexpr auto rule = dsl::list(dsl::p<symbol>, dsl::sep(dsl::ascii::space));
+            static constexpr auto value = lexy::as_list<std::vector<abbadingo_symbol_info>>;
+        };
+
+        struct abbadingo_trace {
+            static constexpr auto rule = dsl::p<number> + dsl::p<symbol> + dsl::p<symbol_list>;
+            static constexpr auto value = lexy::callback<std::string>([] (auto a, auto b, auto c) {
+                return "TODO";
+            });
+        };
     }
 }
 
