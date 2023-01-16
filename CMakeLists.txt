@@ -11,9 +11,7 @@ endif()
 
 option(COMPILE_DOCS "This is settable from the command line" OFF)
 
-include(FetchContent)
-FetchContent_Declare(lexy URL https://lexy.foonathan.net/download/lexy-src.zip)
-FetchContent_MakeAvailable(lexy)
+add_subdirectory(source/utility/lexy)
 
 if (MSVC)
     add_compile_options("/W4" "$<$<CONFIG:RELEASE>:/O2>")
