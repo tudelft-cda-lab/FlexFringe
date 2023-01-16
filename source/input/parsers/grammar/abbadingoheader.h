@@ -14,6 +14,7 @@
 #include <utility>
 #include <vector>
 #include <set>
+#include <iostream>
 
 struct abbadingo_attribute {
     std::string name;
@@ -87,6 +88,7 @@ namespace {
             static constexpr auto value = lexy::as_integer<std::uint64_t>;
         };
 
+        // Attribute types: set of d, s, f, t
         struct attr_types {
             static constexpr auto rule = [] {
                 auto discrete = LEXY_LIT("d");
@@ -104,21 +106,25 @@ namespace {
             static constexpr auto value = lexy::as_string<std::string>;
         };
 
+        // Attribute name
         struct attr_name {
             static constexpr auto rule = dsl::identifier(dsl::ascii::word);
             static constexpr auto value = lexy::as_string<std::string>;
         };
 
+        // Attribute definition: types/attribute_name
         struct attr_def {
             static constexpr auto rule = dsl::p<attr_types> + LEXY_LIT("/") + dsl::p<attr_name>;
             static constexpr auto value = lexy::construct<abbadingo_attribute>;
         };
 
+        // List of attribute definitions: :dsft/name1,dsft/name2,...
         struct attr_list {
             static constexpr auto rule = LEXY_LIT(":") + dsl::list(dsl::p<attr_def>, dsl::sep(dsl::comma));
             static constexpr auto value = lexy::as_list<std::vector<abbadingo_attribute>>;
         };
 
+        // One out of two abbadingo header parts: number:dsft/name1,dsft/name2,...
         struct abbadingo_header_part_p {
             static constexpr auto rule = [] {
                 // Do we have a : before the next whitespace?
@@ -129,6 +135,7 @@ namespace {
             static constexpr auto value = lexy::construct<abbadingo_header_part>;
         };
 
+        // The complete abbadingo header: number:dsft/name1,... number:dsft/name2,...
         struct abbadingo_header_p {
             static constexpr auto rule = dsl::twice(dsl::p<abbadingo_header_part_p>, dsl::trailing_sep(dsl::ascii::space));
             static constexpr auto value = lexy::construct<abbadingo_header_info>;
