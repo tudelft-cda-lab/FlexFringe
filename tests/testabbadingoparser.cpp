@@ -3,6 +3,7 @@
 #include "input/parsers/abbadingoparser.h"
 #include <cstdio>
 #include <iostream>
+#include <sstream>
 #include <lexy/action/parse.hpp>
 #include <lexy_ext/report_error.hpp>
 #include <lexy/input/string_input.hpp>
