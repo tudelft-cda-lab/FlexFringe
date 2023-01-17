@@ -18,18 +18,38 @@
 
 
 struct abbadingo_symbol_info {
+    std::string name;
+    std::optional<std::vector<std::string>> attribute_values;
+    std::optional<std::string> data;
+};
+
+struct abbadingo_trace_specifier_info {
     uint64_t number;
     std::optional<std::vector<std::string>> attribute_values;
     std::optional<std::string> data;
+};
+
+struct abbadingo_trace_info {
+    std::string label;
+    // Symbol info functions as holder for trace info since they are parsed the same way
+    abbadingo_trace_specifier_info trace_info;
+    std::vector<abbadingo_symbol_info> symbols;
 };
 
 namespace {
     namespace symbol_grammar {
         namespace dsl = lexy::dsl;
 
+        constexpr auto ws = dsl::whitespace(dsl::ascii::blank);
+
         struct number {
             static constexpr auto rule = dsl::integer<std::uint64_t>;
             static constexpr auto value = lexy::as_integer<std::uint64_t>;
+        };
+
+        struct name {
+            static constexpr auto rule = dsl::identifier(dsl::ascii::alpha_digit_underscore);
+            static constexpr auto value = lexy::as_string<std::string>;
         };
 
         // Attribute value - convert to double
@@ -66,20 +86,40 @@ namespace {
             static constexpr auto value = lexy::as_string<std::string>;
         };
 
+        // The actual symbols in the trace: symbol_name:1.0,2.0/foo
         struct symbol {
             static constexpr auto rule = [] {
                 auto lookahead_attr = dsl::lookahead(LEXY_LIT(":"), dsl::literal_set(LEXY_LIT(" "), LEXY_LIT("\n")));
                 auto lookahead_data = dsl::lookahead(LEXY_LIT("/"), dsl::literal_set(LEXY_LIT(" "), LEXY_LIT("\n")));
-                return  (dsl::p<number>
+                return  (dsl::p<name>
                         + (lookahead_attr >> dsl::p<attr_val_list> | dsl::else_ >> dsl::nullopt)
                         + (lookahead_data >> dsl::p<data> | dsl::else_ >> dsl::nullopt));
             }();
 
-            static constexpr auto value = lexy::callback<abbadingo_symbol_info>([](auto number, auto attr_val_list, auto data) {
+            static constexpr auto value = lexy::callback<abbadingo_symbol_info>([](auto name, auto attr_val_list, auto data) {
                 return abbadingo_symbol_info {
-                    .number = number,
+                    .name = name,
                     .attribute_values = attr_val_list,
                     .data = data
+                };
+            });
+        };
+
+        // Like a symbol, but for declaring the trace length and attributes: 10:1.0,2.0/foo
+        struct trace_specifier {
+            static constexpr auto rule = [] {
+                auto lookahead_attr = dsl::lookahead(LEXY_LIT(":"), dsl::literal_set(LEXY_LIT(" "), LEXY_LIT("\n")));
+                auto lookahead_data = dsl::lookahead(LEXY_LIT("/"), dsl::literal_set(LEXY_LIT(" "), LEXY_LIT("\n")));
+                return  (dsl::p<number>
+                         + (lookahead_attr >> dsl::p<attr_val_list> | dsl::else_ >> dsl::nullopt)
+                         + (lookahead_data >> dsl::p<data> | dsl::else_ >> dsl::nullopt));
+            }();
+
+            static constexpr auto value = lexy::callback<abbadingo_trace_specifier_info>([](auto number, auto attr_val_list, auto data) {
+                return abbadingo_trace_specifier_info {
+                        .number = number,
+                        .attribute_values = attr_val_list,
+                        .data = data
                 };
             });
         };
@@ -89,10 +129,19 @@ namespace {
             static constexpr auto value = lexy::as_list<std::vector<abbadingo_symbol_info>>;
         };
 
+        struct trace_label {
+            static constexpr auto rule = dsl::identifier(dsl::ascii::alpha_digit_underscore);
+            static constexpr auto value = lexy::as_string<std::string>;
+        };
+
         struct abbadingo_trace {
-            static constexpr auto rule = dsl::p<number> + dsl::p<symbol> + dsl::p<symbol_list>;
-            static constexpr auto value = lexy::callback<std::string>([] (auto a, auto b, auto c) {
-                return "TODO";
+            static constexpr auto rule = dsl::p<trace_label> + ws + dsl::p<trace_specifier> + ws + dsl::p<symbol_list>;
+            static constexpr auto value = lexy::callback<abbadingo_trace_info>([] (auto trace_label, auto trace_info, auto symbols) {
+                return abbadingo_trace_info {
+                    .label = trace_label,
+                    .trace_info = trace_info,
+                    .symbols = symbols
+                };
             });
         };
     }
