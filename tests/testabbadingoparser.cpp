@@ -96,7 +96,7 @@ TEST_CASE("abbadingo symbol parser 1", "[parsing]") {
     auto result = lexy::parse<symbol_grammar::symbol>(input, lexy_ext::report_error);
     REQUIRE(result.has_value());
     auto value = result.value();
-    REQUIRE(value.number == 10);
+    REQUIRE(value.name == "10");
     REQUIRE(value.attribute_values.value() == std::vector<std::string>{"1.23"});
     REQUIRE(value.data.value() == "asdf");
 }
@@ -106,7 +106,7 @@ TEST_CASE("abbadingo symbol parser: only attr", "[parsing]") {
     auto result = lexy::parse<symbol_grammar::symbol>(input, lexy_ext::report_error);
     REQUIRE(result.has_value());
     auto value = result.value();
-    REQUIRE(value.number == 10);
+    REQUIRE(value.name == "10");
     REQUIRE(value.attribute_values.value() == std::vector<std::string>{"1.23"});
     REQUIRE(!value.data.has_value());
 }
@@ -116,9 +116,62 @@ TEST_CASE("abbadingo symbol parser: only data", "[parsing]") {
     auto result = lexy::parse<symbol_grammar::symbol>(input, lexy_ext::report_error);
     REQUIRE(result.has_value());
     auto value = result.value();
-    REQUIRE(value.number == 10);
+    REQUIRE(value.name == "10");
     REQUIRE(!value.attribute_values.has_value());
     REQUIRE(value.data.value() == "blabla");
+}
+
+TEST_CASE("abbadingo symbol list parser: simple", "[parsing]") {
+    auto input = lexy::zstring_input("1 2 3");
+    auto result = lexy::parse<symbol_grammar::symbol_list>(input, lexy_ext::report_error);
+    REQUIRE(result.has_value());
+    const auto& value = result.value();
+    REQUIRE(value.size() == 3);
+}
+
+TEST_CASE("abbadingo trace parser", "[parsing]") {
+    auto input = lexy::zstring_input("0 3 1 2 3");
+    auto result = lexy::parse<symbol_grammar::abbadingo_trace>(input, lexy_ext::report_error);
+    REQUIRE(result.has_value());
+    auto value = result.value();
+    REQUIRE(value.label == "0");
+    REQUIRE(value.trace_info.number == 3);
+    REQUIRE(value.symbols.size() == 3);
+    REQUIRE(value.symbols.at(0).name == "1");
+    REQUIRE(value.symbols.at(1).name == "2");
+    REQUIRE(value.symbols.at(2).name == "3");
+}
+
+TEST_CASE("abbadingo trace parser 2", "[parsing]") {
+    auto input = lexy::zstring_input("label 3 a b c");
+    auto result = lexy::parse<symbol_grammar::abbadingo_trace>(input, lexy_ext::report_error);
+    REQUIRE(result.has_value());
+    auto value = result.value();
+    REQUIRE(value.label == "label");
+    REQUIRE(value.trace_info.number == 3);
+    REQUIRE(value.symbols.size() == 3);
+    REQUIRE(value.symbols.at(0).name == "a");
+    REQUIRE(value.symbols.at(1).name == "b");
+    REQUIRE(value.symbols.at(2).name == "c");
+}
+
+TEST_CASE("abbadingo trace parser 3", "[parsing]") {
+    auto input = lexy::zstring_input("label 3:1.0/bar a:2.0 b:3.0 c:4.0/foo");
+    auto result = lexy::parse<symbol_grammar::abbadingo_trace>(input, lexy_ext::report_error);
+    REQUIRE(result.has_value());
+    auto value = result.value();
+    REQUIRE(value.label == "label");
+    REQUIRE(value.trace_info.number == 3);
+    REQUIRE(value.trace_info.attribute_values.value().at(0) == "1.0");
+    REQUIRE(value.trace_info.data.value() == "bar");
+    REQUIRE(value.symbols.size() == 3);
+    REQUIRE(value.symbols.at(0).name == "a");
+    REQUIRE(value.symbols.at(0).attribute_values.value().at(0) == "2.0");
+    REQUIRE(value.symbols.at(1).name == "b");
+    REQUIRE(value.symbols.at(1).attribute_values.value().at(0) == "3.0");
+    REQUIRE(value.symbols.at(2).name == "c");
+    REQUIRE(value.symbols.at(2).attribute_values.value().at(0) == "4.0");
+    REQUIRE(value.symbols.at(2).data.value() == "foo");
 }
 
 TEST_CASE("abbadingo_parser: smoke test", "[parsing]") {
