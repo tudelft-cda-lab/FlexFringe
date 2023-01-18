@@ -174,6 +174,14 @@ TEST_CASE("abbadingo trace parser 3", "[parsing]") {
     REQUIRE(value.symbols.at(2).data.value() == "foo");
 }
 
+TEST_CASE("abbadingo trace parser: empty trace", "[parsing]") {
+    auto input = lexy::zstring_input("0 0");
+    auto result = lexy::parse<symbol_grammar::abbadingo_trace>(input, lexy_ext::report_error);
+    REQUIRE(result.has_value());
+    auto value = result.value();
+    REQUIRE(value.symbols.empty());
+}
+
 TEST_CASE("abbadingo_parser: smoke test", "[parsing]") {
     std::string input = "2 2\n"
                         "0 2 a b\n"

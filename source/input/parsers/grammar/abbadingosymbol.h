@@ -135,14 +135,25 @@ namespace {
         };
 
         struct abbadingo_trace {
-            static constexpr auto rule = dsl::p<trace_label> + ws + dsl::p<trace_specifier> + ws + dsl::p<symbol_list>;
-            static constexpr auto value = lexy::callback<abbadingo_trace_info>([] (auto trace_label, auto trace_info, auto symbols) {
-                return abbadingo_trace_info {
-                    .label = trace_label,
-                    .trace_info = trace_info,
-                    .symbols = symbols
-                };
-            });
+            static constexpr auto rule = [] {
+                auto trace_info_part = dsl::p<trace_label> + ws + dsl::p<trace_specifier>;
+                auto symbol_list_part = ws + dsl::p<symbol_list>;
+                auto condition = dsl::peek(symbol_list_part);
+                return trace_info_part + dsl::opt(condition >> symbol_list_part);
+            }();
+
+            static constexpr auto value = lexy::callback<abbadingo_trace_info>(
+                    [] (auto trace_label, auto trace_info, const std::optional<std::vector<abbadingo_symbol_info>>& symbols_list_maybe) {
+
+                        auto symbols_list = symbols_list_maybe.value_or(std::vector<abbadingo_symbol_info> {});
+
+                        return abbadingo_trace_info{
+                                .label = trace_label,
+                                .trace_info = trace_info,
+                                .symbols = symbols_list
+                        };
+                    }
+            );
         };
     }
 }
