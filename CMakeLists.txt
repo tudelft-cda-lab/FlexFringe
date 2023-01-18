@@ -12,6 +12,7 @@ endif()
 option(COMPILE_DOCS "This is settable from the command line" OFF)
 
 add_subdirectory(source/utility/lexy)
+add_subdirectory(source/utility/fmt-9.1.0)
 
 if (MSVC)
     add_compile_options("/W4" "$<$<CONFIG:RELEASE>:/O2>")
@@ -55,7 +56,8 @@ endif()
 target_link_libraries(flexfringe
         Source
         Util
-        foonathan::lexy)
+        foonathan::lexy
+        fmt::fmt)
 
 
 find_package(Threads)
@@ -103,6 +105,7 @@ if(NOT SKIP_TESTS)
             Source
             Util
             foonathan::lexy
+            fmt::fmt
             ${CMAKE_THREAD_LIBS_INIT})
 
     if(NOT WIN32)
