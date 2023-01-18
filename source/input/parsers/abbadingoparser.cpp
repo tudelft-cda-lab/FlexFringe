@@ -7,10 +7,13 @@
 #include "input/parsers/abbadingoparser.h"
 #include "stringutil.h"
 #include "input/parsers/grammar/abbadingoheader.h"
+#include "input/parsers/grammar/abbadingosymbol.h"
+
 
 #include <lexy/action/parse.hpp>
 #include <lexy_ext/report_error.hpp>
 #include <lexy/input/string_input.hpp>
+#include <fmt/format.h>
 
 #include <sstream>
 
@@ -38,19 +41,28 @@ bool abbadingoparser::read_abbadingo_trace() {
         return false;
     }
 
-    std::istringstream iss(line);
+    auto input = lexy::string_input(line);
+    auto parsed_trace_maybe = lexy::parse<symbol_grammar::abbadingo_trace>(input, lexy_ext::report_error);
 
-    std::string label, symbol;
-    ssize_t len;
-    iss >> label >> len;
+    // Did we parse successfully?
+    if (!parsed_trace_maybe.has_value()) {
+        throw std::runtime_error(fmt::format("Error parsing abbadingo input: line {}", num_lines_processed));
+    }
+    auto trace = parsed_trace_maybe.value();
 
-    while (!iss.eof()) {
-        iss >> symbol;
+    // Is the specified amount of symbols in the trace equal to the actual amount?
+    if (trace.trace_info.number != trace.symbols.size()) {
+        throw std::runtime_error(fmt::format("Error parsing abbadingo input: line {} - Incorrectly specified number of symbols in trace", num_lines_processed));
+    }
+
+    for (const auto &symbol: trace.symbols) {
         symbol_info cur_symbol;
 
         cur_symbol.set("id", std::to_string(num_lines_processed) );
-        cur_symbol.set("symb", symbol);
-        cur_symbol.set("type", label); // Not sure if this is the correct place to put this
+        cur_symbol.set("symb", symbol.name);
+        cur_symbol.set("type", trace.label); // Not sure if this is the correct place to put this
+
+        // TODO: attributes & data
 
         symbols.push_back(cur_symbol);
     }
