@@ -74,7 +74,7 @@ bool abbadingoparser::read_abbadingo_trace() {
 std::optional<symbol_info> abbadingoparser::next() {
     // If we don't have any new symbols available, read the next trace
     // If there are no new traces to read, we are done
-    if (symbols.empty()) {
+    while (symbols.empty()) {
         if(!read_abbadingo_trace()) {
             return std::nullopt;
         }
