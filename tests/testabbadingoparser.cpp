@@ -97,7 +97,7 @@ TEST_CASE("abbadingo symbol parser 1", "[parsing]") {
     REQUIRE(result.has_value());
     auto value = result.value();
     REQUIRE(value.name == "10");
-    REQUIRE(value.attribute_values.value() == std::vector<std::string>{"1.23"});
+    REQUIRE(value.attribute_values.value().front() == "1.23");
     REQUIRE(value.data.value() == "asdf");
 }
 
@@ -107,7 +107,7 @@ TEST_CASE("abbadingo symbol parser: only attr", "[parsing]") {
     REQUIRE(result.has_value());
     auto value = result.value();
     REQUIRE(value.name == "10");
-    REQUIRE(value.attribute_values.value() == std::vector<std::string>{"1.23"});
+    REQUIRE(value.attribute_values.value().front() == "1.23");
     REQUIRE(!value.data.has_value());
 }
 

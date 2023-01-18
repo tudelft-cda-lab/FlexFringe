@@ -18,19 +18,19 @@
 
 
 struct abbadingo_symbol_info {
-    std::string name;
-    std::optional<std::vector<std::string>> attribute_values;
-    std::optional<std::string> data;
+    std::string_view name;
+    std::optional<std::vector<std::string_view>> attribute_values;
+    std::optional<std::string_view> data;
 };
 
 struct abbadingo_trace_specifier_info {
     uint64_t number;
-    std::optional<std::vector<std::string>> attribute_values;
-    std::optional<std::string> data;
+    std::optional<std::vector<std::string_view>> attribute_values;
+    std::optional<std::string_view> data;
 };
 
 struct abbadingo_trace_info {
-    std::string label;
+    std::string_view label;
     // Symbol info functions as holder for trace info since they are parsed the same way
     abbadingo_trace_specifier_info trace_info;
     std::vector<abbadingo_symbol_info> symbols;
@@ -49,7 +49,7 @@ namespace {
 
         struct name {
             static constexpr auto rule = dsl::identifier(dsl::ascii::alpha_digit_underscore);
-            static constexpr auto value = lexy::as_string<std::string>;
+            static constexpr auto value = lexy::as_string<std::string_view>;
         };
 
         // Attribute value - convert to double
@@ -66,10 +66,8 @@ namespace {
         // Attribute value - keep as string
         struct attr_val_str {
             static constexpr auto rule = dsl::capture(dsl::digits<>) + dsl::period + dsl::capture(dsl::digits<>);
-            static constexpr auto value = lexy::callback<std::string>([](auto integer, auto decimal) {
-                std::string tmp(integer.begin(), integer.end());
-                tmp.append(".");
-                tmp.append(decimal.begin(), decimal.end());
+            static constexpr auto value = lexy::callback<std::string_view>([](auto integer, auto decimal) {
+                std::string_view tmp(integer.begin(), decimal.end());
                 return tmp;
             });
         };
@@ -77,13 +75,13 @@ namespace {
         // Attribute value list
         struct attr_val_list {
             static constexpr auto rule = LEXY_LIT(":") + dsl::list(dsl::p<attr_val_str>, dsl::sep(dsl::comma));
-            static constexpr auto value = lexy::as_list<std::vector<std::string>>;
+            static constexpr auto value = lexy::as_list<std::vector<std::string_view>>;
         };
 
         // Data
         struct data {
             static constexpr auto rule = LEXY_LIT("/") + dsl::identifier(dsl::ascii::alpha_digit_underscore);
-            static constexpr auto value = lexy::as_string<std::string>;
+            static constexpr auto value = lexy::as_string<std::string_view>;
         };
 
         // The actual symbols in the trace: symbol_name:1.0,2.0/foo
@@ -131,7 +129,7 @@ namespace {
 
         struct trace_label {
             static constexpr auto rule = dsl::identifier(dsl::ascii::alpha_digit_underscore);
-            static constexpr auto value = lexy::as_string<std::string>;
+            static constexpr auto value = lexy::as_string<std::string_view>;
         };
 
         struct abbadingo_trace {
