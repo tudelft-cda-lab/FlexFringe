@@ -16,6 +16,7 @@
 #include <fmt/format.h>
 
 #include <sstream>
+#include <chrono>
 
 void abbadingoparser::parse_header() {
     std::string line;
@@ -36,13 +37,17 @@ void abbadingoparser::parse_header() {
 }
 
 bool abbadingoparser::read_abbadingo_trace() {
+
+
     std::string line;
     if (!std::getline(inputstream, line)) {
         return false;
     }
 
+//    auto before = std::chrono::high_resolution_clock::now();
     auto input = lexy::string_input(line);
     auto parsed_trace_maybe = lexy::parse<symbol_grammar::abbadingo_trace>(input, lexy_ext::report_error);
+//    auto after = std::chrono::high_resolution_clock::now();
 
     // Did we parse successfully?
     if (!parsed_trace_maybe.has_value()) {
@@ -59,8 +64,8 @@ bool abbadingoparser::read_abbadingo_trace() {
         symbol_info cur_symbol;
 
         cur_symbol.set("id", std::to_string(num_lines_processed) );
-        cur_symbol.set("symb", symbol.name);
-        cur_symbol.set("type", trace.label); // Not sure if this is the correct place to put this
+        cur_symbol.set("symb", std::string {symbol.name});
+        cur_symbol.set("type", std::string {trace.label}); // Not sure if this is the correct place to put this
 
         // TODO: attributes & data
 
@@ -68,6 +73,9 @@ bool abbadingoparser::read_abbadingo_trace() {
     }
 
     num_lines_processed++;
+
+//    auto ms = std::chrono::duration<double, std::milli>(after - before);
+//    std::cout << "Parsing trace took " << ms.count() << "ms" << "\n";
     return true;
 }
 
