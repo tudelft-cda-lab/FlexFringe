@@ -15,18 +15,54 @@
 #include <vector>
 #include <set>
 #include <iostream>
+#include <fmt/format.h>
+#include <fmt/ostream.h>
 
 
 struct abbadingo_symbol_info {
     std::string_view name;
     std::optional<std::vector<std::string_view>> attribute_values;
     std::optional<std::string_view> data;
+
+    friend std::ostream& operator << (std::ostream &os, const abbadingo_symbol_info &self) {
+        os << self.name;
+
+        if (self.attribute_values.has_value()) {
+            os << ":";
+            fmt::print(os, "{}", fmt::join(self.attribute_values.value(), ","));
+        }
+
+        if (self.data.has_value()) {
+            os << "/" << self.data.value();
+        }
+
+        return os;
+    }
 };
+
+// Needed to let fmt library print this
+template <>
+struct fmt::formatter<abbadingo_symbol_info> : ostream_formatter {};
 
 struct abbadingo_trace_specifier_info {
     uint64_t number;
     std::optional<std::vector<std::string_view>> attribute_values;
     std::optional<std::string_view> data;
+
+    friend std::ostream& operator << (std::ostream &os, const abbadingo_trace_specifier_info &self) {
+        os << self.number;
+
+        if (self.attribute_values.has_value()) {
+            os << ":";
+            fmt::print(os, "{}", fmt::join(self.attribute_values.value(), ","));
+        }
+
+        if (self.data.has_value()) {
+            os << "/" << self.data.value();
+        }
+
+        return os;
+    }
 };
 
 struct abbadingo_trace_info {
@@ -34,6 +70,12 @@ struct abbadingo_trace_info {
     // Symbol info functions as holder for trace info since they are parsed the same way
     abbadingo_trace_specifier_info trace_info;
     std::vector<abbadingo_symbol_info> symbols;
+
+    friend std::ostream& operator << (std::ostream &os, const abbadingo_trace_info &self) {
+        os << self.label << " " << self.trace_info << " ";
+        fmt::print(os, "{}", fmt::join(self.symbols, " "));
+        return os;
+    }
 };
 
 namespace {
@@ -65,7 +107,13 @@ namespace {
 
         // Attribute value - keep as string
         struct attr_val_str {
-            static constexpr auto rule = dsl::capture(dsl::digits<>) + dsl::period + dsl::capture(dsl::digits<>);
+            struct attr_val_error {
+                static constexpr auto name = "Expected attribute value";
+            };
+            static constexpr auto rule = [] {
+                auto dec_number = dsl::capture(dsl::digits<>) + dsl::period + dsl::capture(dsl::digits<>);
+                return dsl::peek(dec_number) >> dec_number | dsl::error<attr_val_error>;
+            }();
             static constexpr auto value = lexy::callback<std::string_view>([](auto integer, auto decimal) {
                 std::string_view tmp(integer.begin(), decimal.end());
                 return tmp;
@@ -80,7 +128,13 @@ namespace {
 
         // Data
         struct data {
-            static constexpr auto rule = LEXY_LIT("/") + dsl::identifier(dsl::ascii::alpha_digit_underscore);
+            struct data_error {
+                static constexpr auto name = "Expected data string";
+            };
+            static constexpr auto rule = [] {
+                auto data_rule = LEXY_LIT("/") + dsl::identifier(dsl::ascii::alpha_digit_underscore);
+                return dsl::peek(data_rule) >> data_rule | dsl::error<data_error>;
+            }();
             static constexpr auto value = lexy::as_string<std::string_view>;
         };
 
@@ -136,7 +190,8 @@ namespace {
             static constexpr auto rule = [] {
                 auto trace_info_part = dsl::p<trace_label> + ws + dsl::p<trace_specifier>;
                 auto symbol_list_part = ws + dsl::p<symbol_list>;
-                auto condition = dsl::peek(symbol_list_part);
+                auto symbol_list_peek = ws + dsl::ascii::word;
+                auto condition = dsl::peek(symbol_list_peek);
                 return trace_info_part + dsl::opt(condition >> symbol_list_part);
             }();
 
