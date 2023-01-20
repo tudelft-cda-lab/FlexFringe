@@ -5,6 +5,9 @@
 #include <iostream>
 #include <sstream>
 #include <lexy/action/parse.hpp>
+#include <lexy/action/parse_as_tree.hpp>
+#include <lexy/action/trace.hpp>
+#include <lexy/visualize.hpp>
 #include <lexy_ext/report_error.hpp>
 #include <lexy/input/string_input.hpp>
 #include <lexy/action/match.hpp>
@@ -180,6 +183,18 @@ TEST_CASE("abbadingo trace parser: empty trace", "[parsing]") {
     REQUIRE(result.has_value());
     auto value = result.value();
     REQUIRE(value.symbols.empty());
+}
+
+TEST_CASE("abbadingo trace parser: error incomplete attributes", "[parsing]") {
+    auto input = lexy::zstring_input("0 1 a:");
+    auto result = lexy::parse<symbol_grammar::abbadingo_trace>(input, lexy_ext::report_error);
+    REQUIRE(!result.has_value());
+}
+
+TEST_CASE("abbadingo trace parser: error incomplete data", "[parsing]") {
+    auto input = lexy::zstring_input("0 1 a/");
+    auto result = lexy::parse<symbol_grammar::abbadingo_trace>(input, lexy_ext::report_error);
+    REQUIRE(!result.has_value());
 }
 
 TEST_CASE("abbadingo_parser: smoke test", "[parsing]") {
