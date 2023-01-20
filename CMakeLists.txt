@@ -23,6 +23,7 @@ else()
 endif()
 
 add_compile_definitions(LOGURU_WITH_STREAMS=1)
+add_compile_definitions(CATCH_CONFIG_EXPERIMENTAL_REDIRECT=1)
 
 include_directories("${PROJECT_SOURCE_DIR}"
                     "${PROJECT_SOURCE_DIR}/source"
