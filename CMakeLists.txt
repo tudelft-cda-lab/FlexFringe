@@ -123,3 +123,6 @@ if(MSVC)
     set_property(TARGET flexfringe Evaluation Source Util runtests PROPERTY
             MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
+
+set_property(TARGET flexfringe PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+set_property(TARGET runtests PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)

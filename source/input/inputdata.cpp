@@ -27,6 +27,11 @@ void inputdata::read(parser* input_parser) {
     for (const auto &[id, trace]: trace_map) {
         traces.push_back(trace);
     }
+
+    // Make sure they are ordered by sequence number
+    traces.sort([](auto& left, auto& right) {
+        return left->sequence < right->sequence;
+    });
 }
 
 /**
@@ -120,7 +125,9 @@ std::pair<trace*, tail*> inputdata::process_symbol_info(symbol_info &cur_symbol,
 
     // Get or create the trace for this trace id
     if (!trace_map.contains(id)) {
-        trace_map.emplace(id, mem_store::create_trace(this));
+        auto new_trace = mem_store::create_trace(this);
+        new_trace->sequence = this->num_sequences++;
+        trace_map.emplace(id, new_trace);
     }
     trace* tr = trace_map.at(id);
 
@@ -141,6 +148,8 @@ std::pair<trace*, tail*> inputdata::process_symbol_info(symbol_info &cur_symbol,
         tr->length++;
         new_tail->tr = tr;
     }
+
+    new_tail->td->index = tr->length - 1;
 
     return std::make_pair(tr, new_tail);
 }

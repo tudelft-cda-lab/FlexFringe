@@ -31,10 +31,10 @@ protected:
     std::vector<attribute> trace_attributes;
     std::vector<attribute> symbol_attributes;
 
-    int max_sequences;
-    int num_sequences;
-    int node_number;
-    int num_tails;
+    int max_sequences {};
+    int num_sequences {};
+    int node_number {};
+    int num_tails {};
 
     tail *make_tail(const std::string &id,
                     const std::string &symbol,
