@@ -25,7 +25,7 @@ void abbadingoparser::parse_header() {
     auto input = lexy::string_input(line);
     auto parsed_header_maybe = lexy::parse<grammar::abbadingo_header_p>(input, lexy_ext::report_error);
 
-    if (!parsed_header_maybe.has_value()){
+    if (!parsed_header_maybe.has_value()) {
         throw std::runtime_error("Could not parse abbadingo header");
     }
 
@@ -44,6 +44,8 @@ bool abbadingoparser::read_abbadingo_trace() {
         return false;
     }
 
+    auto line_idx = num_lines_processed + 2;
+
 //    auto before = std::chrono::high_resolution_clock::now();
     auto input = lexy::string_input(line);
     auto parsed_trace_maybe = lexy::parse<symbol_grammar::abbadingo_trace>(input, lexy_ext::report_error);
@@ -51,13 +53,13 @@ bool abbadingoparser::read_abbadingo_trace() {
 
     // Did we parse successfully?
     if (!parsed_trace_maybe.has_value()) {
-        throw std::runtime_error(fmt::format("Error parsing abbadingo input: line {}", num_lines_processed));
+        throw std::runtime_error(fmt::format("Error parsing abbadingo input: line {}", line_idx));
     }
     auto trace = parsed_trace_maybe.value();
 
     // Is the specified amount of symbols in the trace equal to the actual amount?
     if (trace.trace_info.number != trace.symbols.size()) {
-        throw std::runtime_error(fmt::format("Error parsing abbadingo input: line {} - Incorrectly specified number of symbols in trace", num_lines_processed));
+        throw std::runtime_error(fmt::format("Error parsing abbadingo input: line {} - Incorrectly specified number of symbols in trace", line_idx));
     }
 
     for (const auto &symbol: trace.symbols) {
