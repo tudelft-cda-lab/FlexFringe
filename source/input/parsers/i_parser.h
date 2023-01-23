@@ -15,6 +15,7 @@
 class parser {
 public:
     virtual std::optional<symbol_info> next() = 0;
+    virtual ~parser() = default;
 };
 
 #endif //FLEXFRINGE_I_PARSER_H
