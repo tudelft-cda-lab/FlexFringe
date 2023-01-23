@@ -25,6 +25,16 @@ void inputdata::read(parser* input_parser) {
 
     // Add all collected traces to the list of traces
     for (const auto &[id, trace]: trace_map) {
+        // Create final tail
+        // This is a special tail with symbol -1, which signifies the end of a trace
+        tail* end_tail = mem_store::create_tail(nullptr);
+        end_tail->tr = trace;
+        end_tail->td->index = trace->end_tail->get_index() + 1;
+
+        // Add final tail to trace
+        trace->end_tail->set_future(end_tail);
+        trace->end_tail = end_tail;
+
         traces.push_back(trace);
     }
 
@@ -280,7 +290,7 @@ void inputdata::add_trace_to_apta(trace *tr, apta *the_apta) {
 
     while(t != nullptr){
         node->size = node->size + 1;
-        if(ADD_TAILS) node->add_tail(t);
+        node->add_tail(t);
         node->data->add_tail(t);
 
         depth++;
