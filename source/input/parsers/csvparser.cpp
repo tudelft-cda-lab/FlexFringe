@@ -36,7 +36,6 @@ std::optional<symbol_info> csv_parser::next() {
 
 std::vector<std::string> csv_parser::get_vec_from_row(const std::string &label, const csv::CSVRow &row) {
     std::vector<std::string> result;
-    auto col_ids = header_parser->get(label);
     for (auto i: header_parser->get(label)) {
         result.emplace_back(row[i].get());
     }
