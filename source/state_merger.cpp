@@ -1082,9 +1082,9 @@ int state_merger::num_sink_types(){
 } // this got moved to eval data */
 
 state_merger::~state_merger(){
-    delete aut;
-    delete eval;
-    delete dat;
+//    delete aut;
+//    delete eval;
+//    delete dat;
     cerr << "deleted merger" << endl;
 }
 
