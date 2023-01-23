@@ -6,6 +6,7 @@
 #include <string>
 #include <map>
 #include <stdexcept>
+#include "input/parsers/attribute_info.h"
 
 /**
  * @brief Wrapper class for the input data. Supports functionalities
@@ -24,7 +25,8 @@ public:
 
     std::string name;
 
-    attribute(const std::string& input);
+    explicit attribute(const std::string& input);
+    explicit attribute(const attribute_info& input);
 
     inline double get_value(std::string val){
         if(discrete){

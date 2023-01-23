@@ -30,3 +30,11 @@ attribute::attribute(const string& input){
 
     cs.clear();
 }
+
+attribute::attribute(const attribute_info &input) {
+    discrete = input.is_discrete();
+    splittable = input.is_splittable();
+    distributionable = input.is_distributionable();
+    target = input.is_target();
+    name = input.get_name();
+}
