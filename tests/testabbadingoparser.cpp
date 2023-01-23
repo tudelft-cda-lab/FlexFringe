@@ -177,6 +177,19 @@ TEST_CASE("abbadingo trace parser 3", "[parsing]") {
     REQUIRE(value.symbols.at(2).data.value() == "foo");
 }
 
+TEST_CASE("abbadingo trace parser 4", "[parsing]") {
+    auto input = lexy::zstring_input("0 2 a:1.0 b:2.0");
+    auto result = lexy::parse<symbol_grammar::abbadingo_trace>(input, lexy_ext::report_error);
+    REQUIRE(result.has_value());
+    auto value = result.value();
+
+    REQUIRE(value.symbols.at(0).name == "a");
+    REQUIRE(value.symbols.at(0).attribute_values.value().at(0) == "1.0");
+
+    REQUIRE(value.symbols.at(1).name == "b");
+    REQUIRE(value.symbols.at(1).attribute_values.value().at(0) == "2.0");
+}
+
 TEST_CASE("abbadingo trace parser: empty trace", "[parsing]") {
     auto input = lexy::zstring_input("0 0");
     auto result = lexy::parse<symbol_grammar::abbadingo_trace>(input, lexy_ext::report_error);
@@ -226,3 +239,127 @@ TEST_CASE("abbadingo_parser: smoke test", "[parsing]") {
     REQUIRE(fourth.get("type") == std::vector<std::string> {"1"});
 }
 
+TEST_CASE("abbadingo_parser: smoke test with trace attributes", "[parsing]") {
+    std::string input = "2:ds/tatt1,ft/tatt2 2\n"
+                        "0 2:1.0,2.0 a b\n"
+                        "1 2:3.0,4.0 c d";
+    std::istringstream inputstream(input);
+
+    auto parser = abbadingoparser(inputstream);
+
+    auto first = parser.next().value();
+    auto first_trace_attr_info = first.get_trace_attr_info();
+    REQUIRE(first.get("id") == std::vector<std::string> {"0"});
+    REQUIRE(first.get("symb") == std::vector<std::string> {"a"});
+    REQUIRE(first.get("type") == std::vector<std::string> {"0"});
+
+
+    auto second = parser.next().value();
+    auto second_trace_attr_info = second.get_trace_attr_info();
+    REQUIRE(second.get("id") == std::vector<std::string> {"0"});
+    REQUIRE(second.get("symb") == std::vector<std::string> {"b"});
+    REQUIRE(second.get("type") == std::vector<std::string> {"0"});
+
+    REQUIRE(first_trace_attr_info == second_trace_attr_info);
+
+    auto third = parser.next().value();
+    auto third_trace_attr_info = third.get_trace_attr_info();
+    REQUIRE(third.get("id") == std::vector<std::string> {"1"});
+    REQUIRE(third.get("symb") == std::vector<std::string> {"c"});
+    REQUIRE(third.get("type") == std::vector<std::string> {"1"});
+
+    auto fourth = parser.next().value();
+    auto fourth_trace_attr_info = fourth.get_trace_attr_info();
+    REQUIRE(fourth.get("id") == std::vector<std::string> {"1"});
+    REQUIRE(fourth.get("symb") == std::vector<std::string> {"d"});
+    REQUIRE(fourth.get("type") == std::vector<std::string> {"1"});
+
+    REQUIRE(third_trace_attr_info == fourth_trace_attr_info);
+
+    REQUIRE(first_trace_attr_info->at(0).get_name() == "tatt1");
+    REQUIRE(first_trace_attr_info->at(1).get_name() == "tatt2");
+    REQUIRE(first_trace_attr_info->at(0).get_value() == "1.0");
+    REQUIRE(first_trace_attr_info->at(1).get_value() == "2.0");
+
+    REQUIRE(first_trace_attr_info->at(0).is_discrete());
+    REQUIRE(first_trace_attr_info->at(0).is_splittable());
+    REQUIRE(!first_trace_attr_info->at(0).is_distributionable());
+    REQUIRE(!first_trace_attr_info->at(0).is_target());
+    REQUIRE(!first_trace_attr_info->at(1).is_discrete());
+    REQUIRE(!first_trace_attr_info->at(1).is_splittable());
+    REQUIRE(first_trace_attr_info->at(1).is_distributionable());
+    REQUIRE(first_trace_attr_info->at(1).is_target());
+
+    REQUIRE(third_trace_attr_info->at(0).get_name() == "tatt1");
+    REQUIRE(third_trace_attr_info->at(1).get_name() == "tatt2");
+    REQUIRE(third_trace_attr_info->at(0).get_value() == "3.0");
+    REQUIRE(third_trace_attr_info->at(1).get_value() == "4.0");
+
+    REQUIRE(third_trace_attr_info->at(0).is_discrete());
+    REQUIRE(third_trace_attr_info->at(0).is_splittable());
+    REQUIRE(!third_trace_attr_info->at(0).is_distributionable());
+    REQUIRE(!third_trace_attr_info->at(0).is_target());
+    REQUIRE(!third_trace_attr_info->at(1).is_discrete());
+    REQUIRE(!third_trace_attr_info->at(1).is_splittable());
+    REQUIRE(third_trace_attr_info->at(1).is_distributionable());
+    REQUIRE(third_trace_attr_info->at(1).is_target());
+}
+
+
+TEST_CASE("abbadingo_parser: smoke test with symbol attributes", "[parsing]") {
+    std::string input = "2 2:d/sattr1\n"
+                        "0 2 a:1.0 b:2.0\n"
+                        "1 2 c:3.0 d:4.0";
+    std::istringstream inputstream(input);
+
+    auto parser = abbadingoparser(inputstream);
+
+    auto first = parser.next().value();
+    auto first_sattr_info = first.get_symb_attr_info();
+    REQUIRE(first.get("id") == std::vector<std::string> {"0"});
+    REQUIRE(first.get("symb") == std::vector<std::string> {"a"});
+    REQUIRE(first.get("type") == std::vector<std::string> {"0"});
+    REQUIRE(first_sattr_info.size() == 1);
+    REQUIRE(first_sattr_info.at(0).get_value() == "1.0");
+    REQUIRE(first_sattr_info.at(0).is_discrete());
+    REQUIRE(!first_sattr_info.at(0).is_splittable());
+    REQUIRE(!first_sattr_info.at(0).is_distributionable());
+    REQUIRE(!first_sattr_info.at(0).is_target());
+
+    auto second = parser.next().value();
+    auto second_sattr_info = second.get_symb_attr_info();
+    REQUIRE(second.get("id") == std::vector<std::string> {"0"});
+    REQUIRE(second.get("symb") == std::vector<std::string> {"b"});
+    REQUIRE(second.get("type") == std::vector<std::string> {"0"});
+    REQUIRE(second_sattr_info.size() == 1);
+    REQUIRE(second_sattr_info.at(0).get_value() == "2.0");
+    REQUIRE(second_sattr_info.at(0).is_discrete());
+    REQUIRE(!second_sattr_info.at(0).is_splittable());
+    REQUIRE(!second_sattr_info.at(0).is_distributionable());
+    REQUIRE(!second_sattr_info.at(0).is_target());
+
+    auto third = parser.next().value();
+    auto third_sattr_info = third.get_symb_attr_info();
+    REQUIRE(third.get("id") == std::vector<std::string> {"1"});
+    REQUIRE(third.get("symb") == std::vector<std::string> {"c"});
+    REQUIRE(third.get("type") == std::vector<std::string> {"1"});
+    REQUIRE(third_sattr_info.size() == 1);
+    REQUIRE(third_sattr_info.at(0).get_value() == "3.0");
+    REQUIRE(third_sattr_info.at(0).is_discrete());
+    REQUIRE(!third_sattr_info.at(0).is_splittable());
+    REQUIRE(!third_sattr_info.at(0).is_distributionable());
+    REQUIRE(!third_sattr_info.at(0).is_target());
+
+    auto fourth = parser.next().value();
+    auto fourth_sattr_info = fourth.get_symb_attr_info();
+    REQUIRE(fourth.get("id") == std::vector<std::string> {"1"});
+    REQUIRE(fourth.get("symb") == std::vector<std::string> {"d"});
+    REQUIRE(fourth.get("type") == std::vector<std::string> {"1"});
+    REQUIRE(fourth_sattr_info.size() == 1);
+    REQUIRE(fourth_sattr_info.at(0).get_value() == "4.0");
+    REQUIRE(fourth_sattr_info.at(0).is_discrete());
+    REQUIRE(!fourth_sattr_info.at(0).is_splittable());
+    REQUIRE(!fourth_sattr_info.at(0).is_distributionable());
+    REQUIRE(!fourth_sattr_info.at(0).is_target());
+
+}
