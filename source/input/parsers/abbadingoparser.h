@@ -8,24 +8,24 @@
 
 #include <deque>
 #include "i_parser.h"
+#include "input/parsers/grammar/abbadingoheader.h"
 
 class abbadingoparser: public parser {
 private:
     std::istream& inputstream;
-    size_t max_sequences;
-    size_t alphabet_size;
 
-    size_t num_lines_processed;
+    std::unique_ptr<abbadingo_header_info> header_info;
+
+    size_t num_lines_processed {};
     std::deque<symbol_info> symbols;
+
+    std::vector<attribute_info> trace_attr_prototypes;
+    std::vector<attribute_info> symbol_attr_prototypes;
 
 public:
     abbadingoparser(std::istream &input)
     : inputstream(input)
     {
-        max_sequences = 0;
-        alphabet_size = 0;
-        num_lines_processed = 0;
-
         parse_header();
     }
 
