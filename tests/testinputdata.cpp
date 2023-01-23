@@ -32,10 +32,10 @@ TEST_CASE("AbbadingoReader: smoke test", "[parsing]") {
     };
 
     for (auto trace: input_data) {
-        auto expected = expected_traces.back();
+        auto expected = expected_traces.front();
         auto actual = trace->to_string();
         REQUIRE_THAT(actual, Equals(expected));
-        expected_traces.pop_back();
+        expected_traces.pop_front();
     }
 }
 
@@ -60,8 +60,8 @@ TEST_CASE("CSVReader: smoke test", "[parsing]") {
     input_data.read(&parser);
 
     std::list<std::string> expected_traces = {
-            "0 1 Received symbol b",
-            "0 2 Received symbol b Received symbol b"
+            "0 2 Received symbol b Received symbol b",
+            "0 1 Received symbol b"
     };
 
     for (auto trace: input_data) {
@@ -91,8 +91,8 @@ TEST_CASE("CSVReader: Special characters", "[parsing]") {
     input_data.read(&parser);
 
     std::list<std::string> expected_traces = {
+            "0 2 msg: b msg: b",
             "0 1 msg: a/b",
-            "0 2 msg: b msg: b"
     };
 
     for (auto trace: input_data) {
