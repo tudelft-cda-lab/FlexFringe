@@ -36,11 +36,7 @@ protected:
     int node_number {};
     int num_tails {};
 
-    tail *make_tail(const std::string &id,
-                    const std::string &symbol,
-                    const std::string &type,
-                    const std::vector<std::string> &trace_attrs,
-                    const std::vector<std::string> &symbol_attrs,
+    tail *make_tail(const std::string &symbol,
                     const std::vector<std::string> &data);
 
     void add_type_to_trace(trace *new_trace,
@@ -49,6 +45,14 @@ protected:
 
     std::pair<trace*, tail*> process_symbol_info(symbol_info &symbolinfo,
                                                  std::unordered_map<std::string, trace*> &trace_map);
+private:
+
+    // The trace IDs of which we already processed the trace attributes
+    std::set<std::string> processed_trace_ids {};
+
+    void process_trace_attributes(symbol_info &symbolinfo, trace* tr);
+    void process_symbol_attributes(symbol_info &symbolinfo, tail* t);
+
 public:
     using Iterator = std::list<trace*>::iterator;
 

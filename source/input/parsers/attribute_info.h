@@ -49,13 +49,13 @@ public:
         return new_info;
     }
 
-    bool is_discrete() { return types[discrete]; }
-    bool is_splittable() { return types[splittable]; }
-    bool is_distributionable() { return types[distributionable]; }
-    bool is_target() { return types[target]; }
+    [[nodiscard]] bool is_discrete() const { return types[discrete]; }
+    [[nodiscard]] bool is_splittable() const { return types[splittable]; }
+    [[nodiscard]] bool is_distributionable() const { return types[distributionable]; }
+    [[nodiscard]] bool is_target() const { return types[target]; }
 
-    const std::string& get_name() { return name; }
-    const std::string& get_value() { return value; }
+    [[nodiscard]] const std::string& get_name() const { return name; }
+    [[nodiscard]] const std::string& get_value() const { return value; }
 
 
 };

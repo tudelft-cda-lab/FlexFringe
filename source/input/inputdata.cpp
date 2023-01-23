@@ -139,9 +139,12 @@ std::pair<trace*, tail*> inputdata::process_symbol_info(symbol_info &cur_symbol,
         new_trace->sequence = this->num_sequences++;
         trace_map.emplace(id, new_trace);
     }
-    trace* tr = trace_map.at(id);
 
-    tail* new_tail = make_tail(id, symbol, type, trace_attrs, symbol_attrs, data);
+    trace* tr = trace_map.at(id);
+    process_trace_attributes(cur_symbol, tr);
+
+    tail* new_tail = make_tail(symbol, data);
+    process_symbol_attributes(cur_symbol, new_tail);
 
     add_type_to_trace(tr, type, trace_attrs);
 
@@ -369,11 +372,7 @@ int inputdata::get_max_sequences() {
     return max_sequences;
 }
 
-tail *inputdata::make_tail(const string& id,
-                           const string& symbol,
-                           const string& type,
-                           const vector<string>& trace_attrs,
-                           const vector<string>& symbol_attrs,
+tail *inputdata::make_tail(const string& symbol,
                            const vector<string>& data) {
 
     tail* new_tail = mem_store::create_tail(nullptr);
@@ -389,14 +388,6 @@ tail *inputdata::make_tail(const string& id,
     td->symbol = r_alphabet[symbol];
     td->data = strutil::join(data, ",");
     td->tail_nr = num_tails++;
-
-    auto num_symbol_attributes = this->symbol_attributes.size();
-    if(num_symbol_attributes > 0){
-        for(int i = 0; i < num_symbol_attributes; ++i){
-            const string& val = symbol_attrs.at(i);
-            td->attr[i] = symbol_attributes[i].get_value(val);
-        }
-    }
 
     return new_tail;
 }
@@ -418,6 +409,54 @@ void inputdata::add_type_to_trace(trace* new_trace,
         }
     }
     new_trace->type = r_types[type];
+}
+
+void inputdata::process_trace_attributes(symbol_info &symbolinfo, trace* tr) {
+    auto trace_id = symbolinfo.get_str("id");
+    if (processed_trace_ids.contains(trace_id)) {
+        return;
+    }
+
+    // Add attributes to the attribute list first if neccessary
+    // TODO: allow dynamically adding attributes?
+    // TODO: would probably need a map with attr name -> attr info
+    auto trace_attribute_info = symbolinfo.get_trace_attr_info();
+
+    // Do we even have tattr info?
+    // TODO: figure out how to arrange this for csv parsing as well
+    if (trace_attribute_info == nullptr) {
+        return;
+    }
+
+    if (trace_attributes.empty() && trace_attributes.size() < trace_attribute_info->size()) {
+        for (auto &tattr_info: *trace_attribute_info) {
+            trace_attributes.emplace_back(tattr_info);
+        }
+    }
+
+    // Add the actual values of the attributes too
+    size_t idx {};
+    for (auto &tattr_info: *trace_attribute_info) {
+        tr->trace_attr[idx] = trace_attributes[idx].get_value(tattr_info.get_value());
+        idx++;
+    }
+
+    processed_trace_ids.insert(trace_id);
+}
+
+void inputdata::process_symbol_attributes(symbol_info &symbolinfo, tail* t) {
+    auto symbol_attribute_info = symbolinfo.get_symb_attr_info();
+    if (symbol_attributes.empty() && symbol_attributes.size() < symbol_attribute_info.size()) {
+        for (auto &sattr_info: symbol_attribute_info) {
+            symbol_attributes.emplace_back(sattr_info);
+        }
+    }
+
+    size_t idx {};
+    for (auto &sattr_info: symbol_attribute_info) {
+        t->td->attr[idx] = symbol_attributes[idx].get_value(sattr_info.get_value());
+        idx++;
+    }
 }
 
 
