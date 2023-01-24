@@ -19,6 +19,7 @@ private:
 
     std::unordered_map<TypeName, std::set<int>> col_types;
     std::unordered_map<TypeName, std::vector<std::string>> col_names;
+    std::unordered_map<size_t, std::set<std::string>> attr_types;
 
     std::set<std::string> col_type_names;
 

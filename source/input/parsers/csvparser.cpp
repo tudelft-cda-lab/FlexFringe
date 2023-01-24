@@ -92,7 +92,7 @@ void csv_header_parser::parse(const std::vector<std::string> &headers) {
         }
         const auto& parsed_header = result.value();
 
-        // If only a name is specified, we check if it's a valid column type name
+        // CASE 1: If only a name is specified, we check if it's a valid column type name
         if (!parsed_header.type_name.has_value() && !parsed_header.attr_types.has_value()) {
 
             // If its attr or tattr, we can't parse it without additional information
@@ -100,7 +100,7 @@ void csv_header_parser::parse(const std::vector<std::string> &headers) {
                 throw std::runtime_error(fmt::format("Error parsing column header from column {} - {}", idx, header));
             }
 
-            // Otherwise, we try our best
+            // Otherwise, we try our best (if the column name is a column type)
             if (type_names.contains(parsed_header.name)) {
                 col_types.at(header).emplace(idx);
                 col_names.at(header).emplace_back(header);
@@ -109,27 +109,24 @@ void csv_header_parser::parse(const std::vector<std::string> &headers) {
             continue;
         }
 
-        // Do we have a : ?
-        auto delim_pos = header.find(':');
-
-        // If there is no delimiter, skip this header
-        if (delim_pos == std::string::npos) {
-            // Unless the header itself is a label
-            if (col_type_names.contains(header)) {
-                col_types.at(header).emplace(idx);
-                col_names.at(header).emplace_back(header);
-            }
-            idx++;
-            continue;
+        // CASE 2: Do we have a name and a column type? (col_type:col_name)
+        if (parsed_header.type_name.has_value() && !parsed_header.attr_types.has_value()) {
+            const std::string& type = parsed_header.type_name.value();
+            const std::string& name = parsed_header.name;
+            col_types.at(type).emplace(idx);
+            col_names.at(type).emplace_back(name);
         }
 
-        // Get the type name and the col name
-        std::string type = header.substr(0, delim_pos);
-        std::string name = header.substr(delim_pos + 1);
+        // CASE 3: We have a trace or symbol attribute column ({attr,tattr}/{d,s,f,t}+:col_name)
+        if (parsed_header.type_name.has_value() && parsed_header.attr_types.has_value()) {
+            const std::string& type = parsed_header.type_name.value();
+            const std::string& name = parsed_header.name;
+            const std::set<std::string>& attr_type = parsed_header.attr_types.value();
 
-        col_types.at(type).emplace(idx);
-        col_names.at(type).emplace_back(name);
-
+            col_types.at(type).emplace(idx);
+            col_names.at(type).emplace_back(name);
+            attr_types.insert(std::make_pair<>(idx, attr_type));
+        }
         idx++;
     }
 }
