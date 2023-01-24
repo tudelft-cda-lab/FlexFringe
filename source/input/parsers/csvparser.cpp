@@ -72,16 +72,42 @@ void csv_header_parser::setup_col_maps() {
 }
 
 void csv_header_parser::parse(const std::vector<std::string> &headers) {
+    // The type names that indicate a column containins trace or symbol attributes
+    const std::set<std::string> type_name_attrs = {"attr", "tattr"};
+
+    // The type names that indicate a column contains other relevant information
+    std::set<std::string> type_names;
+    std::set_difference(col_type_names.begin(), col_type_names.end(),
+                        type_name_attrs.begin(), type_name_attrs.end(),
+                        std::inserter(type_names, type_names.begin()));
+
     int idx = 0;
     for (const auto& header: headers) {
-        auto input = lexy::string_input(header);
 
+        // Parse the current column header with lexy
+        auto input = lexy::string_input(header);
         auto result = lexy::parse<csv_header_grammar::col_name>(input, lexy_ext::report_error);
         if (!result.has_value()) {
             throw std::runtime_error(fmt::format("Error parsing column header from column {} - {}", idx, header));
         }
-
         const auto& parsed_header = result.value();
+
+        // If only a name is specified, we check if it's a valid column type name
+        if (!parsed_header.type_name.has_value() && !parsed_header.attr_types.has_value()) {
+
+            // If its attr or tattr, we can't parse it without additional information
+            if (type_name_attrs.contains(parsed_header.name)) {
+                throw std::runtime_error(fmt::format("Error parsing column header from column {} - {}", idx, header));
+            }
+
+            // Otherwise, we try our best
+            if (type_names.contains(parsed_header.name)) {
+                col_types.at(header).emplace(idx);
+                col_names.at(header).emplace_back(header);
+            }
+            idx++;
+            continue;
+        }
 
         // Do we have a : ?
         auto delim_pos = header.find(':');

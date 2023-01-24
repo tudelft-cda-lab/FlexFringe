@@ -33,7 +33,16 @@ namespace {
         };
 
         struct name {
-            static constexpr auto rule = dsl::identifier(dsl::ascii::word);
+
+            struct name_error {
+                static constexpr auto name = "Incomplete attribute specification (did you add types?)";
+            };
+
+            static constexpr auto rule = [] {
+                auto word = dsl::identifier(dsl::ascii::word);
+                auto peek = dsl::peek(LEXY_LIT("tattr") | LEXY_LIT("attr"));
+                return peek >> dsl::error<name_error> | dsl::else_ >> word;
+            }();
             static constexpr auto value = lexy::as_string<std::string>;
         };
 
@@ -60,7 +69,7 @@ namespace {
             static constexpr auto value = lexy::fold_inplace<std::set<std::string>>(
                     std::initializer_list<std::string> {},
                     [](std::set<std::string>& acc, const auto& val) {
-                       acc.insert(std::string(val.begin(), val.end()));
+                       acc.insert(lexy::as_string<std::string>(val));
                     });
         };
 
