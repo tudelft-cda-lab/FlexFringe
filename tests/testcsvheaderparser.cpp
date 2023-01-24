@@ -62,7 +62,7 @@ TEST_CASE( "CSVHeaderParser: implicit label", "[parsing]" ) {
 }
 
 TEST_CASE( "CSVHeaderParser: get symbol attributes", "[parsing]" ) {
-    std::vector<std::string> input = {"attr:column_a", "column_b", "attr:column_c"};
+    std::vector<std::string> input = {"attr/d:column_a", "column_b", "attr/f:column_c"};
 
     auto parser = csv_header_parser(input);
 
