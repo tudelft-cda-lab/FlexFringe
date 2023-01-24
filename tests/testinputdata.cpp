@@ -2,6 +2,7 @@
 
 #include "input/inputdata.h"
 #include "input/inputdatalocator.h"
+#include "input/tail.h"
 #include "input/parsers/abbadingoparser.h"
 #include "input/parsers/csvparser.h"
 
@@ -164,4 +165,30 @@ TEST_CASE("CSVReader: Sliding window abbadingo", "[parsing]") {
         REQUIRE_THAT(actual, Equals(expected));
         expected_traces.pop_back();
     }
+}
+
+
+TEST_CASE("CSVReader: symbol attributes", "[parsing]") {
+    // check if we can parse csv files with the abbadingo delimiter symbols
+
+    std::string input_whitespace = "id, symb, attr/d:test\n"
+                                   "1, a, 1.0\n"
+                                   "1, b, 2.0\n"
+                                   "2, c, 3.0";
+    std::istringstream input(input_whitespace);
+
+    auto input_data = inputdata();
+    inputdata_locator::provide(&input_data);
+
+    auto parser = csv_parser(input,
+                             csv::CSVFormat().trim({' '}));
+
+    input_data.read(&parser);
+
+    std::vector<trace*> actual_traces(input_data.begin(), input_data.end());
+
+    REQUIRE(actual_traces.size() == 2);
+
+    //TODO: make sure this value actually gets set :/
+    REQUIRE(actual_traces.at(0)->get_head()->td->attr[0] == 1.0);
 }

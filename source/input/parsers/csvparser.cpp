@@ -15,14 +15,47 @@ std::optional<symbol_info> csv_parser::next() {
     csv::CSVRow row;
     bool row_read = reader->read_row(row);
 
-    if(!row_read) {
+    if (!row_read) {
         return std::nullopt;
     }
 
     symbol_info cur_symbol;
 
-    for (auto label: header_parser->get_column_type_names()) {
+    // Handle everything besides attr and tattr columns
+    for (const auto& label: header_parser->get_non_reserved_column_type_names()) {
         cur_symbol.set(label, get_vec_from_row(label, row));
+    }
+
+    // Handle attr columns
+    size_t idx {};
+    auto attr_col_names = header_parser->get_names("attr");
+    for (auto col_idx: header_parser->get("attr")) {
+        cur_symbol.push_symb_attr_info({
+            attr_col_names.at(idx),
+            row[col_idx].get(),
+            header_parser->get_col_attr_types(col_idx)
+        });
+        idx++;
+    }
+
+    // Handle tattr columns
+    // Do we have trace attribute info for this trace ID?
+    auto cur_trace_id = cur_symbol.get_str("id");
+    if (!tattr_info.contains(cur_trace_id)) {
+        tattr_info.insert(std::make_pair<>(cur_trace_id, std::make_shared<std::vector<attribute_info>>()));
+    }
+    auto cur_trace_attr_info = tattr_info.at(cur_trace_id);
+    cur_symbol.set_trace_attr_info(cur_trace_attr_info);
+
+    idx = 0;
+    auto tattr_col_names = header_parser->get_names("tattr");
+    for (auto col_idx: header_parser-> get("tattr")) {
+        cur_symbol.push_trace_attr_info({
+            tattr_col_names.at(idx),
+            row[col_idx].get(),
+            header_parser->get_col_attr_types(col_idx)
+        });
+        idx++;
     }
 
     return cur_symbol;
@@ -51,6 +84,11 @@ const std::set<std::string> csv_header_parser::default_col_type_names = {
         "id", "type", "symb", "eval", "attr", "tattr"
 };
 
+// These are special cases, resembling attributes, which need special handling
+const std::set<std::string> csv_header_parser::reserved_col_type_names = {
+        "attr", "tattr"
+};
+
 csv_header_parser::csv_header_parser(const std::vector<std::string> &headers) {
     col_type_names = default_col_type_names;
     setup_col_maps();
@@ -65,7 +103,7 @@ csv_header_parser::csv_header_parser(const std::vector<std::string> &headers,
 }
 
 void csv_header_parser::setup_col_maps() {
-    for (auto& col_type_name: col_type_names) {
+    for (auto &col_type_name: col_type_names) {
         col_types.emplace(col_type_name, std::set<int>{});
         col_names.emplace(col_type_name, std::vector<std::string>{});
     }
@@ -73,7 +111,7 @@ void csv_header_parser::setup_col_maps() {
 
 void csv_header_parser::parse(const std::vector<std::string> &headers) {
     // The type names that indicate a column containins trace or symbol attributes
-    const std::set<std::string> type_name_attrs = {"attr", "tattr"};
+    const std::set<std::string> type_name_attrs = reserved_col_type_names;
 
     // The type names that indicate a column contains other relevant information
     std::set<std::string> type_names;
@@ -82,7 +120,7 @@ void csv_header_parser::parse(const std::vector<std::string> &headers) {
                         std::inserter(type_names, type_names.begin()));
 
     int idx = 0;
-    for (const auto& header: headers) {
+    for (const auto &header: headers) {
 
         // Parse the current column header with lexy
         auto input = lexy::string_input(header);
@@ -90,7 +128,7 @@ void csv_header_parser::parse(const std::vector<std::string> &headers) {
         if (!result.has_value()) {
             throw std::runtime_error(fmt::format("Error parsing column header from column {} - {}", idx, header));
         }
-        const auto& parsed_header = result.value();
+        const auto &parsed_header = result.value();
 
         // CASE 1: If only a name is specified, we check if it's a valid column type name
         if (!parsed_header.type_name.has_value() && !parsed_header.attr_types.has_value()) {
@@ -111,21 +149,26 @@ void csv_header_parser::parse(const std::vector<std::string> &headers) {
 
         // CASE 2: Do we have a name and a column type? (col_type:col_name)
         if (parsed_header.type_name.has_value() && !parsed_header.attr_types.has_value()) {
-            const std::string& type = parsed_header.type_name.value();
-            const std::string& name = parsed_header.name;
+            const std::string &type = parsed_header.type_name.value();
+            const std::string &name = parsed_header.name;
             col_types.at(type).emplace(idx);
             col_names.at(type).emplace_back(name);
         }
 
         // CASE 3: We have a trace or symbol attribute column ({attr,tattr}/{d,s,f,t}+:col_name)
         if (parsed_header.type_name.has_value() && parsed_header.attr_types.has_value()) {
-            const std::string& type = parsed_header.type_name.value();
-            const std::string& name = parsed_header.name;
-            const std::set<std::string>& attr_type = parsed_header.attr_types.value();
+            const std::string &type = parsed_header.type_name.value();
+            const std::string &name = parsed_header.name;
+            const std::set<std::string> &attr_type = parsed_header.attr_types.value();
+
+            std::set<char> attr_type_char;
+            for (auto &t: attr_type) {
+                attr_type_char.insert(*t.c_str());
+            }
 
             col_types.at(type).emplace(idx);
             col_names.at(type).emplace_back(name);
-            attr_types.insert(std::make_pair<>(idx, attr_type));
+            attr_types.insert(std::make_pair<>(idx, attr_type_char));
         }
         idx++;
     }
@@ -143,6 +186,21 @@ const std::set<std::string> &csv_header_parser::get_column_type_names() const {
     return col_type_names;
 }
 
+std::set<std::string> csv_header_parser::get_non_reserved_column_type_names() {
+    if (!non_reserved_col_type_names.has_value()) {
+        non_reserved_col_type_names = std::set<std::string>{};
+        std::set_difference(col_type_names.begin(), col_type_names.end(),
+                            reserved_col_type_names.begin(), reserved_col_type_names.end(),
+                            std::inserter(
+                                    non_reserved_col_type_names.value(),
+                                    non_reserved_col_type_names.value().begin()
+                            ));
+    }
+    return non_reserved_col_type_names.value();
+}
 
+const std::set<char>& csv_header_parser::get_col_attr_types(size_t idx) const {
+    return attr_types.at(idx);
+}
 
 
