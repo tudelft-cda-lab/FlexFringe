@@ -3,8 +3,10 @@
 #include "input/parsers/csvparser.h"
 #include "lexy/input/string_input.hpp"
 #include "lexy/action/parse.hpp"
+#include "lexy/action/parse_as_tree.hpp"
 #include "lexy_ext/report_error.hpp"
 #include "input/parsers/grammar/csvheader.h"
+#include "lexy/action/trace.hpp"
 #include <cstdio>
 #include <iostream>
 #include <sstream>
@@ -116,4 +118,17 @@ TEST_CASE("CSVHeaderParser: column name, with attribute specifier", "[parsing]")
     REQUIRE(value.attr_types.value() == std::set<std::string> {"d", "s", "f", "t"});
     REQUIRE(value.type_name.has_value());
     REQUIRE(value.type_name.value() == "attr");
+}
+
+TEST_CASE("CSVHeaderParser: column name, incomplete attr spec", "[parsing]") {
+    auto input = lexy::zstring_input("attr:example_name");
+    lexy::trace<csv_header_grammar::col_name>(stdout, input);
+//    auto result = lexy::parse<csv_header_grammar::col_name>(input, lexy_ext::report_error);
+//    REQUIRE(!result.has_value());
+}
+
+TEST_CASE("CSVHeaderParser: column name, incomplete attr spec 2", "[parsing]") {
+    auto input = lexy::zstring_input("attr/dsft");
+    lexy::trace<csv_header_grammar::col_name>(stdout, input);
+//    REQUIRE(!result.has_value());
 }
