@@ -1,6 +1,10 @@
 
 #include "catch.hpp"
 #include "input/parsers/csvparser.h"
+#include "lexy/input/string_input.hpp"
+#include "lexy/action/parse.hpp"
+#include "lexy_ext/report_error.hpp"
+#include "input/parsers/grammar/csvheader.h"
 #include <cstdio>
 #include <iostream>
 #include <sstream>
@@ -79,4 +83,37 @@ TEST_CASE( "CSVHeaderParser: no :, just label", "[parsing]" ) {
 
     REQUIRE(parser.get("id") == std::set<int> {0});
     REQUIRE(parser.get("symb") == std::set<int> {1});
+}
+
+TEST_CASE("CSVHeaderParser: column name, just name", "[parsing]") {
+    auto input = lexy::zstring_input("example_name");
+    auto result = lexy::parse<csv_header_grammar::col_name>(input, lexy_ext::report_error);
+    REQUIRE(result.has_value());
+    auto value = result.value();
+    REQUIRE(value.name == "example_name");
+    REQUIRE(!value.attr_types.has_value());
+    REQUIRE(!value.type_name.has_value());
+}
+
+TEST_CASE("CSVHeaderParser: column name, with column type specifier", "[parsing]") {
+    auto input = lexy::zstring_input("symb:example_name");
+    auto result = lexy::parse<csv_header_grammar::col_name>(input, lexy_ext::report_error);
+    REQUIRE(result.has_value());
+    auto value = result.value();
+    REQUIRE(value.name == "example_name");
+    REQUIRE(!value.attr_types.has_value());
+    REQUIRE(value.type_name.has_value());
+    REQUIRE(value.type_name.value() == "symb");
+}
+
+TEST_CASE("CSVHeaderParser: column name, with attribute specifier", "[parsing]") {
+    auto input = lexy::zstring_input("attr/dsft:example_name");
+    auto result = lexy::parse<csv_header_grammar::col_name>(input, lexy_ext::report_error);
+    REQUIRE(result.has_value());
+    auto value = result.value();
+    REQUIRE(value.name == "example_name");
+    REQUIRE(value.attr_types.has_value());
+    REQUIRE(value.attr_types.value() == std::set<std::string> {"d", "s", "f", "t"});
+    REQUIRE(value.type_name.has_value());
+    REQUIRE(value.type_name.value() == "attr");
 }

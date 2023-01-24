@@ -5,6 +5,11 @@
 #include "csvparser.h"
 #include "stringutil.h"
 #include "mem_store.h"
+#include "lexy/action/parse.hpp"
+#include "input/parsers/grammar/csvheader.h"
+#include "lexy_ext/report_error.hpp"
+#include "lexy/input/string_input.hpp"
+#include "fmt/format.h"
 
 std::optional<symbol_info> csv_parser::next() {
     csv::CSVRow row;
@@ -69,6 +74,15 @@ void csv_header_parser::setup_col_maps() {
 void csv_header_parser::parse(const std::vector<std::string> &headers) {
     int idx = 0;
     for (const auto& header: headers) {
+        auto input = lexy::string_input(header);
+
+        auto result = lexy::parse<csv_header_grammar::col_name>(input, lexy_ext::report_error);
+        if (!result.has_value()) {
+            throw std::runtime_error(fmt::format("Error parsing column header from column {} - {}", idx, header));
+        }
+
+        const auto& parsed_header = result.value();
+
         // Do we have a : ?
         auto delim_pos = header.find(':');
 
