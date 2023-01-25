@@ -122,15 +122,14 @@ TEST_CASE("CSVHeaderParser: column name, with attribute specifier", "[parsing]")
 
 TEST_CASE("CSVHeaderParser: column name, incomplete attr spec", "[parsing]") {
     auto input = lexy::zstring_input("attr:example_name");
-    lexy::trace<csv_header_grammar::col_name>(stdout, input);
-//    auto result = lexy::parse<csv_header_grammar::col_name>(input, lexy_ext::report_error);
-//    REQUIRE(!result.has_value());
+    auto result = lexy::parse<csv_header_grammar::col_name>( input, lexy_ext::report_error);
+    REQUIRE(!result.has_value());
 }
 
 TEST_CASE("CSVHeaderParser: column name, incomplete attr spec 2", "[parsing]") {
     auto input = lexy::zstring_input("attr/dsft");
-    lexy::trace<csv_header_grammar::col_name>(stdout, input);
-//    REQUIRE(!result.has_value());
+    auto result = lexy::parse<csv_header_grammar::col_name>(input, lexy_ext::report_error);
+    REQUIRE(!result.has_value());
 }
 
 TEST_CASE("CSVHeaderParser: column name, duplicate symbol attribute name", "[parsing]") {
