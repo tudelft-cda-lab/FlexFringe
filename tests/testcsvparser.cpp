@@ -119,11 +119,10 @@ TEST_CASE("csv_parser: smoke test with tattr", "[parsing]") {
     auto second_tattr = second.get_trace_attr_info();
     REQUIRE(second.get_str("id") == "1");
     REQUIRE(second.get_str("symb") == "b");
-    REQUIRE(second_tattr->at(0).get_value() == "1.0");
-    REQUIRE(second_tattr->at(1).get_value() == "2.0");
+    REQUIRE(second_tattr->at(0).get_value() == "2.0");
 
     REQUIRE(second_tattr == first_tattr);
-    REQUIRE(second_tattr->size() == 2);
+    REQUIRE(second_tattr->size() == 1);
 
     auto third = parser.next().value();
     auto third_tattr = third.get_trace_attr_info();

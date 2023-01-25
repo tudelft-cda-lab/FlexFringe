@@ -22,19 +22,17 @@ std::optional<symbol_info> csv_parser::next() {
     symbol_info cur_symbol;
 
     // Handle everything besides attr and tattr columns
-    for (const auto& label: header_parser->get_non_reserved_column_type_names()) {
+    for (const auto &label: header_parser->get_non_reserved_column_type_names()) {
         cur_symbol.set(label, get_vec_from_row(label, row));
     }
 
     // Handle attr columns
-    size_t idx {};
+    size_t idx{};
     auto attr_col_names = header_parser->get_names("attr");
     for (auto col_idx: header_parser->get("attr")) {
-        cur_symbol.push_symb_attr_info({
-            attr_col_names.at(idx),
-            row[col_idx].get(),
-            header_parser->get_col_attr_types(col_idx)
-        });
+        cur_symbol.push_symb_attr_info({attr_col_names.at(idx),
+                                        row[col_idx].get(),
+                                        header_parser->get_col_attr_types(col_idx)});
         idx++;
     }
 
@@ -46,15 +44,16 @@ std::optional<symbol_info> csv_parser::next() {
     }
     auto cur_trace_attr_info = tattr_info.at(cur_trace_id);
     cur_symbol.set_trace_attr_info(cur_trace_attr_info);
-
+    // Fill in the trace attributes for this symbol
     idx = 0;
     auto tattr_col_names = header_parser->get_names("tattr");
-    for (auto col_idx: header_parser-> get("tattr")) {
-        cur_symbol.push_trace_attr_info({
-            tattr_col_names.at(idx),
-            row[col_idx].get(),
-            header_parser->get_col_attr_types(col_idx)
-        });
+    for (auto col_idx: header_parser->get("tattr")) {
+        auto tattr_value = row[col_idx].get();
+        if (!tattr_value.empty()) {
+            cur_symbol.push_trace_attr_info({tattr_col_names.at(idx),
+                                             row[col_idx].get(),
+                                             header_parser->get_col_attr_types(col_idx)});
+        }
         idx++;
     }
 
@@ -172,6 +171,20 @@ void csv_header_parser::parse(const std::vector<std::string> &headers) {
         }
         idx++;
     }
+
+    // Verify that the symbol and trace attribute names are unique
+    check_duplicates("attr");
+    check_duplicates("tattr");
+}
+
+void csv_header_parser::check_duplicates(const std::string &col_type) const {
+    if (!col_names.contains(col_type)) { return; }
+    std::vector<std::string> attr_names = col_names.at(col_type);
+    std::sort(attr_names.begin(), attr_names.end());
+    auto duplicate = std::adjacent_find(attr_names.begin(), attr_names.end());
+    if (duplicate != attr_names.end()) {
+        throw std::runtime_error(fmt::format("Duplicate attribute name: {}", *duplicate));
+    }
 }
 
 const std::set<int> &csv_header_parser::get(const std::string &type) const {
@@ -199,7 +212,7 @@ std::set<std::string> csv_header_parser::get_non_reserved_column_type_names() {
     return non_reserved_col_type_names.value();
 }
 
-const std::set<char>& csv_header_parser::get_col_attr_types(size_t idx) const {
+const std::set<char> &csv_header_parser::get_col_attr_types(size_t idx) const {
     return attr_types.at(idx);
 }
 

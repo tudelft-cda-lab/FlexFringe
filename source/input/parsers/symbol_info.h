@@ -6,10 +6,12 @@
 #define FLEXFRINGE_SYMBOL_INFO_H
 
 
+#include <utility>
 #include <vector>
 #include <unordered_map>
 #include <string>
 #include <memory>
+#include <algorithm>
 #include "attribute_info.h"
 
 /**
@@ -24,32 +26,45 @@ private:
     std::vector<attribute_info> symbol_attribute_info;
 
 public:
-    void set(const std::string& name, const std::vector<std::string>& property_list);
-    void set(const std::string& name, const std::string& property);
+    void set(const std::string &name, const std::vector<std::string> &property_list);
 
-    const std::vector<std::string>& get(const std::string& name);
-    std::string get_str(const std::string& name);
+    void set(const std::string &name, const std::string &property);
 
-    bool has(const std::string& name);
+    const std::vector<std::string> &get(const std::string &name);
+
+    std::string get_str(const std::string &name);
+
+    bool has(const std::string &name);
 
     // Attribute info getters and setters
-    void push_trace_attr_info(const attribute_info& tattr) {
-        trace_attribute_info->push_back(tattr);
+    void push_trace_attr_info(const attribute_info &tattr) {
+        // Do we already have an attribute with this name?
+        auto existing_attr = std::find_if(trace_attribute_info->begin(),
+                                          trace_attribute_info->end(),
+                                          [&tattr](auto &el) {
+                                              return el.get_name() == tattr.get_name();
+                                          });
+        if (existing_attr != trace_attribute_info->end()) {
+            existing_attr->set_value(tattr.get_value());
+        }
+        else {
+            trace_attribute_info->push_back(tattr);
+        }
     }
 
     void set_trace_attr_info(std::shared_ptr<std::vector<attribute_info>> tattr_info) {
-        trace_attribute_info = tattr_info;
+        trace_attribute_info = std::move(tattr_info);
     }
 
     std::shared_ptr<std::vector<attribute_info>> get_trace_attr_info() {
         return trace_attribute_info;
     }
 
-    void push_symb_attr_info(const attribute_info& attr) {
+    void push_symb_attr_info(const attribute_info &attr) {
         symbol_attribute_info.push_back(attr);
     }
 
-    const std::vector<attribute_info>& get_symb_attr_info() {
+    const std::vector<attribute_info> &get_symb_attr_info() {
         return symbol_attribute_info;
     }
 };

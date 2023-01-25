@@ -132,3 +132,19 @@ TEST_CASE("CSVHeaderParser: column name, incomplete attr spec 2", "[parsing]") {
     lexy::trace<csv_header_grammar::col_name>(stdout, input);
 //    REQUIRE(!result.has_value());
 }
+
+TEST_CASE("CSVHeaderParser: column name, duplicate symbol attribute name", "[parsing]") {
+    std::vector<std::string> input = {"attr/dsft:example_name", "attr/dsft:example_name"};
+    REQUIRE_THROWS_WITH(csv_header_parser(input), "Duplicate attribute name: example_name");
+}
+
+TEST_CASE("CSVHeaderParser: column name, duplicate trace attribute name", "[parsing]") {
+    std::vector<std::string> input = {"tattr/dsft:example_name", "tattr/dsft:example_name"};
+    REQUIRE_THROWS_WITH(csv_header_parser(input), "Duplicate attribute name: example_name");
+}
+
+TEST_CASE("CSVHeaderParser: column name, duplicate other name", "[parsing]") {
+    std::vector<std::string> input = {"id", "id"};
+    auto result = csv_header_parser(input);
+    REQUIRE(result.get("id") == std::set<int>{0, 1});
+}
