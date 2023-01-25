@@ -52,3 +52,16 @@ string trace::to_string(){
     while(t->future() != nullptr) t = t->future();
     return "" + this->inputData->string_from_type(get_type()) + " " + std::to_string(get_length()) + " " + t->to_string() +"";
 }
+
+/**
+ * Adds a sentinel tail (with symbol -1) at the end of this trace
+ */
+void trace::finalize() {
+    tail* new_end_tail = mem_store::create_tail(nullptr);
+    new_end_tail->tr = this;
+    new_end_tail->td->index = this->end_tail->get_index() + 1;
+
+    // Add final tail to trace
+    this->end_tail->set_future(new_end_tail);
+    this->end_tail = new_end_tail;
+}
