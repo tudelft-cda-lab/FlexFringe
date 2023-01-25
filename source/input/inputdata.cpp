@@ -25,7 +25,7 @@ void inputdata::read(parser* input_parser) {
 
     // Add all collected traces to the list of traces
     for (const auto &[id, trace]: trace_map) {
-        // Create final tail
+        // Create final tail TODO: refactor this to be a bit clearer
         // This is a special tail with symbol -1, which signifies the end of a trace
         tail* end_tail = mem_store::create_tail(nullptr);
         end_tail->tr = trace;
@@ -129,8 +129,6 @@ std::pair<trace*, tail*> inputdata::process_symbol_info(symbol_info &cur_symbol,
     if (symbol.empty()) symbol = "0";
     auto type = cur_symbol.get_str("type");
     if (type.empty()) type = "0";
-    auto trace_attrs = cur_symbol.get("tattr");
-    auto symbol_attrs = cur_symbol.get("attr");
     auto data = cur_symbol.get("eval");
 
     // Get or create the trace for this trace id
@@ -146,7 +144,7 @@ std::pair<trace*, tail*> inputdata::process_symbol_info(symbol_info &cur_symbol,
     tail* new_tail = make_tail(symbol, data);
     process_symbol_attributes(cur_symbol, new_tail);
 
-    add_type_to_trace(tr, type, trace_attrs);
+    add_type_to_trace(tr, type);
 
     tail* old_tail = tr->end_tail;
     if(old_tail == nullptr){
@@ -393,20 +391,11 @@ tail *inputdata::make_tail(const string& symbol,
 }
 
 void inputdata::add_type_to_trace(trace* new_trace,
-                                  const string& type,
-                                  const vector<string>& trace_attrs) {
+                                  const string& type) {
     // Add to type map
     if(r_types.find(type) == r_types.end()){
         r_types[type] = (int)types.size();
         types.push_back(type);
-    }
-
-    auto num_trace_attributes = this->trace_attributes.size();
-    if(num_trace_attributes > 0){
-        for(int i = 0; i < num_trace_attributes; ++i){
-            const string& val = trace_attrs.at(i);
-            new_trace->trace_attr[i] = trace_attributes[i].get_value(val);
-        }
     }
     new_trace->type = r_types[type];
 }

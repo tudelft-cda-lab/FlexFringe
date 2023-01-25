@@ -40,8 +40,7 @@ protected:
                     const std::vector<std::string> &data);
 
     void add_type_to_trace(trace *new_trace,
-                           const std::string &type,
-                           const std::vector<std::string> &trace_attrs);
+                           const std::string &type);
 
     std::pair<trace*, tail*> process_symbol_info(symbol_info &symbolinfo,
                                                  std::unordered_map<std::string, trace*> &trace_map);
