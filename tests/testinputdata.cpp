@@ -169,9 +169,7 @@ TEST_CASE("CSVReader: Sliding window abbadingo", "[parsing]") {
 
 
 TEST_CASE("CSVReader: symbol attributes", "[parsing]") {
-    // check if we can parse csv files with the abbadingo delimiter symbols
-
-    std::string input_whitespace = "id, symb, attr/d:test\n"
+    std::string input_whitespace = "id, symb, attr/s:test\n"
                                    "1, a, 1.0\n"
                                    "1, b, 2.0\n"
                                    "2, c, 3.0";
@@ -189,6 +187,13 @@ TEST_CASE("CSVReader: symbol attributes", "[parsing]") {
 
     REQUIRE(actual_traces.size() == 2);
 
-    //TODO: make sure this value actually gets set :/
-    REQUIRE(actual_traces.at(0)->get_head()->td->attr[0] == 1.0);
+    REQUIRE(actual_traces.at(0)->get_head()->get_value(0) == 1.0);
+    REQUIRE(input_data.get_symbol(actual_traces.at(0)->get_head()->get_symbol()) == "a");
+
+    REQUIRE(actual_traces.at(0)->get_head()->future()->get_value(0) == 2.0);
+    REQUIRE(input_data.get_symbol(actual_traces.at(0)->get_head()->future()->get_symbol()) == "b");
+
+    REQUIRE(actual_traces.at(1)->get_head()->get_value(0) == 3.0);
+    REQUIRE(input_data.get_symbol(actual_traces.at(1)->get_head()->get_symbol()) == "c");
 }
+

@@ -12,6 +12,7 @@
 #include <string>
 #include <memory>
 #include <algorithm>
+#include <fmt/core.h>
 #include "attribute_info.h"
 
 /**
@@ -45,7 +46,10 @@ public:
                                               return el.get_name() == tattr.get_name();
                                           });
         if (existing_attr != trace_attribute_info->end()) {
-            existing_attr->set_value(tattr.get_value());
+            throw std::runtime_error(fmt::format(
+                    "Error: duplicate trace attribute value \"{}\" specified for trace with id: {}",
+                    tattr.get_name(), get_str("id")
+                    ));
         }
         else {
             trace_attribute_info->push_back(tattr);
