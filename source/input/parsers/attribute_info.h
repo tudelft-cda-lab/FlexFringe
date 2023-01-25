@@ -57,6 +57,7 @@ public:
     [[nodiscard]] const std::string& get_name() const { return name; }
     [[nodiscard]] const std::string& get_value() const { return value; }
 
+    void set_value(std::string val) {value = std::move(val);}
 
 };
 

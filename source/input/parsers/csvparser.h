@@ -17,18 +17,18 @@ class csv_header_parser {
 private:
     static const std::set<std::string> default_col_type_names;
     static const std::set<std::string> reserved_col_type_names;
-
+    std::set<std::string> col_type_names;
     std::optional<std::set<std::string>> non_reserved_col_type_names {};
 
     std::unordered_map<TypeName, std::set<int>> col_types;
     std::unordered_map<TypeName, std::vector<std::string>> col_names;
     std::unordered_map<size_t, std::set<char>> attr_types;
 
-    std::set<std::string> col_type_names;
-
     void setup_col_maps();
 
     void parse(const std::vector<std::string> &headers);
+
+    void check_duplicates(const std::string &col_type) const;
 
 public:
     explicit csv_header_parser(const std::vector<std::string> &headers);
@@ -44,6 +44,7 @@ public:
 
     std::set<std::string> get_non_reserved_column_type_names();
     const std::set<char> &get_col_attr_types(size_t idx) const;
+
 };
 
 class csv_parser : public parser {
