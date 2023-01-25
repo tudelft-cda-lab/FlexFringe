@@ -96,7 +96,7 @@ TEST_CASE("csv_parser: smoke test with attr", "[parsing]") {
 TEST_CASE("csv_parser: smoke test with tattr", "[parsing]") {
     std::string input = "id, symb, tattr/d:test\n"
                         "1, a, 1.0\n"
-                        "1, b, 2.0\n"
+                        "1, b,    \n"
                         "3, c, 3.0";
     std::istringstream inputstream(input);
 
@@ -113,13 +113,11 @@ TEST_CASE("csv_parser: smoke test with tattr", "[parsing]") {
     REQUIRE(first.get_str("symb") == "a");
     REQUIRE(first_tattr->at(0).get_value() == "1.0");
 
-    //TODO: what should be the behavior when specifying trace attributes in csv format,
-    // when a later symbol in a trace overwrites the value set by an earlier symbol?
     auto second = parser.next().value();
     auto second_tattr = second.get_trace_attr_info();
     REQUIRE(second.get_str("id") == "1");
     REQUIRE(second.get_str("symb") == "b");
-    REQUIRE(second_tattr->at(0).get_value() == "2.0");
+    REQUIRE(second_tattr->at(0).get_value() == "1.0");
 
     REQUIRE(second_tattr == first_tattr);
     REQUIRE(second_tattr->size() == 1);
@@ -129,5 +127,29 @@ TEST_CASE("csv_parser: smoke test with tattr", "[parsing]") {
     REQUIRE(third.get_str("id") == "3");
     REQUIRE(third.get_str("symb") == "c");
     REQUIRE(third_tattr->at(0).get_value() == "3.0");
-
 }
+
+TEST_CASE("csv_parser: smoke test with duplicate tattr", "[parsing]") {
+    std::string input = "id, symb, tattr/d:test\n"
+                        "1, a, 1.0\n"
+                        "1, b, 2.0\n" // <- This is not allowed, this redefines the trace attribute "test" for trace with id 1
+                        "3, c, 3.0";
+    std::istringstream inputstream(input);
+
+    auto parser = csv_parser(
+            std::make_unique<csv::CSVReader>(
+                    inputstream,
+                    csv::CSVFormat().trim({' '})
+            )
+    );
+
+    auto first = parser.next().value();
+    auto first_tattr = first.get_trace_attr_info();
+    REQUIRE(first.get_str("id") == "1");
+    REQUIRE(first.get_str("symb") == "a");
+    REQUIRE(first_tattr->at(0).get_value() == "1.0");
+
+    REQUIRE_THROWS_WITH(parser.next().value(), "Error: duplicate trace attribute value \"test\" specified for trace with id: 1");
+}
+
+
