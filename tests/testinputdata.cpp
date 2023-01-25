@@ -120,10 +120,7 @@ TEST_CASE("CSVReader: Sliding window csv", "[parsing]") {
     auto parser = csv_parser(input,
                              csv::CSVFormat().trim({' '}));
 
-    input_data.read_slidingwindow(&parser,
-                                  4,
-                                  1,
-                                  false);
+    input_data.read_slidingwindow(&parser, 3);
 
     std::list<std::string> expected_traces = {
             "0 3 a b c",
@@ -131,10 +128,10 @@ TEST_CASE("CSVReader: Sliding window csv", "[parsing]") {
     };
 
     for (auto trace: input_data) {
-        auto expected = expected_traces.back();
+        auto expected = expected_traces.front();
         auto actual = trace->to_string();
         REQUIRE_THAT(actual, Equals(expected));
-        expected_traces.pop_back();
+        expected_traces.pop_front();
     }
 }
 
@@ -149,10 +146,7 @@ TEST_CASE("CSVReader: Sliding window abbadingo", "[parsing]") {
     inputdata_locator::provide(&input_data);
 
     auto parser = abbadingoparser(input);
-    input_data.read_slidingwindow(&parser,
-                                  4,
-                                  1,
-                                  false);
+    input_data.read_slidingwindow(&parser, 3);
 
     std::list<std::string> expected_traces = {
             "0 3 a b c",
@@ -160,10 +154,10 @@ TEST_CASE("CSVReader: Sliding window abbadingo", "[parsing]") {
     };
 
     for (auto trace: input_data) {
-        auto expected = expected_traces.back();
+        auto expected = expected_traces.front();
         auto actual = trace->to_string();
         REQUIRE_THAT(actual, Equals(expected));
-        expected_traces.pop_back();
+        expected_traces.pop_front();
     }
 }
 
@@ -195,5 +189,39 @@ TEST_CASE("CSVReader: symbol attributes", "[parsing]") {
 
     REQUIRE(actual_traces.at(1)->get_head()->get_value(0) == 3.0);
     REQUIRE(input_data.get_symbol(actual_traces.at(1)->get_head()->get_symbol()) == "c");
+}
+
+TEST_CASE("CSVReader: sliding window", "[parsing]") {
+    std::string input_whitespace = "symb\n"
+                                   "a\n"
+                                   "b\n"
+                                   "c\n"
+                                   "d\n"
+                                   "e\n";
+    std::istringstream input(input_whitespace);
+
+    auto input_data = inputdata();
+    inputdata_locator::provide(&input_data);
+
+    auto parser = csv_parser(input,
+                             csv::CSVFormat().trim({' '}));
+
+    input_data.read_slidingwindow(&parser, 3, 1, false);
+
+    std::vector<trace*> actual_traces(input_data.begin(), input_data.end());
+
+    REQUIRE(actual_traces.size() == 3);
+
+    REQUIRE(input_data.get_symbol(actual_traces.at(0)->get_head()->get_symbol()) == "a");
+    REQUIRE(input_data.get_symbol(actual_traces.at(0)->get_head()->future()->get_symbol()) == "b");
+    REQUIRE(input_data.get_symbol(actual_traces.at(0)->get_head()->future()->future()->get_symbol()) == "c");
+
+    REQUIRE(input_data.get_symbol(actual_traces.at(1)->get_head()->get_symbol()) == "b");
+    REQUIRE(input_data.get_symbol(actual_traces.at(1)->get_head()->future()->get_symbol()) == "c");
+    REQUIRE(input_data.get_symbol(actual_traces.at(1)->get_head()->future()->future()->get_symbol()) == "d");
+
+    REQUIRE(input_data.get_symbol(actual_traces.at(2)->get_head()->get_symbol()) == "c");
+    REQUIRE(input_data.get_symbol(actual_traces.at(2)->get_head()->future()->get_symbol()) == "d");
+    REQUIRE(input_data.get_symbol(actual_traces.at(2)->get_head()->future()->future()->get_symbol()) == "e");
 }
 
