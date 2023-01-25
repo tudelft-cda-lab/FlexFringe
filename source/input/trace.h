@@ -34,6 +34,7 @@ public:
     tail* end_tail;
 
     void initialize(inputdata *inputData);
+    void finalize();
 
     inline int get_type() const{ return type; }
     inline int get_length(){ return length; }
