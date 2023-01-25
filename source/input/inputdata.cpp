@@ -50,6 +50,15 @@ void inputdata::read_slidingwindow(parser *input_parser,
                                    ssize_t sliding_window_stride,
                                    bool sliding_window_type) {
 
+    if (sliding_window_stride > sliding_window_size) {
+        throw std::logic_error("Sliding window stride cannot be bigger than sliding window size");
+        // Due to the way it is currently implemented. :(
+    }
+
+    if (sliding_window_stride < 1) {
+        throw std::logic_error("Sliding window stride cannot be < 1");
+    }
+
     std::unordered_map<std::string, trace *> trace_map;
 
     while (true) {
@@ -65,6 +74,8 @@ void inputdata::read_slidingwindow(parser *input_parser,
         // Sliding window stuff.
         // Definitely some more refactoring potential in here
         if (tr->get_length() == sliding_window_size) {
+
+            // Do some weird type stuff? TODO: what is happening here?
             if (sliding_window_type) {
                 string type_string = inputdata::string_from_symbol(new_tail->get_symbol());
                 if (r_types.find(type_string) == r_types.end()) {
@@ -73,40 +84,39 @@ void inputdata::read_slidingwindow(parser *input_parser,
                 }
                 tr->type = r_types[type_string];
             }
+
+            // Build the new window trace
             trace *new_window = mem_store::create_trace();
             new_window->type = tr->type;
-            new_window->sequence = inputdata::num_sequences;
+            new_window->sequence = inputdata::num_sequences++;
             tail *t = tr->get_head();
-            int index = 0;
             tail *new_window_tail = nullptr;
             while (t != nullptr) {
-                if (index >= sliding_window_stride) {
-                    if (new_window_tail == nullptr) {
-                        new_window_tail = mem_store::create_tail(nullptr);
-                        new_window->head = new_window_tail;
-                        new_window->end_tail = new_window_tail;
-                        new_window->length = 1;
-                    } else {
-                        tail *old_tail = new_window_tail;
-                        new_window_tail = mem_store::create_tail(nullptr);
-                        old_tail->set_future(new_window_tail);
-                        new_window->length++;
-                        new_window->end_tail = new_window_tail;
-                    }
-                    new_window_tail->tr = new_window;
-                    new_window_tail->td = t->td;
-                    new_window_tail->split_from = t;
+                if (new_window_tail == nullptr) {
+                    new_window_tail = mem_store::create_tail(nullptr);
+                    new_window->head = new_window_tail;
+                    new_window->end_tail = new_window_tail;
+                    new_window->length = 1;
+                } else {
+                    tail *old_tail = new_window_tail;
+                    new_window_tail = mem_store::create_tail(nullptr);
+                    old_tail->set_future(new_window_tail);
+                    new_window->length++;
+                    new_window->end_tail = new_window_tail;
                 }
+                new_window_tail->tr = new_window;
+                new_window_tail->td = t->td;
+                new_window_tail->split_from = t;
                 t = t->future();
-                index++;
             }
-            tail *old_tail = tr->end_tail;
-            tail *end_tail = mem_store::create_tail(nullptr);
-            end_tail->td->index = old_tail->get_index() + 1;
-            end_tail->tr = tr;
-            old_tail->set_future(end_tail);
-            tr->end_tail = end_tail;
 
+            // Chomp up the front of the trace we are sliding over
+            for (ssize_t i = 0; i < sliding_window_stride; i++) {
+                tr->pop_front();
+            }
+
+            // Finalize and push the newly created sliding window trace!
+            new_window->finalize();
             traces.push_back(new_window);
         }
     }

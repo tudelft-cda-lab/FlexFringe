@@ -65,3 +65,22 @@ void trace::finalize() {
     this->end_tail->set_future(new_end_tail);
     this->end_tail = new_end_tail;
 }
+
+/**
+ * Pops the front tail of a trace
+ */
+void trace::pop_front() {
+    tail* old_head = this->head;
+    if (old_head == nullptr) { return; }
+
+    this->head = old_head->future();
+    this->length--;
+
+    // TODO: should we delete? may cause issues with tail data being reused
+    // Lets just not delete for now, and technically "leak" the tail memory
+    // since the tail data may be used elsewhere still?
+    //mem_store::delete_tail(old_head);
+
+    if (this->head == nullptr) { return; }
+    this->head->past_tail = nullptr;
+}

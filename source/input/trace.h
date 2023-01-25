@@ -47,6 +47,7 @@ public:
     std::string to_string();
 
     void reverse();
+    void pop_front();
 };
 
 
