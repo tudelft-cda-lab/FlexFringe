@@ -76,7 +76,7 @@ add_library(Source STATIC
         input/parsers/grammar/abbadingoheader.h
         input/parsers/grammar/abbadingosymbol.h
         input/parsers/attribute_info.cpp
-        input/parsers/attribute_info.h input/parsers/grammar/csvheader.h)
+        input/parsers/attribute_info.h input/parsers/grammar/csvheader.h input/parsers/dummyparser.cpp input/parsers/dummyparser.h input/streaming.cpp input/streaming.h)
 
 ## create CMakeLists.txt in evaluation directory
 set(cmakelists_eval "evaluation/CMakeLists.txt")
