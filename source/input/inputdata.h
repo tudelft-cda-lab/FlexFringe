@@ -10,11 +10,13 @@
 #include "input/trace.h"
 #include "input/attribute.h"
 #include "input/parsers/i_parser.h"
+#include "input/parsers/reader_strategy.h"
 
 class apta;
 class csv_parser;
 class parser;
 class symbol_info;
+class reader_strategy;
 
 class inputdata {
 protected:
@@ -41,9 +43,6 @@ protected:
 
     void add_type_to_trace(trace *new_trace,
                            const std::string &type);
-
-    std::pair<trace*, tail*> process_symbol_info(symbol_info &symbolinfo,
-                                                 std::unordered_map<std::string, trace*> &trace_map);
 private:
 
     // The trace IDs of which we already processed the trace attributes
@@ -55,11 +54,18 @@ private:
 public:
     using Iterator = std::list<trace*>::iterator;
 
+
     void read(parser* input_parser);
     void read_slidingwindow(parser* input_parser,
                             ssize_t sliding_window_size     = 10,
                             ssize_t sliding_window_stride   = 1,
                             bool sliding_window_type        = false);
+
+
+    std::optional<trace*> read_trace(parser& input_parser, reader_strategy& strategy);
+
+    std::pair<trace*, tail*> process_symbol_info(symbol_info &symbolinfo,
+                                                 std::unordered_map<std::string, trace*> &trace_map);
 
     void add_traces_to_apta(apta *the_apta);
     void add_trace_to_apta(trace *tr, apta *the_apta);
