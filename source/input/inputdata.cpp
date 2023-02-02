@@ -86,6 +86,7 @@ void inputdata::read_slidingwindow(parser *input_parser,
             }
 
             // Build the new window trace
+            // TODO: also copy over trace and symbol attributes to the new trace & tails.
             trace *new_window = mem_store::create_trace();
             new_window->type = tr->type;
             new_window->sequence = inputdata::num_sequences++;
