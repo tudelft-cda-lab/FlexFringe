@@ -6,11 +6,12 @@
 #define FLEXFRINGE_DUMMYPARSER_H
 
 #include <deque>
+#include <optional>
 
 #include "input/parsers/symbol_info.h"
 #include "input/parsers/i_parser.h"
 
-class dummyparser: parser {
+class dummyparser: public parser {
 private:
     std::deque<symbol_info> symbols;
 

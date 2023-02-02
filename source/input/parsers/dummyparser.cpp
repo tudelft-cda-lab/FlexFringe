@@ -2,7 +2,7 @@
 // Created by tom on 1/30/23.
 //
 
-#include "dummyparser.h"
+#include "input/parsers/dummyparser.h"
 
 std::optional<symbol_info> dummyparser::next() {
     if (symbols.empty()) {
