@@ -9,25 +9,13 @@ using namespace std;
  * @param input_parser the input parser to read from
  */
 void inputdata::read(parser *input_parser) {
+    auto strategy = read_all();
+    auto next_trace_maybe = read_trace(*input_parser, strategy);
 
-    std::unordered_map<std::string, trace *> trace_map;
-
-    while (true) {
-        // Do we have another symbol from the parser?
-        auto cur_symbol_maybe = input_parser->next();
-        if (!cur_symbol_maybe.has_value()) {
-            break;
-        }
-
-        // Process it!
-        auto cur_symbol = cur_symbol_maybe.value();
-        process_symbol_info(cur_symbol, trace_map);
-    }
-
-    // Add all collected traces to the list of traces
-    for (const auto &[id, trace]: trace_map) {
-        trace->finalize();
-        traces.push_back(trace);
+    // Loop through all the traces, they are added and finalized automatically
+    while (next_trace_maybe.has_value()) {
+        auto next_trace = next_trace_maybe.value();
+        next_trace_maybe = read_trace(*input_parser, strategy);
     }
 
     // Make sure they are ordered by sequence number
