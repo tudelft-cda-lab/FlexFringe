@@ -9,6 +9,7 @@ using namespace std;
  * @param input_parser the input parser to read from
  */
 void inputdata::read(parser *input_parser) {
+
     std::unordered_map<std::string, trace *> trace_map;
 
     while (true) {
@@ -448,6 +449,24 @@ void inputdata::process_symbol_attributes(symbol_info &symbolinfo, tail *t) {
         t->td->attr[idx] = symbol_attributes[idx].get_value(sattr_info.get_value());
         idx++;
     }
+}
+
+/**
+ * Reads a trace from the given input parser according to the provided strategy
+ * @param input_parser input parser to read from
+ * @param strategy strategy to follow for trace building
+ * @return an optional trace pointer. If it is nullopt, there were not enough symbols to build a trace.
+ */
+std::optional<trace *> inputdata::read_trace(parser &input_parser, reader_strategy &strategy) {
+    auto tr_maybe = strategy.read(input_parser, *this);
+
+    if (tr_maybe.has_value()) {
+        auto tr = tr_maybe.value();
+        tr->finalize();
+        traces.push_back(tr);
+    }
+
+    return tr_maybe;
 }
 
 

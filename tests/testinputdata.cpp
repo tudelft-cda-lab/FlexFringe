@@ -225,3 +225,62 @@ TEST_CASE("CSVReader: sliding window", "[parsing]") {
     REQUIRE(input_data.get_symbol(actual_traces.at(2)->get_head()->future()->future()->get_symbol()) == "e");
 }
 
+
+TEST_CASE("Inputdata: read trace from CSV with sentinel symbol", "[parsing]") {
+    std::string input_whitespace = "symb\n"
+                                   "a\n"
+                                   "b\n"
+                                   "x\n"
+                                   "c\n";
+    std::istringstream input(input_whitespace);
+
+    auto input_data = inputdata();
+    inputdata_locator::provide(&input_data);
+
+    auto parser = csv_parser(input,
+                             csv::CSVFormat().trim({' '}));
+
+    auto strategy = sentinel_symbol("x");
+    auto tr_maybe = input_data.read_trace(parser, strategy);
+    REQUIRE(tr_maybe.has_value());
+    auto tr = tr_maybe.value();
+
+    REQUIRE(tr->get_length() == 2);
+    REQUIRE(input_data.get_symbol(tr->get_head()->get_symbol()) == "a");
+    REQUIRE(input_data.get_symbol(tr->get_head()->future()->get_symbol()) == "b");
+}
+
+
+TEST_CASE("Inputdata: read trace from abbadingo with sentinel symbol", "[parsing]") {
+    std::string input_whitespace = "1 8\n"
+                                   "0 4 a b c d\n"
+                                   "0 4 e f g h\n";
+    std::istringstream input(input_whitespace);
+
+    auto input_data = inputdata();
+    inputdata_locator::provide(&input_data);
+
+    auto parser = abbadingoparser(input);
+
+    auto strategy = in_order();
+
+    auto tr_maybe = input_data.read_trace(parser, strategy);
+    REQUIRE(tr_maybe.has_value());
+    auto tr = tr_maybe.value();
+    REQUIRE(tr->get_length() == 4);
+    REQUIRE(input_data.get_symbol(tr->get_head()->get_symbol()) == "a");
+    REQUIRE(input_data.get_symbol(tr->get_head()->future()->get_symbol()) == "b");
+    REQUIRE(input_data.get_symbol(tr->get_head()->future()->future()->get_symbol()) == "c");
+    REQUIRE(input_data.get_symbol(tr->get_head()->future()->future()->future()->get_symbol()) == "d");
+
+
+    auto tr_maybe2 = input_data.read_trace(parser, strategy);
+    REQUIRE(tr_maybe2.has_value());
+    auto tr2 = tr_maybe2.value();
+    REQUIRE(tr2->get_length() == 4);
+    REQUIRE(input_data.get_symbol(tr2->get_head()->get_symbol()) == "e");
+    REQUIRE(input_data.get_symbol(tr2->get_head()->future()->get_symbol()) == "f");
+    REQUIRE(input_data.get_symbol(tr2->get_head()->future()->future()->get_symbol()) == "g");
+    REQUIRE(input_data.get_symbol(tr2->get_head()->future()->future()->future()->get_symbol()) == "h");
+}
+
