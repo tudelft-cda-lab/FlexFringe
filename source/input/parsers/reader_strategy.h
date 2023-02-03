@@ -33,6 +33,21 @@ public:
     std::optional<trace*> read(parser& input_parser, inputdata& idata) override;
 };
 
+class slidingwindow: public reader_strategy {
+private:
+    std::unordered_map<std::string, trace *> trace_map;
+    ssize_t sliding_window_size {};
+    ssize_t sliding_window_stride {};
+    bool sliding_window_type {};
+    int num_sequences {};
+
+public:
+    slidingwindow(ssize_t sliding_window_size,
+                  ssize_t sliding_window_stride,
+                  bool sliding_window_type);
+    std::optional<trace*> read(parser& input_parser, inputdata& idata) override;
+};
+
 /**
  * This reader strategy reads traces that are delimited by a specified sentinel symbol
  * e.g. a->b->c->x with sentinel symbol x would result in the trace a->b->c

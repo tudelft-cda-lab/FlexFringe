@@ -39,77 +39,21 @@ void inputdata::read_slidingwindow(parser *input_parser,
                                    ssize_t sliding_window_stride,
                                    bool sliding_window_type) {
 
-    if (sliding_window_stride > sliding_window_size) {
-        throw std::logic_error("Sliding window stride cannot be bigger than sliding window size");
-        // Due to the way it is currently implemented. :(
+    auto strategy = slidingwindow(sliding_window_size,
+                                  sliding_window_stride,
+                                  sliding_window_type);
+    auto next_trace_maybe = read_trace(*input_parser, strategy);
+
+    // Loop through all the traces, they are added and finalized automatically
+    while (next_trace_maybe.has_value()) {
+        auto next_trace = next_trace_maybe.value();
+        next_trace_maybe = read_trace(*input_parser, strategy);
     }
 
-    if (sliding_window_stride < 1) {
-        throw std::logic_error("Sliding window stride cannot be < 1");
-    }
-
-    std::unordered_map<std::string, trace *> trace_map;
-
-    while (true) {
-        auto cur_symbol_maybe = input_parser->next();
-        if (!cur_symbol_maybe.has_value()) {
-            break;
-        }
-
-        auto cur_symbol = cur_symbol_maybe.value();
-
-        auto [tr, new_tail] = process_symbol_info(cur_symbol, trace_map);
-
-        // Sliding window stuff.
-        // Definitely some more refactoring potential in here
-        if (tr->get_length() == sliding_window_size) {
-
-            // Do some weird type stuff? TODO: what is happening here?
-            if (sliding_window_type) {
-                string type_string = inputdata::string_from_symbol(new_tail->get_symbol());
-                if (r_types.find(type_string) == r_types.end()) {
-                    r_types[type_string] = (int) types.size();
-                    types.push_back(type_string);
-                }
-                tr->type = r_types[type_string];
-            }
-
-            // Build the new window trace
-            // TODO: also copy over trace and symbol attributes to the new trace & tails.
-            trace *new_window = mem_store::create_trace();
-            new_window->type = tr->type;
-            new_window->sequence = inputdata::num_sequences++;
-            tail *t = tr->get_head();
-            tail *new_window_tail = nullptr;
-            while (t != nullptr) {
-                if (new_window_tail == nullptr) {
-                    new_window_tail = mem_store::create_tail(nullptr);
-                    new_window->head = new_window_tail;
-                    new_window->end_tail = new_window_tail;
-                    new_window->length = 1;
-                } else {
-                    tail *old_tail = new_window_tail;
-                    new_window_tail = mem_store::create_tail(nullptr);
-                    old_tail->set_future(new_window_tail);
-                    new_window->length++;
-                    new_window->end_tail = new_window_tail;
-                }
-                new_window_tail->tr = new_window;
-                new_window_tail->td = t->td;
-                new_window_tail->split_from = t;
-                t = t->future();
-            }
-
-            // Chomp up the front of the trace we are sliding over
-            for (ssize_t i = 0; i < sliding_window_stride; i++) {
-                tr->pop_front();
-            }
-
-            // Finalize and push the newly created sliding window trace!
-            new_window->finalize();
-            traces.push_back(new_window);
-        }
-    }
+    // Make sure they are ordered by sequence number
+    traces.sort([](auto &left, auto &right) {
+        return left->sequence < right->sequence;
+    });
 }
 
 std::pair<trace *, tail *> inputdata::process_symbol_info(symbol_info &cur_symbol,
