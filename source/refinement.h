@@ -27,6 +27,13 @@ class apta_node;
 class tail;
 class trace;
 
+enum class refinement_type{
+    base_rf_type,
+    merge_rf_type,
+    split_rf_type,
+    extend_rf_type
+};
+
 /**
  * @brief Base class for refinements. Specialized to either
  * a point (merge), split, or color (adding of a new state).
@@ -59,9 +66,13 @@ public:
 
     static void print_refinement_list_json(iostream &output, refinement_list *list);
 
-    virtual int type();
+    virtual refinement_type type();
 
     inline int get_time();
+
+    // these two functions are for streaming
+    virtual bool test_ref_structural(state_merger* m);
+    virtual bool test_ref_consistency(state_merger* m);
 };
 
 /**
@@ -87,7 +98,11 @@ public:
 
     virtual void print_json(iostream &output) const;
 
-    virtual int type();
+    virtual refinement_type type();
+
+    // these two functions are for streaming
+    virtual bool test_ref_structural(state_merger* m);
+    virtual bool test_ref_consistency(state_merger* m);
 };
 
  /**
@@ -110,7 +125,11 @@ public:
 
     virtual void print_json(iostream &output) const;
 
-    virtual int type();
+    virtual refinement_type type();
+
+    // these two functions are for streaming
+    virtual bool test_ref_structural(state_merger* m);
+    virtual bool test_ref_consistency(state_merger* m);
 };
 
 /**
@@ -135,7 +154,11 @@ public:
 
     virtual void print_json(iostream &output) const;
 
-    virtual int type();
+    virtual refinement_type type();
+
+    // these two functions are for streaming
+    virtual bool test_ref_structural(state_merger* m);
+    virtual bool test_ref_consistency(state_merger* m);
 };
 
  /**
@@ -156,19 +179,24 @@ struct score_compare {
 */
 struct ref_compare {
     inline bool operator()(refinement* r1, refinement* r2) const {
-        if(r1->type() != r2->type()) return r1->type() < r2->type();
-        if(r1->type() == 1){
+        if(r1->type() != r2->type()){
+            if(r1->type()==refinement_type::split_rf_type || (r1->type()==refinement_type::merge_rf_type && r2->type()==refinement_type::extend_rf_type)){
+                return true;
+            }
+            return false;
+        }
+        if(r1->type() == refinement_type::split_rf_type){
             split_refinement* sr1 = (split_refinement*)r1;
             split_refinement* sr2 = (split_refinement*)r2;
             return sr1->red < sr2->red;
         }
-        if(r1->type() == 2){
+        if(r1->type() == refinement_type::merge_rf_type){
             merge_refinement* mr1 = (merge_refinement*)r1;
             merge_refinement* mr2 = (merge_refinement*)r2;
             if(mr1->red != mr2->red) return mr1->red < mr2->red;
             return mr1->blue < mr2->blue;
         }
-        if(r1->type() == 3){
+        if(r1->type() == refinement_type::extend_rf_type){
             extend_refinement* er1 = (extend_refinement*)r1;
             extend_refinement* er2 = (extend_refinement*)r2;
             return er1->red < er2->red;
