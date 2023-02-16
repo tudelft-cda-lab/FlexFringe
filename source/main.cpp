@@ -111,11 +111,15 @@ void run() {
 
     inputdata id;
     inputdata_locator::provide(&id);
+
+    parser* parser;    
     if(read_csv) {
         auto parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
-        id.read(&parser);
     } else {
         auto parser = abbadingoparser(input_stream);
+    }
+
+    if(!OPERATION_MODE == "stream"){
         id.read(&parser);
     }
 
@@ -157,7 +161,7 @@ void run() {
 
         stream_object stream_obj;
         throw std::logic_error("Streaming mode is currently broken");
-//        stream_obj.stream_mode(merger, input_stream, id);
+//        stream_obj.stream_mode(merger, input_stream, id, parser);
 
         print_current_automaton(merger, OUTPUT_FILE, ".final");
     } else if(OPERATION_MODE == "search") {

@@ -4,9 +4,12 @@
 #include <list>
 #include <vector>
 #include <map>
+#include <set>
 #include <istream>
 #include <memory>
 #include <unordered_map>
+#include <optional>
+
 #include "input/trace.h"
 #include "input/attribute.h"
 #include "input/parsers/i_parser.h"
@@ -61,14 +64,13 @@ public:
                             ssize_t sliding_window_stride   = 1,
                             bool sliding_window_type        = false);
 
-
     std::optional<trace*> read_trace(parser& input_parser, reader_strategy& strategy);
 
     std::pair<trace*, tail*> process_symbol_info(symbol_info &symbolinfo,
                                                  std::unordered_map<std::string, trace*> &trace_map);
 
     void add_traces_to_apta(apta *the_apta);
-    void add_trace_to_apta(trace *tr, apta *the_apta);
+    void add_trace_to_apta(trace *tr, apta *the_apta, const std::set<int>& states_to_append_to);
 
     std::string& get_symbol(int a);
     int get_reverse_symbol(std::string a);
