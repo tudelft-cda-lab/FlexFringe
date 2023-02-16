@@ -206,43 +206,56 @@ std::string inputdata::string_from_type(int type) {
 
 void inputdata::add_traces_to_apta(apta *the_apta) {
     for (auto *tr: traces) {
-        add_trace_to_apta(tr, the_apta);
+        add_trace_to_apta(tr, the_apta, set<int>());
         if (!ADD_TAILS) tr->erase();
     }
 }
 
-void inputdata::add_trace_to_apta(trace *tr, apta *the_apta) {
+void inputdata::add_trace_to_apta(trace* tr, apta* the_apta, const set<int>& states_to_append_to){
     int depth = 0;
-    apta_node *node = the_apta->root;
+    apta_node* node = the_apta->root;
     /*if(node->access_trace == nullptr){
         node->access_trace = mem_store::create_trace();
     }*/
 
-    if (REVERSE_TRACES) {
+    if(REVERSE_TRACES){
         tr->reverse();
     }
 
-    tail *t = tr->head;
+    //set<int> states_to_append_to;
+    //if(states_to_append_to_opt){
+    //    states_to_append_to = states_to_append_to_opt.value();
+    //}
 
-    while (t != nullptr) {
+    tail* t = tr->head;
+
+    while(t != nullptr){
         node->size = node->size + 1;
         node->add_tail(t);
         node->data->add_tail(t);
 
         depth++;
-        if (t->is_final()) {
+        if(t->is_final()){
             node->final = node->final + 1;
         } else {
             int symbol = t->get_symbol();
-            if (node->child(symbol) == nullptr) {
-                if (node->size < PARENT_SIZE_THRESHOLD) {
+            if(node->child(symbol) == nullptr){
+                if(RED_BLUE_THRESHOLD==0 and node->size < PARENT_SIZE_THRESHOLD){
                     break;
                 }
-                auto *next_node = mem_store::create_node(nullptr);
+                // case 1 of the red-blue-threshold: We get an already merged APTA
+                if(RED_BLUE_THRESHOLD!=0 && !states_to_append_to.empty() && !node->is_red() && !node->is_blue()){
+                    break;
+                }
+                // case 2: we get an apta that is unmerged, yet we want to keep track of the states we append to
+                if(RED_BLUE_THRESHOLD!=0 && !states_to_append_to.empty() && (states_to_append_to.count(node->get_number()) == 0)){
+                    break;
+                } 
+                auto* next_node = mem_store::create_node(nullptr);
                 node->set_child(symbol, next_node);
                 next_node->source = node;
                 //next_node->access_trace = inputdata::access_trace(t);
-                next_node->depth = depth;
+                next_node->depth  = depth;
                 next_node->number = ++(this->node_number);
             }
             node = node->child(symbol)->find();
