@@ -116,9 +116,19 @@ extern bool STORE_ACCESS_STRINGS;
 // Count-min-sketches
 extern int NROWS_SKETCHES;
 extern int NCOLUMNS_SKETCHES;
-extern int DISTANCE_METRIC_SKETCHES;
-extern int RANDOM_INITIALIZATION_SKETCHES;
 extern int NSTEPS_SKETCHES;
+extern bool CONDITIONAL_PROB;
+extern bool MINHASH;
+extern int MINHASH_SIZE;
+extern int ALPHABET_SIZE;
+
+// space-saving specific
+extern double DELTA;
+extern double MU;
+extern double EPSILON;
+extern int L;
+extern int R;
+extern int K;
 
 extern string HEURISTIC_NAME;
 extern string DATA_NAME;

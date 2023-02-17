@@ -6,6 +6,7 @@
 #include "dfa_properties.h"
 #include <queue>
 #include "input/inputdatalocator.h"
+#include "input/parsers/abbadingoparser.h"
 
 struct tail_state_compare{ bool operator()(const pair<double, pair<apta_node*, tail*>> &a, const pair<double, pair<apta_node*, tail*>> &b) const{ return a.first < b.first; } };
 
@@ -533,14 +534,13 @@ void predict(state_merger* m, istream& input, ofstream& output){
     output << endl;
 
     // TODO fix
-//    rownr=-1;
-//    inputdata* id = m->get_dat();
-//    for(int i = 0; i < id->get_max_sequences(); ++i) {
-//        rownr += 1;
-//        trace* tr = mem_store::create_trace();
-//        id->read_abbadingo_sequence(input, tr);
-//        predict_trace(m, output, tr);
-//        add_visits(m, tr);
-//        tr->erase();
-//    }
+    auto predict_inputdata = inputdata();
+    auto parser = abbadingoparser(input);
+    predict_inputdata.read(&parser);
+
+    for (auto trace: predict_inputdata) {
+        predict_trace(m, output, trace);
+        add_visits(m, trace);
+        trace->erase();
+    }
 }
