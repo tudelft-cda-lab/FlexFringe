@@ -98,6 +98,8 @@ void run() {
         LOG_S(ERROR) << "Input file not found, aborting";
         std::cerr << "Input file not found, aborting" << std::endl;
         exit(-1);
+    } else {
+        std::cout << "Using input file: " << INPUT_FILE << std::endl;
     }
 
     bool read_csv = false;
@@ -205,7 +207,7 @@ void run() {
             res_stream << APTA_FILE << ".result";
             ofstream output(res_stream.str().c_str());
             if(read_csv) predict_csv(merger, input_stream, output);
-            else predict(merger, input_stream, output);
+            else predict(merger, id, output);
             output.close();
         } else {
             cerr << "require a json formatted apta file to make predictions" << endl;
