@@ -5,14 +5,11 @@ project(flexfringe)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# TODO: my block
-#set(CC gcc-10) 
-#set(CXX /usr/bin/gcc-10) #cmake -G "Your Generator" path/to/your/source
-#set( CMAKE_VERBOSE_MAKEFILE on )
-
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 option(COMPILE_DOCS "This is settable from the command line" OFF)
 

@@ -5,10 +5,10 @@ add_library(Evaluation STATIC
             alergia.cpp
             alergia94.h
             alergia94.cpp
-            cms.h
-            cms.cpp
             count_types.h
             count_types.cpp
+            css.h
+            css.cpp
             edsm.h
             edsm.cpp
             evaluate.h
@@ -28,4 +28,6 @@ add_library(Evaluation STATIC
             overlap4logs.h
             overlap4logs.cpp
             rti+.h
-            rti+.cpp)
+            rti+.cpp
+            space-saving.h
+            space-saving.cpp)
