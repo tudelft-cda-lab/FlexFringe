@@ -92,7 +92,7 @@ public:
 	virtual inline void print_short() const;
 	virtual inline void doref(state_merger* m);
 	virtual inline void undo(state_merger* m);
-    virtual inline bool testref(state_merger* m);
+    //virtual inline bool testref(state_merger* m);
 
     virtual inline void erase();
 

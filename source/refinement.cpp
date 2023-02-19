@@ -191,20 +191,10 @@ inline void merge_refinement::undo(state_merger* m){
 };
 
 /* inline bool merge_refinement::testref(state_merger* m){
-    apta_node* left = red;
-    apta_node* right = blue;
-    if(STORE_ACCESS_STRINGS){
-        left = m->get_state_from_trace(red_trace);
-        right = m->get_state_from_trace(blue_trace);
+    if(this->test_ref_structural(m)){
+        return this->test_ref_consistency(m);
     }
-    if(left == right) return false;
-    if((!left->is_red() && !left->get_source()->find()->is_red()) || right->is_red() || !right->get_source()->find()->is_red()) return false;
-    if(left->rep() != 0 || right->rep() != 0) return false;
-    refinement* ref = m->test_merge(left, right);
-    if(ref != 0){
-        score = ref->score;
-        return true;
-    }
+
     return false;
 }; */
 

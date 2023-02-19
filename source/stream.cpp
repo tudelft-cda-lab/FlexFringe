@@ -266,12 +266,9 @@ int stream_object::stream_mode(state_merger* merger, ifstream& input_stream, inp
         else{
           while(!trace_opt) trace_opt = id->read_trace(*input_parser, *parser_strategy); // making sure we got a value; for real streaming
         }
-        
-        //trace* new_trace = mem_store::create_trace();
         trace* new_trace = trace_opt.value();
-        //id->read_abbadingo_sequence(input_stream, new_trace);
-
         new_trace->sequence = seq_nr;
+        
         id->add_trace_to_apta(new_trace, merger->get_aut(), this->states_to_append_to);
         if(!ADD_TAILS) new_trace->erase();
       }
