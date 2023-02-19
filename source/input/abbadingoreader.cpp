@@ -117,6 +117,8 @@ void abbadingo_inputdata::read_abbadingo_header(istream &input_stream) {
     std::getline(lineStream,alph,':');
     //alphabet_size = stoi(alph);
 
+    ALPHABET_SIZE = stoi(alph);
+
     string trace_attr;
     std::getline(lineStream,trace_attr, ':');
     string symbol_attr;

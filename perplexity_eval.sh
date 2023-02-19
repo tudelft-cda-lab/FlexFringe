@@ -1,0 +1,1 @@
+for i in {1..48}; do echo $i; ./flexfringe --ini ini/css.ini data/PAutomaC-competition_sets/$i.pautomac.train.dat; done

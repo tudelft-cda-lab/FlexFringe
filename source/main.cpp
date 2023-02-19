@@ -94,6 +94,9 @@ void run() {
     evaluation_function *eval = get_evaluation();
 
     ifstream input_stream(INPUT_FILE);
+    
+    cout << "Input file: " << INPUT_FILE << endl;
+    
     if(!input_stream) {
         LOG_S(ERROR) << "Input file not found, aborting";
         std::cerr << "Input file not found, aborting" << std::endl;
@@ -112,15 +115,16 @@ void run() {
     inputdata id;
     inputdata_locator::provide(&id);
 
-    parser* parser;    
     if(read_csv) {
-        auto parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
+        auto input_parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
+        id.read(&input_parser);
     } else {
-        auto parser = abbadingoparser(input_stream);
+        auto input_parser = abbadingoparser(input_stream);
+        id.read(&input_parser);
     }
 
-    if(!OPERATION_MODE == "stream"){
-        id.read(&parser);
+    if(OPERATION_MODE != "stream"){
+        
     }
 
     apta* the_apta = new apta();
@@ -160,9 +164,15 @@ void run() {
         LOG_S(INFO) << "Stream mode selected, starting run";
 
         stream_object stream_obj;
-        throw std::logic_error("Streaming mode is currently broken");
-//        stream_obj.stream_mode(merger, input_stream, id, parser);
-
+        if(read_csv) {
+            auto input_parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
+            //stream_obj.stream_mode(merger, input_stream, id, parser);
+            //id.read(&input_parser);
+        } else {
+            auto input_parser = abbadingoparser(input_stream);
+            //stream_obj.stream_mode(merger, input_stream, id, parser);
+            //id.read(&input_parser);
+        }
         print_current_automaton(merger, OUTPUT_FILE, ".final");
     } else if(OPERATION_MODE == "search") {
         cout << "search mode selected" << endl;
@@ -384,10 +394,19 @@ int main(int argc, char *argv[]){
     // parameters specifically for CMS heuristic
     app.add_option("--numoftables", NROWS_SKETCHES, "Number of rows of sketches upon initialization.");
     app.add_option("--vectordimension", NCOLUMNS_SKETCHES, "Number of columns of sketches upon initialization.");
-    app.add_option("--distancemetric", DISTANCE_METRIC_SKETCHES, "The distance metric when comparing the sketches. 1 hoeffding-bound and cosine-similarity for score, 2 hoeffding bound in both, 3 like 1 but pooled. Default: 1");
-    app.add_option("--randominitialization", RANDOM_INITIALIZATION_SKETCHES, "If 0 (zero), then initialize CMS deterministically. Elsewise, CMS becomes random. Default: 0.");
     app.add_option("--futuresteps", NSTEPS_SKETCHES, "Number of steps into future when storing future in sketches. Default: 2.");
+    app.add_option("--conditionalprob", CONDITIONAL_PROB, "Do make the sketches conditional as strings. Default=false");
+    app.add_option("--minhash", MINHASH, "Perform Min-Hash scheme on the ngrams. Only works in conjunction with --conditionalprob turned on. Default=false");
+    app.add_option("--minhashsize", MINHASH_SIZE, "Perform Min-Hash scheme on the ngrams. Only works in conjunction with --conditionalprob turned on. Default=false");
+    app.add_option("--alphabetsize", ALPHABET_SIZE, "An upper estimate on the alphabet size. Only needed with minhash-function turned on, in order to perform the permutation. Larger estimate increases runtime. Default=0");
 
+    app.add_option("-e,--epsilon", EPSILON, "Epsilon parameter, determining approximation error.");
+    app.add_option("-D,--delta", DELTA, "Delta param, the error rate.");
+    app.add_option("--mu", MU, "Distinguishability parameter.");
+    app.add_option("--pref_L", L, "The expected length of prefixes.");
+    app.add_option("--pref_K", K, "Number of frequent items in sketches.");
+    app.add_option("--bootstrap_R", R, "The number of bootstrapped examples.");
+    
     CLI11_PARSE(app, argc, argv)
 
     loguru::g_stderr_verbosity = loguru::Verbosity_OFF;

@@ -24,3 +24,6 @@ tests/tests
 source/gitversion.cpp
 source/evaluators.h
 CMakeFiles/
+
+# my own
+perplexity_eval*.sh

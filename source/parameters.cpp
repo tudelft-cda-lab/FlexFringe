@@ -112,9 +112,11 @@ bool PREDICT_DATA = false;
 // the count-min-sketches
 int NROWS_SKETCHES = 0;
 int NCOLUMNS_SKETCHES = 0;
-int DISTANCE_METRIC_SKETCHES = 1;
-int RANDOM_INITIALIZATION_SKETCHES = 0;
 int NSTEPS_SKETCHES = 2;
+bool CONDITIONAL_PROB = false;
+bool MINHASH = false;
+int MINHASH_SIZE = 2;
+int ALPHABET_SIZE = 0;
 
 double ALIGN_SKIP_PENALTY = 1.0;
 double ALIGN_DISTANCE_PENALTY = 0.1;
@@ -123,5 +125,10 @@ int DIFF_SIZE = 1000;
 int DIFF_MAX_LENGTH = 50;
 double DIFF_MIN = -100.0;
 
-
-
+// space-saving specific
+double DELTA = 0;
+double MU = 0;
+double EPSILON = 0;
+int L = 0;
+int R = 0;
+int K = 0;
