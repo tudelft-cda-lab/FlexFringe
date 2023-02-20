@@ -1,5 +1,7 @@
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/evaluation"
         "${CMAKE_CURRENT_SOURCE_DIR}/utility"
+        "${CMAKE_CURRENT_SOURCE_DIR}/input"
+        "${CMAKE_CURRENT_SOURCE_DIR}/active_learning"
         )
 
 ## create the gitversion.cpp
@@ -99,3 +101,4 @@ file(APPEND "${cmakelists_eval}" ")")
 
 add_subdirectory(evaluation)
 add_subdirectory(utility)
+add_subdirectory(active_learning)
