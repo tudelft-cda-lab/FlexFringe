@@ -40,7 +40,9 @@ add_executable(flexfringe source/main.cpp)
 
 if(MSVC)
     target_link_libraries(flexfringe
-            Evaluation)
+            Evaluation
+            ActiveLearning
+    )
     # MSVC option to add all object files in static lib
     set_target_properties(flexfringe PROPERTIES LINK_FLAGS
             "/WHOLEARCHIVE:Evaluation")
@@ -48,12 +50,14 @@ if(MSVC)
 elseif(APPLE)
 	target_link_libraries(flexfringe
             "-Wl,-force_load" Evaluation
+            "-Wl,-force_load" ActiveLearning
             "-Wl")
 
 else()
     # Need this so the plugin registration does not get stripped out
     target_link_libraries(flexfringe
             "-Wl,--whole-archive" Evaluation
+            "-Wl,--whole-archive" ActiveLearning
             "-Wl,--no-whole-archive")
 endif()
 
