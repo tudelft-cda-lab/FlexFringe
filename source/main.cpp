@@ -124,7 +124,7 @@ void run() {
     }
 
     if(OPERATION_MODE != "stream"){
-        
+        // TODO: what's this here?
     }
 
     apta* the_apta = new apta();
