@@ -18,9 +18,10 @@
 
 class lstar_algorithm{
   protected:
-    //std::vector<int> alphabet;
     observation_table obs_table;
 
+    void construct_automaton_from_table();
+    
   public:
     lstar_algorithm(std::vector<int>& alphabet);
     void run_l_star();

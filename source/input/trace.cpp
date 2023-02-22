@@ -84,3 +84,12 @@ void trace::pop_front() {
     if (this->head == nullptr) { return; }
     this->head->past_tail = nullptr;
 }
+
+const std::vector<int> trace::get_input_sequence() const {
+    std::vector<int> res;
+    tail* t = head;
+    while(t != end_tail){
+        res.push_back(t->get_symbol());
+    }
+    return res;
+}

@@ -12,17 +12,24 @@
 #ifndef _SUL_BASE_H_
 #define _SUL_BASE_H_
 
+#include <vector>
+
 class teacher_base;
 
 class sul_base{
   friend class teacher_base;
 
   protected:
-    virtual void preprocessing() = 0;
-    virtual void postprocessing() = 0;
-    // TODO: change return type to what you need
-    virtual void step() = 0;
-  //public:
+    virtual void preprocessing(){};
+    virtual void postprocessing(){};
+    virtual void step(){};
+
+    virtual bool is_member(const std::vector<int>& query_trace) const {
+      return true;
+    }
+    
+  public:
+    sul_base() = delete;
 };
 
 #endif

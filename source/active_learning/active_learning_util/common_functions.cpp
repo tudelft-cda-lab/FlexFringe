@@ -20,7 +20,7 @@
 using namespace std;
 using namespace active_learning_namespace;
 
-database create_db(){
+/* database create_db(){
   ifstream input_stream(INPUT_FILE);  
   cout << "Input file: " << INPUT_FILE << endl;
     
@@ -44,8 +44,4 @@ database create_db(){
       auto input_parser = abbadingoparser(input_stream);
       return abbadingo_database(input_parser);
   }
-}
-
-parser get_file_handler(){
-
-}
+} */
