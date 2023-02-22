@@ -40,14 +40,14 @@ void lstar_algorithm::run_l_star(){
           continue;
         }
 
-        const knowledge_t answer = teacher.ask_query(current_row, current_column);
-        //obs_table.insert_record(current_row, current_column, answer);
+        const knowledge_t answer = teacher.ask_membership_query(current_row, current_column);
+        obs_table.insert_record(current_row, current_column, answer);
       }
       obs_table.mark_row_complete(current_row);
     }
 
     if(obs_table.is_closed()){
-      // TODO: ask equivalence query
+      construct_automaton_from_table();
     }
     else{
       obs_table.extend_lower_table(); // extending the lower table, rerun

@@ -10,24 +10,32 @@
  * 
  */
 
-#ifndef _ABBADINGO_SUL_H_
-#define _ABBADINGO_SUL_H_
+#ifndef _INPUT_FILE_SUL_H_
+#define _INPUT_FILE_SUL_H_
 
 #include "sul_base.h"
 #include "i_parser.h"
 
+#include <vector>
+#include <set>
+
+// only those should be able to access the system
 class teacher_base;
+class eq_oracle_base;
 
 class positive_traces_sul : sul_base {
   friend class teacher_base;
   friend class eq_oracle_base;
 
   protected:
+    std::set< std::vector<int> > all_traces;
+
     virtual void preprocessing();
     virtual void postprocessing();
     virtual void step();
 
-    void parse_input(parser& input_parser);
+    void parse_input();
+    bool is_member(const std::vector<int>& query_trace) const;
   public:
     positive_traces_sul();
 };

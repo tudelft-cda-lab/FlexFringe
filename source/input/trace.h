@@ -3,6 +3,7 @@
 
 //#import "inputdata.h"
 #include <string>
+#include <vector>
 
 class inputdata;
 class tail;
@@ -48,6 +49,8 @@ public:
 
     void reverse();
     void pop_front();
+
+    const std::vector<int> get_input_sequence() const;
 };
 
 

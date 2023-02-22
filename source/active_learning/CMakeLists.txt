@@ -26,10 +26,9 @@ add_library(ActiveLearning STATIC
 
             system_under_learning/sul_base.h
             system_under_learning/sul_base.cpp
-            system_under_learning/positive_traces_sul.h
-            system_under_learning/positive_traces_sul.cpp
+            system_under_learning/input_file_sul.h
+            system_under_learning/input_file_sul.cpp
 
-            teacher/teacher_base.h
-            teacher/lstar_teacher.h
-            teacher/lstar_teacher.cpp
+            teacher/base_teacher.h
+            teacher/base_teacher.cpp
 )
