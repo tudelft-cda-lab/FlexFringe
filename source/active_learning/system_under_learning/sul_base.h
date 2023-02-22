@@ -12,15 +12,17 @@
 #ifndef _SUL_BASE_H_
 #define _SUL_BASE_H_
 
-#include "trace.h"
+class teacher_base;
 
 class sul_base{
+  friend class teacher_base;
+
   protected:
     virtual void preprocessing() = 0;
     virtual void postprocessing() = 0;
-    virtual void step(); // TODO: change return type to what you need
-  public:
-    virtual trace* get_counterexample();
+    // TODO: change return type to what you need
+    virtual void step() = 0;
+  //public:
 };
 
 #endif

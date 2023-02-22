@@ -1,6 +1,8 @@
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/evaluation"
         "${CMAKE_CURRENT_SOURCE_DIR}/utility"
         "${CMAKE_CURRENT_SOURCE_DIR}/input"
+        "${CMAKE_CURRENT_SOURCE_DIR}/input/parsers"
+        "${CMAKE_CURRENT_SOURCE_DIR}/input/parsers/grammar"
         "${CMAKE_CURRENT_SOURCE_DIR}/active_learning"
         )
 

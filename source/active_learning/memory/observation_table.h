@@ -12,50 +12,63 @@
 #ifndef _OBS_TABLE_H_
 #define _OBS_TABLE_H_
 
+#include "definitions.h"
+
 #include <vector>
 #include <map>
 #include <set>
 
 namespace obs_table_namespace{
-  const int EPS = -1; // empty symbol special character. flexfringe does not map to -1 by design.
-
-  typedef std::vector<int> pref_suf;
-
   enum class upper_lower_t{
     upper,
     lower
   };
 
-  enum class knowledge_t{
-    accepting,
-    rejecting,
-    unknown
-  };
+  typedef std::map<active_learning_namespace::pref_suf_t, active_learning_namespace::knowledge_t> row_type;
+  typedef std::map< active_learning_namespace::pref_suf_t, row_type > table_type;
 }
  
 
 class observation_table{
   protected:
-    const std::vector<int> alphabet;
+    std::vector<int> alphabet;
+    std::set<active_learning_namespace::pref_suf_t> all_colums;
+    std::map< active_learning_namespace::pref_suf_t, obs_table_namespace::upper_lower_t> table_mapper; // prefix in upper table or lower table?
+    std::vector< active_learning_namespace::pref_suf_t > incomplete_rows;
 
-    std::set<obs_table_namespace::pref_suf> all_colums;
+    // the actual table
+    obs_table_namespace::table_type upper_table; 
+    obs_table_namespace::table_type lower_table; 
 
-    std::map< obs_table_namespace::pref_suf, obs_table_namespace::upper_lower_t> table_mapper; // prefix in upper table or lower table?
+    // keeping easier track of all the rows to check for closedness
+    std::set<obs_table_namespace::row_type> upper_table_rows;
+    void hash_upper_table();
+    void move_to_upper_table(const active_learning_namespace::pref_suf_t& row);
 
-    // two dimensional maps
-    std::map< obs_table_namespace::pref_suf, std::map<obs_table_namespace::pref_suf,obs_table_namespace::knowledge_t> > upper_table; 
-    std::map< obs_table_namespace::pref_suf, std::map<obs_table_namespace::pref_suf,obs_table_namespace::knowledge_t> > lower_table; 
-
-    void extend_lower_table();
-    
-    obs_table_namespace::pref_suf get_null_vector() const noexcept {
-      return obs_table_namespace::pref_suf{obs_table_namespace::EPS};
+    active_learning_namespace::pref_suf_t get_null_vector() const noexcept {
+      return active_learning_namespace::pref_suf_t{active_learning_namespace::EPS};
     }
 
+    const bool record_is_in_selected_table(const obs_table_namespace::table_type& selected_table, const active_learning_namespace::pref_suf_t& row, const active_learning_namespace::pref_suf_t& col) const;
+    void insert_record_in_selected_table(obs_table_namespace::table_type& selected_table, const active_learning_namespace::pref_suf_t& row, const active_learning_namespace::pref_suf_t& col, const active_learning_namespace::knowledge_t answer);
+  
+    
   public:
-    observation_table(std::vector<int> alphabet);
+    observation_table() = delete;
+    observation_table(std::vector<int>& alphabet);
 
-    const obs_table_namespace::knowledge_t get_answer(const pref_suf test_string) const;
+    const bool has_record(const active_learning_namespace::pref_suf_t& row, const active_learning_namespace::pref_suf_t& col) const;
+    void insert_record(const active_learning_namespace::pref_suf_t& row, const active_learning_namespace::pref_suf_t& col, const active_learning_namespace::knowledge_t answer);
+    
+    const bool is_closed();
+    
+    void extend_lower_table();
+    const std::vector< active_learning_namespace::pref_suf_t >& get_incomplete_rows() const;
+    void mark_row_complete(const active_learning_namespace::pref_suf_t& row);
+
+    const auto& get_column_names() const noexcept{
+      return all_colums;
+    }
 };
 
 #endif
