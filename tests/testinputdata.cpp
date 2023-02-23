@@ -284,3 +284,23 @@ TEST_CASE("Inputdata: read trace from abbadingo with sentinel symbol", "[parsing
     REQUIRE(input_data.get_symbol(tr2->get_head()->future()->future()->future()->get_symbol()) == "h");
 }
 
+
+TEST_CASE("Inputdata: abbadingo with empty trace", "[parsing]") {
+    std::string input_whitespace = "1 0\n"
+                                   "1 0\n";
+    std::istringstream input(input_whitespace);
+
+    auto input_data = inputdata();
+    inputdata_locator::provide(&input_data);
+
+    auto parser = abbadingoparser(input);
+
+    auto strategy = in_order();
+
+    auto tr_maybe = input_data.read_trace(parser, strategy);
+    REQUIRE(tr_maybe.has_value());
+    auto tr = tr_maybe.value();
+    REQUIRE(tr->get_length() == 0);
+    REQUIRE(input_data.get_num_sequences() == 1);
+}
+
