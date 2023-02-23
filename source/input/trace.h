@@ -35,6 +35,7 @@ public:
 
     void initialize(inputdata *inputData);
     void finalize();
+    bool is_finalized();
 
     inline int get_type() const{ return type; }
     inline int get_length(){ return length; }
