@@ -42,8 +42,8 @@ void abbadingoparser::parse_header() {
     }
     for (auto &attr_info: parsed_header.symbols.attributes) {
         symbol_attr_prototypes.emplace_back(attr_info.name,
-                                           "",
-                                           attr_info.type);
+                                            "",
+                                            attr_info.type);
     }
 }
 
@@ -94,39 +94,57 @@ bool abbadingoparser::read_abbadingo_trace() {
     }
 
     // Construct the symbol info for this trace
-    for (const auto &symbol: trace.symbols) {
+
+    // Handle special case of empty trace (it can still have useful information even without symbols)
+    // we do this by specifying a symbol without a "symb" value defined
+    if (trace.symbols.empty()) {
         symbol_info cur_symbol;
 
         cur_symbol.set("id", std::to_string(num_lines_processed));
-        cur_symbol.set("symb", std::string{symbol.name});
-        cur_symbol.set("type", std::string{trace.label}); // Not sure if this is the correct place to put this
+        cur_symbol.set("type", std::string{trace.label});
 
-        // Construct the symbol attribute info objects if we have any
-        if(symbol.attribute_values.has_value()) {
-            auto symbol_attr_vals = symbol.attribute_values.value();
-            auto num_sattr_values = symbol_attr_vals.size();
-            auto expected_num_sattr_values = symbol_attr_prototypes.size();
-
-            if (num_sattr_values != expected_num_sattr_values) {
-                throw std::runtime_error(
-                        fmt::format("Error parsing abbadingo input: line {} - expected {} symbol attributes, found {}",
-                                    line_idx, num_sattr_values, expected_num_sattr_values));
-            }
-
-            for (size_t i = 0; i < num_sattr_values; i++) {
-                auto cur_prototype = symbol_attr_prototypes.at(i);
-                auto cur_value = symbol_attr_vals.at(i);
-                cur_symbol.push_symb_attr_info(cur_prototype.clone(std::string(cur_value)));
-            }
-        }
-
+        // No symbol attributes possible
+        // But we can have trace attributes
         cur_symbol.set_trace_attr_info(trace_attribute_info);
-
-        if (symbol.data.has_value()) {
-            cur_symbol.set("eval", std::string(symbol.data.value()));
-        }
-
         symbols.push_back(cur_symbol);
+    }
+    // If we do have symbols, just grab all the info we have and stuff it in a symbolinfo
+    else {
+        for (const auto &symbol: trace.symbols) {
+            symbol_info cur_symbol;
+
+            cur_symbol.set("id", std::to_string(num_lines_processed));
+            cur_symbol.set("symb", std::string{symbol.name});
+            cur_symbol.set("type", std::string{trace.label}); // Not sure if this is the correct place to put this
+
+            // Construct the symbol attribute info objects if we have any
+            if (symbol.attribute_values.has_value()) {
+                auto symbol_attr_vals = symbol.attribute_values.value();
+                auto num_sattr_values = symbol_attr_vals.size();
+                auto expected_num_sattr_values = symbol_attr_prototypes.size();
+
+                if (num_sattr_values != expected_num_sattr_values) {
+                    throw std::runtime_error(
+                            fmt::format(
+                                    "Error parsing abbadingo input: line {} - expected {} symbol attributes, found {}",
+                                    line_idx, num_sattr_values, expected_num_sattr_values));
+                }
+
+                for (size_t i = 0; i < num_sattr_values; i++) {
+                    auto cur_prototype = symbol_attr_prototypes.at(i);
+                    auto cur_value = symbol_attr_vals.at(i);
+                    cur_symbol.push_symb_attr_info(cur_prototype.clone(std::string(cur_value)));
+                }
+            }
+
+            cur_symbol.set_trace_attr_info(trace_attribute_info);
+
+            if (symbol.data.has_value()) {
+                cur_symbol.set("eval", std::string(symbol.data.value()));
+            }
+
+            symbols.push_back(cur_symbol);
+        }
     }
 
     num_lines_processed++;

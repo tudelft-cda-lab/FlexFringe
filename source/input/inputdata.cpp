@@ -61,7 +61,7 @@ std::pair<trace *, tail *> inputdata::process_symbol_info(symbol_info &cur_symbo
     // Build expected trace / tail strings from symbol info
     auto id = cur_symbol.get_str("id");
     auto symbol = cur_symbol.get_str("symb");
-    if (symbol.empty()) symbol = "0";
+    if (symbol.empty()) symbol = "0"; // TODO: this seems incorrect? It was like this in the old inputdata code though.
     auto type = cur_symbol.get_str("type");
     if (type.empty()) type = "0";
     auto data = cur_symbol.get("eval");
