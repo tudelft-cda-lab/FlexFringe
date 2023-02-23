@@ -61,7 +61,6 @@ std::pair<trace *, tail *> inputdata::process_symbol_info(symbol_info &cur_symbo
     // Build expected trace / tail strings from symbol info
     auto id = cur_symbol.get_str("id");
     auto symbol = cur_symbol.get_str("symb");
-    if (symbol.empty()) symbol = "0"; // TODO: this seems incorrect? It was like this in the old inputdata code though.
     auto type = cur_symbol.get_str("type");
     if (type.empty()) type = "0";
     auto data = cur_symbol.get("eval");
@@ -76,16 +75,16 @@ std::pair<trace *, tail *> inputdata::process_symbol_info(symbol_info &cur_symbo
     trace *tr = trace_map.at(id);
     process_trace_attributes(cur_symbol, tr);
 
+    add_type_to_trace(tr, type);
+
     tail *new_tail = make_tail(symbol, data);
     process_symbol_attributes(cur_symbol, new_tail);
-
-    add_type_to_trace(tr, type);
 
     tail *old_tail = tr->end_tail;
     if (old_tail == nullptr) {
         tr->head = new_tail;
         tr->end_tail = new_tail;
-        tr->length = 1;
+        tr->length = symbol.empty() ? 0 : 1;
         new_tail->tr = tr;
     } else {
         new_tail->td->index = old_tail->get_index() + 1;
@@ -311,16 +310,18 @@ tail *inputdata::make_tail(const string &symbol,
     tail *new_tail = mem_store::create_tail(nullptr);
     tail_data *td = new_tail->td;
 
-    // Add symbol to the alphabet if it isn't in there already
-    if (r_alphabet.find(symbol) == r_alphabet.end()) {
-        r_alphabet[symbol] = (int) alphabet.size();
-        alphabet.push_back(symbol);
-    }
+    if (!symbol.empty()) {
+        // Add symbol to the alphabet if it isn't in there already
+        if (r_alphabet.find(symbol) == r_alphabet.end()) {
+            r_alphabet[symbol] = (int) alphabet.size();
+            alphabet.push_back(symbol);
+        }
 
-    // Fill in tail data
-    td->symbol = r_alphabet[symbol];
-    td->data = strutil::join(data, ",");
-    td->tail_nr = num_tails++;
+        // Fill in tail data
+        td->symbol = r_alphabet[symbol];
+        td->data = strutil::join(data, ",");
+        td->tail_nr = num_tails++;
+    }
 
     return new_tail;
 }
