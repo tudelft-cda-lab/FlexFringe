@@ -207,8 +207,12 @@ double alergia_data::predict_symbol_score(int t){
 
     if(t != -1) {
         if (symbol_counts.find(t) != symbol_counts.end()) count += (double) symbol_counts[t];
+        cerr << t << endl;
+        for (auto c : symbol_counts) cerr << c.first << " " << c.second << endl;
     } else if (FINAL_PROBABILITIES) count += (double) num_final();
     else return 0.0;
+
+    cerr << divider << " " << count << endl;
 
     if(divider != 0.0) return log(count / divider);
     return 0.0;

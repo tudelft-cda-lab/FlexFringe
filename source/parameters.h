@@ -32,6 +32,7 @@ extern bool RED_FIXED;
 extern bool ALL_FIXED;
 extern bool MERGE_WHEN_TESTING;
 extern bool DEPTH_FIRST;
+extern bool PERFORM_FIRST_POSSIBLE_MERGE;
 extern int RANGE;
 extern string COMMAND;
 extern bool FINAL_PROBABILITIES;

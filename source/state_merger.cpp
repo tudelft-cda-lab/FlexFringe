@@ -1045,6 +1045,7 @@ refinement_set* state_merger::get_possible_refinements(){
     auto* result = new refinement_set();
 
     state_set blue_its = state_set();
+    state_set red_its = state_set();
     bool found_non_sink = false;
 
     for(blue_state_iterator it = blue_state_iterator(aut->root); *it != nullptr; ++it){
@@ -1070,17 +1071,21 @@ refinement_set* state_merger::get_possible_refinements(){
                     found = true;
                 }
             }
+            if(found && PERFORM_FIRST_POSSIBLE_MERGE) return result;
         }
 
-        for(red_state_iterator it2 = red_state_iterator(aut->root); *it2 != nullptr; ++it2){
-            apta_node* red = *it2;
-
+        for(red_state_iterator it2 = red_state_iterator(aut->root); *it2 != nullptr; ++it2) {
+            red_its.insert(*it2);
+        }
+        for(auto red : red_its){
+            //apta_node* red = *it2;
             refinement* ref = test_merge(red,blue);
 
             if(ref != nullptr){
                 result->insert(ref);
                 found = true;
             }
+            if(found && PERFORM_FIRST_POSSIBLE_MERGE) return result;
         }
 
         if(MERGE_BLUE_BLUE){
@@ -1094,6 +1099,7 @@ refinement_set* state_merger::get_possible_refinements(){
                     result->insert(ref);
                     found = true;
                 }
+                if(found && PERFORM_FIRST_POSSIBLE_MERGE) return result;
             }
         }
 
@@ -1107,7 +1113,7 @@ refinement_set* state_merger::get_possible_refinements(){
         if(!found || EXTEND_SINKS || !blue->is_sink())
             result->insert(mem_store::create_extend_refinement(this, blue));
 
-        if(MERGE_MOST_VISITED) break;
+        if(MERGE_MOST_VISITED) return result;
     }
     return result;
 }
