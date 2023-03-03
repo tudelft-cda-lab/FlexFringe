@@ -98,6 +98,7 @@ extern bool SEARCH_DEEP;
 extern bool SEARCH_LOCAL;
 extern bool SEARCH_GLOBAL;
 extern bool SEARCH_PARTIAL;
+extern bool SEARCH_MINIMIZE_REFINEMENTS;
 
 extern bool REVERSE_TRACES;
 

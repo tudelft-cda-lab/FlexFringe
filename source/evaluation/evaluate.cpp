@@ -148,6 +148,58 @@ double evaluation_data::predict_score(tail* t){
     return predict_symbol_score(t);
 };
 
+int evaluation_data::predict_path_type(tail*){
+    return 0;
+};
+
+double evaluation_data::predict_path_type_score(int t){
+    return 0.0;
+};
+
+double evaluation_data::predict_path_type_score(tail* t){
+    return predict_path_type_score(t->get_type());
+};
+
+int evaluation_data::predict_path_symbol(tail*){
+    return 0;
+};
+
+double evaluation_data::predict_path_symbol_score(int s){
+    return 0.0;
+};
+
+double evaluation_data::predict_path_symbol_score(tail* t){
+    return predict_path_symbol_score(t->get_symbol());
+};
+
+double evaluation_data::predict_path_attr(tail*, int attr){
+    return 0.0;
+};
+
+double evaluation_data::predict_path_attr_score(int attr, double v) {
+    return 0.0;
+};
+
+double evaluation_data::predict_path_attr_score(int attr, tail* t){
+    return predict_path_attr_score(attr, t->get_symbol_value(attr));
+};
+
+string evaluation_data::predict_path_data(tail*){
+    return "0";
+};
+
+double evaluation_data::predict_path_data_score(string s){
+    return 0.0;
+};
+
+double evaluation_data::predict_path_data_score(tail* t){
+    return predict_path_data_score(t->get_data());
+};
+
+double evaluation_data::predict_path_score(tail* t){
+    return predict_path_symbol_score(t);
+};
+
 double evaluation_data::align_score(tail* t){
     if(node->child(t->get_symbol()) != nullptr) return 0.0;
     return -1;

@@ -11,44 +11,27 @@ REGISTER_DEF_TYPE(alergia94);
 alergia94_data::alergia94_data(){
 };
 
-bool alergia94::alergia_consistency(double right_count, double left_count, double right_total, double left_total){
-    double bound = (1.0 / sqrt(left_total) + 1.0 / sqrt(right_total));
-    bound = bound * sqrt(0.5 * log(2.0 / CHECK_PARAMETER));
-    
-    double gamma = (left_count / left_total) - (right_count / right_total);
-    
-    if(gamma > bound) return false;
-    if(-gamma > bound) return false;
-    
-    return true;
-};
-
-bool alergia94::data_consistent(alergia94_data* l, alergia94_data* r){
-    /* we ignore low frequency states, decided by input parameter STATE_COUNT */
-    if(FINAL_PROBABILITIES) {
-        if (r->num_paths() + r->num_final() < STATE_COUNT ||
-            l->num_paths() + l->num_final() < STATE_COUNT)
-            return true;
-    } else {
-        if (r->num_paths() < STATE_COUNT || l->num_paths() < STATE_COUNT) return true;
-    }
-
+bool alergia94::pool_and_compute_tests(num_map& left_map, int left_total, int left_final,
+                                     num_map& right_map, int right_total, int right_final) {
     /* computing the dividers (denominator) */
-    double left_divider = (double) l->num_paths();
-    double right_divider = (double) r->num_paths();
+    double left_divider = (double) left_total;
+    double right_divider = (double) right_total;
 
     if (FINAL_PROBABILITIES) {
-        left_divider += (double) l->num_final();
-        right_divider += (double) r->num_final();
+        left_divider += (double) left_final;
+        right_divider += (double) right_final;
     }
 
-    for (auto & symbol_count : l->symbol_counts) {
+    for (auto & symbol_count : left_map) {
         int symbol = symbol_count.first;
         double left_count = symbol_count.second;
         if (left_count == 0) continue;
-        double right_count = r->count(symbol);
 
-        if (!alergia_consistency(right_count, left_count, right_divider, left_divider)) {
+        double right_count = 0;
+        auto hit = right_map.find(symbol);
+        if(hit != right_map.end()) right_count = hit->second;
+
+        if (!test_and_update(right_count, left_count, right_divider, left_divider)) {
             inconsistency_found = true;
             return false;
         }
@@ -56,24 +39,27 @@ bool alergia94::data_consistent(alergia94_data* l, alergia94_data* r){
 
     /* count the final probabilities */
     if (FINAL_PROBABILITIES) {
-        double left_count = l->num_final();
-        double right_count = r->num_final();
+        double left_count = left_final;
+        double right_count = right_final;
 
-        if (!alergia_consistency(right_count, left_count, right_divider, left_divider)) {
+        if (!test_and_update(right_count, left_count, right_divider, left_divider)) {
             inconsistency_found = true;
             return false;
         }
     }
 
     /* computing the remaining bins */
-    for (auto & symbol_count : r->symbol_counts) {
+    for (auto & symbol_count : right_map) {
         int symbol = symbol_count.first;
         double right_count = symbol_count.second;
         if (right_count == 0) continue;
-        double left_count = l->count(symbol);
+
+        double left_count = 0;
+        auto hit = left_map.find(symbol);
+        if(hit != left_map.end()) left_count = hit->second;
         if (left_count != 0) continue;
 
-        if (!alergia_consistency(right_count, left_count, right_divider, left_divider)) {
+        if (!test_and_update(right_count, left_count, right_divider, left_divider)) {
             inconsistency_found = true;
             return false;
         }
@@ -81,11 +67,6 @@ bool alergia94::data_consistent(alergia94_data* l, alergia94_data* r){
     return true;
 };
 
-/* ALERGIA, consistency based on Hoeffding bound */
-bool alergia94::consistent(state_merger *merger, apta_node* left, apta_node* right){
-    if(!count_driven::consistent(merger, left, right)){ inconsistency_found = true; return false; }
-    auto* l = dynamic_cast<alergia94_data*>(left->get_data());
-    auto* r = dynamic_cast<alergia94_data*>(right->get_data());
-    
-    return data_consistent(l, r);
+double alergia94::compute_score(state_merger *merger, apta_node* left, apta_node* right){
+    return num_tests;
 };

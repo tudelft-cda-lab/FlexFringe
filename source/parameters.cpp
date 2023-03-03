@@ -53,7 +53,7 @@ bool MERGE_DATA = true;
 bool STAR_FREE = false;
 
 bool USE_SINKS = 0;
-int SINK_COUNT = 10;
+int SINK_COUNT = -1;
 bool MERGE_SINKS = 0;
 bool MERGE_SINKS_WITH_CORE = 0;
 bool MERGE_SINKS_PRESOLVE = 0;
@@ -61,14 +61,14 @@ bool SEARCH_SINKS = false;
 bool MERGE_IDENTICAL_SINKS = false;
 bool CONVERT_SINK_STATES = false;
 bool EXTEND_SINKS = true;
-bool SINK_TYPE = false;
+bool SINK_TYPE = true;
 
 bool FINAL_PROBABILITIES = 0;
 bool USE_LOWER_BOUND = 0;
 float LOWER_BOUND = 0;
 double EXTEND_SCORE = 0.0;
-int STATE_COUNT = 25;
-int SYMBOL_COUNT = 10;
+int STATE_COUNT = 0;
+int SYMBOL_COUNT = 0;
 float CORRECTION = 1.0;
 double CORRECTION_SEEN = 0.0;
 double CORRECTION_UNSEEN = 0.0;
@@ -108,6 +108,7 @@ bool SEARCH_DEEP = false;
 bool SEARCH_LOCAL = false;
 bool SEARCH_GLOBAL = false;
 bool SEARCH_PARTIAL = false;
+bool SEARCH_MINIMIZE_REFINEMENTS = true;
 
 bool PREDICT_RESET = false;
 bool PREDICT_REMAIN = false;

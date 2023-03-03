@@ -191,7 +191,7 @@ void run() {
             the_apta->read_json(input_apta_stream);
 
             std::ostringstream res_stream;
-            res_stream << APTA_FILE << ".result";
+            res_stream << APTA_FILE << ".result.csv";
             ofstream output(res_stream.str().c_str());
             if(read_csv) predict_csv(merger, input_stream, output);
             else predict(merger, input_stream, output);

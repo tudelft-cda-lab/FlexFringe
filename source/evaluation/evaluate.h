@@ -129,6 +129,11 @@ public:
     virtual double predict_attr(tail*, int attr);
     virtual string predict_data(tail*);
 
+    virtual int predict_path_type(tail*);
+    virtual int predict_path_symbol(tail*);
+    virtual double predict_path_attr(tail*, int attr);
+    virtual string predict_path_data(tail*);
+
     virtual double predict_score(tail* t);
     virtual double predict_type_score(int t);
     virtual double predict_type_score(tail* t);
@@ -138,6 +143,16 @@ public:
     virtual double predict_attr_score(int attr, tail* t);
     virtual double predict_data_score(string s);
     virtual double predict_data_score(tail* t);
+
+    virtual double predict_path_score(tail* t);
+    virtual double predict_path_type_score(int t);
+    virtual double predict_path_type_score(tail* t);
+    virtual double predict_path_symbol_score(int s);
+    virtual double predict_path_symbol_score(tail* t);
+    virtual double predict_path_attr_score(int attr, double v);
+    virtual double predict_path_attr_score(int attr, tail* t);
+    virtual double predict_path_data_score(string s);
+    virtual double predict_path_data_score(tail* t);
 
     virtual tail* sample_tail();
 

@@ -23,11 +23,8 @@ protected:
   REGISTER_DEC_TYPE(alergia94);
 
 public:
-  static bool alergia_consistency(double right_count, double left_count, double right_total, double left_total);
-  static int EVAL_TYPE;
-
-  virtual bool data_consistent(alergia94_data* l, alergia94_data* r);
-  virtual bool consistent(state_merger *merger, apta_node* left, apta_node* right);
+    virtual double compute_score(state_merger*, apta_node* left, apta_node* right);
+    virtual bool pool_and_compute_tests(num_map& left_map, int left_total, int left_final, num_map& right_map, int right_total, int right_final);
 };
 
 #endif

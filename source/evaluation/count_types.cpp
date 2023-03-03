@@ -161,18 +161,23 @@ void count_data::undo(evaluation_data* right){
 };
 
 double count_data::predict_type_score(int t){
+    if(total_final == 0) return predict_path_type_score(t);
+
     double final_count = 0.0;
-    double divider_correction = CORRECTION * (double)final_counts.size();
-    if(divider_correction == 0.0) divider_correction += CORRECTION;
+    double divider_correction = CORRECTION * (double)final_counts.size() + CORRECTION;
     if(final_counts.find(t) != final_counts.end() && final_counts[t] != 0.0) final_count = (double)final_counts[t] / (double)(total_final + divider_correction);
     final_count += (double)(CORRECTION) / (double)(total_final + divider_correction);
 
     if(!PREDICT_TYPE_PATH) return final_count;
-    double path_count = CORRECTION;
-    divider_correction = CORRECTION * (double)path_counts.size();
-    if(divider_correction == 0.0) divider_correction += CORRECTION;
+    return (final_count + predict_path_type_score(t)) / 2.0;
+};
+
+double count_data::predict_path_type_score(int t){
+    double path_count = 0.0;
+    double divider_correction = CORRECTION * (double)path_counts.size() + CORRECTION;
     if(path_counts.find(t) != path_counts.end() && path_counts[t] != 0.0) path_count = (double)path_counts[t] / (double)(total_paths+divider_correction);
-    return (path_count + final_count) / 2.0;
+    path_count += (double)(CORRECTION) / (double)(total_paths+divider_correction);
+    return path_count;
 };
 
 int count_data::predict_type(tail*){
@@ -180,6 +185,19 @@ int count_data::predict_type(tail*){
     double max_count = -1;
     for(int i = 0; i < inputdata::get_types_size(); ++i){
         double prob = predict_type_score(i);
+        if(max_count == -1 || max_count < prob){
+            max_count = prob;
+            t = i;
+        }
+    }
+    return t;
+};
+
+int count_data::predict_path_type(tail*){
+    int t = 0;
+    double max_count = -1;
+    for(int i = 0; i < inputdata::get_types_size(); ++i){
+        double prob = predict_path_type_score(i);
         if(max_count == -1 || max_count < prob){
             max_count = prob;
             t = i;

@@ -14,6 +14,23 @@ double best_solution = -1;
 int start_size = 0;
 int nr = 0;
 
+double compute_solution_score(state_merger* merger, refinement_list* extra_refinements){
+    if(SEARCH_MINIMIZE_REFINEMENTS){
+        if(extra_refinements != nullptr) return current_refinements->size() + extra_refinements->size();
+        return current_refinements->size();
+    }
+    return merger->get_eval()->compute_global_score(merger);
+}
+
+double compute_partial_score(state_merger* merger, refinement_list* extra_refinements){
+    if(SEARCH_MINIMIZE_REFINEMENTS){
+        if(extra_refinements != nullptr) return current_refinements->size() + extra_refinements->size();
+        return current_refinements->size();
+    }
+    return merger->get_eval()->compute_global_score(merger);
+}
+
+
 int greedy(state_merger* merger, int depth, bool undo){
     int result = depth;
 
@@ -50,7 +67,7 @@ int greedy(state_merger* merger, int depth, bool undo){
 
     current_run->clear();
 
-    result = merger->get_eval()->compute_global_score(merger);
+    result = compute_solution_score(merger, &refs);
 
     if(best_solution == -1.0 || result < best_solution){
         cerr << "*** current best *** " << result << endl;
@@ -69,7 +86,7 @@ int greedy(state_merger* merger, int depth, bool undo){
     return result;
 }
 
-double compute_score(state_merger* merger){
+double compute_refinement_score(state_merger* merger){
     if(SEARCH_DEEP) return greedy(merger, current_refinements->size(), true);
     if(SEARCH_LOCAL) return merger->get_best_refinement_score();
     if(SEARCH_GLOBAL) return merger->get_eval()->compute_global_score(merger);
@@ -78,7 +95,7 @@ double compute_score(state_merger* merger){
 }
 
 void add_to_q(state_merger* merger){
-    double result = merger->get_eval()->compute_partial_score(merger);
+    double result = compute_partial_score(merger, nullptr);
     if(best_solution != -1.0 && result >= best_solution){
         cerr << "solution > best q_size: " << Q.size() << endl;
         return;
@@ -105,7 +122,7 @@ void add_to_q(state_merger* merger){
 	for(refinement_set::iterator it = refs->begin(); it != refs->end(); ++it){
         refinement* ref = *it;
 	    ref->doref(merger);
-		double score = compute_score(merger);
+		double score = compute_refinement_score(merger);
         ref->undo(merger);
 
         refinement_list* new_list = new refinement_list(*current_refinements);

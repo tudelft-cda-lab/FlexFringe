@@ -105,8 +105,10 @@ public:
     virtual void write_json(json& node);
 
     virtual int predict_type(tail*);
+    virtual int predict_path_type(tail*);
 
     virtual double predict_type_score(int t);
+    virtual double predict_path_type_score(int t);
 
     int get_type_sink();
     bool is_low_count_sink();

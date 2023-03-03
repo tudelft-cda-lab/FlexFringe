@@ -1094,11 +1094,14 @@ refinement_set* state_merger::get_possible_refinements(){
 
                 if(blue2->is_sink()) continue;
 
+                blue2->set_red(true);
                 refinement* ref = test_merge(blue2,blue);
                 if(ref != nullptr){
                     result->insert(ref);
                     found = true;
                 }
+                blue2->set_red(false);
+
                 if(found && PERFORM_FIRST_POSSIBLE_MERGE) return result;
             }
         }

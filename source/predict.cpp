@@ -38,6 +38,7 @@ list<int> state_sequence;
 list<double> score_sequence;
 list<int> align_sequence;
 apta_node* ending_state = nullptr;
+apta_node* last_state = nullptr;
 tail* ending_tail = nullptr;
 
 void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
@@ -85,7 +86,7 @@ void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
 
         if (next_tail->is_final()) {
             // STOP RUN
-            //cerr << "final: " << compute_score(score, next_node, next_tail) << endl;
+            //cerr << "final: " << compute_refinement_score(score, next_node, next_tail) << endl;
             Q.push(pair<double, pair<apta_node *, tail *>>(
                     update_score(score, next_node, next_tail),
                     pair<apta_node*, tail *>(next_node, 0)));
@@ -94,7 +95,7 @@ void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
             apta_node *child = next_node->child(next_tail);
             if (child != nullptr) {
                 child = child->find();
-                //cerr << "follow: " << compute_score(score, next_node, next_tail) << endl;
+                //cerr << "follow: " << compute_refinement_score(score, next_node, next_tail) << endl;
                 Q.push(pair<double, pair<apta_node *, tail *>>(
                         update_score(score, next_node, next_tail),
                         pair<apta_node *, tail *>(child, next_tail->future())));
@@ -107,7 +108,7 @@ void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
                 if (jump_child == next_node) continue;
                 if (jump_child->get_data()->align_consistent(next_tail)) {
                     //apta_node *next_child = jump_child->child(next_tail)->find();
-                    //cerr << "jump: " << compute_score(score, next_node, next_tail) << endl;
+                    //cerr << "jump: " << compute_refinement_score(score, next_node, next_tail) << endl;
                     Q.push(pair<double, pair<apta_node *, tail *>>(
                             update_score(score, next_node, next_tail) *
                                     compute_jump_penalty(next_node, jump_child),
@@ -117,7 +118,7 @@ void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
 
             // SKIP TO ALIGN
             // UNCLEAR whether this is needed.
-            //cerr << "skip: " << compute_score(score, next_node, next_tail) << endl;
+            //cerr << "skip: " << compute_refinement_score(score, next_node, next_tail) << endl;
             Q.push(pair<double, pair<apta_node *, tail *>>(
                     update_score(score, next_node, next_tail) *
                         compute_skip_penalty(next_node),
@@ -313,6 +314,8 @@ void predict_trace_update_sequences(state_merger* m, tail* t){
     double score = 0.0;
 
     for(int j = 0; j < t->get_length(); j++){
+        last_state = n;
+
         score = compute_score(n, t);
         score_sequence.push_back(score);
 
@@ -489,15 +492,39 @@ void predict_trace(state_merger* m, ofstream& output, trace* tr){
             output << "; " << ending_state->get_data()->predict_data_score(data_predict);
         }
     }
-    else{
+    else if(last_state != nullptr){
+        ending_tail = tr->get_end();
+        if(ending_tail->is_final()) ending_tail = ending_tail->past();
+
         if(PREDICT_TYPE){
-            output << "; 0; 0; 0; 0";
+            output << "; " << inputdata::string_from_type(tr->get_type());
+            output << "; " << last_state->get_data()->predict_path_type_score(tr->get_head());
+
+            int type_predict = last_state->get_data()->predict_path_type(ending_tail);
+            output << "; " << inputdata::string_from_type(type_predict);
+            output << "; " << last_state->get_data()->predict_path_type_score(type_predict);
         }
-        if(PREDICT_SYMBOL){
-            output << "; 0; 0; 0; 0";
+
+        if(PREDICT_SYMBOL) {
+            if (ending_tail != nullptr) {
+                output << "; " << inputdata::string_from_symbol(ending_tail->get_symbol());
+                output << "; " << last_state->get_data()->predict_path_symbol_score(ending_tail);
+            } else output << "; 0; 0";
+
+            int symbol_predict = last_state->get_data()->predict_path_symbol(ending_tail);
+            output << "; " << inputdata::string_from_symbol(symbol_predict);
+            output << "; " << last_state->get_data()->predict_path_symbol_score(symbol_predict);
         }
-        if(PREDICT_DATA){
-            output << "; 0; 0; 0; 0";
+
+        if(PREDICT_DATA) {
+            if (ending_tail != nullptr) {
+                output << "; " << ending_tail->get_data();
+                output << "; " << last_state->get_data()->predict_path_data_score(ending_tail);
+            } else output << "; 0; 0";
+
+            string data_predict = last_state->get_data()->predict_path_data(ending_tail);
+            output << "; " << data_predict;
+            output << "; " << last_state->get_data()->predict_path_data_score(data_predict);
         }
     }
     output << endl;
