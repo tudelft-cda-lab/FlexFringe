@@ -24,8 +24,10 @@
 class teacher_base;
 class eq_oracle_base;
 
-class input_file_sul : sul_base {
-  friend class teacher_base;
+class input_file_sul : public sul_base {
+
+  // only the teacher and the oracle should be able to influence the sul
+  friend class base_teacher;
   friend class eq_oracle_base;
 
   protected:
@@ -35,11 +37,13 @@ class input_file_sul : sul_base {
     virtual void postprocessing();
     virtual void step();
 
-    void parse_input(ifstream& input_stream, inputdata& id);
+    virtual void reset(){};
+
     bool is_member(const std::vector<int>& query_trace) const;
   public:
     input_file_sul();
 
+    virtual void parse_input(inputdata& id);
     const std::set< std::vector<int> >& get_all_traces() const {
       return all_traces;
     }

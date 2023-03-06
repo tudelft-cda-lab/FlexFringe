@@ -12,12 +12,12 @@
 #include "common_functions.h"
 #include "parameters.h"
 #include "definitions.h"
+#include "inputdata.h"
 
 #include <iostream>
 #include <stdexcept>
 
 using namespace std;
-using namespace active_learning_namespace;
 
 /* evaluation_function* get_evaluation(){
     evaluation_function *eval = nullptr;
@@ -45,7 +45,7 @@ apta_node* active_learning_namespace::get_child_node(apta_node* n, tail* t){
     return child->find();
 }
 
-bool aut_accepts_trace(trace* tr, apta* aut){
+bool active_learning_namespace::aut_accepts_trace(trace* tr, apta* aut){
     apta_node* n = aut->get_root();
     tail* t = tr->get_head();
     for(int j = 0; j < t->get_length(); j++){
@@ -65,7 +65,7 @@ bool aut_accepts_trace(trace* tr, apta* aut){
  * @param aut The apta.
  * @return vector<refinement*> vector with the refinements done. 
  */
-const vector<refinement*> minimize_apta(state_merger* merger){
+const vector<refinement*> active_learning_namespace::minimize_apta(state_merger* merger){
     vector<refinement*> refs;
 
     refinement* top_ref = merger->get_best_refinement();
@@ -77,21 +77,21 @@ const vector<refinement*> minimize_apta(state_merger* merger){
     return refs;
 }
 
-void reset_apta(state_merger* merger, const vector<refinement*> refs){
+void active_learning_namespace::reset_apta(state_merger* merger, const vector<refinement*> refs){
     for(auto top_ref: refs){
         top_ref->undo(merger);
     }
 }
 
-void update_tail(tail* t, const int symbol){
+void active_learning_namespace::update_tail(tail* t, const int symbol){
     static int num_tails = 0;
 
-    tail_data* td = new_tail->td;
+    tail_data* td = t->td;
     td->symbol = symbol;
-    td->data = data;
+    //td->data = ""; // TODO: does not work yet with attributes
     td->tail_nr = num_tails++;
 
-    int num_symbol_attributes = inputdata::get_num_symbol_attributes();
+    int num_symbol_attributes = 0; //inputdata::get_num_symbol_attributes();
     if(num_symbol_attributes > 0){
       // TODO: we do not treat this one yet
 /*         l3.str(symbol_attr);
@@ -104,7 +104,7 @@ void update_tail(tail* t, const int symbol){
     }
 }
 
-void add_sequence_to_trace(trace* new_trace, const vector<int> sequence){
+void active_learning_namespace::add_sequence_to_trace(trace* new_trace, const vector<int> sequence){
     static int num_sequences = 0;
     new_trace->length = sequence.size();
 
@@ -114,7 +114,7 @@ void add_sequence_to_trace(trace* new_trace, const vector<int> sequence){
 
     for(int index = 0; index < sequence.size(); ++index){
         const int symbol = sequence.at(index);
-        update_tail(new_tail, symbol);
+        active_learning_namespace::update_tail(new_tail, symbol);
 
         new_tail->td->index = index;
         tail* old_tail = new_tail;
@@ -127,8 +127,18 @@ void add_sequence_to_trace(trace* new_trace, const vector<int> sequence){
     new_trace->sequence = num_sequences++;
 }
 
-trace* vector_to_trace(const vector<int>& vec, const knowledge_t trace_type){
-    trace* new_trace = mem_store::create_trace(id);
+vector<int> active_learning_namespace::concatenate_strings(const vector<int>& pref1, const vector<int>& pref2){
+  vector<int> res(pref1);
+  res.insert(res.end(), pref2.begin(), pref2.end());
+  return res;
+}
+
+trace* active_learning_namespace::vector_to_trace(const vector<int>& vec, inputdata& id){
+    return vector_to_trace(vec, id, knowledge_t::accepting);
+}
+
+trace* active_learning_namespace::vector_to_trace(const vector<int>& vec, inputdata& id, const knowledge_t trace_type){
+    trace* new_trace = mem_store::create_trace(&id);
     int type;
     if(trace_type==knowledge_t::accepting){
       type = 1;
@@ -140,7 +150,7 @@ trace* vector_to_trace(const vector<int>& vec, const knowledge_t trace_type){
       throw logic_error("This part is not implemented (yet).");
     }
     new_trace->type = type;
-    add_sequence_to_trace(new_trace, vec);
+    active_learning_namespace::add_sequence_to_trace(new_trace, vec);
     new_trace->finalize();
     
     return new_trace;

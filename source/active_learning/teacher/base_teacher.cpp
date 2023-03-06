@@ -14,11 +14,11 @@
 using namespace std;
 using namespace active_learning_namespace;
 
-const knowledge_t base_teacher::ask_membership_query(const sul_base& sul, const pref_suf_t& prefix, const pref_suf_t& suffix) {
-  std::vector query(prefix);
+const knowledge_t base_teacher::ask_membership_query(const pref_suf_t& prefix, const pref_suf_t& suffix) {
+  vector query(prefix);
   query.insert(query.end(), suffix.begin(), suffix.end());
 
-  if(sul.is_member(query)){
+  if(sul->is_member(query)){
     return knowledge_t::accepting;
   }
   return knowledge_t::rejecting;

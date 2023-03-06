@@ -74,7 +74,7 @@ class observation_table{
     void extend_lower_table();
     const std::vector< active_learning_namespace::pref_suf_t >& get_incomplete_rows() const;
     void mark_row_complete(const active_learning_namespace::pref_suf_t& row);
-    void extent_columns(const active_learning_namespace::pref_suf_t& suffix) const;
+    void extent_columns(const active_learning_namespace::pref_suf_t& suffix);
 
     const auto& get_column_names() const noexcept{
       return all_colums;
