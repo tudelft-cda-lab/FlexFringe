@@ -21,7 +21,7 @@ class state_merger;
 using namespace std;
 
 /**
- * @brief The state merger. Whereas the 
+ * @brief The state merger. Contains the prefix and performs the merges, undoes them etc.
  * 
  */
 class state_merger{
@@ -69,7 +69,7 @@ public:
     }
 
     /* performing red-blue merges */
-    void perform_merge(apta_node*, apta_node*); // merge function already above
+    void perform_merge(apta_node*, apta_node*); 
     void undo_perform_merge(apta_node*, apta_node*);
     void perform_split(apta_node*, tail*, int);
     void undo_perform_split(apta_node*, tail*, int);

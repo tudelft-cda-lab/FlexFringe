@@ -12,21 +12,33 @@
 #ifndef _SUL_BASE_H_
 #define _SUL_BASE_H_
 
+#include <fstream>
 #include <vector>
 
 class teacher_base;
 
 class sul_base{
   friend class teacher_base;
+  friend class base_teacher;
 
   protected:
+    const bool parses_input_file = false; // input files mainly for SULs with database
+
     virtual void preprocessing(){};
     virtual void postprocessing(){};
     virtual void step(){};
 
+    virtual void reset(){};
+
     virtual bool is_member(const std::vector<int>& query_trace) const {
       return true;
     }
+
+    virtual bool has_input_file() const noexcept {
+      return parses_input_file;
+    }
+
+    std::ifstream get_input_stream() const;
     
   public:
     sul_base() = delete;

@@ -20,6 +20,11 @@ using namespace std;
 using namespace obs_table_namespace;
 using namespace active_learning_namespace;
 
+/**
+ * @brief Construct a new observation table::observation table object
+ * 
+ * @param alphabet We need the alphabet beforehand to know how to extend, see e.g. "Learning regular sets from queries and counterexamples" by Dana Angluin.
+ */
 observation_table::observation_table(vector<int>& alphabet) : alphabet(alphabet) {
   const auto nullvector = get_null_vector();
   upper_table[nullvector][nullvector] = knowledge_t::accepting;
@@ -64,6 +69,25 @@ const bool observation_table::has_record(const pref_suf_t& row, const pref_suf_t
       return record_is_in_selected_table(upper_table, row, col);
     case upper_lower_t::lower:
       return record_is_in_selected_table(lower_table, row, col);
+    default:
+      throw runtime_error("Unknown table_select variable occured in observation_table::get_answer.");
+  }
+}
+
+knowledge_t observation_table::get_answer_from_selected_table(const table_type& selected_table, const pref_suf_t& row, const pref_suf_t& col) const {
+  return selected_table.at(row).at(col);
+}
+
+
+active_learning_namespace::knowledge_t observation_table::get_answer(const active_learning_namespace::pref_suf_t& row, const active_learning_namespace::pref_suf_t& col) const {
+  if(!table_mapper.contains(row)){ throw logic_error("This should not happen. Why do we ask about a row that does not exist?"); }
+
+  auto table_select = table_mapper.at(row);
+  switch(table_select){
+    case upper_lower_t::upper:
+      return get_answer_from_selected_table(upper_table, row, col);
+    case upper_lower_t::lower:
+      return get_answer_from_selected_table(lower_table, row, col);
     default:
       throw runtime_error("Unknown table_select variable occured in observation_table::get_answer.");
   }
@@ -164,6 +188,14 @@ const vector< pref_suf_t >& observation_table::get_incomplete_rows() const {
 
 void observation_table::mark_row_complete(const pref_suf_t& row) {
   incomplete_rows.erase(row);
+}
+
+void observation_table::extent_columns(const pref_suf_t& suffix) const {
+  pref_suf_t current_suffix;
+  for(const int symbol: suffix){
+    current_suffix.push_back(symbol);
+    all_colums.insert(current_suffix);
+  }
 }
 
 /**

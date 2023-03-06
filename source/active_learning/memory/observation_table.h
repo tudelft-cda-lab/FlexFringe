@@ -51,7 +51,7 @@ class observation_table{
 
     const bool record_is_in_selected_table(const obs_table_namespace::table_type& selected_table, const active_learning_namespace::pref_suf_t& row, const active_learning_namespace::pref_suf_t& col) const;
     void insert_record_in_selected_table(obs_table_namespace::table_type& selected_table, const active_learning_namespace::pref_suf_t& row, const active_learning_namespace::pref_suf_t& col, const active_learning_namespace::knowledge_t answer);
-  
+    active_learning_namespace::knowledge_t get_answer_from_selected_table(const obs_table_namespace::table_type& selected_table, const active_learning_namespace::pref_suf_t& row, const active_learning_namespace::pref_suf_t& col) const;
     
   public:
     observation_table() = delete;
@@ -59,12 +59,22 @@ class observation_table{
 
     const bool has_record(const active_learning_namespace::pref_suf_t& row, const active_learning_namespace::pref_suf_t& col) const;
     void insert_record(const active_learning_namespace::pref_suf_t& row, const active_learning_namespace::pref_suf_t& col, const active_learning_namespace::knowledge_t answer);
-    
+    active_learning_namespace::knowledge_t get_answer(const active_learning_namespace::pref_suf_t& row, const active_learning_namespace::pref_suf_t& col) const;
+
     const bool is_closed();
+
+    const obs_table_namespace::table_type& get_upper_table() const noexcept {
+      return upper_table;
+    }
+
+    const obs_table_namespace::table_type& get_lower_table() const noexcept {
+      return lower_table;
+    }
     
     void extend_lower_table();
     const std::vector< active_learning_namespace::pref_suf_t >& get_incomplete_rows() const;
     void mark_row_complete(const active_learning_namespace::pref_suf_t& row);
+    void extent_columns(const active_learning_namespace::pref_suf_t& suffix) const;
 
     const auto& get_column_names() const noexcept{
       return all_colums;

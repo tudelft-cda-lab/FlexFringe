@@ -206,7 +206,7 @@ std::string inputdata::string_from_type(int type) {
 
 void inputdata::add_traces_to_apta(apta *the_apta) {
     for (auto *tr: traces) {
-        add_trace_to_apta(tr, the_apta, set<int>());
+        add_trace_to_apta(tr, the_apta, set<int>()); // TODO: make this one an optional
         if (!ADD_TAILS) tr->erase();
     }
 }

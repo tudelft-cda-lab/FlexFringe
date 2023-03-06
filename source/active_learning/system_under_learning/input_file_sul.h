@@ -1,8 +1,8 @@
 /**
- * @file positive_traces_sul.h
+ * @file input_file_sul.h
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
  * @brief This is a standard SUL that answers normal membership queries. It does only contain positive traces,
- * and assumes all traces that are not part of it as negative.
+ * and assumes all traces that are not part of it as negative. The SUL is just a file to read from.
  * @version 0.1
  * @date 2023-02-22
  * 
@@ -15,6 +15,7 @@
 
 #include "sul_base.h"
 #include "i_parser.h"
+#include "inputdata.h"
 
 #include <vector>
 #include <set>
@@ -23,7 +24,7 @@
 class teacher_base;
 class eq_oracle_base;
 
-class positive_traces_sul : sul_base {
+class input_file_sul : sul_base {
   friend class teacher_base;
   friend class eq_oracle_base;
 
@@ -34,10 +35,14 @@ class positive_traces_sul : sul_base {
     virtual void postprocessing();
     virtual void step();
 
-    void parse_input();
+    void parse_input(ifstream& input_stream, inputdata& id);
     bool is_member(const std::vector<int>& query_trace) const;
   public:
-    positive_traces_sul();
+    input_file_sul();
+
+    const std::set< std::vector<int> >& get_all_traces() const {
+      return all_traces;
+    }
 };
 
 #endif

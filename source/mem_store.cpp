@@ -144,7 +144,6 @@ void mem_store::erase(){
     for(auto & it : mem_store::extendref_store){
         delete it;
     }
-
 }
 
 void mem_store::delete_trace(trace* trace) {
