@@ -16,10 +16,14 @@
 #include "sul_base.h"
 #include "definitions.h"
 
+#include <vector>
+
 class base_teacher{
+  protected:
+    sul_base* sul;
   public:
-    virtual const active_learning_namespace::knowledge_t ask_membership_query(const sul_base& sul, const active_learning_namespace::pref_suf_t& prefix, const active_learning_namespace::pref_suf_t& suffix);
-    base_teacher(){};
+    virtual const active_learning_namespace::knowledge_t ask_membership_query(const active_learning_namespace::pref_suf_t& prefix, const active_learning_namespace::pref_suf_t& suffix);
+    base_teacher(sul_base* sul) : sul(sul) {};
 };
 
 #endif

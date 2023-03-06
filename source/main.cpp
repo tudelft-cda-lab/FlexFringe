@@ -32,7 +32,6 @@
 // during make, so contributors don't have to
 // touch anything than their own files
 string COMMAND;
-bool debugging_enabled = false;
 
 /*
  * Input parameters, see 'man popt'

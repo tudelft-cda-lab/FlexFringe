@@ -21,13 +21,14 @@
 
 class input_file_oracle : eq_oracle_base {
   protected:    
-    input_file_sul* sul;
-    virtual void reset_sul(){}; // TODO: change return type to what you need
-    bool apta_accepts_trace(state_merger* merger, const vector<int>& tr) const;
-  public:
-    input_file_oracle(sul_base* sul) : sul(dynamic_cast< sul_base* >(sul)){};
-    virtual std::optional< std::vector<int> > equivalence_query(state_merger* merger); // TODO: put in hypothesis
+    virtual void reset_sul(){
+      // we won't need this guy here
+    }; 
 
+    virtual bool apta_accepts_trace(state_merger* merger, const vector<int>& tr, inputdata& id) const;
+  public:
+    input_file_oracle(sul_base* sul) : eq_oracle_base(sul) {};
+    virtual std::optional< std::vector<int> > equivalence_query(state_merger* merger); // TODO: put in hypothesis
 };
 
 #endif

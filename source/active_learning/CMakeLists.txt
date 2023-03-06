@@ -12,6 +12,8 @@ include_directories(
 add_library(ActiveLearning STATIC
 
             active_learning_util/definitions.h
+            active_learning_util/common_functions.h
+            active_learning_util/common_functions.cpp
 
             algorithms/lstar.h
             algorithms/lstar.cpp

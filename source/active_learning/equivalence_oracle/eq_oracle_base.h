@@ -26,9 +26,10 @@ class eq_oracle_base{
     sul_base* sul;
 
     virtual void reset_sul() = 0; // TODO: change return type to what you need
+    virtual bool apta_accepts_trace(state_merger* merger, const vector<int>& tr, inputdata& id) const = 0;
   public:
     eq_oracle_base(sul_base* sul) : sul(sul){};
-    virtual std::optional< std::vector<int> > equivalence_query(state_merger* merger){};
+    virtual std::optional< std::vector<int> > equivalence_query(state_merger* merger) = 0;
 };
 
 #endif

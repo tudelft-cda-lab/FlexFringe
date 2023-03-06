@@ -16,10 +16,10 @@
 using namespace std;
 using namespace active_learning_namespace;
 
-bool input_file_oracle::apta_accepts_trace(state_merger* merger, const vector<int>& tr) const {
+bool input_file_oracle::apta_accepts_trace(state_merger* merger, const vector<int>& tr, inputdata& id) const {
   const static double THRESH = 1; // TODO: we need to set this guy somehow
 
-  trace* new_tr = vector_to_trace(tr);
+  trace* new_tr = vector_to_trace(tr, id);
   double score = predict_trace(merger, new_tr);
   mem_store::delete_trace(new_tr);
 
@@ -27,9 +27,10 @@ bool input_file_oracle::apta_accepts_trace(state_merger* merger, const vector<in
 }
 
 optional< vector<int> > input_file_oracle::equivalence_query(state_merger* merger) {
-  for(const auto& tr: sul->get_all_traces()){
-    if(!apta_accepts_trace(aut, tr)){
-      return make_optional< vector<int> >(tr);
+  for(const auto& sequence: dynamic_cast<input_file_sul*>(sul)->get_all_traces()){
+    trace* tr = vector_to_trace(sequence, *(merger->get_dat()) );
+    if(!active_learning_namespace::aut_accepts_trace(tr, merger->get_aut())){
+      return make_optional< vector<int> >(sequence);
     }
   }
   return nullopt; // empty optional

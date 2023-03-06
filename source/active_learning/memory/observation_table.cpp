@@ -15,6 +15,7 @@
 #include <utility>
 #include <stdexcept>
 #include <cassert>
+#include <algorithm>
 
 using namespace std;
 using namespace obs_table_namespace;
@@ -187,10 +188,11 @@ const vector< pref_suf_t >& observation_table::get_incomplete_rows() const {
 }
 
 void observation_table::mark_row_complete(const pref_suf_t& row) {
-  incomplete_rows.erase(row);
+  auto position_it = std::find(incomplete_rows.begin(), incomplete_rows.end(), row);
+  incomplete_rows.erase(position_it);
 }
 
-void observation_table::extent_columns(const pref_suf_t& suffix) const {
+void observation_table::extent_columns(const pref_suf_t& suffix) {
   pref_suf_t current_suffix;
   for(const int symbol: suffix){
     current_suffix.push_back(symbol);
