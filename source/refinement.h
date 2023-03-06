@@ -133,7 +133,8 @@ public:
 };
 
 /**
- * @brief TODO
+ * @brief Splitting of states used for continuous values. For example, the RTI-algorithm 
+ * uses this one to split states based on (continuous) time-feature.
  * 
  */
 class split_refinement : public refinement {

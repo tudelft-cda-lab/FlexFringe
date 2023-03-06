@@ -9,11 +9,14 @@
  * 
  */
 
-#ifndef _SUL_BASE_H_
-#define _SUL_BASE_H_
+#ifndef _EQ_ORACLE_BASE_H_
+#define _EQ_ORACLE_BASE_H_
 
 #include "sul_base.h"
 #include "parameters.h"
+
+#include "apta.h"
+#include "state_merger.h"
 
 #include <vector>
 #include <optional>
@@ -21,12 +24,11 @@
 class eq_oracle_base{
   protected:
     sul_base* sul;
-    
+
     virtual void reset_sul() = 0; // TODO: change return type to what you need
   public:
     eq_oracle_base(sul_base* sul) : sul(sul){};
-    virtual std::optional< std::vector<int> > find_counterexample(); // TODO: put in hypothesis
-
+    virtual std::optional< std::vector<int> > equivalence_query(state_merger* merger){};
 };
 
 #endif

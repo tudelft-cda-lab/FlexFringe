@@ -13,15 +13,22 @@
 #define _L_STAR_H_
 
 #include "observation_table.h"
+#include "state_merger.h"
+#include "inputdata.h"
+#include "definitions.h"
+#include "trace.h"
+#include "tail.h"
+#include "refinement.h"
 
 #include <vector> 
+#include <memory>
 
 class lstar_algorithm{
   protected:
     observation_table obs_table;
 
-    void construct_automaton_from_table();
-    
+    active_learning_namespace::pref_suf_t concatenate_prefixes(const active_learning_namespace::pref_suf_t& pref1, const active_learning_namespace::pref_suf_t& pref2) const;
+    vector< refinement* > construct_automaton_from_table(std::unique_ptr<state_merger> merger, intputdata& id) const;
   public:
     lstar_algorithm(std::vector<int>& alphabet);
     void run_l_star();

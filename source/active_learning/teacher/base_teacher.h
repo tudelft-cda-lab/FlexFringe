@@ -19,6 +19,7 @@
 class base_teacher{
   public:
     virtual const active_learning_namespace::knowledge_t ask_membership_query(const sul_base& sul, const active_learning_namespace::pref_suf_t& prefix, const active_learning_namespace::pref_suf_t& suffix);
+    base_teacher(){};
 };
 
 #endif

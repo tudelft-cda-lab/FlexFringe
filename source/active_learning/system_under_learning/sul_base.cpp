@@ -10,5 +10,26 @@
  */
 
 #include "sul_base.h"
+#include "parameters.h"
 
-// TODO: do the implementations here
+#include <iostream>
+#include <stdexcept>
+
+using namespace std;
+
+ifstream sul_base::get_input_stream() const {
+  if(!parses_input_file){
+    throw logic_error("Cannot get input stream of SUL-class not supporting it.");
+  }
+
+  ifstream input_stream(INPUT_FILE);  
+  cout << "Input file: " << INPUT_FILE << endl;
+    
+  if(!input_stream) {
+      cerr << "Input file not found, aborting" << endl;
+      exit(-1);
+  } else {
+      cout << "Using input file: " << INPUT_FILE << endl;
+  }
+  return input_stream;
+}

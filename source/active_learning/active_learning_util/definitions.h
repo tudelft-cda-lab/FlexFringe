@@ -18,7 +18,7 @@ namespace active_learning_namespace{
   const int EPS = -1; // empty symbol special character. flexfringe does not map to -1 by design.
   
   typedef std::vector<int> pref_suf_t;
-
+  
   enum class knowledge_t{
     accepting,
     rejecting,
