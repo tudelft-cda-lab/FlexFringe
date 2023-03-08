@@ -132,3 +132,6 @@ double EPSILON = 0;
 int L = 0;
 int R = 0;
 int K = 0;
+
+// active learning parameters
+string ACTIVE_LEARNING_ALGORITHM = "l_star";

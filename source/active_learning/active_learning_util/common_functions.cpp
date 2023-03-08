@@ -19,24 +19,6 @@
 
 using namespace std;
 
-/* evaluation_function* get_evaluation(){
-    evaluation_function *eval = nullptr;
-    if(debugging_enabled){
-        for(auto & myit : *DerivedRegister<evaluation_function>::getMap()) {
-            cout << myit.first << " " << myit.second << endl;
-        }
-    }
-    try {
-        eval = (DerivedRegister<evaluation_function>::getMap())->at(HEURISTIC_NAME)();
-        std::cout << "Using heuristic " << HEURISTIC_NAME << std::endl;
-        LOG_S(INFO) <<  "Using heuristic " << HEURISTIC_NAME;
-    } catch(const std::out_of_range& oor ) {
-        LOG_S(WARNING) << "No named heuristic found, defaulting back on -h flag";
-        std::cerr << "No named heuristic found, defaulting back on -h flag" << std::endl;
-    }
-    return eval;
-} */
-
 apta_node* active_learning_namespace::get_child_node(apta_node* n, tail* t){
     apta_node* child = n->child(t);
     if(child == 0){
@@ -156,3 +138,10 @@ trace* active_learning_namespace::vector_to_trace(const vector<int>& vec, inputd
     return new_trace;
 }
 
+void active_learning_namespace::print_vector(const vector<int>& v){
+    cout << "Here comes a vector: ";
+    for(const auto symbol: v){
+      cout << symbol << ",";
+    }
+    cout << endl;
+}

@@ -11,30 +11,35 @@
 
 #include "observation_table.h"
 #include "definitions.h"
+#include "common_functions.h"
 
 #include <utility>
 #include <stdexcept>
 #include <cassert>
 #include <algorithm>
+#include <sstream>
+#include <iostream>
 
 using namespace std;
 using namespace obs_table_namespace;
 using namespace active_learning_namespace;
 
 /**
- * @brief Construct a new observation table::observation table object
+ * @brief Construct a new observation_table::observation_table object
  * 
  * @param alphabet We need the alphabet beforehand to know how to extend, see e.g. "Learning regular sets from queries and counterexamples" by Dana Angluin.
  */
-observation_table::observation_table(vector<int>& alphabet) : alphabet(alphabet) {
-  const auto nullvector = get_null_vector();
-  upper_table[nullvector][nullvector] = knowledge_t::accepting;
+observation_table::observation_table(const vector<int>& alphabet) : alphabet(alphabet), checked_for_closedness(false) {
 
-  table_mapper[nullvector] = upper_lower_t::upper;
-  all_colums.insert(nullvector);
-  hash_upper_table();
+  // initialize the lower table properly
+  for(const auto i: concatenate_strings(get_null_vector(), alphabet)){
+    pref_suf_t new_row_name{i};
+    incomplete_rows.push_back(pref_suf_t(new_row_name)); // we do a copy to circumvent the destructor
+    table_mapper[ pref_suf_t(new_row_name.begin(), new_row_name.end()) ] = upper_lower_t::lower; // TODO: do we need the copy of the prefix here?
+    lower_table[move(new_row_name)] = map<pref_suf_t, knowledge_t>();
+  }
 
-  extend_lower_table();
+  all_columns.insert(get_null_vector());
 };
 
 /**
@@ -46,11 +51,23 @@ observation_table::observation_table(vector<int>& alphabet) : alphabet(alphabet)
  * @return true Entry exists.
  * @return false Doesn't exist.
  */
-const bool observation_table::record_is_in_selected_table(const table_type& selected_table, const pref_suf_t& row, const pref_suf_t& col) const {
+const bool observation_table::record_is_in_selected_table(const table_type& selected_table, const pref_suf_t& raw_row, const pref_suf_t& col) const {
+  const auto row = map_prefix(raw_row);
   if(!selected_table.contains(row)){ throw logic_error("The row should exist. What happened?"); }
-  //assert(selected_table.contains(row), "The row should exist. What happened?");
+  return selected_table.at(row).contains(map_prefix(col));
+}
 
-  return selected_table.at(row).contains(col);
+/**
+ * @brief This function exists for convenience. The empty prefix is by design the nullvector, hence we need to check we got this one straight.
+ * 
+ * @param column_name The name of the column.
+ * @return const pref_suf_t The column again or the nullvector.
+ */
+const pref_suf_t observation_table::map_prefix(const pref_suf_t& column) const {
+  if(column.size() == 0){
+    return get_null_vector();
+  }
+  return column;
 }
 
 /**
@@ -61,34 +78,49 @@ const bool observation_table::record_is_in_selected_table(const table_type& sele
  * @return true Entry exists.
  * @return false Doesn't exist.
  */
-const bool observation_table::has_record(const pref_suf_t& row, const pref_suf_t& col) const {
-  if(!table_mapper.contains(row)){ throw logic_error("This should not happen. Why do we ask about a row that does not exist?"); }
-
+const bool observation_table::has_record(const pref_suf_t& raw_row, const pref_suf_t& col) const {
+  const auto row = map_prefix(raw_row);
+  if(!table_mapper.contains(row)){ throw logic_error("Why do we ask about a row that does not exist? (observation_table::has_record)"); }
+    
   auto table_select = table_mapper.at(row);
   switch(table_select){
     case upper_lower_t::upper:
-      return record_is_in_selected_table(upper_table, row, col);
+      return record_is_in_selected_table(upper_table, row, map_prefix(col));
+      break;
     case upper_lower_t::lower:
-      return record_is_in_selected_table(lower_table, row, col);
+      return record_is_in_selected_table(lower_table, row, map_prefix(col));
+      break;
     default:
-      throw runtime_error("Unknown table_select variable occured in observation_table::get_answer.");
+      throw runtime_error("Unknown table_select variable occured in observation_table::has_record.");
   }
 }
 
+/**
+ * @brief What you think it does.
+ */
 knowledge_t observation_table::get_answer_from_selected_table(const table_type& selected_table, const pref_suf_t& row, const pref_suf_t& col) const {
-  return selected_table.at(row).at(col);
+  return selected_table.at( map_prefix(row) ).at( map_prefix(col) );
 }
 
-
-active_learning_namespace::knowledge_t observation_table::get_answer(const active_learning_namespace::pref_suf_t& row, const active_learning_namespace::pref_suf_t& col) const {
-  if(!table_mapper.contains(row)){ throw logic_error("This should not happen. Why do we ask about a row that does not exist?"); }
+/**
+ * @brief What you think it does.
+ * 
+ * @param raw_row The prefix.
+ * @param col The suffix.
+ * @return active_learning_namespace::knowledge_t Answer. 
+ */
+active_learning_namespace::knowledge_t observation_table::get_answer(const active_learning_namespace::pref_suf_t& raw_row, const active_learning_namespace::pref_suf_t& col) const {
+  const auto row = map_prefix(raw_row);
+  if(!table_mapper.contains(row)){ throw logic_error("Why do we ask about a row that does not exist? (observation_table::get_answer)"); }
 
   auto table_select = table_mapper.at(row);
   switch(table_select){
     case upper_lower_t::upper:
-      return get_answer_from_selected_table(upper_table, row, col);
+      return get_answer_from_selected_table(upper_table, row, map_prefix(col));
+      break;
     case upper_lower_t::lower:
-      return get_answer_from_selected_table(lower_table, row, col);
+      return get_answer_from_selected_table(lower_table, row, map_prefix(col));
+      break;
     default:
       throw runtime_error("Unknown table_select variable occured in observation_table::get_answer.");
   }
@@ -102,24 +134,33 @@ active_learning_namespace::knowledge_t observation_table::get_answer(const activ
  * @param col The column.
  * @param answer The answer to insert, as returned by the oracle.
  */
-void observation_table::insert_record_in_selected_table(table_type& selected_table, const pref_suf_t& row, const pref_suf_t& col, const knowledge_t answer){
+void observation_table::insert_record_in_selected_table(table_type& selected_table, const pref_suf_t& raw_row, const pref_suf_t& col, const knowledge_t answer){
+  const auto row = map_prefix(raw_row);
   if(!selected_table.contains(row)){ throw logic_error("The row should exist. What happened?"); }
-
-  selected_table[row][col] = answer;
+  selected_table[row][map_prefix(col)] = answer;
 }
 
-void observation_table::insert_record(const pref_suf_t& row, const pref_suf_t& col, const knowledge_t answer){
-  if(!table_mapper.contains(row)){ throw logic_error("This should not happen. Why do we ask about a row that does not exist?"); }
-  //assert(answer != knowledge_t::unknown);
+/**
+ * @brief Inserts a record with the known answer into the table. The answer has been obtained by the teacher.
+ * 
+ * @param raw_row The row/prefix.
+ * @param col The column/suffix.
+ * @param answer The answer.
+ */
+void observation_table::insert_record(const pref_suf_t& raw_row, const pref_suf_t& col, const knowledge_t answer){
+  const auto row = map_prefix(raw_row);
+  if(!table_mapper.contains(row)) throw logic_error("Why do we ask about a row that does not exist? (observation_table::insert_record)."); 
 
   auto table_select = table_mapper.at(row);
   switch(table_select){
     case upper_lower_t::upper:
-      insert_record_in_selected_table(upper_table, row, col, answer);
+      insert_record_in_selected_table(upper_table, row, map_prefix(col), answer);
+      break;
     case upper_lower_t::lower:
-      insert_record_in_selected_table(lower_table, row, col, answer);
+      insert_record_in_selected_table(lower_table, row, map_prefix(col), answer);
+      break;
     default:
-      throw runtime_error("Unknown table_select variable occured in observation_table::get_answer.");
+      throw runtime_error("Unknown table_select variable occured in observation_table::insert_record.");
   }
 }
 
@@ -128,7 +169,7 @@ void observation_table::insert_record(const pref_suf_t& row, const pref_suf_t& c
  * 
  */
 void observation_table::hash_upper_table(){
-  upper_table_rows.clear();
+  //upper_table_rows.clear();
   for(auto it = upper_table.cbegin(); it != upper_table.cend(); ++it){
     const auto& entry = it->second;
     upper_table_rows.insert(entry);
@@ -138,23 +179,23 @@ void observation_table::hash_upper_table(){
 /**
  * @brief Used when we move a row to the upper table. Updates all data structures accordingly.
  * 
- * @param row 
+ * @param row The row to move.
  */
-void observation_table::move_to_upper_table(const active_learning_namespace::pref_suf_t& row){
+void observation_table::move_to_upper_table(const active_learning_namespace::pref_suf_t& raw_row){
+  const auto row = map_prefix(raw_row);
   if(lower_table.contains(row) && upper_table.contains(row)){ throw logic_error("Invariant broken. The two tables should never have the same row the same time."); }
 
   const auto& entry = lower_table.at(row);
   upper_table[row] = entry;
   upper_table_rows.insert(entry);
 
-  //const auto it = lower_table.find(row);
-  //lower_table.erase(it);
   lower_table.erase(row);
+  table_mapper.at(row) = upper_lower_t::upper;
 }
 
 /**
  * @brief This function has two purposes. It checks if the table is closed as given by the algorithm. It also moves all the 
- * unique entries from the lower table to the upper table.
+ * unique entries from the lower table to the upper table. (Perhaps we should separate those two functionalities?)
  * 
  * A table is closed then all rows of the lower table also exist in the upper table. If we do have a row in the lower table 
  * that does not exist in the upper table, then we identified a new state, and hence we move the row from the lower table 
@@ -164,39 +205,74 @@ void observation_table::move_to_upper_table(const active_learning_namespace::pre
  * @return false Table not closed.
  */
 const bool observation_table::is_closed() {
+  if(checked_for_closedness){
+    throw logic_error("is_closed() cannot be called consecutively without extending columns or lower table in the meantime.");
+  }
+
+  checked_for_closedness = true;
+  hash_upper_table();
+
   bool is_closed = true;
-  for(auto it = lower_table.cbegin(); it != lower_table.cend(); ++it){
-    const auto& entry = it->second;
+
+  // we break the lower_table if we delete on the fly, hence we need storage
+  set<pref_suf_t> rows_to_move;
+  for (const auto& it : lower_table){
+    const auto& entry = it.second;
     if(!upper_table_rows.contains(entry)){
       is_closed = false;
-
-      const auto& row = it->first;
-      move_to_upper_table(row);
+      rows_to_move.insert(it.first);
     }
   }
 
-  if(is_closed){
-    return true;
+  for(const auto& row: rows_to_move){
+    move_to_upper_table(row);
   }
 
-  hash_upper_table();
-  return false;
+  return is_closed;
 }
 
+/**
+ * @brief Gets the incomplete rows. Helps speeding up the algorithm by saving the search.
+ * 
+ * @return const vector< pref_suf_t >& The vector of incomplete rows.
+ */
 const vector< pref_suf_t >& observation_table::get_incomplete_rows() const {
   return this->incomplete_rows;
 }
 
+/**
+ * @brief Delete the row from the incomplete_rows data structure.
+ * 
+ * @param row The row to close/complete.
+ */
 void observation_table::mark_row_complete(const pref_suf_t& row) {
-  auto position_it = std::find(incomplete_rows.begin(), incomplete_rows.end(), row);
+  auto position_it = std::find(incomplete_rows.begin(), incomplete_rows.end(), map_prefix(row));
   incomplete_rows.erase(position_it);
 }
 
+/**
+ * @brief Extends the columns by all the prefixes the argument suffix includes. Moves all rows as incomplete, as they are by design 
+ * again.
+ * 
+ * @param suffix The suffix by which to extend. Gained from a counterexample as per L* algorithm.
+ */
 void observation_table::extent_columns(const pref_suf_t& suffix) {
+  checked_for_closedness = false;
+
   pref_suf_t current_suffix;
   for(const int symbol: suffix){
     current_suffix.push_back(symbol);
-    all_colums.insert(current_suffix);
+    all_columns.insert(current_suffix);
+  }
+  
+  incomplete_rows.clear();
+  for(auto it = upper_table.cbegin(); it != upper_table.cend(); ++it){
+    const auto& row_name = it->first;
+    incomplete_rows.push_back(row_name);
+  }
+  for(auto it = lower_table.cbegin(); it != lower_table.cend(); ++it){
+    const auto& row_name = it->first;
+    incomplete_rows.push_back(row_name);
   }
 }
 
@@ -206,15 +282,29 @@ void observation_table::extent_columns(const pref_suf_t& suffix) {
  * 
  */
 void observation_table::extend_lower_table() {
-  for(auto it = lower_table.cbegin(); it != lower_table.cend(); ++it){
-    auto& row_name = it->first;
-    //auto& entry = it->second;
+  checked_for_closedness = false;
 
+  // adding to lower table while iterating it results in infinite loop, hence we do auxiliary object
+  set<pref_suf_t> all_row_names;
+  for(auto it = lower_table.cbegin(); it != lower_table.cend(); ++it){
+    const auto& row_name = it->first;
+    all_row_names.insert(row_name);
+  }
+
+  for(auto it = upper_table.cbegin(); it != upper_table.cend(); ++it){
+    const auto& row_name = it->first;
+    all_row_names.insert(row_name);
+  }
+
+  for(const auto& row_name: all_row_names){
     for(const auto i: alphabet){
-      pref_suf_t new_row_name = pref_suf_t(row_name);
+      pref_suf_t new_row_name = pref_suf_t(row_name.begin(), row_name.end());
       new_row_name.push_back(i);
 
-      incomplete_rows.push_back(pref_suf_t(new_row_name)); // we do a copy to circumvent the destructor
+      if(lower_table.contains(new_row_name) || upper_table.contains(new_row_name)) continue;
+
+      incomplete_rows.push_back(pref_suf_t(new_row_name.begin(), new_row_name.end())); // we do a copy to circumvent the destructor
+      table_mapper[ pref_suf_t(new_row_name.begin(), new_row_name.end()) ] = upper_lower_t::lower; // TODO: do we need the copy of the prefix here?
       lower_table[move(new_row_name)] = map<pref_suf_t, knowledge_t>();
     }
   }

@@ -38,6 +38,8 @@ namespace active_learning_namespace{
 
   void add_sequence_to_trace(trace* new_trace, const std::vector<int> sequence);
   void update_tail(/*out*/ tail* t, const int symbol);
+
+  void print_vector(const vector<int>& v);
 }
 
 #endif

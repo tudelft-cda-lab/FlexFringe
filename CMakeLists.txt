@@ -85,26 +85,40 @@ endif()
 if(NOT SKIP_TESTS)
     add_subdirectory(source/utility/Catch2-2.13.9)
 
+    include_directories(
+        "${PROJECT_SOURCE_DIR}/source/active_learning/active_learning_util"
+        "${PROJECT_SOURCE_DIR}/source/active_learning/memory"
+        "${PROJECT_SOURCE_DIR}/source/active_learning/teacher"
+        "${PROJECT_SOURCE_DIR}/source/active_learning/system_under_learning"
+        "${PROJECT_SOURCE_DIR}/source/active_learning/counterexample_strategies"
+        "${PROJECT_SOURCE_DIR}/source/active_learning/equivalence_oracle"
+        "${PROJECT_SOURCE_DIR}/source/active_learning/algorithms"
+        )
+
     add_executable(runtests
             tests/tests.cpp
             tests/smoketest.cpp
             tests/testcsvheaderparser.cpp
             tests/testcsvparser.cpp
             tests/testabbadingoparser.cpp
-            source/main.cpp tests/testinputdata.cpp)
+            source/main.cpp tests/testinputdata.cpp
+            tests/testobservationtable.cpp)
 
     if(MSVC)
         target_link_libraries(runtests
-                Evaluation)
+                Evaluation
+                ActiveLearning)
         set_target_properties(runtests PROPERTIES LINK_FLAGS
                 "/WHOLEARCHIVE:Evaluation")
     elseif(APPLE)
         target_link_libraries(runtests
                 "-Wl,-force_load" Evaluation
+                "-Wl,-force_load" ActiveLearning
                 "-Wl")
     else()
         target_link_libraries(runtests
                 "-Wl,--whole-archive" Evaluation
+                "-Wl,--whole-archive" ActiveLearning
                 "-Wl,--no-whole-archive")
     endif()
 
@@ -126,7 +140,7 @@ endif()
 
 if(MSVC)
     # Statically link msvc runtime so we don't need the redistributable
-    set_property(TARGET flexfringe Evaluation Source Util runtests PROPERTY
+    set_property(TARGET flexfringe Evaluation Source Util ActiveLearning runtests PROPERTY
             MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
