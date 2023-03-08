@@ -150,4 +150,8 @@ extern int IDENTICAL_KTAIL;
 
 extern bool STAR_FREE;
 extern bool SINK_TYPE;
+
+// active learning parameters
+extern string ACTIVE_LEARNING_ALGORITHM;
+
 #endif

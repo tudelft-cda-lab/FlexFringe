@@ -16,6 +16,8 @@
 #include "differencing.h"
 #include "ensemble.h"
 
+#include "source/active_learning/active_learning_main.h"
+
 #include "main_helpers.h" // TODO: shall we leave this or can we find a smarter structure to incorporate the active learning?
 
 #include "loguru.hpp"
@@ -89,7 +91,7 @@ void run() {
     the_apta->set_context(merger);
     eval->set_context(merger);
 
-    cout << "Creating apta " <<  "using evaluation class " << HEURISTIC_NAME << endl;
+    cout << "Creating apta using evaluation class " << HEURISTIC_NAME << endl;
 
     if(OPERATION_MODE == "batch" || OPERATION_MODE == "greedy") {
         cout << "batch mode selected" << endl;
@@ -116,7 +118,13 @@ void run() {
         run_dfasat(merger, SAT_SOLVER, -1);
 
         print_current_automaton(merger, OUTPUT_FILE, ".final");
-    } else if(OPERATION_MODE == "stream") {
+    }
+    else if(OPERATION_MODE == "active_learning"){
+        cout << "Run in active learning mode." << endl;
+        run_active_learning();
+        cout << "Finished running, terminating program." << endl;
+    } 
+    else if(OPERATION_MODE == "stream") {
         cout << "stream mode selected" << endl;
         LOG_S(INFO) << "Stream mode selected, starting run";
 
@@ -364,6 +372,9 @@ int main(int argc, char *argv[]){
     app.add_option("--pref_K", K, "Number of frequent items in sketches.");
     app.add_option("--bootstrap_R", R, "The number of bootstrapped examples.");
     
+    // here come the active learning parameters
+    app.add_option("--active_learning_algorithm", ACTIVE_LEARNING_ALGORITHM, "The basic algorithm that runs through. Current options are (l_star). DEFAULT: l_star");
+
     CLI11_PARSE(app, argc, argv)
 
     loguru::g_stderr_verbosity = loguru::Verbosity_OFF;

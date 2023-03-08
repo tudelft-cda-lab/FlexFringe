@@ -31,8 +31,9 @@ namespace obs_table_namespace{
 
 class observation_table{
   protected:
-    std::vector<int> alphabet;
-    std::set<active_learning_namespace::pref_suf_t> all_colums;
+    bool checked_for_closedness;
+    const std::vector<int> alphabet;
+    std::set<active_learning_namespace::pref_suf_t> all_columns;
     std::map< active_learning_namespace::pref_suf_t, obs_table_namespace::upper_lower_t> table_mapper; // prefix in upper table or lower table?
     std::vector< active_learning_namespace::pref_suf_t > incomplete_rows;
 
@@ -49,13 +50,15 @@ class observation_table{
       return active_learning_namespace::pref_suf_t{active_learning_namespace::EPS};
     }
 
+    const active_learning_namespace::pref_suf_t map_prefix(const active_learning_namespace::pref_suf_t& column) const;
+
     const bool record_is_in_selected_table(const obs_table_namespace::table_type& selected_table, const active_learning_namespace::pref_suf_t& row, const active_learning_namespace::pref_suf_t& col) const;
     void insert_record_in_selected_table(obs_table_namespace::table_type& selected_table, const active_learning_namespace::pref_suf_t& row, const active_learning_namespace::pref_suf_t& col, const active_learning_namespace::knowledge_t answer);
     active_learning_namespace::knowledge_t get_answer_from_selected_table(const obs_table_namespace::table_type& selected_table, const active_learning_namespace::pref_suf_t& row, const active_learning_namespace::pref_suf_t& col) const;
     
   public:
     observation_table() = delete;
-    observation_table(std::vector<int>& alphabet);
+    observation_table(const std::vector<int>& alphabet);
 
     const bool has_record(const active_learning_namespace::pref_suf_t& row, const active_learning_namespace::pref_suf_t& col) const;
     void insert_record(const active_learning_namespace::pref_suf_t& row, const active_learning_namespace::pref_suf_t& col, const active_learning_namespace::knowledge_t answer);
@@ -76,8 +79,8 @@ class observation_table{
     void mark_row_complete(const active_learning_namespace::pref_suf_t& row);
     void extent_columns(const active_learning_namespace::pref_suf_t& suffix);
 
-    const auto& get_column_names() const noexcept{
-      return all_colums;
+    const auto& get_column_names() const noexcept {
+      return all_columns;
     }
 };
 

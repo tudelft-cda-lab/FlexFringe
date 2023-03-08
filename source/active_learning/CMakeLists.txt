@@ -1,15 +1,17 @@
 include_directories(
+        "${CMAKE_CURRENT_SOURCE_DIR}"
         "${CMAKE_CURRENT_SOURCE_DIR}/active_learning_util"
         "${CMAKE_CURRENT_SOURCE_DIR}/memory"
         "${CMAKE_CURRENT_SOURCE_DIR}/teacher"
         "${CMAKE_CURRENT_SOURCE_DIR}/system_under_learning"
         "${CMAKE_CURRENT_SOURCE_DIR}/counterexample_strategies"
         "${CMAKE_CURRENT_SOURCE_DIR}/equivalence_oracle"
-        "${CMAKE_CURRENT_SOURCE_DIR}/observation_table"
         "${CMAKE_CURRENT_SOURCE_DIR}/algorithms"
         )
 
 add_library(ActiveLearning STATIC
+            active_learning_main.h
+            active_learning_main.cpp
 
             active_learning_util/definitions.h
             active_learning_util/common_functions.h
