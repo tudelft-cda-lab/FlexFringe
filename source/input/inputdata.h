@@ -105,6 +105,7 @@ public:
      * */
     int get_types_size();
     int get_alphabet_size();
+    const std::vector<int> get_alphabet() const;
 
     int symbol_from_string(std::string symbol);
 

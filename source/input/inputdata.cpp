@@ -178,6 +178,14 @@ int inputdata::get_alphabet_size() {
     return alphabet.size();
 }
 
+const std::vector<int> inputdata::get_alphabet() const {
+    std::vector<int> res;
+    for(const auto& mapping: r_alphabet){
+        res.push_back(mapping.second);
+    }
+    return res;
+}
+
 int inputdata::symbol_from_string(std::string symbol) {
     if (r_alphabet.find(symbol) == r_alphabet.end()) {
         r_alphabet[symbol] = alphabet.size();
@@ -337,6 +345,8 @@ tail *inputdata::make_tail(const string &symbol,
 
     return new_tail;
 }
+
+
 
 void inputdata::add_type_to_trace(trace *new_trace,
                                   const string &type) {

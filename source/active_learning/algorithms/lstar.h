@@ -29,7 +29,7 @@ class lstar_algorithm{
 
     vector< refinement* > construct_automaton_from_table(std::unique_ptr<state_merger>& merger, inputdata& id) const;
   public:
-    lstar_algorithm(std::vector<int>& alphabet);
+    lstar_algorithm(const std::vector<int>& alphabet);
     void run_l_star();
 };
 

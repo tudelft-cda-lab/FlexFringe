@@ -293,7 +293,7 @@ public:
     /** FIND/UNION functions, returns head of representative list */
     inline apta_node* find(){
         apta_node* rep = this;
-        while(rep->representative != 0) rep = rep->representative;
+        while(rep->representative != nullptr) rep = rep->representative;
         return rep;
     };
     /** FIND/UNION functions, returns rep that has node as representative */

@@ -31,25 +31,21 @@ using namespace active_learning_namespace;
 
 const bool PROCESS_NEGATIVE_TRACES = false; // TODO: refactor this one later
 
-lstar_algorithm::lstar_algorithm(vector<int>& alphabet) : obs_table(observation_table(alphabet)){
+lstar_algorithm::lstar_algorithm(const vector<int>& alphabet) : obs_table(observation_table(alphabet)){
   //merger = unique_ptr(state_merger(inputdata*, evaluation_function*, apta*));
 }
 
 vector<refinement*> lstar_algorithm::construct_automaton_from_table(unique_ptr<state_merger>& merger, inputdata& id) const {
-  // step 1: construct traces
-  // step 2: sort traces
-  // step 3: add traces to apta, step by step
+  //static int sequence_nr = 0;
 
-  static int sequence_nr = 0;
+  const auto& upper_table = obs_table.get_upper_table();
+  const auto& lower_table = obs_table.get_lower_table();
+  const auto& column_names = obs_table.get_column_names();
 
-  const auto upper_table = obs_table.get_upper_table();
-  const auto lower_table = obs_table.get_lower_table();
-  const auto column_names = obs_table.get_column_names();
   // We iterate over all prefixes and suffixes. TODO: Can cause duplicates? Optimize later
-  //for(const auto row_it: upper_table){
   for(auto row_it = upper_table.cbegin(); row_it != upper_table.cend(); ++row_it){
-    const vector<int>& prefix = row_it->first; // pointer?
-    //for(const auto suffix: column_names){
+    const vector<int>& prefix = row_it->first;
+
     for(auto col_it = column_names.cbegin(); col_it != column_names.cend(); ++col_it){
       const vector<int>& suffix = *col_it;
       const auto whole_prefix = concatenate_strings(prefix, suffix);
@@ -61,6 +57,7 @@ vector<refinement*> lstar_algorithm::construct_automaton_from_table(unique_ptr<s
       }
       else if (answer==knowledge_t::rejecting){
         type = 0;
+        //continue;
       }
       else{
         throw logic_error("The table in L* at this point should always be closed.");
@@ -69,7 +66,7 @@ vector<refinement*> lstar_algorithm::construct_automaton_from_table(unique_ptr<s
       trace* new_trace = mem_store::create_trace(&id);
       new_trace->type = type;
       add_sequence_to_trace(new_trace, whole_prefix);
-      new_trace->sequence = ++sequence_nr;
+      //new_trace->sequence = ++sequence_nr;
       new_trace->finalize();
 
       id.add_trace_to_apta(new_trace, merger->get_aut(), set<int>());
@@ -84,6 +81,7 @@ void lstar_algorithm::run_l_star(){
   bool terminated = false;
   int n_runs = 0;
 
+  // TODO: make those dynamic later
   input_file_sul sul; // TODO: make these generic when you can
   base_teacher teacher(&sul); // TODO: make these generic when you can
   input_file_oracle oracle(&sul); // TODO: make these generic when you can
@@ -98,15 +96,15 @@ void lstar_algorithm::run_l_star(){
   auto merger = unique_ptr<state_merger>(new state_merger(&id, eval.get(), the_apta.get()));
 
   while(!terminated || (ENSEMBLE_RUNS > 0 && n_runs < ENSEMBLE_RUNS)){
-    const auto& rows_to_close = obs_table.get_incomplete_rows();
-    const auto& column_names = obs_table.get_column_names();
+    cout << "Iteration: " << n_runs << endl;
 
+    const auto& rows_to_close = vector<pref_suf_t>(obs_table.get_incomplete_rows()); // need a copy, since we're modifying structure in mark_row_complete()
+    const auto& column_names = obs_table.get_column_names();
+    
     // fill the table until known
     for(const auto& current_row : rows_to_close){
       for(const auto& current_column: column_names){
-        if(obs_table.has_record(current_row, current_column)){
-          continue;
-        }
+        if(obs_table.has_record(current_row, current_column)) continue;
 
         const knowledge_t answer = teacher.ask_membership_query(current_row, current_column);
         obs_table.insert_record(current_row, current_column, answer);
@@ -118,12 +116,12 @@ void lstar_algorithm::run_l_star(){
       vector< refinement* > refs = construct_automaton_from_table(merger, id);
       optional< vector<int> > query_result = oracle.equivalence_query(merger.get());
       if(!query_result){
-        cout << "Found consistent automaton. Print and terminate program." << endl;
-        print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
-        cout << "Terminate program." << endl;
+        cout << "Found consistent automaton => Print." << endl;
+        break;
       }
       else{
         // found a counterexample
+        cout << "Found counterexample. Resetting apta." << endl;
         reset_apta(merger.get(), refs);
         const vector<int>& cex = query_result.value();
         obs_table.extent_columns(cex);
@@ -135,4 +133,7 @@ void lstar_algorithm::run_l_star(){
 
     ++n_runs;
   }
+
+  if(ENSEMBLE_RUNS > 0 && n_runs == ENSEMBLE_RUNS) cout << "Reached maximum number of iterations. Printing model" << endl;
+  print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
 }

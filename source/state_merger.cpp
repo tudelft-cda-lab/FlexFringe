@@ -31,10 +31,11 @@ state_merger::state_merger(inputdata* d, evaluation_function* e, apta* a){
  * @param t 
  * @return apta_node* 
  */
-apta_node* state_merger::get_state_from_trace(trace* t) const{
+apta_node* state_merger::get_state_from_trace(trace* t) const {
     tail* cur_tail = t->head;
     apta_node* cur_state = aut->root;
     while(cur_tail != nullptr){
+        cout << "Cur_state: " << cur_state << endl;
         cur_state = cur_state->find();
         cur_state = cur_state->child(cur_tail);
         cur_tail = cur_tail->future();

@@ -19,6 +19,7 @@
 
 #include <vector>
 #include <set>
+#include <map>
 
 // only those should be able to access the system
 class teacher_base;
@@ -31,6 +32,7 @@ class input_file_sul : public sul_base {
   friend class eq_oracle_base;
 
   protected:
+
     std::set< std::vector<int> > all_traces;
 
     virtual void preprocessing();
