@@ -49,7 +49,7 @@ bool active_learning_namespace::aut_accepts_trace(trace* tr, apta* aut){
  */
 const vector<refinement*> active_learning_namespace::minimize_apta(state_merger* merger){
     vector<refinement*> refs;
-
+    cout << "Minimization started" << endl;
     refinement* top_ref = merger->get_best_refinement();
     while(top_ref != 0){
         refs.push_back(top_ref);
@@ -71,7 +71,8 @@ void active_learning_namespace::update_tail(tail* t, const int symbol){
     tail_data* td = t->td;
     td->symbol = symbol;
     //td->data = ""; // TODO: does not work yet with attributes
-    td->tail_nr = num_tails++;
+    td->tail_nr = num_tails;
+    ++num_tails;
 
     int num_symbol_attributes = 0; //inputdata::get_num_symbol_attributes();
     if(num_symbol_attributes > 0){
@@ -97,16 +98,18 @@ void active_learning_namespace::add_sequence_to_trace(trace* new_trace, const ve
     for(int index = 0; index < sequence.size(); ++index){
         const int symbol = sequence.at(index);
         active_learning_namespace::update_tail(new_tail, symbol);
-
         new_tail->td->index = index;
+
         tail* old_tail = new_tail;
         new_tail = mem_store::create_tail(nullptr);
         new_tail->tr = new_trace;
         old_tail->set_future(new_tail);
     }
+
     new_tail->td->index = sequence.size();
     new_trace->end_tail = new_tail;
-    new_trace->sequence = num_sequences++;
+    new_trace->sequence = num_sequences;
+    ++num_sequences;
 }
 
 vector<int> active_learning_namespace::concatenate_strings(const vector<int>& pref1, const vector<int>& pref2){
@@ -132,6 +135,7 @@ trace* active_learning_namespace::vector_to_trace(const vector<int>& vec, inputd
       throw logic_error("This part is not implemented (yet).");
     }
     new_trace->type = type;
+
     active_learning_namespace::add_sequence_to_trace(new_trace, vec);
     new_trace->finalize();
     
@@ -144,4 +148,12 @@ void active_learning_namespace::print_vector(const vector<int>& v){
       cout << symbol << ",";
     }
     cout << endl;
+}
+
+void active_learning_namespace::print_all_columns(const std::map<pref_suf_t, knowledge_t>& row){
+    cout << "Here come all columns in this row: ";
+    for(const auto& col: row){
+        print_vector(col.first);
+    }
+    cout << " ...end of columns of this row." << endl;
 }

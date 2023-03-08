@@ -54,6 +54,14 @@ string COMMAND;
  * @param param The parameters. 
  */
 void run() {
+
+    if(OPERATION_MODE == "active_learning"){
+        cout << "Run in active learning mode." << endl;
+        active_learning_namespace::run_active_learning();
+        cout << "Finished running, terminating program." << endl;
+        return;
+    } 
+
     evaluation_function *eval = get_evaluation();
 
     ifstream input_stream(INPUT_FILE);
@@ -119,11 +127,6 @@ void run() {
 
         print_current_automaton(merger, OUTPUT_FILE, ".final");
     }
-    else if(OPERATION_MODE == "active_learning"){
-        cout << "Run in active learning mode." << endl;
-        run_active_learning();
-        cout << "Finished running, terminating program." << endl;
-    } 
     else if(OPERATION_MODE == "stream") {
         cout << "stream mode selected" << endl;
         LOG_S(INFO) << "Stream mode selected, starting run";

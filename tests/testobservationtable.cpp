@@ -84,33 +84,4 @@ TEST_CASE("Observation table: Construction and simple insertions", "[memory]") {
         }
         REQUIRE(obs.get_incomplete_rows().size()==0);
     }
-
-
-
-/*     SECTION("Check insertion and retrieval"){
-
-        for(const int i: alp){
-            obs.insert_record(vector<int>{i}, vector<int>(), knowledge_t::accepting);
-        }
-
-        for(const int i: alp){
-            for(const int j: alp){
-                obs.insert_record(vector<int>{i}, vector<int>{j}, knowledge_t::accepting);
-                obs.insert_record(vector<int>{i, j}, vector<int>(), knowledge_t::rejecting);
-            }
-        }
-
-        for(const int i: alp){
-            CHECK(obs.has_record(vector<int>{i}, vector<int>()));
-        }
-
-        for(const int i: alp){
-            for(const int j: alp){
-                CHECK(obs.get_answer(vector<int>{i}, vector<int>{j}) == knowledge_t::accepting);
-                CHECK(obs.get_answer(vector<int>{i, j}, vector<int>()) == knowledge_t::rejecting);
-            }
-        }
-        
-        REQUIRE_FALSE(obs.has_record(nullvector, vector<int>()));
-    } */
 }

@@ -34,11 +34,11 @@ observation_table::observation_table(const vector<int>& alphabet) : alphabet(alp
   // initialize the lower table properly
   for(const auto i: concatenate_strings(get_null_vector(), alphabet)){
     pref_suf_t new_row_name{i};
+
     incomplete_rows.push_back(pref_suf_t(new_row_name)); // we do a copy to circumvent the destructor
     table_mapper[ pref_suf_t(new_row_name.begin(), new_row_name.end()) ] = upper_lower_t::lower; // TODO: do we need the copy of the prefix here?
     lower_table[move(new_row_name)] = map<pref_suf_t, knowledge_t>();
   }
-
   all_columns.insert(get_null_vector());
 };
 
@@ -186,8 +186,13 @@ void observation_table::move_to_upper_table(const active_learning_namespace::pre
   if(lower_table.contains(row) && upper_table.contains(row)){ throw logic_error("Invariant broken. The two tables should never have the same row the same time."); }
 
   const auto& entry = lower_table.at(row);
+
+  //cout << "Row to move: "; 
+  //print_vector(row);
+  //print_all_columns(entry);
+
   upper_table[row] = entry;
-  upper_table_rows.insert(entry);
+  upper_table_rows.insert(std::move(entry));
 
   lower_table.erase(row);
   table_mapper.at(row) = upper_lower_t::upper;
@@ -288,11 +293,13 @@ void observation_table::extend_lower_table() {
   set<pref_suf_t> all_row_names;
   for(auto it = lower_table.cbegin(); it != lower_table.cend(); ++it){
     const auto& row_name = it->first;
+    if(row_name.at(0) == active_learning_namespace::EPS) continue;
     all_row_names.insert(row_name);
   }
 
   for(auto it = upper_table.cbegin(); it != upper_table.cend(); ++it){
     const auto& row_name = it->first;
+    if(row_name.at(0) == active_learning_namespace::EPS) continue;
     all_row_names.insert(row_name);
   }
 

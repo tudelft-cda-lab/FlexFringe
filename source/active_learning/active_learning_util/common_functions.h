@@ -21,6 +21,7 @@
 #include "definitions.h"
 
 #include <vector>
+#include <map>
 
 namespace active_learning_namespace{
 
@@ -40,6 +41,9 @@ namespace active_learning_namespace{
   void update_tail(/*out*/ tail* t, const int symbol);
 
   void print_vector(const vector<int>& v);
+  
+  // for debugging observation table like data structures
+  void print_all_columns(const std::map<pref_suf_t, knowledge_t>& row);
 }
 
 #endif

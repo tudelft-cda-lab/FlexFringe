@@ -90,6 +90,7 @@ const std::vector<int> trace::get_input_sequence() const {
     tail* t = head;
     while(t != end_tail){
         res.push_back(t->get_symbol());
+        t = t->future();
     }
     return res;
 }

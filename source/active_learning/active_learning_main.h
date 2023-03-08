@@ -12,7 +12,11 @@
 #ifndef _ACTIVE_LEARNING_MAIN_H_
 #define _ACTIVE_LEARNING_MAIN_H_
 
+#include <vector>
+
 namespace active_learning_namespace{
+  const std::vector<int> get_alphabet();
+
   void run_active_learning();
 }
 
