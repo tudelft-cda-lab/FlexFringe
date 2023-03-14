@@ -30,13 +30,14 @@ using namespace std;
 using namespace active_learning_namespace;
 
 const bool PROCESS_NEGATIVE_TRACES = false; // TODO: refactor this one later
+const bool PRINT_ALL_MODELS = true;
 
 lstar_algorithm::lstar_algorithm(const vector<int>& alphabet) : obs_table(observation_table(alphabet)){
   //merger = unique_ptr(state_merger(inputdata*, evaluation_function*, apta*));
 }
 
-vector<refinement*> lstar_algorithm::construct_automaton_from_table(unique_ptr<state_merger>& merger, inputdata& id) const {
-  //static int sequence_nr = 0;
+stack<refinement*> lstar_algorithm::construct_automaton_from_table(unique_ptr<state_merger>& merger, inputdata& id) const {
+  static int sequence_nr = 0;
 
   const auto& upper_table = obs_table.get_upper_table();
   const auto& lower_table = obs_table.get_lower_table();
@@ -57,7 +58,6 @@ vector<refinement*> lstar_algorithm::construct_automaton_from_table(unique_ptr<s
       }
       else if (answer==knowledge_t::rejecting){
         type = 0;
-        //continue;
       }
       else{
         throw logic_error("The table in L* at this point should always be closed.");
@@ -66,13 +66,24 @@ vector<refinement*> lstar_algorithm::construct_automaton_from_table(unique_ptr<s
       trace* new_trace = mem_store::create_trace(&id);
       new_trace->type = type;
       add_sequence_to_trace(new_trace, whole_prefix);
-      //new_trace->sequence = ++sequence_nr;
+      
+      new_trace->sequence = ++sequence_nr;
       new_trace->finalize();
 
       id.add_trace_to_apta(new_trace, merger->get_aut(), set<int>());
     }
   }
-  vector<refinement*> refs = minimize_apta(merger.get());
+
+  cout << "Building a model => starting a greedy minimization routine" << endl;
+  stack<refinement*> refs = minimize_apta(merger.get());
+
+  // For debugging
+  if(PRINT_ALL_MODELS){ 
+    static int model_nr = 0;
+    cout << "Printing model nr. " << model_nr << endl;
+    print_current_automaton(merger.get(), OUTPUT_FILE, "." + to_string(model_nr) + ".not_final");
+    ++model_nr;
+  }
 
   return refs;
 }
@@ -96,7 +107,7 @@ void lstar_algorithm::run_l_star(){
   auto merger = unique_ptr<state_merger>(new state_merger(&id, eval.get(), the_apta.get()));
 
   while(!terminated || (ENSEMBLE_RUNS > 0 && n_runs < ENSEMBLE_RUNS)){
-    cout << "Iteration: " << n_runs << endl;
+    cout << "\nIteration: " << n_runs << endl;
 
     const auto& rows_to_close = vector<pref_suf_t>(obs_table.get_incomplete_rows()); // need a copy, since we're modifying structure in mark_row_complete()
     const auto& column_names = obs_table.get_column_names();
@@ -113,7 +124,7 @@ void lstar_algorithm::run_l_star(){
     }
 
     if(obs_table.is_closed()){
-      vector< refinement* > refs = construct_automaton_from_table(merger, id);
+      stack< refinement* > refs = construct_automaton_from_table(merger, id);
       optional< vector<int> > query_result = oracle.equivalence_query(merger.get());
       if(!query_result){
         cout << "Found consistent automaton => Print." << endl;

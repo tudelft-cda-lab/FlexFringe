@@ -142,9 +142,9 @@ inline void refinement::erase(){
 
 inline void merge_refinement::print() const{
     if(STORE_ACCESS_STRINGS)
-        cout << "merge( " << score << " " << red_trace->to_string() << " " << blue_trace->to_string() << " )" << endl;
+        cout << "merge( " << score << ", " << red_trace->to_string() << ", " << blue_trace->to_string() << " )" << endl;
     else
-        cout << "merge( " << score << " " << red->get_number() << " " << blue->get_number() << " )" << endl;
+        cout << "merge( " << score << ", " << red->get_number() << ", " << blue->get_number() << " )" << endl;
 };
 	
 inline void merge_refinement::print_short() const{

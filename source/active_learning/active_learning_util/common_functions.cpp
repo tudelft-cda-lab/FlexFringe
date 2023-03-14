@@ -47,21 +47,22 @@ bool active_learning_namespace::aut_accepts_trace(trace* tr, apta* aut){
  * @param aut The apta.
  * @return vector<refinement*> vector with the refinements done. 
  */
-const vector<refinement*> active_learning_namespace::minimize_apta(state_merger* merger){
-    vector<refinement*> refs;
-    cout << "Minimization started" << endl;
+const stack<refinement*> active_learning_namespace::minimize_apta(state_merger* merger){
+    stack<refinement*> refs;
     refinement* top_ref = merger->get_best_refinement();
     while(top_ref != 0){
-        refs.push_back(top_ref);
+        refs.push(top_ref);        
         top_ref->doref(merger);
         top_ref = merger->get_best_refinement();
     }
     return refs;
 }
 
-void active_learning_namespace::reset_apta(state_merger* merger, const vector<refinement*> refs){
-    for(auto top_ref: refs){
+void active_learning_namespace::reset_apta(state_merger* merger, stack<refinement*> refs){
+    while(!refs.empty()){
+        const auto& top_ref = refs.top();
         top_ref->undo(merger);
+        refs.pop();
     }
 }
 
@@ -87,16 +88,22 @@ void active_learning_namespace::update_tail(tail* t, const int symbol){
     }
 }
 
+/**
+ * @brief Add the sequence as a concatenation of tail-objects to the trace, so that flexfringe can work it out.
+ * 
+ * @param new_trace The trace to add to.
+ * @param sequence Sequence in vector for.
+ */
 void active_learning_namespace::add_sequence_to_trace(trace* new_trace, const vector<int> sequence){
-    static int num_sequences = 0;
-    new_trace->length = sequence.size();
-
     tail* new_tail = mem_store::create_tail(nullptr);
     new_tail->tr = new_trace;
     new_trace->head = new_tail;
 
+    int size = 0;
     for(int index = 0; index < sequence.size(); ++index){
         const int symbol = sequence.at(index);
+        if(symbol==EPS) continue; // we don't include the null-symbol
+
         active_learning_namespace::update_tail(new_tail, symbol);
         new_tail->td->index = index;
 
@@ -104,24 +111,45 @@ void active_learning_namespace::add_sequence_to_trace(trace* new_trace, const ve
         new_tail = mem_store::create_tail(nullptr);
         new_tail->tr = new_trace;
         old_tail->set_future(new_tail);
+
+        ++size;
     }
 
-    new_tail->td->index = sequence.size();
+    new_tail->td->index = size;;
     new_trace->end_tail = new_tail;
-    new_trace->sequence = num_sequences;
-    ++num_sequences;
+
+    new_trace->length = size;
 }
 
+/**
+ * @brief What you think it does.
+ * 
+ */
 vector<int> active_learning_namespace::concatenate_strings(const vector<int>& pref1, const vector<int>& pref2){
   vector<int> res(pref1);
   res.insert(res.end(), pref2.begin(), pref2.end());
   return res;
 }
 
+/**
+ * @brief Overload. Does a positive (accepting) trace.
+ * 
+ * @param vec The vector.
+ * @param id The inputdata.
+ * @return trace* The trace.
+ */
 trace* active_learning_namespace::vector_to_trace(const vector<int>& vec, inputdata& id){
     return vector_to_trace(vec, id, knowledge_t::accepting);
 }
 
+/**
+ * @brief Turns a vector to a trace.
+ * 
+ * @param vec The vector.
+ * @param id The inputdata.
+ * @param trace_type Accepting or rejecting.
+ * @return trace* The trace.
+ */
 trace* active_learning_namespace::vector_to_trace(const vector<int>& vec, inputdata& id, const knowledge_t trace_type){
     trace* new_trace = mem_store::create_trace(&id);
     int type;
@@ -142,6 +170,11 @@ trace* active_learning_namespace::vector_to_trace(const vector<int>& vec, inputd
     return new_trace;
 }
 
+/**
+ * @brief Print a vector of ints. For debugging purposes.
+ * 
+ * @param v The vector.
+ */
 void active_learning_namespace::print_vector(const vector<int>& v){
     cout << "Here comes a vector: ";
     for(const auto symbol: v){
@@ -150,6 +183,11 @@ void active_learning_namespace::print_vector(const vector<int>& v){
     cout << endl;
 }
 
+/**
+ * @brief For debugging purposes when using observation table. Prints columns of a row.
+ * 
+ * @param row A row of the observation table.
+ */
 void active_learning_namespace::print_all_columns(const std::map<pref_suf_t, knowledge_t>& row){
     cout << "Here come all columns in this row: ";
     for(const auto& col: row){

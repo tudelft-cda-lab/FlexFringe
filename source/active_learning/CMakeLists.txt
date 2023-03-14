@@ -27,6 +27,8 @@ add_library(ActiveLearning STATIC
 
             memory/observation_table.h
             memory/observation_table.cpp
+            memory/adaptive_distinguishing_sequences.h
+            memory/adaptive_distinguishing_sequences.cpp 
 
             system_under_learning/sul_base.h
             system_under_learning/sul_base.cpp
