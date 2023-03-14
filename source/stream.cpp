@@ -21,11 +21,58 @@
 #include <chrono> // for measuring performance
 #include <fstream> // for measuring performance
 
-const bool RETRY_MERGES = false; // if true use new streaming scheme, else use the old one
+const bool RETRY_MERGES = true;
 const bool PRINT_ALL_MODELS = false; // for debugging purposes
 const bool EXPERIMENTAL_RUN = true;
 
 int P_PERCENT = 0; // to get each i-th percentage. We print the model then
+
+void stream_object::greedyrun_no_undo(state_merger* merger, const int seq_nr, const bool last_sequence, const int n_runs){
+    static int count_printouts = 1;
+
+/*     if(PRINT_ALL_MODELS){
+      merger->todot();
+      std::ostringstream oss2;
+      oss2 << "model_before_" << this->batch_number << ".dot";
+      ofstream output1(oss2.str().c_str());
+      output1 << merger->dot_output;
+      output1.close();
+    } */
+
+    int c2 = 0;
+
+    refinement* top_ref;
+    top_ref = merger->get_best_refinement();
+    while(top_ref != 0){
+      top_ref->doref(merger);
+      top_ref = merger->get_best_refinement();
+
+      if(PRINT_ALL_MODELS){
+        merger->todot();
+        std::ostringstream oss2;
+        oss2 << "batch_" << this->batch_number << "_" << c2 << ".dot";
+        ofstream output1(oss2.str().c_str());
+        output1 << merger->dot_output;
+        output1.close();
+
+        ++c2;
+      }
+    }
+
+/*     if(PRINT_ALL_MODELS){
+      merger->todot();
+      std::ostringstream oss2;
+      oss2 << "model_after_" << this->batch_number << ".dot";
+      ofstream output1(oss2.str().c_str());
+      output1 << merger->dot_output;
+      output1.close();
+    } */
+
+    if(seq_nr > count_printouts * P_PERCENT || last_sequence){
+      cout << "Processed " << count_printouts * 10 << " percent" << endl;
+      ++count_printouts;
+    }
+}
 
 void stream_object::greedyrun_retry_merges(state_merger* merger, const int seq_nr, const bool last_sequence, const int n_runs){
     static int count_printouts = 1;
@@ -289,10 +336,9 @@ int stream_object::stream_mode(state_merger* merger, ifstream& input_stream, inp
             cerr << "Error: Currentrun object empty after running the whole input. No output to be generated." << endl;
             throw new exception;
           }
-          if (RETRY_MERGES){
-            for(auto top_ref: *currentrun){
-                top_ref->doref(merger);
-            }
+
+          for(auto top_ref: *currentrun){
+              top_ref->doref(merger);
           }
         }
 

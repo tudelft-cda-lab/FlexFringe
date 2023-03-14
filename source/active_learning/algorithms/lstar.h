@@ -22,12 +22,13 @@
 
 #include <vector> 
 #include <memory>
+#include <stack>
 
 class lstar_algorithm{
   protected:
     observation_table obs_table;
 
-    vector< refinement* > construct_automaton_from_table(std::unique_ptr<state_merger>& merger, inputdata& id) const;
+    std::stack< refinement* > construct_automaton_from_table(std::unique_ptr<state_merger>& merger, inputdata& id) const;
   public:
     lstar_algorithm(const std::vector<int>& alphabet);
     void run_l_star();

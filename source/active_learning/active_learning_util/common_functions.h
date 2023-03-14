@@ -22,14 +22,15 @@
 
 #include <vector>
 #include <map>
+#include <stack>
 
 namespace active_learning_namespace{
 
   apta_node* get_child_node(apta_node* n, tail* t);
   bool aut_accepts_trace(trace* tr, apta* aut); 
 
-  void reset_apta(state_merger* merger, const std::vector<refinement*> refs);
-  const std::vector<refinement*> minimize_apta(state_merger* merger);
+  void reset_apta(state_merger* merger, std::stack<refinement*> refs);
+  const std::stack<refinement*> minimize_apta(state_merger* merger);
 
   std::vector<int> concatenate_strings(const std::vector<int>& pref1, const std::vector<int>& pref2);
 
