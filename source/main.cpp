@@ -54,6 +54,7 @@ string COMMAND;
  * @param param The parameters. 
  */
 void run() {
+    if(OUTPUT_FILE.empty()) OUTPUT_FILE = INPUT_FILE + ".ff";
 
     if(OPERATION_MODE == "active_learning"){
         cout << "Run in active learning mode." << endl;
@@ -81,8 +82,6 @@ void run() {
         read_csv = true;
     }
 
-    if(OUTPUT_FILE.empty()) OUTPUT_FILE = INPUT_FILE + ".ff";
-
     inputdata id;
     inputdata_locator::provide(&id);
 
@@ -95,7 +94,6 @@ void run() {
             id.read(&input_parser);
         }
     }
-
 
     apta* the_apta = new apta();
     state_merger* merger = new state_merger(&id, eval, the_apta);
