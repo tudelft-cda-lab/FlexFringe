@@ -52,6 +52,17 @@ stack<refinement*> lstar_algorithm::construct_automaton_from_table(unique_ptr<st
       const auto whole_prefix = concatenate_strings(prefix, suffix);
       const auto answer = obs_table.get_answer(prefix, suffix);
 
+      // TODO: if this works we can optimize in concatenate_strings()
+      vector<int> clean_prefix;
+      for(int s: whole_prefix){
+        if(s == active_learning_namespace::EPS) continue;
+        clean_prefix.push_back(s);
+      }
+      if(clean_prefix.size()==0) continue;
+
+      cout << "Here comes a trace: ";
+      print_vector(whole_prefix);
+
       int type;
       if(answer==knowledge_t::accepting){
         type = 1;
@@ -65,7 +76,7 @@ stack<refinement*> lstar_algorithm::construct_automaton_from_table(unique_ptr<st
 
       trace* new_trace = mem_store::create_trace(&id);
       new_trace->type = type;
-      add_sequence_to_trace(new_trace, whole_prefix);
+      add_sequence_to_trace(new_trace, clean_prefix);
       
       new_trace->sequence = ++sequence_nr;
       new_trace->finalize();
@@ -81,7 +92,7 @@ stack<refinement*> lstar_algorithm::construct_automaton_from_table(unique_ptr<st
   if(PRINT_ALL_MODELS){ 
     static int model_nr = 0;
     cout << "Printing model nr. " << model_nr << endl;
-    print_current_automaton(merger.get(), OUTPUT_FILE, "." + to_string(model_nr) + ".not_final");
+    print_current_automaton(merger.get(), "model", "." + to_string(model_nr) + ".not_final");
     ++model_nr;
   }
 
@@ -91,6 +102,10 @@ stack<refinement*> lstar_algorithm::construct_automaton_from_table(unique_ptr<st
 void lstar_algorithm::run_l_star(){
   bool terminated = false;
   int n_runs = 0;
+
+  if(ENSEMBLE_RUNS <= 0){
+    cout << "WARNING: runs parameter set to " << ENSEMBLE_RUNS << ". This can cause the algorithm to run indefinitely." << endl;
+  }
 
   // TODO: make those dynamic later
   input_file_sul sul; // TODO: make these generic when you can
@@ -106,7 +121,7 @@ void lstar_algorithm::run_l_star(){
   auto the_apta = unique_ptr<apta>(new apta());
   auto merger = unique_ptr<state_merger>(new state_merger(&id, eval.get(), the_apta.get()));
 
-  while(!terminated || (ENSEMBLE_RUNS > 0 && n_runs < ENSEMBLE_RUNS)){
+  while(true){
     cout << "\nIteration: " << n_runs << endl;
 
     const auto& rows_to_close = vector<pref_suf_t>(obs_table.get_incomplete_rows()); // need a copy, since we're modifying structure in mark_row_complete()
@@ -125,6 +140,9 @@ void lstar_algorithm::run_l_star(){
 
     if(obs_table.is_closed()){
       stack< refinement* > refs = construct_automaton_from_table(merger, id);
+
+      print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
+
       optional< vector<int> > query_result = oracle.equivalence_query(merger.get());
       if(!query_result){
         cout << "Found consistent automaton => Print." << endl;
@@ -143,8 +161,9 @@ void lstar_algorithm::run_l_star(){
     }
 
     ++n_runs;
+    if(ENSEMBLE_RUNS > 0 && n_runs == ENSEMBLE_RUNS) break;
   }
 
-  if(ENSEMBLE_RUNS > 0 && n_runs == ENSEMBLE_RUNS) cout << "Reached maximum number of iterations. Printing model" << endl;
-  print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
+/*   if(ENSEMBLE_RUNS > 0 && n_runs == ENSEMBLE_RUNS) cout << "Reached maximum number of iterations. Printing model" << endl;
+  print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); */
 }
