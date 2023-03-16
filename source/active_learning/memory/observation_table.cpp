@@ -187,10 +187,6 @@ void observation_table::move_to_upper_table(const active_learning_namespace::pre
 
   const auto& entry = lower_table.at(row);
 
-  //cout << "Row to move: "; 
-  //print_vector(row);
-  //print_all_columns(entry);
-
   upper_table[row] = entry;
   upper_table_rows.insert(std::move(entry));
 
@@ -256,7 +252,7 @@ void observation_table::mark_row_complete(const pref_suf_t& row) {
 }
 
 /**
- * @brief Extends the columns by all the prefixes the argument suffix includes. Moves all rows as incomplete, as they are by design 
+ * @brief Extends the columns by all the prefixes the argument suffix includes. Marks all rows as incomplete, as they are by design 
  * again.
  * 
  * @param suffix The suffix by which to extend. Gained from a counterexample as per L* algorithm.
@@ -289,7 +285,7 @@ void observation_table::extent_columns(const pref_suf_t& suffix) {
 void observation_table::extend_lower_table() {
   checked_for_closedness = false;
 
-  // adding to lower table while iterating it results in infinite loop, hence we do auxiliary object
+  // adding to lower table while iterating its results in infinite loop, hence we do auxiliary object
   set<pref_suf_t> all_row_names;
   for(auto it = lower_table.cbegin(); it != lower_table.cend(); ++it){
     const auto& row_name = it->first;
@@ -312,7 +308,35 @@ void observation_table::extend_lower_table() {
 
       incomplete_rows.push_back(pref_suf_t(new_row_name.begin(), new_row_name.end())); // we do a copy to circumvent the destructor
       table_mapper[ pref_suf_t(new_row_name.begin(), new_row_name.end()) ] = upper_lower_t::lower; // TODO: do we need the copy of the prefix here?
-      lower_table[move(new_row_name)] = map<pref_suf_t, knowledge_t>();
+      lower_table[move(new_row_name)] = row_type();
     }
+  }
+}
+
+/**
+ * @brief For debugging purposes. Prints all the rows and columns.
+ * 
+ */
+void observation_table::print() const {
+  cout << "Upper table: " << endl;
+  for(auto it = upper_table.cbegin(); it != upper_table.cend(); ++it){
+    const auto& row_name = it->first;
+    print_vector(row_name);
+  }
+
+  cout << "Lower table:" << endl;
+  for(auto it = lower_table.cbegin(); it != lower_table.cend(); ++it){
+    const auto& row_name = it->first;
+    print_vector(row_name);
+  }
+
+  cout << "Columns:" << endl;
+  for(const auto col: all_columns){
+    print_vector(col);
+  }
+
+  cout << "Rows to close:" << endl;
+  for(const auto r: incomplete_rows){
+    print_vector(r);
   }
 }

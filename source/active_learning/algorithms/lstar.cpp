@@ -30,14 +30,14 @@ using namespace std;
 using namespace active_learning_namespace;
 
 const bool PROCESS_NEGATIVE_TRACES = false; // TODO: refactor this one later
-const bool PRINT_ALL_MODELS = true;
+const bool PRINT_ALL_MODELS = false;
 
 lstar_algorithm::lstar_algorithm(const vector<int>& alphabet) : obs_table(observation_table(alphabet)){
   //merger = unique_ptr(state_merger(inputdata*, evaluation_function*, apta*));
 }
 
 stack<refinement*> lstar_algorithm::construct_automaton_from_table(unique_ptr<state_merger>& merger, inputdata& id) const {
-  static int sequence_nr = 0;
+  //static int sequence_nr = 0;
 
   const auto& upper_table = obs_table.get_upper_table();
   const auto& lower_table = obs_table.get_lower_table();
@@ -46,24 +46,19 @@ stack<refinement*> lstar_algorithm::construct_automaton_from_table(unique_ptr<st
   // We iterate over all prefixes and suffixes. TODO: Can cause duplicates? Optimize later
   for(auto row_it = upper_table.cbegin(); row_it != upper_table.cend(); ++row_it){
     const vector<int>& prefix = row_it->first;
+    const auto entry = row_it->second;
 
-    for(auto col_it = column_names.cbegin(); col_it != column_names.cend(); ++col_it){
-      const vector<int>& suffix = *col_it;
+    //for(auto col_it = column_names.cbegin(); col_it != column_names.cend(); ++col_it){
+    for(auto col_it = entry.cbegin(); col_it != entry.cend(); ++col_it){
+      const vector<int>& suffix = col_it->first;
+
       const auto whole_prefix = concatenate_strings(prefix, suffix);
       const auto answer = obs_table.get_answer(prefix, suffix);
 
-      // TODO: if this works we can optimize in concatenate_strings()
-      vector<int> clean_prefix;
-      for(int s: whole_prefix){
-        if(s == active_learning_namespace::EPS) continue;
-        clean_prefix.push_back(s);
-      }
-      if(clean_prefix.size()==0) continue;
+/*       cout << "Here comes a trace: ";
+      print_vector(whole_prefix); */
 
-      cout << "Here comes a trace: ";
-      print_vector(whole_prefix);
-
-      int type;
+/*       int type;
       if(answer==knowledge_t::accepting){
         type = 1;
       }
@@ -72,14 +67,20 @@ stack<refinement*> lstar_algorithm::construct_automaton_from_table(unique_ptr<st
       }
       else{
         throw logic_error("The table in L* at this point should always be closed.");
-      }
+      } */
 
-      trace* new_trace = mem_store::create_trace(&id);
+/*       trace* new_trace = mem_store::create_trace(&id);
       new_trace->type = type;
       add_sequence_to_trace(new_trace, clean_prefix);
       
       new_trace->sequence = ++sequence_nr;
-      new_trace->finalize();
+      new_trace->finalize(); */
+
+      trace* new_trace = vector_to_trace(whole_prefix, id, answer);
+
+      cout << "whole prefix";
+      print_vector(whole_prefix);
+      cout << "trace: " << new_trace->to_string() << endl;
 
       id.add_trace_to_apta(new_trace, merger->get_aut(), set<int>());
     }
@@ -138,10 +139,14 @@ void lstar_algorithm::run_l_star(){
       obs_table.mark_row_complete(current_row);
     }
 
-    if(obs_table.is_closed()){
-      stack< refinement* > refs = construct_automaton_from_table(merger, id);
+    //cout << "Added some traces to table. Print: " << endl;
+    //obs_table.print();
 
-      print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
+    if(obs_table.is_closed()){
+      static int model_nr = 0;
+      stack< refinement* > refs = construct_automaton_from_table(merger, id);
+      print_current_automaton(merger.get(), /* OUTPUT_FILE */ "model.", to_string(++model_nr) + ".final"); // printing the final model each time
+      cout << "Model nr " << model_nr << endl;
 
       optional< vector<int> > query_result = oracle.equivalence_query(merger.get());
       if(!query_result){
@@ -154,6 +159,10 @@ void lstar_algorithm::run_l_star(){
         reset_apta(merger.get(), refs);
         const vector<int>& cex = query_result.value();
         obs_table.extent_columns(cex);
+
+        cout << "CEX: ";
+        print_vector(cex);
+        print_current_automaton(merger.get(), /* OUTPUT_FILE */ "model.", to_string(model_nr) + ".after_undo"); // printing the final model each time
       }
     }
     else{

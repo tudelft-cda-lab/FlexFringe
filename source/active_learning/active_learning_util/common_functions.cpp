@@ -16,6 +16,7 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <algorithm>
 
 using namespace std;
 
@@ -99,6 +100,17 @@ void active_learning_namespace::add_sequence_to_trace(trace* new_trace, const ve
     new_tail->tr = new_trace;
     new_trace->head = new_tail;
 
+    if(std::count(sequence.begin(), sequence.end(), active_learning_namespace::EPS) == sequence.size()) {
+        new_tail->td->index = 0;
+        
+        new_trace->end_tail = new_tail;
+        new_trace->length = 1;
+        
+        update_tail(new_tail, -1);
+        new_trace->end_tail = new_tail;
+        return; 
+    } 
+
     int size = 0;
     for(int index = 0; index < sequence.size(); ++index){
         const int symbol = sequence.at(index);
@@ -119,6 +131,14 @@ void active_learning_namespace::add_sequence_to_trace(trace* new_trace, const ve
     new_trace->end_tail = new_tail;
 
     new_trace->length = size;
+
+    new_trace->finalize();
+
+    if(size==0){
+        cerr << "Problematic prefix";
+        print_vector(sequence);
+        throw runtime_error("Size should always be larger 0 at this stage.");
+    } 
 }
 
 /**
@@ -151,6 +171,8 @@ trace* active_learning_namespace::vector_to_trace(const vector<int>& vec, inputd
  * @return trace* The trace.
  */
 trace* active_learning_namespace::vector_to_trace(const vector<int>& vec, inputdata& id, const knowledge_t trace_type){
+    static int trace_nr = 0;
+
     trace* new_trace = mem_store::create_trace(&id);
     int type;
     if(trace_type==knowledge_t::accepting){
@@ -163,9 +185,10 @@ trace* active_learning_namespace::vector_to_trace(const vector<int>& vec, inputd
       throw logic_error("This part is not implemented (yet).");
     }
     new_trace->type = type;
+    new_trace->sequence = ++trace_nr;
+    //++trace_nr;
 
     active_learning_namespace::add_sequence_to_trace(new_trace, vec);
-    new_trace->finalize();
     
     return new_trace;
 }
