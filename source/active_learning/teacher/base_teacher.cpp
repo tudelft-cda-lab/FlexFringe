@@ -15,9 +15,13 @@ using namespace std;
 using namespace active_learning_namespace;
 
 const knowledge_t base_teacher::ask_membership_query(const pref_suf_t& prefix, const pref_suf_t& suffix) {
-  vector query(prefix);
+  pref_suf_t query(prefix);
   query.insert(query.end(), suffix.begin(), suffix.end());
 
+  return ask_membership_query(query);
+}
+
+const knowledge_t base_teacher::ask_membership_query(const pref_suf_t& query) {
   if(sul->is_member(query)){
     return knowledge_t::accepting;
   }

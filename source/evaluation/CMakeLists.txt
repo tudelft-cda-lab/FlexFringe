@@ -17,6 +17,8 @@ add_library(Evaluation STATIC
             gini.cpp
             kldistance.h
             kldistance.cpp
+            l_star_evaluation.h
+            l_star_evaluation.cpp
             likelihood.h
             likelihood.cpp
             mealy.h

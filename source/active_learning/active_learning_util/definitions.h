@@ -13,6 +13,8 @@
 #define _ACTIVE_LEARNING_DEFINITIONS_H_
 
 #include <vector>
+#include <map>
+#include <string>
 
 namespace active_learning_namespace{
   const int EPS = -1; // empty symbol special character. flexfringe does not map to -1 by design.
@@ -23,6 +25,21 @@ namespace active_learning_namespace{
     accepting,
     rejecting,
     unknown
+  };
+
+  const std::map<int, knowledge_t> int_type_map {
+    {1, knowledge_t::accepting},
+    {0, knowledge_t::rejecting}
+  };
+
+  const std::map<knowledge_t, int> type_int_map {
+    {knowledge_t::accepting, 1},
+    {knowledge_t::rejecting, 0}
+  };
+
+  const std::map<knowledge_t, std::string> type_string_map {
+    {knowledge_t::accepting, "accepting"},
+    {knowledge_t::rejecting, "rejecting"}
   };
 }
 

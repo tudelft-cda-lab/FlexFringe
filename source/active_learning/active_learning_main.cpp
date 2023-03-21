@@ -18,53 +18,59 @@
 #include "csvparser.h"
 
 #include <stdexcept>
+#include <fstream>
 
 using namespace std;
 using namespace active_learning_namespace;
 
 const bool INPUT_FILE_SUL = true; // TODO: have better switch for that later
 
-const vector<int> active_learning_namespace::get_alphabet(){
-  if(INPUT_FILE_SUL){
-    bool read_csv = false;
-    //ifstream input_stream = get_input_stream();
+inputdata active_learning_namespace::get_inputdata(){
 
-    ifstream input_stream(INPUT_FILE);  
-    cout << "Input file: " << INPUT_FILE << endl;
-
-    if(!input_stream) {
-        cerr << "Input file not found, aborting" << endl;
-        exit(-1);
-    } else {
-        cout << "Using input file: " << INPUT_FILE << endl;
-    }
-
-    if(INPUT_FILE.compare(INPUT_FILE.length() - 4, INPUT_FILE.length(), ".csv") == 0){
-        read_csv = true;
-    }
-
-    inputdata id;
-    inputdata_locator::provide(&id);
+  bool read_csv = false;
+  //ifstream input_stream = get_input_stream();
   
-    if(read_csv) {
-        auto input_parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
-        id.read(&input_parser);
-    } else {
-        auto input_parser = abbadingoparser(input_stream);
-        id.read(&input_parser);
-    }
-    input_stream.close();
-
-    const vector<int> res = id.get_alphabet();
-    return res;
+  ifstream input_stream(INPUT_FILE);  
+  cout << "Input file: " << INPUT_FILE << endl;
+    
+  if(!input_stream) {
+      cerr << "Input file not found, aborting" << endl;
+      exit(-1);
+  } else {
+      cout << "Using input file: " << INPUT_FILE << endl;
   }
+
+  inputdata id;
+  inputdata_locator::provide(&id);
+  
+  if(read_csv) {
+      auto input_parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
+      id.read(&input_parser);
+  } else {
+      auto input_parser = abbadingoparser(input_stream);
+      id.read(&input_parser);
+  }
+
+/*   for(const auto it: id){
+    auto& current_trace = *it;
+    const auto current_sequence = current_trace.get_input_sequence();
+    all_traces.insert(current_sequence);
+  } */
+  input_stream.close();
+
+  return id;
 }
 
 void active_learning_namespace::run_active_learning(){
   if(ACTIVE_LEARNING_ALGORITHM == "l_star"){
-    const auto alphabet = get_alphabet();
-    auto l_star = lstar_algorithm(alphabet);
-    l_star.run_l_star();
+    inputdata id = get_inputdata();
+    
+    auto l_star = lstar_algorithm();
+    l_star.run_l_star(id);
+  }
+  else if(ACTIVE_LEARNING_ALGORITHM == "l_sharp"){
+    STORE_ACCESS_STRINGS = true;
+    // TODO
   }
   else{
     throw logic_error("Fatal error: Unknown active_learning_algorithm flag used: " + ACTIVE_LEARNING_ALGORITHM);

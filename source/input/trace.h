@@ -45,6 +45,8 @@ public:
     inline void inc_refs(){ ++refs; }
     void erase();
 
+    std::string get_mapped_type(int t) const;
+
     std::string to_string();
 
     void reverse();

@@ -342,10 +342,11 @@ public:
             g->target = node;
         }
     };
+    
     inline apta_node* get_child(int c){
         apta_node* rep = find();
         if(rep->child(c) != 0) return rep->child(c)->find();
-        return 0;
+        return nullptr;
     };
 
     /** red, blue, white, and sinks */

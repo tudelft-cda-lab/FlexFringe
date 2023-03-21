@@ -12,10 +12,12 @@
 #ifndef _ACTIVE_LEARNING_MAIN_H_
 #define _ACTIVE_LEARNING_MAIN_H_
 
+#include "source/input/inputdata.h"
+
 #include <vector>
 
 namespace active_learning_namespace{
-  const std::vector<int> get_alphabet();
+  inputdata get_inputdata();
 
   void run_active_learning();
 }

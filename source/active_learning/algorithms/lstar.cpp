@@ -29,16 +29,17 @@
 using namespace std;
 using namespace active_learning_namespace;
 
-const bool PROCESS_NEGATIVE_TRACES = false; // TODO: refactor this one later
-const bool PRINT_ALL_MODELS = false;
+const bool PRINT_ALL_MODELS = true; // for debugging
 
-lstar_algorithm::lstar_algorithm(const vector<int>& alphabet) : obs_table(observation_table(alphabet)){
-  //merger = unique_ptr(state_merger(inputdata*, evaluation_function*, apta*));
-}
-
-stack<refinement*> lstar_algorithm::construct_automaton_from_table(unique_ptr<state_merger>& merger, inputdata& id) const {
-  //static int sequence_nr = 0;
-
+/**
+ * @brief Does what it says it does.
+ * 
+ * @param obs_table 
+ * @param merger 
+ * @param id 
+ * @return stack<refinement*> 
+ */
+const list<refinement*> lstar_algorithm::construct_automaton_from_table(const observation_table& obs_table, unique_ptr<state_merger>& merger, inputdata& id) const {
   const auto& upper_table = obs_table.get_upper_table();
   const auto& lower_table = obs_table.get_lower_table();
   const auto& column_names = obs_table.get_column_names();
@@ -55,52 +56,27 @@ stack<refinement*> lstar_algorithm::construct_automaton_from_table(unique_ptr<st
       const auto whole_prefix = concatenate_strings(prefix, suffix);
       const auto answer = obs_table.get_answer(prefix, suffix);
 
-/*       cout << "Here comes a trace: ";
-      print_vector(whole_prefix); */
-
-/*       int type;
-      if(answer==knowledge_t::accepting){
-        type = 1;
-      }
-      else if (answer==knowledge_t::rejecting){
-        type = 0;
-      }
-      else{
-        throw logic_error("The table in L* at this point should always be closed.");
-      } */
-
-/*       trace* new_trace = mem_store::create_trace(&id);
-      new_trace->type = type;
-      add_sequence_to_trace(new_trace, clean_prefix);
-      
-      new_trace->sequence = ++sequence_nr;
-      new_trace->finalize(); */
+      cout << "here's the vector: ";
+      print_vector(whole_prefix);
 
       trace* new_trace = vector_to_trace(whole_prefix, id, answer);
-
-      cout << "whole prefix";
-      print_vector(whole_prefix);
-      cout << "trace: " << new_trace->to_string() << endl;
 
       id.add_trace_to_apta(new_trace, merger->get_aut(), set<int>());
     }
   }
 
   cout << "Building a model => starting a greedy minimization routine" << endl;
-  stack<refinement*> refs = minimize_apta(merger.get());
-
-  // For debugging
-  if(PRINT_ALL_MODELS){ 
-    static int model_nr = 0;
-    cout << "Printing model nr. " << model_nr << endl;
-    print_current_automaton(merger.get(), "model", "." + to_string(model_nr) + ".not_final");
-    ++model_nr;
-  }
+  const list<refinement*> refs = minimize_apta(merger.get());
 
   return refs;
 }
 
-void lstar_algorithm::run_l_star(){
+/**
+ * @brief This algorithms main method.
+ * 
+ * @param id The inputdata, already initialized with input file.
+ */
+void lstar_algorithm::run_l_star(inputdata& id){
   bool terminated = false;
   int n_runs = 0;
 
@@ -113,7 +89,8 @@ void lstar_algorithm::run_l_star(){
   base_teacher teacher(&sul); // TODO: make these generic when you can
   input_file_oracle oracle(&sul); // TODO: make these generic when you can
 
-  inputdata id;
+  observation_table obs_table(id.get_alphabet());
+
   if(sul.has_input_file()){
     sul.parse_input(id);
   }
@@ -125,7 +102,8 @@ void lstar_algorithm::run_l_star(){
   while(true){
     cout << "\nIteration: " << n_runs << endl;
 
-    const auto& rows_to_close = vector<pref_suf_t>(obs_table.get_incomplete_rows()); // need a copy, since we're modifying structure in mark_row_complete()
+    //optimize :This below would work with lists without copy
+    const auto& rows_to_close = vector<pref_suf_t>(obs_table.get_incomplete_rows()); // need a copy, since we're modifying structure in mark_row_complete(). 
     const auto& column_names = obs_table.get_column_names();
     
     // fill the table until known
@@ -139,14 +117,15 @@ void lstar_algorithm::run_l_star(){
       obs_table.mark_row_complete(current_row);
     }
 
-    //cout << "Added some traces to table. Print: " << endl;
-    //obs_table.print();
-
     if(obs_table.is_closed()){
-      static int model_nr = 0;
-      stack< refinement* > refs = construct_automaton_from_table(merger, id);
-      print_current_automaton(merger.get(), /* OUTPUT_FILE */ "model.", to_string(++model_nr) + ".final"); // printing the final model each time
-      cout << "Model nr " << model_nr << endl;
+      const list< refinement* > refs = construct_automaton_from_table(obs_table, merger, id);
+      print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
+
+      if(PRINT_ALL_MODELS){
+        static int model_nr = 0;
+        print_current_automaton(merger.get(),"model.", to_string(++model_nr) + ".not_final"); // printing the final model each time
+        cout << "Model nr " << model_nr << endl;
+      }
 
       optional< vector<int> > query_result = oracle.equivalence_query(merger.get());
       if(!query_result){
@@ -154,15 +133,18 @@ void lstar_algorithm::run_l_star(){
         break;
       }
       else{
-        // found a counterexample
-        cout << "Found counterexample. Resetting apta." << endl;
-        reset_apta(merger.get(), refs);
         const vector<int>& cex = query_result.value();
+        auto cex_tr = vector_to_trace(cex, id);
+        cout << "Found counterexample:" << cex_tr->to_string() << ". Resetting apta and extending observation table." << endl;
+
+        reset_apta(merger.get(), refs);
         obs_table.extent_columns(cex);
 
-        cout << "CEX: ";
-        print_vector(cex);
-        print_current_automaton(merger.get(), /* OUTPUT_FILE */ "model.", to_string(model_nr) + ".after_undo"); // printing the final model each time
+        if(PRINT_ALL_MODELS){
+          static int model_nr = 0;
+          print_current_automaton(merger.get(),"model.", to_string(++model_nr) + ".after_undo"); // printing the final model each time
+          cout << "Model nr " << model_nr << endl;
+        }
       }
     }
     else{
