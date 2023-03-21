@@ -54,6 +54,16 @@ string trace::to_string(){
 }
 
 /**
+ * @brief This function helps us debugging.
+ * 
+ * @param t The type.
+ * @return std::string The mapped type. 
+ */
+string trace::get_mapped_type(int t) const {
+    return this->inputData->string_from_type(t);
+} 
+
+/**
  * Adds a sentinel tail (with symbol -1) at the end of this trace
  */
 void trace::finalize() {

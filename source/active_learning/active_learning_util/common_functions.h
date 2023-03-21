@@ -19,18 +19,20 @@
 #include "trace.h"
 #include "refinement.h"
 #include "definitions.h"
+#include "count_types.h"
 
 #include <vector>
+#include <list>
 #include <map>
-#include <stack>
 
 namespace active_learning_namespace{
 
   apta_node* get_child_node(apta_node* n, tail* t);
   bool aut_accepts_trace(trace* tr, apta* aut); 
+  bool aut_accepts_trace(trace* tr, apta* aut, const count_driven* const eval); 
 
-  void reset_apta(state_merger* merger, std::stack<refinement*> refs);
-  const std::stack<refinement*> minimize_apta(state_merger* merger);
+  void reset_apta(state_merger* merger, const std::list<refinement*>& refs);
+  const std::list<refinement*> minimize_apta(state_merger* merger);
 
   std::vector<int> concatenate_strings(const std::vector<int>& pref1, const std::vector<int>& pref2);
 
@@ -45,6 +47,8 @@ namespace active_learning_namespace{
   
   // for debugging observation table like data structures
   void print_all_columns(const std::map<pref_suf_t, knowledge_t>& row);
+
+  active_learning_namespace::knowledge_t map_bool_to_answer(const bool ans);
 }
 
 #endif

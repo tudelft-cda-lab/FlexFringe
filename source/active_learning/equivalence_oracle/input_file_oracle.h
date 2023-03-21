@@ -18,6 +18,7 @@
 
 #include <vector>
 #include <optional>
+#include <utility>
 
 class input_file_oracle : eq_oracle_base {
   protected:    

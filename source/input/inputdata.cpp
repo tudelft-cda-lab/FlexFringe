@@ -2,6 +2,11 @@
 #include "apta.h"
 #include "stringutil.h"
 
+//additional namespace to circumvent multiple definitions problem 
+namespace al_defintions{
+    #include "active_learning/active_learning_util/definitions.h"
+}
+
 using namespace std;
 
 /**
@@ -108,7 +113,17 @@ int inputdata::get_reverse_symbol(string a) {
     return r_alphabet[a];
 }
 
-std::string &inputdata::get_type(int a) {
+const std::string& inputdata::get_type(int a) {
+    static bool hit = false;
+    if(OPERATION_MODE == "active_learning"){
+        if(!hit){
+            cout << "WARNING: Using the type mapping of the active learning. If this is not intended fix this line of code." << endl;
+            hit = true;
+        }
+        const auto t = al_defintions::active_learning_namespace::int_type_map.at(a);
+        return al_defintions::active_learning_namespace::type_string_map.at(t);
+    }
+
     return types[a];
 }
 
@@ -170,6 +185,10 @@ bool inputdata::is_target(int attr) {
 }
 
 int inputdata::get_types_size() {
+    if(OPERATION_MODE == "active_learning"){
+        return al_defintions::active_learning_namespace::type_string_map.size();
+    }
+
     return types.size();
 }
 
@@ -208,6 +227,16 @@ int inputdata::type_from_string(std::string type) {
 }
 
 std::string inputdata::string_from_type(int type) {
+    static bool hit = false;
+    if(OPERATION_MODE == "active_learning"){
+        if(!hit){
+            cout << "WARNING: Using the type mapping of the active learning. If this is not intended fix this line of code." << endl;
+            hit = true;
+        }
+        const auto t = al_defintions::active_learning_namespace::int_type_map.at(type);
+        return al_defintions::active_learning_namespace::type_string_map.at(t);
+    }
+
     return types[type];
 }
 

@@ -22,25 +22,45 @@
 #include "greedy.h"
 #include "main_helpers.h"
 
-lsharp_algorithm::lsharp_algorithm(const std::vector<int>& alphabet) : alphabet(alphabet) {
-  // TODO
-}
+#include <list>
 
 /**
- * @brief We want the root state to be complete, and it is not a blue state. Hence we want to make sure it is complete at this stage.
+ * @brief Take a node and complete it wrt to the alphabet.
  * 
  * @param aut 
  */
-void lsharp_algorithm::init_root_state(apta* aut) const {
-  // TODO
+void lsharp_algorithm::complete_state(unique_ptr<state_merger>& merger, apta_node* n, unique_ptr<base_teacher>& teacher, inputdata& id, const vector<int>& alphabet) const {
+  for(const int symbol: alphabet){
+    if(n->get_child(symbol) == nullptr){
+      auto access_trace = n->get_access_trace();
+      auto seq = access_trace->get_input_sequence();
+      seq.push_back(symbol);
+      const auto answer = teacher->ask_membership_query(merger.get(), seq, id);
+      
+      trace* new_trace = vector_to_trace(seq, id, answer);
+      id.add_trace_to_apta(new_trace, merger->get_aut(), set<int>());
+    }
+  }
 }
 
 void lsharp_algorithm::proc_counterex(apta* aut, const std::vector<int>& counterex) const {
   // TODO: this is a counterexample strategy
 }
 
-void lsharp_algorithm::run_l_sharp(){
-  bool terminated = false;
+refinement* lsharp_algorithm::extract_best_merge(refinement_set* rs) const {
+  refinement *r = nullptr;
+  if (!rs->empty()) {
+      r = *rs->begin();
+      for(auto it : *rs){
+          if(r != it) it->erase();
+      }
+  }
+
+  delete rs;
+  return r;
+}
+
+void lsharp_algorithm::run_l_sharp(inputdata& id){
   int n_runs = 0;
 
   // TODO: make those dynamic later
@@ -48,7 +68,6 @@ void lsharp_algorithm::run_l_sharp(){
   base_teacher teacher(&sul); // TODO: make these generic when you can
   input_file_oracle oracle(&sul); // TODO: make these generic when you can
 
-  inputdata id;
   if(sul.has_input_file()){
     sul.parse_input(id);
   }
@@ -57,11 +76,45 @@ void lsharp_algorithm::run_l_sharp(){
   auto the_apta = unique_ptr<apta>(new apta());
   auto merger = unique_ptr<state_merger>(new state_merger(&id, eval.get(), the_apta.get()));
 
-  while(!terminated || (ENSEMBLE_RUNS > 0 && n_runs < ENSEMBLE_RUNS)){
+  const vector<int> alphabet = id.get_alphabet();
 
+  // init the root node, s.t. we have blue states to iterate over
+  complete_state(merger, the_apta->get_root_node(), teacher, id, alphabet);
+  while(ENSEMBLE_RUNS > 0 && n_runs < ENSEMBLE_RUNS){
+    
+    bool merge_performed = false; // avoid iterating over a changed data structure
+    for(blue_state_iterator b_it = blue_state_iterator(apta.get_root()); b_it != nullptr; ++b_it){
+      if(merge_performed) continue; 
+
+      const auto blue_node = *b_it;
+      if(blue_node->size() == 0) continue;
+      assert(blue_node->is_blue());
+      // note: we don't treat sinks here, but could potentially do
+
+      refinement_set possible_refs;
+      for(red_state_iterator r_it = red_state_iterator(apta.get_root()); r_it != nullptr; ++r_it){
+        const auto red_node = *r_it;
+        assert(red_node->is_red());
+
+        complete_state(merger, red_node, teacher, id, alphabet);
+
+        refinement* ref = merger->test_merge(red_node, blue_node);
+        if(refinement != nullptr) possible_refs.insert(ref);
+      }
+
+      if(possible_refs.size() == 0){
+        continue;
+      }
+      else if((possible_refs.size()>1 && dynamic_cast<l_star_evaluation*>(eval) != nullptr) || possible_refs.size() == 1){
+        auto* best_merge = extract_best_merge(possible_refs);
+        best_merge->doref();
+        merge_performed = true;
+      }
+      else{
+        // more than one merge possible and l_star_evaluation function => Rule 3 from "A New Approach for Active Automata Learning Based on Apartness"
+        throw new logic_error("This branch is not implemented yet.");
+      }
+    }
     ++n_runs;
   }
-
-  if(ENSEMBLE_RUNS > 0 && n_runs == ENSEMBLE_RUNS) cout << "Reached maximum number of iterations. Printing model" << endl;
-  print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
 }

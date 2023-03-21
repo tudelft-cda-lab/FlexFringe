@@ -27,9 +27,12 @@ bool input_file_oracle::apta_accepts_trace(state_merger* merger, const vector<in
 }
 
 optional< vector<int> > input_file_oracle::equivalence_query(state_merger* merger) {
+  const count_driven* const eval_func = dynamic_cast<count_driven*>(merger->get_eval());
+  if(eval_func == nullptr) throw logic_error("Must have a heuristic that derives from count_driven at this point.");
+
   for(const auto& sequence: dynamic_cast<input_file_sul*>(sul)->get_all_traces()){
     trace* tr = vector_to_trace(sequence, *(merger->get_dat()) );
-    if(!active_learning_namespace::aut_accepts_trace(tr, merger->get_aut())){
+    if(!active_learning_namespace::aut_accepts_trace(tr, merger->get_aut(), eval_func)){
       return make_optional< vector<int> >(sequence);
     }
   }

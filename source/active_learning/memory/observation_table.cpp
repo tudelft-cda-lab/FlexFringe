@@ -32,13 +32,19 @@ using namespace active_learning_namespace;
 observation_table::observation_table(const vector<int>& alphabet) : alphabet(alphabet), checked_for_closedness(false) {
 
   // initialize the lower table properly
-  for(const auto i: concatenate_strings(get_null_vector(), alphabet)){
+  for(const auto i: alphabet){
     pref_suf_t new_row_name{i};
 
     incomplete_rows.push_back(pref_suf_t(new_row_name)); // we do a copy to circumvent the destructor
     table_mapper[ pref_suf_t(new_row_name.begin(), new_row_name.end()) ] = upper_lower_t::lower; // TODO: do we need the copy of the prefix here?
     lower_table[move(new_row_name)] = map<pref_suf_t, knowledge_t>();
   }
+
+  const auto nullv = get_null_vector();
+  incomplete_rows.push_back(nullv); // we do a copy to circumvent the destructor
+  table_mapper[ pref_suf_t(nullv.begin(), nullv.end()) ] = upper_lower_t::lower; // TODO: do we need the copy of the prefix here?
+  lower_table[move(nullv)] = map<pref_suf_t, knowledge_t>(); 
+
   all_columns.insert(get_null_vector());
 };
 
@@ -289,13 +295,13 @@ void observation_table::extend_lower_table() {
   set<pref_suf_t> all_row_names;
   for(auto it = lower_table.cbegin(); it != lower_table.cend(); ++it){
     const auto& row_name = it->first;
-    if(row_name.at(0) == active_learning_namespace::EPS) continue;
+    //if(row_name.at(0) == active_learning_namespace::EPS) continue;
     all_row_names.insert(row_name);
   }
 
   for(auto it = upper_table.cbegin(); it != upper_table.cend(); ++it){
     const auto& row_name = it->first;
-    if(row_name.at(0) == active_learning_namespace::EPS) continue;
+    //if(row_name.at(0) == active_learning_namespace::EPS) continue;
     all_row_names.insert(row_name);
   }
 

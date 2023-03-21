@@ -74,7 +74,7 @@ public:
 
     std::string& get_symbol(int a);
     int get_reverse_symbol(std::string a);
-    std::string& get_type(int a);
+    const std::string& get_type(int a);
     int get_reverse_type(std::string a);
 
     /* gets an attribute, first symbol attributes, then trace attributes */

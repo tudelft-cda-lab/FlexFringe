@@ -36,28 +36,11 @@ bool input_file_sul::is_member(const vector<int>& query_trace) const {
 }
 
 void input_file_sul::parse_input(inputdata& id){
-  bool read_csv = false;
-  ifstream input_stream = get_input_stream();
-  if(INPUT_FILE.compare(INPUT_FILE.length() - 4, INPUT_FILE.length(), ".csv") == 0){
-      read_csv = true;
-  }
-
-  inputdata_locator::provide(&id);
-  
-  if(read_csv) {
-      auto input_parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
-      id.read(&input_parser);
-  } else {
-      auto input_parser = abbadingoparser(input_stream);
-      id.read(&input_parser);
-  }
-
   for(const auto it: id){
     auto& current_trace = *it;
     const auto current_sequence = current_trace.get_input_sequence();
     all_traces.insert(current_sequence);
   }
-  input_stream.close();
 }
 
 input_file_sul::input_file_sul() : sul_base(true){

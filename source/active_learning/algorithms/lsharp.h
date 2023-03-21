@@ -24,17 +24,15 @@
 
 class lsharp_algorithm{
   protected:
-    const std::vector<int> alphabet;
     vector< refinement* > construct_automaton_from_table(std::unique_ptr<state_merger>& merger, inputdata& id) const;
 
-    void init_root_state(apta* aut) const;
+    void complete_state(std::unique_ptr<state_merger>& merger, apta_node* n, std::unique_ptr<base_teacher>& teacher, inputdata& id, const vector<int>& alphabet) const;
     void proc_counterex(apta* aut, const std::vector<int>& counterex) const;
-
-    
+    refinement* extract_best_merge(refinement_set* rs) const;
 
   public:
-    lsharp_algorithm(const std::vector<int>& alphabet);
-    void run_l_sharp();
+    lsharp_algorithm() = default;
+    void run_l_sharp(inputdata& id);
 };
 
 #endif

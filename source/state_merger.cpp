@@ -805,7 +805,7 @@ bool state_merger::pre_consistent(apta_node* left, apta_node* right){
 }
 
 /* test a merge, behavior depending on input parameters
- * it performs a merge, computes its consistency and score, and undos the merge
+ * it performs a merge, computes its consistency and score, and undoes the merge
  * returns a <consistency,score> pair */
 refinement* state_merger::test_merge(apta_node* left, apta_node* right){
     eval->reset(this);

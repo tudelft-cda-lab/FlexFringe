@@ -14,6 +14,7 @@ add_library(ActiveLearning STATIC
             active_learning_main.cpp
 
             active_learning_util/definitions.h
+            active_learning_util/definitions.cpp
             active_learning_util/common_functions.h
             active_learning_util/common_functions.cpp
 

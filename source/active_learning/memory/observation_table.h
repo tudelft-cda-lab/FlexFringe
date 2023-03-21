@@ -49,7 +49,7 @@ class observation_table{
     void move_to_upper_table(const active_learning_namespace::pref_suf_t& row);
 
     active_learning_namespace::pref_suf_t get_null_vector() const noexcept {
-      return active_learning_namespace::pref_suf_t{active_learning_namespace::EPS};
+      return active_learning_namespace::pref_suf_t(); //active_learning_namespace::pref_suf_t{active_learning_namespace::EPS};
     }
 
     const active_learning_namespace::pref_suf_t map_prefix(const active_learning_namespace::pref_suf_t& column) const;
