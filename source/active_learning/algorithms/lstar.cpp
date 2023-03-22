@@ -103,7 +103,7 @@ void lstar_algorithm::run_l_star(inputdata& id){
     cout << "\nIteration: " << n_runs << endl;
 
     //optimize :This below would work with lists without copy
-    const auto& rows_to_close = vector<pref_suf_t>(obs_table.get_incomplete_rows()); // need a copy, since we're modifying structure in mark_row_complete(). 
+    const auto& rows_to_close = list<pref_suf_t>(obs_table.get_incomplete_rows()); // need a copy, since we're modifying structure in mark_row_complete(). 
     const auto& column_names = obs_table.get_column_names();
     
     // fill the table until known
