@@ -388,6 +388,11 @@ void predict_trace(state_merger* m, ofstream& output, trace* tr){
         auto state_it = state_sequence.begin();
         auto align_it = align_sequence.begin();
         tail *tail_it = tr->get_head();
+
+        map<int, double> root_causes;
+
+        double sum_prob = 0.0;
+
         while (score_it != score_sequence.end() && tail_it != nullptr && !tail_it->is_final()) {
             sw_individual_tail_score[tail_it] = *score_it;
 
@@ -396,10 +401,46 @@ void predict_trace(state_merger* m, ofstream& output, trace* tr){
                 sw_score_per_symbol[tail_nr] = *score_it;
             else sw_score_per_symbol[tail_nr] += *score_it;
             if (*align_it) { tail_it = tail_it->future(); }
+
+            if(root_causes.find(*state_it) == root_causes.end()){
+                root_causes[*state_it] = *score_it;
+            } else {
+                root_causes[*state_it] += *score_it;
+            }
+
+            sum_prob += *score_it;
+
             ++state_it;
             ++score_it;
             ++align_it;
         }
+
+        int top_cause = -1;
+        double top_score = 0.0;
+        for(auto cause : root_causes){
+            if(cause.second < top_score){
+                top_score = cause.second;
+                top_cause = cause.first;
+            }
+        }
+        int first_root_cause = top_cause;
+        root_causes.erase(top_cause);
+        if(top_score > 0.5 * sum_prob){
+            top_cause = -1;
+            top_score = 0.0;
+            for(auto cause : root_causes){
+                if(cause.second < top_score){
+                    top_score = cause.second;
+                    top_cause = cause.first;
+                }
+            }
+        }
+        if(first_root_cause < top_cause)
+            output << "; " << first_root_cause << "_" << top_cause;
+        else
+            output << "; " << top_cause << "_" << first_root_cause;
+
+
 
         list<double> score_tail_sequence;
         list<int> tail_nr_sequence;
@@ -527,6 +568,7 @@ void predict_trace(state_merger* m, ofstream& output, trace* tr){
             output << "; " << last_state->get_data()->predict_path_data_score(data_predict);
         }
     }
+    output << "; " << inputdata::string_from_type(tr->get_type());
     output << endl;
 }
 
@@ -535,12 +577,12 @@ void predict_csv(state_merger* m, istream& input, ofstream& output){
     rownr = -1;
 
     output << "row nr; abbadingo trace; state sequence; score sequence";
-    if(SLIDING_WINDOW) output << "; score per sw tail; score first sw tail; root cause sw tail score; row nrs first sw tail";
+    if(SLIDING_WINDOW) output << "; root_cause; score per sw tail; score first sw tail; root cause sw tail score; row nrs first sw tail";
     if(PREDICT_ALIGN) output << "; alignment; num misaligned";
     if(PREDICT_TRACE) output << "; sum scores; mean scores; min score";
     if(PREDICT_TYPE) output << "; trace type; type probability; predicted trace type; predicted type probability";
     if(PREDICT_SYMBOL) output << "; next trace symbol; next symbol probability; predicted symbol; predicted symbol probability";
-    output << endl;
+    output << "; type" << endl;
 
     while(!input.eof()) {
         rownr += 1;

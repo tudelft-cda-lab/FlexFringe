@@ -275,8 +275,10 @@ public:
         this->next_merged_node = node->representative_of;
         node->representative_of = this;
 
-        node->size += this->size;
-        node->final += this->final;
+        if(MERGE_DATA){
+            node->size += this->size;
+            node->final += this->final;
+        }
     };
     /** undo_merge this gets merged with node, resetting head of list */
     inline void undo_merge_with(apta_node* node){

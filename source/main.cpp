@@ -316,6 +316,7 @@ int main(int argc, char *argv[]){
     app.add_option("--sinkidentical", MERGE_IDENTICAL_SINKS, "Only merge sinks if they have identical suffixes. Default=0.");
     app.add_option("--convertsinks", CONVERT_SINK_STATES, "Instead of merging sinks, convert them to their form defined by the evaluation function (typically a garbage state). Default 0 (false).");
     app.add_option("--extendsinks", EXTEND_SINKS, "Only relevant when mergesinks is set to 1. When set to 1, sinks can be extended (aka, added to the core, colored red). When set to 0, all sinks will be merged with the current core. Default=1.");
+    app.add_option("--typesinks", SINK_TYPE, "Whether to use sinks based on trace/string types, when all traces that reach a state are of the same type, it is a sink. Default=1.");
 
     app.add_option("--finalprob", FINAL_PROBABILITIES, "model final probabilities? if set to 1, distributions are over Sigma*, otherwise over SigmaN. (default: 0)");
     app.add_option("--lowerbound", USE_LOWER_BOUND, "Does the merger use a minimum value of the heuristic function? Set using --lowerboundval. Default=0. Advice: state merging is forced to perform the merge with best heuristic value, it can sometimes be better to color a state red rather then performing a bad merge. This is achieved using a positive lower bound value. Models learned with positive lower bound are frequently more interpretable");
