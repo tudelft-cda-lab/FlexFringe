@@ -37,13 +37,13 @@ observation_table::observation_table(const vector<int>& alphabet) : alphabet(alp
 
     incomplete_rows.push_back(pref_suf_t(new_row_name)); // we do a copy to circumvent the destructor
     table_mapper[ pref_suf_t(new_row_name.begin(), new_row_name.end()) ] = upper_lower_t::lower; // TODO: do we need the copy of the prefix here?
-    lower_table[move(new_row_name)] = map<pref_suf_t, knowledge_t>();
+    lower_table[move(new_row_name)] = map<pref_suf_t, int>();
   }
 
   const auto nullv = get_null_vector();
   incomplete_rows.push_back(nullv); // we do a copy to circumvent the destructor
   table_mapper[ pref_suf_t(nullv.begin(), nullv.end()) ] = upper_lower_t::lower; // TODO: do we need the copy of the prefix here?
-  lower_table[move(nullv)] = map<pref_suf_t, knowledge_t>(); 
+  lower_table[move(nullv)] = map<pref_suf_t, int>(); 
 
   all_columns.insert(get_null_vector());
 };
@@ -104,7 +104,7 @@ const bool observation_table::has_record(const pref_suf_t& raw_row, const pref_s
 /**
  * @brief What you think it does.
  */
-knowledge_t observation_table::get_answer_from_selected_table(const table_type& selected_table, const pref_suf_t& row, const pref_suf_t& col) const {
+int observation_table::get_answer_from_selected_table(const table_type& selected_table, const pref_suf_t& row, const pref_suf_t& col) const {
   return selected_table.at( map_prefix(row) ).at( map_prefix(col) );
 }
 
@@ -113,9 +113,9 @@ knowledge_t observation_table::get_answer_from_selected_table(const table_type& 
  * 
  * @param raw_row The prefix.
  * @param col The suffix.
- * @return active_learning_namespace::knowledge_t Answer. 
+ * @return int Answer. 
  */
-active_learning_namespace::knowledge_t observation_table::get_answer(const active_learning_namespace::pref_suf_t& raw_row, const active_learning_namespace::pref_suf_t& col) const {
+int observation_table::get_answer(const active_learning_namespace::pref_suf_t& raw_row, const active_learning_namespace::pref_suf_t& col) const {
   const auto row = map_prefix(raw_row);
   if(!table_mapper.contains(row)){ throw logic_error("Why do we ask about a row that does not exist? (observation_table::get_answer)"); }
 
@@ -140,7 +140,7 @@ active_learning_namespace::knowledge_t observation_table::get_answer(const activ
  * @param col The column.
  * @param answer The answer to insert, as returned by the oracle.
  */
-void observation_table::insert_record_in_selected_table(table_type& selected_table, const pref_suf_t& raw_row, const pref_suf_t& col, const knowledge_t answer){
+void observation_table::insert_record_in_selected_table(table_type& selected_table, const pref_suf_t& raw_row, const pref_suf_t& col, const int answer){
   const auto row = map_prefix(raw_row);
   if(!selected_table.contains(row)){ throw logic_error("The row should exist. What happened?"); }
   selected_table[row][map_prefix(col)] = answer;
@@ -153,7 +153,7 @@ void observation_table::insert_record_in_selected_table(table_type& selected_tab
  * @param col The column/suffix.
  * @param answer The answer.
  */
-void observation_table::insert_record(const pref_suf_t& raw_row, const pref_suf_t& col, const knowledge_t answer){
+void observation_table::insert_record(const pref_suf_t& raw_row, const pref_suf_t& col, const int answer){
   const auto row = map_prefix(raw_row);
   if(!table_mapper.contains(row)) throw logic_error("Why do we ask about a row that does not exist? (observation_table::insert_record)."); 
 

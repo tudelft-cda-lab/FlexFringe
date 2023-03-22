@@ -1,5 +1,5 @@
 /**
- * @file run_active_learning.h
+ * @file sul_base.h
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
  * @brief Base class for the system under learning.
  * @version 0.1
@@ -34,7 +34,11 @@ class sul_base{
     virtual void reset() = 0;
 
     virtual bool is_member(const std::vector<int>& query_trace) const {
-      return true;
+      return false;
+    }
+
+    virtual const int query_trace(const std::vector<int>& query_trace) const {
+      return -1;
     }
 
     std::ifstream get_input_stream() const;

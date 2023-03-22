@@ -25,6 +25,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <optional>
+#include <utility>
 
 using namespace std;
 using namespace active_learning_namespace;
@@ -56,11 +57,10 @@ const list<refinement*> lstar_algorithm::construct_automaton_from_table(const ob
       const auto whole_prefix = concatenate_strings(prefix, suffix);
       const auto answer = obs_table.get_answer(prefix, suffix);
 
-      cout << "here's the vector: ";
-      print_vector(whole_prefix);
-
       trace* new_trace = vector_to_trace(whole_prefix, id, answer);
 
+      //cout << "here's the trace: " << new_trace->to_string() << endl;
+      
       id.add_trace_to_apta(new_trace, merger->get_aut(), set<int>());
     }
   }
@@ -111,7 +111,7 @@ void lstar_algorithm::run_l_star(inputdata& id){
       for(const auto& current_column: column_names){
         if(obs_table.has_record(current_row, current_column)) continue;
 
-        const knowledge_t answer = teacher.ask_membership_query(current_row, current_column);
+        const int answer = teacher.ask_membership_query(current_row, current_column);
         obs_table.insert_record(current_row, current_column, answer);
       }
       obs_table.mark_row_complete(current_row);
@@ -127,15 +127,15 @@ void lstar_algorithm::run_l_star(inputdata& id){
         cout << "Model nr " << model_nr << endl;
       }
 
-      optional< vector<int> > query_result = oracle.equivalence_query(merger.get());
+      optional< pair< vector<int>, int > > query_result = oracle.equivalence_query(merger.get());
       if(!query_result){
         cout << "Found consistent automaton => Print." << endl;
         break;
       }
       else{
-        const vector<int>& cex = query_result.value();
-        auto cex_tr = vector_to_trace(cex, id);
-        cout << "Found counterexample:" << cex_tr->to_string() << ". Resetting apta and extending observation table." << endl;
+        const vector<int>& cex = query_result.value().first;
+        const int type = query_result.value().second;
+        auto cex_tr = vector_to_trace(cex, id, type);
 
         reset_apta(merger.get(), refs);
         obs_table.extent_columns(cex);

@@ -35,11 +35,19 @@ bool input_file_sul::is_member(const vector<int>& query_trace) const {
     return all_traces.contains(query_trace);
 }
 
+const int input_file_sul::query_trace(const vector<int>& query_trace) const {
+  if(!this->is_member(query_trace)) return -1;
+  return all_traces.at(query_trace);
+}
+
 void input_file_sul::parse_input(inputdata& id){
   for(const auto it: id){
-    auto& current_trace = *it;
+    trace& current_trace = *it;
     const auto current_sequence = current_trace.get_input_sequence();
-    all_traces.insert(current_sequence);
+    if(all_traces.contains(current_sequence)) continue;
+
+    const int type = current_trace.get_type();
+    all_traces[current_sequence] = type;
   }
 }
 
