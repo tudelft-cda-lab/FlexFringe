@@ -35,10 +35,7 @@ namespace active_learning_namespace{
   const std::list<refinement*> minimize_apta(state_merger* merger);
 
   std::vector<int> concatenate_strings(const std::vector<int>& pref1, const std::vector<int>& pref2);
-
-  
-  trace* vector_to_trace(const std::vector<int>& vec, inputdata& id);
-  trace* vector_to_trace(const std::vector<int>& vec, inputdata& id, const active_learning_namespace::knowledge_t trace_type);
+  trace* vector_to_trace(const std::vector<int>& vec, inputdata& id, const int trace_type);
 
   void add_sequence_to_trace(trace* new_trace, const std::vector<int> sequence);
   void update_tail(/*out*/ tail* t, const int symbol);
@@ -46,9 +43,7 @@ namespace active_learning_namespace{
   void print_vector(const vector<int>& v);
   
   // for debugging observation table like data structures
-  void print_all_columns(const std::map<pref_suf_t, knowledge_t>& row);
-
-  active_learning_namespace::knowledge_t map_bool_to_answer(const bool ans);
+  void print_all_columns(const std::map<pref_suf_t, int>& row);
 }
 
 #endif

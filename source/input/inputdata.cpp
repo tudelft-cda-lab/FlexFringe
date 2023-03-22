@@ -2,11 +2,6 @@
 #include "apta.h"
 #include "stringutil.h"
 
-//additional namespace to circumvent multiple definitions problem 
-namespace al_defintions{
-    #include "active_learning/active_learning_util/definitions.h"
-}
-
 using namespace std;
 
 /**
@@ -116,14 +111,31 @@ int inputdata::get_reverse_symbol(string a) {
 const std::string& inputdata::get_type(int a) {
     static bool hit = false;
     if(OPERATION_MODE == "active_learning"){
+        //set<string> seen_string_types;
+        static set<int> seen_r_types;
         if(!hit){
-            cout << "WARNING: Using the type mapping of the active learning. If this is not intended fix this line of code." << endl;
+            //for(const auto& s: alphabet) seen_string_types.insert(s);
+            for(const auto& s_pair: r_types){
+                const auto& s = s_pair.second;
+                seen_r_types.insert(s);
+            }
             hit = true;
         }
-        const auto t = al_defintions::active_learning_namespace::int_type_map.at(a);
-        return al_defintions::active_learning_namespace::type_string_map.at(t);
-    }
 
+        if(!seen_r_types.contains(a)){
+            //cout << "Found unknown trace type in active learning mode: " << a << endl;
+
+            static int unk_types_count = 0;
+            string type_string = "unk";//_" + to_string(++unk_types_count);
+
+            //seen_r_types.insert(a);
+            //seen_string_types.insert(type_string);
+
+            //types.push_back(type_string);
+            r_types[type_string] = a;
+            return type_string;
+        }
+    }
     return types[a];
 }
 
@@ -185,10 +197,6 @@ bool inputdata::is_target(int attr) {
 }
 
 int inputdata::get_types_size() {
-    if(OPERATION_MODE == "active_learning"){
-        return al_defintions::active_learning_namespace::type_string_map.size();
-    }
-
     return types.size();
 }
 
@@ -229,12 +237,35 @@ int inputdata::type_from_string(std::string type) {
 std::string inputdata::string_from_type(int type) {
     static bool hit = false;
     if(OPERATION_MODE == "active_learning"){
+        //set<string> seen_string_types;
+        static set<int> seen_r_types;
         if(!hit){
-            cout << "WARNING: Using the type mapping of the active learning. If this is not intended fix this line of code." << endl;
+
+            // init the two sets
+            //for(const auto& s: alphabet) seen_string_types.insert(s);
+            for(const auto& s_pair: r_types){
+                const auto& s = s_pair.second;
+                cout << "r_type: " << s << endl;
+
+                seen_r_types.insert(s);
+            }
+
             hit = true;
         }
-        const auto t = al_defintions::active_learning_namespace::int_type_map.at(type);
-        return al_defintions::active_learning_namespace::type_string_map.at(t);
+
+        if(!seen_r_types.contains(type)){
+            //cout << "Found unknown trace type in active learning mode: " << type << endl;
+
+            static int unk_types_count = 0;
+            string type_string = "unk";//_" + to_string(++unk_types_count);
+
+            //seen_r_types.insert(a);
+            //seen_string_types.insert(type_string);
+
+            //types.push_back(type_string);
+            r_types[type_string] = type;
+            return type_string;
+        }
     }
 
     return types[type];
@@ -276,7 +307,7 @@ void inputdata::add_trace_to_apta(trace* tr, apta* the_apta, const set<int>& sta
         } else {
             int symbol = t->get_symbol();
             if(node->child(symbol) == nullptr){
-                if(RED_BLUE_THRESHOLD==0 and node->size < PARENT_SIZE_THRESHOLD){
+                if(RED_BLUE_THRESHOLD==0 && node->size < PARENT_SIZE_THRESHOLD){
                     break;
                 }
                 // case 1 of the red-blue-threshold: We get an already merged APTA

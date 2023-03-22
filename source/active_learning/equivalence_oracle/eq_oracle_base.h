@@ -20,6 +20,7 @@
 
 #include <vector>
 #include <optional>
+#include <utility>
 
 class eq_oracle_base{
   protected:
@@ -29,7 +30,7 @@ class eq_oracle_base{
     virtual bool apta_accepts_trace(state_merger* merger, const vector<int>& tr, inputdata& id) const = 0;
   public:
     eq_oracle_base(sul_base* sul) : sul(sul){};
-    virtual std::optional< std::vector<int> > equivalence_query(state_merger* merger) = 0;
+    virtual std::optional< std::pair< std::vector<int>, int> > equivalence_query(state_merger* merger) = 0;
 };
 
 #endif

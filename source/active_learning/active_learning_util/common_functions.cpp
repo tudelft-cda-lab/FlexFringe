@@ -137,17 +137,6 @@ void active_learning_namespace::update_tail(tail* t, const int symbol){
 }
 
 /**
- * @brief Simple boolean to answer_t mapping. For uniformity throughout program.
- * 
- * @param ans The answer as a boolean.
- * @return knowledge_t The type.
- */
-active_learning_namespace::knowledge_t active_learning_namespace::map_bool_to_answer(const bool ans){
-    if(ans) return active_learning_namespace::knowledge_t::accepting;
-    return active_learning_namespace::knowledge_t::rejecting;
-}
-
-/**
  * @brief Add the sequence as a concatenation of tail-objects to the trace, so that flexfringe can work it out.
  * 
  * @param new_trace The trace to add to.
@@ -175,7 +164,7 @@ void active_learning_namespace::add_sequence_to_trace(trace* new_trace, const ve
     new_tail->td->index = sequence.size();
     new_trace->end_tail = new_tail;
 
-    //new_trace->finalize();
+    new_trace->finalize();
 }
 
 /**
@@ -189,17 +178,6 @@ vector<int> active_learning_namespace::concatenate_strings(const vector<int>& pr
 }
 
 /**
- * @brief Overload. Does a positive (accepting) trace.
- * 
- * @param vec The vector.
- * @param id The inputdata.
- * @return trace* The trace.
- */
-trace* active_learning_namespace::vector_to_trace(const vector<int>& vec, inputdata& id){
-    return vector_to_trace(vec, id, knowledge_t::accepting);
-}
-
-/**
  * @brief Turns a vector to a trace.
  * 
  * @param vec The vector.
@@ -207,13 +185,12 @@ trace* active_learning_namespace::vector_to_trace(const vector<int>& vec, inputd
  * @param trace_type Accepting or rejecting.
  * @return trace* The trace.
  */
-trace* active_learning_namespace::vector_to_trace(const vector<int>& vec, inputdata& id, const knowledge_t trace_type){
+trace* active_learning_namespace::vector_to_trace(const vector<int>& vec, inputdata& id, const int trace_type){
     static int trace_nr = 0;
 
     trace* new_trace = mem_store::create_trace(&id);
-    int type = active_learning_namespace::type_int_map.at(trace_type);
 
-    new_trace->type = type;
+    new_trace->type = trace_type;
     new_trace->sequence = ++trace_nr;
 
     active_learning_namespace::add_sequence_to_trace(new_trace, vec);
@@ -239,7 +216,7 @@ void active_learning_namespace::print_vector(const vector<int>& v){
  * 
  * @param row A row of the observation table.
  */
-void active_learning_namespace::print_all_columns(const std::map<pref_suf_t, knowledge_t>& row){
+void active_learning_namespace::print_all_columns(const std::map<pref_suf_t, int>& row){
     cout << "Here come all columns in this row: ";
     for(const auto& col: row){
         print_vector(col.first);

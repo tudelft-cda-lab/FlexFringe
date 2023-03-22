@@ -179,7 +179,7 @@ double count_data::predict_type_score(int t){
 int count_data::predict_type(tail*){
     int t = 0;
     double max_count = -1;
-    for(int i = 0; i < inputdata_locator::get()->get_types_size(); ++i){
+    for(int i = -1; i < inputdata_locator::get()->get_types_size(); ++i){ // -1 is the unknown type
         double prob = predict_type_score(i);
         if(max_count == -1 || max_count < prob){
             max_count = prob;

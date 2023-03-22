@@ -25,8 +25,8 @@ namespace obs_table_namespace{
     lower
   };
 
-  typedef std::map< active_learning_namespace::pref_suf_t, active_learning_namespace::knowledge_t > row_type; // reference is all_columns
-  //typedef std::map< std::reference_wrapper< active_learning_namespace::pref_suf_t >, active_learning_namespace::knowledge_t> row_type; // reference is all_columns
+  typedef std::map< active_learning_namespace::pref_suf_t, int > row_type; // reference is all_columns
+  //typedef std::map< std::reference_wrapper< active_learning_namespace::pref_suf_t >, int> row_type; // reference is all_columns
   typedef std::map< active_learning_namespace::pref_suf_t, row_type > table_type;
 }
  
@@ -55,16 +55,16 @@ class observation_table{
     const active_learning_namespace::pref_suf_t map_prefix(const active_learning_namespace::pref_suf_t& column) const;
 
     const bool record_is_in_selected_table(const obs_table_namespace::table_type& selected_table, const active_learning_namespace::pref_suf_t& row, const active_learning_namespace::pref_suf_t& col) const;
-    void insert_record_in_selected_table(obs_table_namespace::table_type& selected_table, const active_learning_namespace::pref_suf_t& row, const active_learning_namespace::pref_suf_t& col, const active_learning_namespace::knowledge_t answer);
-    active_learning_namespace::knowledge_t get_answer_from_selected_table(const obs_table_namespace::table_type& selected_table, const active_learning_namespace::pref_suf_t& row, const active_learning_namespace::pref_suf_t& col) const;
+    void insert_record_in_selected_table(obs_table_namespace::table_type& selected_table, const active_learning_namespace::pref_suf_t& row, const active_learning_namespace::pref_suf_t& col, const int answer);
+    int get_answer_from_selected_table(const obs_table_namespace::table_type& selected_table, const active_learning_namespace::pref_suf_t& row, const active_learning_namespace::pref_suf_t& col) const;
     
   public:
     observation_table() = delete;
     observation_table(const std::vector<int>& alphabet);
 
     const bool has_record(const active_learning_namespace::pref_suf_t& row, const active_learning_namespace::pref_suf_t& col) const;
-    void insert_record(const active_learning_namespace::pref_suf_t& row, const active_learning_namespace::pref_suf_t& col, const active_learning_namespace::knowledge_t answer);
-    active_learning_namespace::knowledge_t get_answer(const active_learning_namespace::pref_suf_t& row, const active_learning_namespace::pref_suf_t& col) const;
+    void insert_record(const active_learning_namespace::pref_suf_t& row, const active_learning_namespace::pref_suf_t& col, const int answer);
+    int get_answer(const active_learning_namespace::pref_suf_t& row, const active_learning_namespace::pref_suf_t& col) const;
 
     const bool is_closed();
 

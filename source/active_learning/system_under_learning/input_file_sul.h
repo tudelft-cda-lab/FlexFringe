@@ -18,7 +18,6 @@
 #include "inputdata.h"
 
 #include <vector>
-#include <set>
 #include <map>
 
 // only those should be able to access the system
@@ -33,7 +32,7 @@ class input_file_sul : public sul_base {
 
   protected:
 
-    std::set< std::vector<int> > all_traces;
+    std::map< std::vector<int>, int > all_traces;
 
     virtual void preprocessing();
     virtual void postprocessing();
@@ -41,12 +40,13 @@ class input_file_sul : public sul_base {
 
     virtual void reset(){};
 
-    bool is_member(const std::vector<int>& query_trace) const;
+    bool is_member(const std::vector<int>& query_trace) const override;
+    const int query_trace(const std::vector<int>& query_trace) const override;
   public:
     input_file_sul();
 
     virtual void parse_input(inputdata& id);
-    const std::set< std::vector<int> >& get_all_traces() const {
+    const std::map< std::vector<int>, int >& get_all_traces() const {
       return all_traces;
     }
 };
