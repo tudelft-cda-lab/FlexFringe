@@ -17,6 +17,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <list>
 //#include <functional>
 
 namespace obs_table_namespace{
@@ -37,7 +38,7 @@ class observation_table{
     const std::vector<int> alphabet;
     std::set<active_learning_namespace::pref_suf_t> all_columns;
     std::map< active_learning_namespace::pref_suf_t, obs_table_namespace::upper_lower_t> table_mapper; // prefix in upper table or lower table?
-    std::vector< active_learning_namespace::pref_suf_t > incomplete_rows;
+    std::list< active_learning_namespace::pref_suf_t > incomplete_rows;
 
     // the actual table
     obs_table_namespace::table_type upper_table; 
@@ -77,7 +78,7 @@ class observation_table{
     }
     
     void extend_lower_table();
-    const std::vector< active_learning_namespace::pref_suf_t >& get_incomplete_rows() const;
+    const std::list< active_learning_namespace::pref_suf_t >& get_incomplete_rows() const;
     void mark_row_complete(const active_learning_namespace::pref_suf_t& row);
     void extent_columns(const active_learning_namespace::pref_suf_t& suffix);
 

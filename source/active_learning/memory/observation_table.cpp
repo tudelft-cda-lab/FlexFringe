@@ -243,7 +243,7 @@ const bool observation_table::is_closed() {
  * 
  * @return const vector< pref_suf_t >& The vector of incomplete rows.
  */
-const vector< pref_suf_t >& observation_table::get_incomplete_rows() const {
+const list< pref_suf_t >& observation_table::get_incomplete_rows() const {
   return this->incomplete_rows;
 }
 
@@ -312,8 +312,8 @@ void observation_table::extend_lower_table() {
 
       if(lower_table.contains(new_row_name) || upper_table.contains(new_row_name)) continue;
 
-      incomplete_rows.push_back(pref_suf_t(new_row_name.begin(), new_row_name.end())); // we do a copy to circumvent the destructor
-      table_mapper[ pref_suf_t(new_row_name.begin(), new_row_name.end()) ] = upper_lower_t::lower; // TODO: do we need the copy of the prefix here?
+      incomplete_rows.push_back(new_row_name); // we do a copy to circumvent the destructor
+      table_mapper[new_row_name] = upper_lower_t::lower; // TODO: do we need the copy of the prefix here?
       lower_table[move(new_row_name)] = row_type();
     }
   }

@@ -79,7 +79,7 @@ TEST_CASE("Observation table: Construction and simple insertions", "[memory]") {
 
         const vector<int> suffix{2, 2, 3};
         obs.extent_columns(suffix);
-        const vector<pref_suf_t> irows = vector<pref_suf_t>(obs.get_incomplete_rows());
+        const list<pref_suf_t> irows = list<pref_suf_t>(obs.get_incomplete_rows());
         CHECK(irows.size() > 0);
 
         for(const auto& row: irows){
