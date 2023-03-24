@@ -288,6 +288,7 @@ int main(int argc, char *argv[]){
     app.add_option("--swstride", SLIDING_WINDOW_STRIDE, "The stride (jump size) between two sliding windows, when --slidingwindow is set to 1. Default=5.");
     app.add_option("--swtype", SLIDING_WINDOW_TYPE, "Whether the sliding window should use the last element as the sliding window type. Default = 0.");
     app.add_option("--swaddshorter", SLIDING_WINDOW_ADD_SHORTER, "Whether sliding windows shorter than swsize should be added to the apta. Default = 0.");
+    app.add_option("--swaddprefix", SLIDING_WINDOW_ADD_PREFIXES, "Whether prefixes of the first sliding window are added to the apta. Default = 0.");
     app.add_option("--redbluethreshold", RED_BLUE_THRESHOLD, "Boolean. If set to 1, then states will only be appended to red- or blue states. Only makes sense in stream mode. Default=0.");
 
     app.add_option("--extend", EXTEND_ANY_RED, "When set to 1, any merge candidate (blue) that cannot be merged with any target (red) is immediately changed into a (red) target; default=1. If set to 0, a merge candidate is only changed into a target when no more merges are possible. Advice: unclear which strategy is best, when using statistical (or count-based) consistency checks, keep in mind that merge consistency between states may change due to other performed merges. This will especially influence low frequency states. When there are a lot of those, we therefore recommend setting x=0.");

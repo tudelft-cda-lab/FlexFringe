@@ -256,6 +256,8 @@ private:
     list<pair<apta_node*, apta_node*>> caused_merges;
 
 public:
+    int visits;
+
     inline trace* get_access_trace(){ return access_trace; }
     inline apta_node* get_source(){ return source; }
     inline apta_node* get_merged_head(){ return representative_of; }

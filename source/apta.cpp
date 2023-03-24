@@ -454,6 +454,8 @@ apta_node::apta_node(){
     red = false;
     sink = -1;
 
+    visits = 0;
+
     try {
        data = (DerivedDataRegister<evaluation_data>::getMap())->at(DATA_NAME)();
        data->node = this;
@@ -482,6 +484,8 @@ void apta_node::initialize(apta_node* n){
     }
     guards.clear();
     if(performed_splits != nullptr) performed_splits->clear();
+
+    visits = 0;
 }
 
 apta_node* apta_node::child(tail* t){

@@ -134,5 +134,6 @@ int DIFF_SIZE = 1000;
 int DIFF_MAX_LENGTH = 50;
 double DIFF_MIN = -100.0;
 
+bool SLIDING_WINDOW_ADD_PREFIXES = true;
 
 

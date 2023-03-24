@@ -151,4 +151,6 @@ extern int IDENTICAL_KTAIL;
 
 extern bool STAR_FREE;
 extern bool SINK_TYPE;
+
+extern bool SLIDING_WINDOW_ADD_PREFIXES;
 #endif

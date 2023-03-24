@@ -305,6 +305,48 @@ trace* inputdata::read_csv_row(istream &input_stream) {
         tr->end_tail = end_tail;
 
         it->second = new_window;
+    } else if(SLIDING_WINDOW && SLIDING_WINDOW_ADD_PREFIXES && tr->get_length() % SLIDING_WINDOW_STRIDE == 0) {
+        if(SLIDING_WINDOW_TYPE){
+            string type_string = inputdata::string_from_symbol(new_tail->get_symbol());
+            if(r_types.find(type_string) == r_types.end()){
+                r_types[type_string] = (int)types.size();
+                types.push_back(type_string);
+            }
+            tr->type = r_types[type_string];
+        }
+        trace* new_window = mem_store::create_trace();
+        new_window->type = tr->type;
+        new_window->sequence = inputdata::num_sequences;
+        tail* t = tr->get_head();
+        int index = 0;
+        tail* new_window_tail = nullptr;
+        while(t != nullptr){
+            if(new_window_tail == nullptr){
+                new_window_tail = mem_store::create_tail(nullptr);
+                new_window->head = new_window_tail;
+                new_window->end_tail = new_window_tail;
+                new_window->length = 1;
+            } else {
+                tail* old_tail = new_window_tail;
+                new_window_tail = mem_store::create_tail(nullptr);
+                old_tail->set_future(new_window_tail);
+                new_window->length++;
+                new_window->end_tail = new_window_tail;
+            }
+            new_window_tail->tr = new_window;
+            new_window_tail->td = t->td;
+            new_window_tail->split_from = t;
+            t = t->future();
+            index++;
+        }
+        tail* old_tail = tr->end_tail;
+        tail *end_tail = mem_store::create_tail(nullptr);
+        end_tail->td->index = old_tail->get_index() + 1;
+        end_tail->tr = tr;
+        old_tail->set_future(end_tail);
+        tr->end_tail = end_tail;
+
+        it->second = new_window;
     }
 
     return tr;
@@ -325,7 +367,7 @@ void inputdata::read_csv_file(istream &input_stream) {
         }
     }
 
-    if(SLIDING_WINDOW_ADD_SHORTER){
+    if(SLIDING_WINDOW_ADD_SHORTER && !SLIDING_WINDOW_ADD_PREFIXES){
         while(!tail_map.empty()) {
             trace *tr = tail_map.begin()->second;
             tail* old_tail = tr->end_tail;

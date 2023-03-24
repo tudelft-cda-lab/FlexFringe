@@ -23,6 +23,7 @@ double compute_jump_penalty(apta_node* old_node, apta_node* new_node){
 }
 
 double compute_score(apta_node* next_node, tail* next_tail){
+    return - (double)next_node->visits / ((double)next_node->get_size() + (double)next_node->visits);
     //if(PREDICT_ALIGN){ cerr << next_node->get_data()->align_score(next_tail) << endl; }
     if(PREDICT_ALIGN){ return next_node->get_data()->align_score(next_tail); }
     return next_node->get_data()->predict_score(next_tail);
@@ -302,6 +303,7 @@ double add_visits(state_merger* m, trace* tr){
     double score = 0.0;
 
     for(int j = 0; j < t->get_length(); j++){
+        n->visits++;
         n = single_step(n, t, m->get_aut());
         if(n == nullptr) break;
         t = t->future();
@@ -327,7 +329,10 @@ void predict_trace_update_sequences(state_merger* m, tail* t){
         }
 
         t = t->future();
-        state_sequence.push_back(n->get_number());
+        if(n == m->get_aut()->get_root() && !state_sequence.empty())
+            state_sequence.push_back(*state_sequence.rbegin());
+        else
+            state_sequence.push_back(n->get_number());
         align_sequence.push_back(true);
     }
 
@@ -360,7 +365,6 @@ void write_list(list<T>& list_to_write, ofstream& output){
     output << "]";
 }
 
-
 void predict_trace(state_merger* m, ofstream& output, trace* tr){
     if(REVERSE_TRACES) tr->reverse();
 
@@ -376,7 +380,8 @@ void predict_trace(state_merger* m, ofstream& output, trace* tr){
         predict_trace_update_sequences(m, tr->get_head());
     }
 
-    output << rownr << "; " << "\"" << tr->to_string() << "\"";
+    if(SLIDING_WINDOW) output << tr->get_head()->get_nr() << "; " << tr->get_end()->past()->get_nr() << "; \"" << tr->to_string() << "\"";
+    else output << rownr << ";" << rownr << "; " << "\"" << tr->to_string() << "\"";
 
     output << "; ";
     write_list(state_sequence, output);
@@ -402,7 +407,7 @@ void predict_trace(state_merger* m, ofstream& output, trace* tr){
             else sw_score_per_symbol[tail_nr] += *score_it;
             if (*align_it) { tail_it = tail_it->future(); }
 
-            if(root_causes.find(*state_it) == root_causes.end()){
+            if (root_causes.find(*state_it) == root_causes.end()) {
                 root_causes[*state_it] = *score_it;
             } else {
                 root_causes[*state_it] += *score_it;
@@ -417,28 +422,29 @@ void predict_trace(state_merger* m, ofstream& output, trace* tr){
 
         int top_cause = -1;
         double top_score = 0.0;
-        for(auto cause : root_causes){
-            if(cause.second < top_score){
-                top_score = cause.second;
-                top_cause = cause.first;
-            }
+        double sum_scores = 0.0;
+        multimap<double, int> reverse_causes;
+        for (auto cause: root_causes) {
+            reverse_causes.insert(pair<double,int>(cause.second,cause.first));
         }
-        int first_root_cause = top_cause;
-        root_causes.erase(top_cause);
-        if(top_score > 0.5 * sum_prob){
-            top_cause = -1;
-            top_score = 0.0;
-            for(auto cause : root_causes){
-                if(cause.second < top_score){
-                    top_score = cause.second;
-                    top_cause = cause.first;
-                }
-            }
+        set<int> sorted_causes;
+        double cumulative_score = 0.0;
+        for(auto cause : reverse_causes) {
+            sorted_causes.insert(cause.second);
+            cumulative_score += cause.first;
+            if(cumulative_score < 0.1 * sum_prob) break;
+            break;
         }
-        if(first_root_cause < top_cause)
+        output << "; ";
+        for(auto cause : sorted_causes) {
+            output << cause << "_";
+        }
+
+        /*if(first_root_cause < top_cause)
             output << "; " << first_root_cause << "_" << top_cause;
         else
             output << "; " << top_cause << "_" << first_root_cause;
+        */
 
 
 
@@ -576,7 +582,7 @@ void predict_csv(state_merger* m, istream& input, ofstream& output){
     inputdata* id = m->get_dat();
     rownr = -1;
 
-    output << "row nr; abbadingo trace; state sequence; score sequence";
+    output << "first row nr; last row nr; abbadingo trace; state sequence; score sequence";
     if(SLIDING_WINDOW) output << "; root_cause; score per sw tail; score first sw tail; root cause sw tail score; row nrs first sw tail";
     if(PREDICT_ALIGN) output << "; alignment; num misaligned";
     if(PREDICT_TRACE) output << "; sum scores; mean scores; min score";
@@ -607,7 +613,7 @@ void predict_csv(state_merger* m, istream& input, ofstream& output){
 }
 
 void predict(state_merger* m, istream& input, ofstream& output){
-    output << "row nr; abbadingo trace; state sequence; score sequence";
+    output << "first row nr; last row nr; abbadingo trace; state sequence; score sequence";
     if(SLIDING_WINDOW) output << "; score per sw tail; score first sw tail; root cause sw tail score; row nrs first sw tail";
     if(PREDICT_ALIGN) output << "; alignment; num misaligned";
     if(PREDICT_TRACE) output << "; sum scores; mean scores; min score";
