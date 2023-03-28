@@ -16,6 +16,8 @@
 #include "csvparser.h"
 
 #include <iostream>
+#include <set>
+#include <string>
 
 using namespace std;
 
@@ -35,8 +37,24 @@ bool input_file_sul::is_member(const vector<int>& query_trace) const {
     return all_traces.contains(query_trace);
 }
 
-const int input_file_sul::query_trace(const vector<int>& query_trace) const {
-  if(!this->is_member(query_trace)) return -1;
+const int input_file_sul::query_trace(const vector<int>& query_trace, inputdata& id) const {
+  if(!this->is_member(query_trace)){
+
+    static bool added_unknown_type = false;
+    static string unk_t_string = "unk";
+    if(!added_unknown_type){
+      int counter = 0;
+      const auto& r_types = id.get_r_types();
+      while(r_types.contains(unk_t_string)){
+        unk_t_string = unk_t_string + to_string(counter);
+      }
+
+      id.add_unknown_type(unk_t_string);
+      added_unknown_type = true;
+    }
+
+    return id.get_reverse_type(unk_t_string);
+  }
   return all_traces.at(query_trace);
 }
 

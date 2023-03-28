@@ -41,7 +41,7 @@ class input_file_sul : public sul_base {
     virtual void reset(){};
 
     bool is_member(const std::vector<int>& query_trace) const override;
-    const int query_trace(const std::vector<int>& query_trace) const override;
+    const int query_trace(const std::vector<int>& query_trace, inputdata& id) const override;
   public:
     input_file_sul();
 
