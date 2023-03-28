@@ -14,11 +14,16 @@
 #include "definitions.h"
 #include "inputdata.h"
 
+// TODO: delete. Only for debuggging
+//#include "main_helpers.h"
+
 #include <iostream>
 #include <stdexcept>
 #include <algorithm>
 
 using namespace std;
+
+//const bool PRINT_ALL_MODELS = false;
 
 apta_node* active_learning_namespace::get_child_node(apta_node* n, tail* t){
     apta_node* child = n->child(t);
@@ -92,10 +97,16 @@ bool active_learning_namespace::aut_accepts_trace(trace* tr, apta* aut, const co
 const list<refinement*> active_learning_namespace::minimize_apta(state_merger* merger){
     list<refinement*> refs;
     refinement* top_ref = merger->get_best_refinement();
+
+    //int x = 0;
     while(top_ref != 0){
         refs.push_back(top_ref);        
         top_ref->doref(merger);
         top_ref = merger->get_best_refinement();
+
+/*         if(PRINT_ALL_MODELS){
+            print_current_automaton(merger, "model_after_", to_string(++x) + ".refinement");
+        } */
     }
     return refs;
 }
