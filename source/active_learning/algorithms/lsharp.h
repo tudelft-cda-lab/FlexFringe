@@ -18,6 +18,7 @@
 #include "trace.h"
 #include "tail.h"
 #include "refinement.h"
+#include "base_teacher.h"
 
 #include <vector> 
 #include <memory>
@@ -26,7 +27,7 @@ class lsharp_algorithm{
   protected:
     vector< refinement* > construct_automaton_from_table(std::unique_ptr<state_merger>& merger, inputdata& id) const;
 
-    void complete_state(std::unique_ptr<state_merger>& merger, apta_node* n, std::unique_ptr<base_teacher>& teacher, inputdata& id, const vector<int>& alphabet) const;
+    void complete_state(std::unique_ptr<state_merger>& merger, apta_node* n, base_teacher& teacher, inputdata& id, const vector<int>& alphabet) const;
     void proc_counterex(apta* aut, const std::vector<int>& counterex) const;
     refinement* extract_best_merge(refinement_set* rs) const;
 

@@ -10,8 +10,11 @@
  */
 
 #include "active_learning_main.h"
-#include "parameters.h"
+
 #include "lstar.h"
+#include "lsharp.h"
+
+#include "parameters.h"
 #include "inputdata.h"
 #include "inputdatalocator.h"
 #include "abbadingoparser.h"
@@ -70,7 +73,10 @@ void active_learning_namespace::run_active_learning(){
   }
   else if(ACTIVE_LEARNING_ALGORITHM == "l_sharp"){
     STORE_ACCESS_STRINGS = true;
-    // TODO
+    inputdata id = get_inputdata();
+
+    auto l_sharp = lsharp_algorithm();
+    l_sharp.run_l_sharp(id);
   }
   else{
     throw logic_error("Fatal error: Unknown active_learning_algorithm flag used: " + ACTIVE_LEARNING_ALGORITHM);

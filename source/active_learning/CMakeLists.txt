@@ -20,6 +20,8 @@ add_library(ActiveLearning STATIC
 
             algorithms/lstar.h
             algorithms/lstar.cpp
+            algorithms/lsharp.h
+            algorithms/lsharp.cpp
 
             equivalence_oracle/eq_oracle_base.h
             equivalence_oracle/eq_oracle_base.cpp
