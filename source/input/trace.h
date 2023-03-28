@@ -52,7 +52,7 @@ public:
     void reverse();
     void pop_front();
 
-    const std::vector<int> get_input_sequence() const;
+    const std::vector<int> get_input_sequence(const bool is_access_trace=false) const;
 };
 
 

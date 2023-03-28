@@ -95,10 +95,20 @@ void trace::pop_front() {
     this->head->past_tail = nullptr;
 }
 
-const std::vector<int> trace::get_input_sequence() const {
+/**
+ * @brief Gets the input sequence from the trace. Differentiates access-traces
+ * and non access-traces. 
+ * 
+ * Access traces are not finalized, hence need to be treated differently, or 
+ * else the while-loop would ignore the last element.
+ * 
+ * @param is_access_trace Boolean indicating whether it is an access trace or not. Default = false.
+ * @return const std::vector<int> The sequence of the trace.
+ */
+const std::vector<int> trace::get_input_sequence(const bool is_access_trace) const {
     std::vector<int> res;
     tail* t = head;
-    while(t != end_tail){
+    while((!is_access_trace && t != end_tail) || (is_access_trace && t != nullptr)){
         res.push_back(t->get_symbol());
         t = t->future();
     }
