@@ -24,18 +24,23 @@
 
 #include <list>
 
+const bool PRINT_ALL_MODELS = false;
+
+using namespace std;
+using namespace active_learning_namespace;
+
 /**
  * @brief Take a node and complete it wrt to the alphabet.
  * 
  * @param aut 
  */
-void lsharp_algorithm::complete_state(unique_ptr<state_merger>& merger, apta_node* n, unique_ptr<base_teacher>& teacher, inputdata& id, const vector<int>& alphabet) const {
+void lsharp_algorithm::complete_state(unique_ptr<state_merger>& merger, apta_node* n, base_teacher& teacher, inputdata& id, const vector<int>& alphabet) const {
   for(const int symbol: alphabet){
     if(n->get_child(symbol) == nullptr){
       auto access_trace = n->get_access_trace();
       auto seq = access_trace->get_input_sequence();
       seq.push_back(symbol);
-      const auto answer = teacher->ask_membership_query(merger.get(), seq, id);
+      const auto answer = teacher.ask_membership_query(merger.get(), seq, id);
       
       trace* new_trace = vector_to_trace(seq, id, answer);
       id.add_trace_to_apta(new_trace, merger->get_aut(), set<int>());
@@ -62,6 +67,7 @@ refinement* lsharp_algorithm::extract_best_merge(refinement_set* rs) const {
 
 void lsharp_algorithm::run_l_sharp(inputdata& id){
   int n_runs = 0;
+  if(n_runs % 100 == 0) cout << "Iteration " << n_runs << endl;
 
   // TODO: make those dynamic later
   input_file_sul sul; // TODO: make these generic when you can
@@ -79,42 +85,68 @@ void lsharp_algorithm::run_l_sharp(inputdata& id){
   const vector<int> alphabet = id.get_alphabet();
 
   // init the root node, s.t. we have blue states to iterate over
-  complete_state(merger, the_apta->get_root_node(), teacher, id, alphabet);
+  complete_state(merger, the_apta->get_root(), teacher, id, alphabet);
   while(ENSEMBLE_RUNS > 0 && n_runs < ENSEMBLE_RUNS){
     
-    bool merge_performed = false; // avoid iterating over a changed data structure
-    for(blue_state_iterator b_it = blue_state_iterator(apta.get_root()); b_it != nullptr; ++b_it){
-      if(merge_performed) continue; 
+    bool no_isolated_states = true; // avoid iterating over a changed data structure
+    for(blue_state_iterator b_it = blue_state_iterator(the_apta->get_root()); *b_it != nullptr; ++b_it){
 
       const auto blue_node = *b_it;
-      if(blue_node->size() == 0) continue;
-      assert(blue_node->is_blue());
-      // note: we don't treat sinks here, but could potentially do
+      if(blue_node->get_size() == 0) continue;
+      assert(!blue_node->is_red()); // blue_state_iterator gives us blue and white nodes
+
+      // this is a difference with Vandraager, but we need it for statistical methods
+      if(blue_node->is_blue()) complete_state(merger, blue_node, teacher, id, alphabet);
 
       refinement_set possible_refs;
-      for(red_state_iterator r_it = red_state_iterator(apta.get_root()); r_it != nullptr; ++r_it){
+      for(red_state_iterator r_it = red_state_iterator(the_apta->get_root()); *r_it != nullptr; ++r_it){
+        //for(red_state_iterator Ait = red_state_iterator(aut->root); *Ait != nullptr; ++Ait){
         const auto red_node = *r_it;
         assert(red_node->is_red());
 
         complete_state(merger, red_node, teacher, id, alphabet);
 
         refinement* ref = merger->test_merge(red_node, blue_node);
-        if(refinement != nullptr) possible_refs.insert(ref);
+        if(ref != nullptr) possible_refs.insert(ref);
       }
 
-      if(possible_refs.size() == 0){
-        continue;
-      }
-      else if((possible_refs.size()>1 && dynamic_cast<l_star_evaluation*>(eval) != nullptr) || possible_refs.size() == 1){
-        auto* best_merge = extract_best_merge(possible_refs);
-        best_merge->doref();
-        merge_performed = true;
-      }
-      else{
-        // more than one merge possible and l_star_evaluation function => Rule 3 from "A New Approach for Active Automata Learning Based on Apartness"
-        throw new logic_error("This branch is not implemented yet.");
+      if( possible_refs.size()>1 ){
+        refinement* best_merge = extract_best_merge(&possible_refs);
+        if(dynamic_cast<extend_refinement*>(best_merge) != 0){
+          best_merge->doref(merger.get());
+          no_isolated_states = false;
+        }
       }
     }
+
+    if(no_isolated_states){
+      // build hypothesis
+      const list< refinement* > refs = minimize_apta(merger.get());
+      print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
+
+      if(PRINT_ALL_MODELS){
+        static int model_nr = 0;
+        print_current_automaton(merger.get(),"model.", to_string(++model_nr) + ".not_final"); // printing the final model each time
+        cout << "Model nr " << model_nr << endl;
+      }
+
+      optional< pair< vector<int>, int > > query_result = oracle.equivalence_query(merger.get());
+      if(!query_result){
+        cout << "Found consistent automaton => Printed." << endl;
+        return;
+      }
+      else{
+        const vector<int>& cex = query_result.value().first;
+        const int type = query_result.value().second;
+        auto cex_tr = vector_to_trace(cex, id, type);
+        cout << "Found counterexample: " << cex_tr->to_string() << endl;
+
+        reset_apta(merger.get(), refs); // note: does not reset the identified red states we had before
+        id.add_trace_to_apta(cex_tr, merger->get_aut(), set<int>());
+      }
+    }
+
     ++n_runs;
   }
+
 }
