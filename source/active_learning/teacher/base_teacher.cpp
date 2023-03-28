@@ -14,13 +14,13 @@
 using namespace std;
 using namespace active_learning_namespace;
 
-const int base_teacher::ask_membership_query(const pref_suf_t& prefix, const pref_suf_t& suffix) {
+const int base_teacher::ask_membership_query(const pref_suf_t& prefix, const pref_suf_t& suffix, inputdata& id) {
   pref_suf_t query(prefix);
   query.insert(query.end(), suffix.begin(), suffix.end());
 
-  return ask_membership_query(query);
+  return ask_membership_query(query, id);
 }
 
-const int base_teacher::ask_membership_query(const pref_suf_t& query) {
-  return sul->query_trace(query);
+const int base_teacher::ask_membership_query(const pref_suf_t& query, inputdata& id) {
+  return sul->query_trace(query, id);
 }

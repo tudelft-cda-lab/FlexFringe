@@ -41,9 +41,10 @@ apta::apta(){
 
 void apta::print_dot(iostream& output){
     int ncounter = 0;
-    /*for(APTA_iterator Ait = APTA_iterator(root); *Ait != 0; ++Ait){
+    // needed for the correct printing of intermediate models after undoing merges
+    for(APTA_iterator Ait = APTA_iterator(root); *Ait != 0; ++Ait){
         (*Ait)->number = ncounter++;
-    }*/
+    }
 
     output << "digraph DFA {\n";
     output << "\t" << root->find()->number << " [label=\"root\" shape=box];\n";

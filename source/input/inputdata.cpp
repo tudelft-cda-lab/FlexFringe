@@ -109,34 +109,30 @@ int inputdata::get_reverse_symbol(string a) {
 }
 
 const std::string& inputdata::get_type(int a) {
-    static bool hit = false;
-    if(OPERATION_MODE == "active_learning"){
-        //set<string> seen_string_types;
-        static set<int> seen_r_types;
-        if(!hit){
-            //for(const auto& s: alphabet) seen_string_types.insert(s);
-            for(const auto& s_pair: r_types){
-                const auto& s = s_pair.second;
-                seen_r_types.insert(s);
-            }
-            hit = true;
-        }
-
-        if(!seen_r_types.contains(a)){
-            //cout << "Found unknown trace type in active learning mode: " << a << endl;
-
-            static int unk_types_count = 0;
-            string type_string = "unk";//_" + to_string(++unk_types_count);
-
-            //seen_r_types.insert(a);
-            //seen_string_types.insert(type_string);
-
-            //types.push_back(type_string);
-            r_types[type_string] = a;
-            return type_string;
-        }
-    }
     return types[a];
+}
+
+/**
+ * @brief Add an unknown type to the inputdata interface. Warning: 
+ * Make sure that it does not exist yet before inserting, elsewise
+ * behavior might become peculiar.
+ * 
+ * @param t The type-string to add. Will be used when printing and 
+ * internally.
+ */
+void inputdata::add_unknown_type(const std::string& t) {
+    types.push_back(t);
+    r_types[t] = r_types.size();
+}
+
+/**
+ * @brief S.e. 
+ * 
+ * @return const std::map<std::string, int>& Reference to r_types map, 
+ * mapping the external string to the internal integer representation.
+ */
+const std::map<std::string, int>& inputdata::get_r_types() const {
+    return this->r_types;
 }
 
 int inputdata::get_reverse_type(std::string a) {
@@ -235,39 +231,6 @@ int inputdata::type_from_string(std::string type) {
 }
 
 std::string inputdata::string_from_type(int type) {
-    static bool hit = false;
-    if(OPERATION_MODE == "active_learning"){
-        //set<string> seen_string_types;
-        static set<int> seen_r_types;
-        if(!hit){
-
-            // init the two sets
-            //for(const auto& s: alphabet) seen_string_types.insert(s);
-            for(const auto& s_pair: r_types){
-                const auto& s = s_pair.second;
-                cout << "r_type: " << s << endl;
-
-                seen_r_types.insert(s);
-            }
-
-            hit = true;
-        }
-
-        if(!seen_r_types.contains(type)){
-            //cout << "Found unknown trace type in active learning mode: " << type << endl;
-
-            static int unk_types_count = 0;
-            string type_string = "unk";//_" + to_string(++unk_types_count);
-
-            //seen_r_types.insert(a);
-            //seen_string_types.insert(type_string);
-
-            //types.push_back(type_string);
-            r_types[type_string] = type;
-            return type_string;
-        }
-    }
-
     return types[type];
 }
 

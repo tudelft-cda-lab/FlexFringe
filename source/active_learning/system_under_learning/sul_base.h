@@ -37,7 +37,7 @@ class sul_base{
       return false;
     }
 
-    virtual const int query_trace(const std::vector<int>& query_trace) const {
+    virtual const int query_trace(const std::vector<int>& query_trace, inputdata& id) const {
       return -1;
     }
 

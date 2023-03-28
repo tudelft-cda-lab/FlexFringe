@@ -58,9 +58,6 @@ const list<refinement*> lstar_algorithm::construct_automaton_from_table(const ob
       const auto answer = obs_table.get_answer(prefix, suffix);
 
       trace* new_trace = vector_to_trace(whole_prefix, id, answer);
-
-      //cout << "here's the trace: " << new_trace->to_string() << endl;
-      
       id.add_trace_to_apta(new_trace, merger->get_aut(), set<int>());
     }
   }
@@ -111,7 +108,7 @@ void lstar_algorithm::run_l_star(inputdata& id){
       for(const auto& current_column: column_names){
         if(obs_table.has_record(current_row, current_column)) continue;
 
-        const int answer = teacher.ask_membership_query(current_row, current_column);
+        const int answer = teacher.ask_membership_query(current_row, current_column, id);
         obs_table.insert_record(current_row, current_column, answer);
       }
       obs_table.mark_row_complete(current_row);
