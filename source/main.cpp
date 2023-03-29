@@ -62,11 +62,6 @@ void run() {
         cout << "Finished running, terminating program." << endl;
         return;
     }
-    elif(OPERATION_MODE == "predict_active_learning"){
-        cout << "Predicting an automaton learned by active learning." << endl;
-        active_learning_namespace::active_learning_namespace::run_active_learning();
-        return;
-    }
 
     evaluation_function *eval = get_evaluation();
 
