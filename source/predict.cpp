@@ -23,7 +23,7 @@ double compute_jump_penalty(apta_node* old_node, apta_node* new_node){
 }
 
 double compute_score(apta_node* next_node, tail* next_tail){
-    return - (double)next_node->visits / ((double)next_node->get_size() + (double)next_node->visits);
+    if(PREDICT_FREQUENCY_ANOMALY) return - (double)next_node->visits / ((double)next_node->get_size() + (double)next_node->visits);
     //if(PREDICT_ALIGN){ cerr << next_node->get_data()->align_score(next_tail) << endl; }
     if(PREDICT_ALIGN){ return next_node->get_data()->align_score(next_tail); }
     return next_node->get_data()->predict_score(next_tail);

@@ -153,4 +153,5 @@ extern bool STAR_FREE;
 extern bool SINK_TYPE;
 
 extern bool SLIDING_WINDOW_ADD_PREFIXES;
+extern bool PREDICT_FREQUENCY_ANOMALY;
 #endif

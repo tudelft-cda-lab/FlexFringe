@@ -135,5 +135,5 @@ int DIFF_MAX_LENGTH = 50;
 double DIFF_MIN = -100.0;
 
 bool SLIDING_WINDOW_ADD_PREFIXES = true;
-
+bool PREDICT_FREQUENCY_ANOMALY = false;
 
