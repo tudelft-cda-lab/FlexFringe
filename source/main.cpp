@@ -85,7 +85,7 @@ void run() {
     inputdata id;
     inputdata_locator::provide(&id);
 
-    if(OPERATION_MODE!="stream"){
+    if(OPERATION_MODE!="stream" && OPERATION_MODE!="predict"){
         if(read_csv) {
             auto input_parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
             id.read(&input_parser);
@@ -186,6 +186,15 @@ void run() {
             ifstream input_apta_stream(APTA_FILE);
             cerr << "reading apta file - " << APTA_FILE << endl;
             the_apta->read_json(input_apta_stream);
+
+            // this is so we use the correct alphabet when reading.
+            if(read_csv) {
+                auto input_parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
+                id.read(&input_parser);
+            } else {
+                auto input_parser = abbadingoparser(input_stream);
+                id.read(&input_parser);
+            }
 
             std::ostringstream res_stream;
             res_stream << APTA_FILE << ".result";

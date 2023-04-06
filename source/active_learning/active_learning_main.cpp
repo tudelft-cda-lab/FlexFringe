@@ -67,32 +67,6 @@ inputdata active_learning_namespace::get_inputdata(){
 }
 
 void active_learning_namespace::run_active_learning(){
-  if(OPERATION_MODE == "predict_active_learning"){
-    evaluation_function *eval = get_evaluation();
-    inputdata id = get_inputdata();
-
-    auto the_apta = std::unique_ptr<apta>(new apta());
-    state_merger* merger = new state_merger(&id, eval, the_apta);
-    the_apta->set_context(merger);
-    eval->set_context(merger);
-
-    if(!APTA_FILE.empty()){
-      ifstream input_apta_stream(APTA_FILE);
-      cerr << "reading apta file - " << APTA_FILE << endl;
-      the_apta->read_json(input_apta_stream);
-
-      std::ostringstream res_stream;
-      res_stream << APTA_FILE << ".result";
-      ofstream output(res_stream.str().c_str());
-      if(read_csv) throw logic_error("Not implemented yet."); //predict_csv(merger, input_stream, output);
-      else{
-        // TODO
-      }
-      output.close();
-    } else {
-      cerr << "require a json formatted apta file to make predictions" << endl;
-    }
-  }
 
   if(ACTIVE_LEARNING_ALGORITHM == "l_star"){
     inputdata id = get_inputdata();

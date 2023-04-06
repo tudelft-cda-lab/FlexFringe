@@ -81,7 +81,6 @@ bool active_learning_namespace::aut_accepts_trace(trace* tr, apta* aut, const co
     }
 
     if(trace_type==n->get_data()->predict_type(t)) return true;
-    cout << "Found counterexample trace: " << tr->to_string() << ": predicted type: " << tr->get_mapped_type(n->get_data()->predict_type(t)) << endl;
     return false;
 }
 

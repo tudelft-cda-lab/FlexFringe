@@ -108,6 +108,8 @@ void trace::pop_front() {
 const std::vector<int> trace::get_input_sequence(const bool is_access_trace) const {
     std::vector<int> res;
     tail* t = head;
+    if(t->get_symbol() == -1) return std::vector<int>(); // empty strings
+
     while((!is_access_trace && t != end_tail) || (is_access_trace && t != nullptr)){
         res.push_back(t->get_symbol());
         t = t->future();

@@ -24,7 +24,7 @@
 
 #include <list>
 
-const bool PRINT_ALL_MODELS = true;
+const bool PRINT_ALL_MODELS = false;
 
 using namespace std;
 using namespace active_learning_namespace;
@@ -39,8 +39,6 @@ void lsharp_algorithm::complete_state(unique_ptr<state_merger>& merger, apta_nod
     if(n->get_child(symbol) == nullptr){
       auto access_trace = n->get_access_trace();
 
-      //if(n->get_number() != -1) cout << "access trace: " << access_trace->to_string() << endl;
-
       pref_suf_t seq;
       if(n->get_number() != -1) seq = access_trace->get_input_sequence(true);
 
@@ -51,9 +49,7 @@ void lsharp_algorithm::complete_state(unique_ptr<state_merger>& merger, apta_nod
       const auto answer = teacher.ask_membership_query(seq, id);
       
       trace* new_trace = vector_to_trace(seq, id, answer);
-      //cout << "trace to apta: " << new_trace->to_string() << endl;
-
-      cout << "type: " << new_trace->get_type() << ", real_type: " << id.string_from_type(new_trace->get_type()) << endl;
+      //cout << "Trace to apta: " << new_trace->to_string() << endl;
 
       id.add_trace_to_apta(new_trace, merger->get_aut(), set<int>());
     }
@@ -99,7 +95,7 @@ void lsharp_algorithm::run_l_sharp(inputdata& id){
   // init the root node, s.t. we have blue states to iterate over
   complete_state(merger, the_apta->get_root(), teacher, id, alphabet);
   while(ENSEMBLE_RUNS > 0 && n_runs < ENSEMBLE_RUNS){
-    /* if(n_runs % 100 == 0) */ cout << "Iteration " << n_runs << endl;
+    if(n_runs % 100 == 0) cout << "Iteration " << n_runs << endl;
     
     bool no_isolated_states = true; // avoid iterating over a changed data structure
     for(blue_state_iterator b_it = blue_state_iterator(the_apta->get_root()); *b_it != nullptr; ++b_it){
@@ -138,7 +134,6 @@ void lsharp_algorithm::run_l_sharp(inputdata& id){
     if(no_isolated_states){
       // build hypothesis
       const list< refinement* > refs = minimize_apta(merger.get());
-      print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
 
       if(PRINT_ALL_MODELS){
         static int model_nr = 0;
@@ -147,28 +142,28 @@ void lsharp_algorithm::run_l_sharp(inputdata& id){
 
       optional< pair< vector<int>, int > > query_result = oracle.equivalence_query(merger.get());
       if(!query_result){
-        cout << "Found consistent automaton => Printed." << endl;
+        cout << "Found consistent automaton => Print." << endl;
+        print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
         return;
       }
       else{
         const vector<int>& cex = query_result.value().first;
         const int type = query_result.value().second;
         auto cex_tr = vector_to_trace(cex, id, type);
-        cout << "Found counterexample: " << cex_tr->to_string() << endl;
+        cout << "Found counterexample: " << cex_tr->to_string() << "\n"; //endl;
 
         reset_apta(merger.get(), refs); // note: does not reset the identified red states we had before
 
         if(PRINT_ALL_MODELS){
           static int model_nr = 0;
-          print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_undo"); // printing the final model each time
+          print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_undo");
         }
-
-        cout << "type: " << cex_tr->get_type() << ", real_type: " << id.string_from_type(cex_tr->get_type()) << endl;
         id.add_trace_to_apta(cex_tr, merger->get_aut(), set<int>());
       }
     }
 
     ++n_runs;
   }
-
+  cout << "Maximum of runs reached. Printing automaton." << endl;
+  print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
 }
