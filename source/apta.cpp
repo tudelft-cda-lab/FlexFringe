@@ -74,18 +74,18 @@ void apta::print_dot(iostream& output){
             output << "rep#" << n->representative << "\n";
         }
 
-        //output << n->number << ":#" << n->size << "\n";
-        //n->data->print_state_label(output);
-        //output << "\" ";
-        //n->data->print_state_style(output);
-        //if (!n->red) output << " style=dotted";
+        output << n->number << ":#" << n->size << "\n";
+        n->data->print_state_label(output);
+        output << "\" ";
+        n->data->print_state_style(output);
+        if (!n->red) output << " style=dotted";
         
-        output << n->number << " #" << n->size << "\" ";
-        if (n->is_red()) output << ", style=filled, fillcolor=\"firebrick1\"";
-        else if (n->is_blue()) output << ", style=filled, fillcolor=\"dodgerblue1\"";
-        else if (n->is_white()) output << ", style=filled, fillcolor=\"ghostwhite\"";
-        output << ", width=" << log(1 + log(1 + n->size));
-        output << ", height=" << log(1 + log(1 + n->size));
+        //output << n->number << " #" << n->size << "\" ";
+        //if (n->is_red()) output << ", style=filled, fillcolor=\"firebrick1\"";
+        //else if (n->is_blue()) output << ", style=filled, fillcolor=\"dodgerblue1\"";
+        //else if (n->is_white()) output << ", style=filled, fillcolor=\"ghostwhite\"";
+        //output << ", width=" << log(1 + log(1 + n->size));
+        //output << ", height=" << log(1 + log(1 + n->size));
 
         output << ", penwidth=" << log(1 + n->size);
         output << "];\n";
@@ -304,7 +304,7 @@ void apta::print_sinks_json(iostream& output) const{
 
 void apta::read_json(istream& input_stream){
     json read_apta = json::parse(input_stream);
-    abbadingo_inputdata idat;
+    abbadingo_inputdata idat;    
 
     map<int, apta_node*> states;
     //for each json line
