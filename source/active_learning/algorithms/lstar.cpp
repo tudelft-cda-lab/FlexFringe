@@ -30,7 +30,7 @@
 using namespace std;
 using namespace active_learning_namespace;
 
-const bool PRINT_ALL_MODELS = true; // for debugging
+const bool PRINT_ALL_MODELS = false; // for debugging
 
 /**
  * @brief Does what it says it does.
@@ -96,7 +96,7 @@ void lstar_algorithm::run_l_star(inputdata& id){
   auto the_apta = unique_ptr<apta>(new apta());
   auto merger = unique_ptr<state_merger>(new state_merger(&id, eval.get(), the_apta.get()));
 
-  while(true){
+  while(ENSEMBLE_RUNS > 0 && n_runs < ENSEMBLE_RUNS){
     cout << "\nIteration: " << n_runs << endl;
 
     //optimize :This below would work with lists without copy
@@ -116,7 +116,6 @@ void lstar_algorithm::run_l_star(inputdata& id){
 
     if(obs_table.is_closed()){
       const list< refinement* > refs = construct_automaton_from_table(obs_table, merger, id);
-      print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
 
       if(PRINT_ALL_MODELS){
         static int model_nr = 0;
@@ -127,7 +126,8 @@ void lstar_algorithm::run_l_star(inputdata& id){
       optional< pair< vector<int>, int > > query_result = oracle.equivalence_query(merger.get());
       if(!query_result){
         cout << "Found consistent automaton => Print." << endl;
-        break;
+        print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
+        return;
       }
       else{
         const vector<int>& cex = query_result.value().first;
@@ -149,9 +149,7 @@ void lstar_algorithm::run_l_star(inputdata& id){
     }
 
     ++n_runs;
-    if(ENSEMBLE_RUNS > 0 && n_runs == ENSEMBLE_RUNS) break;
   }
-
-/*   if(ENSEMBLE_RUNS > 0 && n_runs == ENSEMBLE_RUNS) cout << "Reached maximum number of iterations. Printing model" << endl;
-  print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); */
+  cout << "Maximum of runs reached. Printing automaton." << endl;
+  print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
 }

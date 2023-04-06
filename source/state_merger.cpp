@@ -1091,3 +1091,10 @@ state_merger::~state_merger(){
 int state_merger::get_num_merges() {
     return num_merges;
 }
+
+void state_merger::renumber_states(){
+    int ncounter = 0;
+    for(merged_APTA_iterator Ait = merged_APTA_iterator(aut->get_root()); *Ait != 0; ++Ait){
+        (*Ait)->number = ncounter++;
+    }
+}
