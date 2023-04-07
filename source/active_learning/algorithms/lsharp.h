@@ -12,6 +12,7 @@
 #ifndef _L_SHARP_H_
 #define _L_SHARP_H_
 
+#include "algorithm_base.h"
 #include "state_merger.h"
 #include "inputdata.h"
 #include "definitions.h"
@@ -23,7 +24,7 @@
 #include <vector> 
 #include <memory>
 
-class lsharp_algorithm{
+class lsharp_algorithm : public algorithm_base {
   protected:
     vector< refinement* > construct_automaton_from_table(std::unique_ptr<state_merger>& merger, inputdata& id) const;
 
@@ -33,7 +34,7 @@ class lsharp_algorithm{
 
   public:
     lsharp_algorithm() = default;
-    void run_l_sharp(inputdata& id);
+    void run(inputdata& id) override;
 };
 
 #endif

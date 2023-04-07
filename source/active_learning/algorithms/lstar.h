@@ -12,6 +12,7 @@
 #ifndef _L_STAR_H_
 #define _L_STAR_H_
 
+#include "algorithm_base.h"
 #include "observation_table.h"
 #include "state_merger.h"
 #include "inputdata.h"
@@ -24,12 +25,12 @@
 #include <memory>
 #include <list>
 
-class lstar_algorithm{
+class lstar_algorithm : public algorithm_base {
   protected:
     const std::list< refinement* > construct_automaton_from_table(const observation_table& obs_table, std::unique_ptr<state_merger>& merger, inputdata& id) const;
   public:
-    lstar_algorithm() = default;
-    void run_l_star(inputdata& id);
+    lstar_algorithm(std::unique_ptr<sul_base>& sul) : algorithm_base(sul){};
+    void run(inputdata& id) override;
 };
 
 #endif

@@ -34,8 +34,7 @@ class input_file_sul : public sul_base {
 
     std::map< std::vector<int>, int > all_traces;
 
-    virtual void preprocessing();
-    virtual void postprocessing();
+    virtual void post();
     virtual void step();
 
     virtual void reset(){};
@@ -45,7 +44,7 @@ class input_file_sul : public sul_base {
   public:
     input_file_sul();
 
-    virtual void parse_input(inputdata& id);
+    virtual void pre(inputdata& id) override;
     const std::map< std::vector<int>, int >& get_all_traces() const {
       return all_traces;
     }

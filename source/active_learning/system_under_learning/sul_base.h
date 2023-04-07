@@ -27,8 +27,7 @@ class sul_base{
   protected:
     const bool parses_input_file; // input files mainly for SULs with database
 
-    virtual void preprocessing() = 0;
-    virtual void postprocessing() = 0;
+    virtual void post() = 0;
     virtual void step() = 0;
 
     virtual void reset() = 0;
@@ -46,7 +45,7 @@ class sul_base{
   public:
     sul_base(const bool parses_input_file) : parses_input_file(parses_input_file){}; // abstract anyway
 
-    virtual void parse_input(inputdata& id){
+    virtual void pre(inputdata& id){
       if(!parses_input_file){
         throw std::logic_error("This function should not be called with kind of SUL, or set parses_input_file flag to true.");
       }

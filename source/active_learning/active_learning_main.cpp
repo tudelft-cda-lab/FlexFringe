@@ -14,6 +14,9 @@
 #include "lstar.h"
 #include "lsharp.h"
 
+#include "sul_base.h"
+#include "input_file_sul.h"
+
 #include "parameters.h"
 #include "inputdata.h"
 #include "inputdatalocator.h"
@@ -28,16 +31,14 @@
 using namespace std;
 using namespace active_learning_namespace;
 
-const bool INPUT_FILE_SUL = true; // TODO: have better switch for that later
-
 inputdata active_learning_namespace::get_inputdata(){
-
   bool read_csv = false;
-  //ifstream input_stream = get_input_stream();
-  
+  if(INPUT_FILE.compare(INPUT_FILE.length() - 4, INPUT_FILE.length(), ".csv") == 0){
+      read_csv = true;
+  }
+
   ifstream input_stream(INPUT_FILE);  
   cout << "Input file: " << INPUT_FILE << endl;
-    
   if(!input_stream) {
       cerr << "Input file not found, aborting" << endl;
       exit(-1);
@@ -47,7 +48,6 @@ inputdata active_learning_namespace::get_inputdata(){
 
   inputdata id;
   inputdata_locator::provide(&id);
-  
   if(read_csv) {
       auto input_parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
       id.read(&input_parser);
@@ -55,31 +55,30 @@ inputdata active_learning_namespace::get_inputdata(){
       auto input_parser = abbadingoparser(input_stream);
       id.read(&input_parser);
   }
-
-/*   for(const auto it: id){
-    auto& current_trace = *it;
-    const auto current_sequence = current_trace.get_input_sequence();
-    all_traces.insert(current_sequence);
-  } */
   input_stream.close();
-
   return id;
 }
 
 void active_learning_namespace::run_active_learning(){
+  inputdata id;
+  if(!INPUT_FILE.compare(INPUT_FILE.length() - 5, INPUT_FILE.length(), ".json")){
+    id = get_inputdata();
+  }
+  else{
+    cout << "Found neither abbadingo formatted file nor .csv formatted file. Treating provided input as SUT." << endl;
+  }
+
+  unique_ptr<sul_base> sul = unique_ptr<input_file_sul>(new input_file_sul());
 
   if(ACTIVE_LEARNING_ALGORITHM == "l_star"){
-    inputdata id = get_inputdata();
-    
-    auto l_star = lstar_algorithm();
-    l_star.run_l_star(id);
+    auto l_star = lstar_algorithm(sul);
+    l_star.run(id);
   }
   else if(ACTIVE_LEARNING_ALGORITHM == "l_sharp"){
     STORE_ACCESS_STRINGS = true;
-    inputdata id = get_inputdata();
-
+    
     auto l_sharp = lsharp_algorithm();
-    l_sharp.run_l_sharp(id);
+    l_sharp.run(id);
   }
   else{
     throw logic_error("Fatal error: Unknown active_learning_algorithm flag used: " + ACTIVE_LEARNING_ALGORITHM);
