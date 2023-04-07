@@ -32,13 +32,13 @@ class sul_base{
 
     virtual void reset() = 0;
 
-    virtual bool is_member(const std::vector<int>& query_trace) const {
+    virtual bool is_member(const std::vector<int>& query_trace) const = 0; /* {
       return false;
-    }
+    } */
 
-    virtual const int query_trace(const std::vector<int>& query_trace, inputdata& id) const {
+    virtual const int query_trace(const std::vector<int>& query_trace, inputdata& id) const = 0; /* {
       return -1;
-    }
+    } */
 
     std::ifstream get_input_stream() const;
     

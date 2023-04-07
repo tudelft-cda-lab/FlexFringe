@@ -30,7 +30,7 @@ class lstar_algorithm : public algorithm_base {
     const std::list< refinement* > construct_automaton_from_table(const observation_table& obs_table, std::unique_ptr<state_merger>& merger, inputdata& id) const;
   public:
     lstar_algorithm(std::unique_ptr<sul_base>& sul) : algorithm_base(sul){};
-    void run(inputdata& id) override;
+    void run(inputdata&& id) override;
 };
 
 #endif

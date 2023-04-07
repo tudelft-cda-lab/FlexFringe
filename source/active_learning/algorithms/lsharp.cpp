@@ -72,16 +72,15 @@ refinement* lsharp_algorithm::extract_best_merge(refinement_set* rs) const {
   return r;
 }
 
-void lsharp_algorithm::run(inputdata& id){
+void lsharp_algorithm::run(inputdata&& id){
   int n_runs = 0;
 
   // TODO: make those dynamic later
-  input_file_sul sul; // TODO: make these generic when you can
-  base_teacher teacher(&sul); // TODO: make these generic when you can
-  input_file_oracle oracle(&sul); // TODO: make these generic when you can
+  base_teacher teacher(sul.get()); // TODO: make these generic when you can
+  input_file_oracle oracle(sul.get()); // TODO: make these generic when you can
 
-  if(sul.has_input_file()){
-    sul.pre(id);
+  if(sul->has_input_file()){
+    sul->pre(id);
   }
   
   auto eval = unique_ptr<evaluation_function>(get_evaluation());
@@ -104,8 +103,7 @@ void lsharp_algorithm::run(inputdata& id){
       if(blue_node->get_size() == 0) continue;
       assert(!blue_node->is_red()); 
 
-
-      if(!blue_node->is_blue()) continue; // blue_state_iterator gives us blue and white nodes
+      //if(!blue_node->is_blue()) continue; // blue_state_iterator gives us blue and white nodes
       //cout << "blue node: " << blue_node->get_number() << endl;
       
       // this is a difference with Vandraager, but we need it for statistical methods
