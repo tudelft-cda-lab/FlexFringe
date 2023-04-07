@@ -33,8 +33,8 @@ class lsharp_algorithm : public algorithm_base {
     refinement* extract_best_merge(refinement_set* rs) const;
 
   public:
-    lsharp_algorithm() = default;
-    void run(inputdata& id) override;
+    lsharp_algorithm(std::unique_ptr<sul_base>& sul) : algorithm_base(sul){};
+    void run(inputdata&& id) override;
 };
 
 #endif

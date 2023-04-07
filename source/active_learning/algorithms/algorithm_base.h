@@ -25,7 +25,7 @@ class algorithm_base {
   public:
     algorithm_base() = default; // TODO: delete
     algorithm_base(std::unique_ptr<sul_base>& sul) : sul(std::move(sul)){};
-    virtual void run(inputdata& id) = 0;
+    virtual void run(inputdata&& id) = 0;
 };
 
 #endif

@@ -73,7 +73,7 @@ const list<refinement*> lstar_algorithm::construct_automaton_from_table(const ob
  * 
  * @param id The inputdata, already initialized with input file.
  */
-void lstar_algorithm::run(inputdata& id){
+void lstar_algorithm::run(inputdata&& id){
   bool terminated = false;
   int n_runs = 0;
 
@@ -95,6 +95,7 @@ void lstar_algorithm::run(inputdata& id){
   auto the_apta = unique_ptr<apta>(new apta());
   auto merger = unique_ptr<state_merger>(new state_merger(&id, eval.get(), the_apta.get()));
 
+  list< refinement* > refs; // we keep track of refinements
   while(ENSEMBLE_RUNS > 0 && n_runs < ENSEMBLE_RUNS){
     cout << "\nIteration: " << n_runs << endl;
 
@@ -114,7 +115,7 @@ void lstar_algorithm::run(inputdata& id){
     }
 
     if(obs_table.is_closed()){
-      const list< refinement* > refs = construct_automaton_from_table(obs_table, merger, id);
+      refs = construct_automaton_from_table(obs_table, merger, id);
 
       if(PRINT_ALL_MODELS){
         static int model_nr = 0;
@@ -148,7 +149,12 @@ void lstar_algorithm::run(inputdata& id){
     }
 
     ++n_runs;
+    if(ENSEMBLE_RUNS > 0 && n_runs == ENSEMBLE_RUNS){
+      cout << "Maximum of runs reached. Printing automaton." << endl;
+      for(auto top_ref: refs){
+        top_ref->doref(merger.get());
+      }
+      print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
+    }
   }
-  cout << "Maximum of runs reached. Printing automaton." << endl;
-  print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
 }

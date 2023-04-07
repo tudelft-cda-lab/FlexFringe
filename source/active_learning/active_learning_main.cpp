@@ -11,6 +11,7 @@
 
 #include "active_learning_main.h"
 
+#include "algorithm_base.h"
 #include "lstar.h"
 #include "lsharp.h"
 
@@ -60,27 +61,35 @@ inputdata active_learning_namespace::get_inputdata(){
 }
 
 void active_learning_namespace::run_active_learning(){
-  inputdata id;
-  if(!INPUT_FILE.compare(INPUT_FILE.length() - 5, INPUT_FILE.length(), ".json")){
+/*   inputdata id; // = get_inputdata();
+  cout << "original addres" << &id << endl;
+
+  if(INPUT_FILE.compare(INPUT_FILE.length() - 5, INPUT_FILE.length(), ".json") != 0){
+    cout << "Reading input data" << endl;
     id = get_inputdata();
+    cout << "new address" << &id << endl;
   }
   else{
     cout << "Found neither abbadingo formatted file nor .csv formatted file. Treating provided input as SUT." << endl;
-  }
+  } */
 
   unique_ptr<sul_base> sul = unique_ptr<input_file_sul>(new input_file_sul());
 
+  unique_ptr<algorithm_base> algorithm;
   if(ACTIVE_LEARNING_ALGORITHM == "l_star"){
-    auto l_star = lstar_algorithm(sul);
-    l_star.run(id);
+    algorithm = unique_ptr<algorithm_base>(new lstar_algorithm(sul));
   }
   else if(ACTIVE_LEARNING_ALGORITHM == "l_sharp"){
     STORE_ACCESS_STRINGS = true;
-    
-    auto l_sharp = lsharp_algorithm();
-    l_sharp.run(id);
+    algorithm = unique_ptr<algorithm_base>(new lsharp_algorithm(sul));
   }
   else{
     throw logic_error("Fatal error: Unknown active_learning_algorithm flag used: " + ACTIVE_LEARNING_ALGORITHM);
+  }
+  if(false){
+    // TODO
+  }
+  else{
+    algorithm->run(get_inputdata());
   }
 }

@@ -35,7 +35,7 @@ void dfa_sul::pre(inputdata& id) {
     input_apta_stream = ifstream(APTA_FILE);
     cout << "Reading apta file (SUT) - " << APTA_FILE << endl;
   }
-  else if (INPUT_FILE.compare(INPUT_FILE.length() - 5, INPUT_FILE.length(), ".json") == 0){
+  else if (INPUT_FILE.compare(INPUT_FILE.length() - 5, INPUT_FILE.length(), ".json") != 0){
     input_apta_stream = ifstream(INPUT_FILE);
     cout << "Reading input file (SUT) - " << INPUT_FILE << endl;
   }
@@ -48,7 +48,7 @@ void dfa_sul::pre(inputdata& id) {
 
 
 bool dfa_sul::is_member(const std::vector<int>& query_trace) const {
-  
+
 }
 
 
