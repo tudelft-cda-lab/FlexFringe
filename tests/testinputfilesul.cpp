@@ -32,7 +32,7 @@ TEST_CASE("Input file SUL", "[SUL]") {
     INPUT_FILE = "./data/PAutomaC-competition_sets/5.pautomac.train.dat";
     input_file_sul sul;
     inputdata id;
-    sul.parse_input(id);
+    sul.pre(id);
 
     SECTION("Check initialization"){
         CHECK(true); // TODO

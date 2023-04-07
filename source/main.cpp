@@ -184,7 +184,7 @@ void run() {
 
         if(!APTA_FILE.empty()){
             ifstream input_apta_stream(APTA_FILE);
-            cerr << "reading apta file - " << APTA_FILE << endl;
+            cout << "reading apta file - " << APTA_FILE << endl;
             the_apta->read_json(input_apta_stream);
 
             // this is so we use the correct alphabet when reading.

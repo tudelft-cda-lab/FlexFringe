@@ -73,7 +73,7 @@ const list<refinement*> lstar_algorithm::construct_automaton_from_table(const ob
  * 
  * @param id The inputdata, already initialized with input file.
  */
-void lstar_algorithm::run_l_star(inputdata& id){
+void lstar_algorithm::run(inputdata& id){
   bool terminated = false;
   int n_runs = 0;
 
@@ -82,14 +82,13 @@ void lstar_algorithm::run_l_star(inputdata& id){
   }
 
   // TODO: make those dynamic later
-  input_file_sul sul; // TODO: make these generic when you can
-  base_teacher teacher(&sul); // TODO: make these generic when you can
-  input_file_oracle oracle(&sul); // TODO: make these generic when you can
+  base_teacher teacher(sul.get()); // TODO: make these generic when you can
+  input_file_oracle oracle(sul.get()); // TODO: make these generic when you can
 
   observation_table obs_table(id.get_alphabet());
 
-  if(sul.has_input_file()){
-    sul.parse_input(id);
+  if(sul->has_input_file()){
+    sul->pre(id);
   }
   
   auto eval = unique_ptr<evaluation_function>(get_evaluation());

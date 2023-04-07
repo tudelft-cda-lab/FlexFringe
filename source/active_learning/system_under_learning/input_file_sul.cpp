@@ -21,12 +21,8 @@
 
 using namespace std;
 
-void input_file_sul::preprocessing(){
-    // this one does not need preprocessing and postprocessing yet, since we test it on abbadingo
-}
-
-void input_file_sul::postprocessing(){
-    // this one does not need preprocessing and postprocessing yet, since we test it on abbadingo
+void input_file_sul::post(){
+    // this one does not need preprocessing and post yet, since we test it on abbadingo
 }
 
 void input_file_sul::step(){
@@ -58,7 +54,7 @@ const int input_file_sul::query_trace(const vector<int>& query_trace, inputdata&
   return all_traces.at(query_trace);
 }
 
-void input_file_sul::parse_input(inputdata& id){
+void input_file_sul::pre(inputdata& id){
   for(const auto it: id){
     trace& current_trace = *it;
     const auto current_sequence = current_trace.get_input_sequence();

@@ -72,7 +72,7 @@ refinement* lsharp_algorithm::extract_best_merge(refinement_set* rs) const {
   return r;
 }
 
-void lsharp_algorithm::run_l_sharp(inputdata& id){
+void lsharp_algorithm::run(inputdata& id){
   int n_runs = 0;
 
   // TODO: make those dynamic later
@@ -81,7 +81,7 @@ void lsharp_algorithm::run_l_sharp(inputdata& id){
   input_file_oracle oracle(&sul); // TODO: make these generic when you can
 
   if(sul.has_input_file()){
-    sul.parse_input(id);
+    sul.pre(id);
   }
   
   auto eval = unique_ptr<evaluation_function>(get_evaluation());
