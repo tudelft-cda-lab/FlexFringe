@@ -12,7 +12,7 @@
 #ifndef _SUL_BASE_H_
 #define _SUL_BASE_H_
 
-#include "inputdata.h"
+#include "source/input/inputdata.h"
 
 #include <fstream>
 #include <vector>
@@ -25,35 +25,21 @@ class sul_base{
   friend class eq_oracle_base;
 
   protected:
-    const bool parses_input_file; // input files mainly for SULs with database
-
     virtual void post() = 0;
     virtual void step() = 0;
 
     virtual void reset() = 0;
 
-    virtual bool is_member(const std::vector<int>& query_trace) const = 0; /* {
-      return false;
-    } */
+    virtual bool is_member(const std::vector<int>& query_trace) const = 0;
 
-    virtual const int query_trace(const std::vector<int>& query_trace, inputdata& id) const = 0; /* {
-      return -1;
-    } */
+    virtual const int query_trace(const std::vector<int>& query_trace, inputdata& id) const = 0;
 
     std::ifstream get_input_stream() const;
     
   public:
-    sul_base(const bool parses_input_file) : parses_input_file(parses_input_file){}; // abstract anyway
+    sul_base() = default; // abstract anyway
 
-    virtual void pre(inputdata& id){
-      if(!parses_input_file){
-        throw std::logic_error("This function should not be called with kind of SUL, or set parses_input_file flag to true.");
-      }
-    };
-
-    const bool has_input_file() const noexcept {
-      return parses_input_file;
-    }
+    virtual void pre(inputdata& id) = 0;
 };
 
 #endif

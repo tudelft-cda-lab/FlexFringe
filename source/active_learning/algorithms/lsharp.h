@@ -20,6 +20,7 @@
 #include "tail.h"
 #include "refinement.h"
 #include "base_teacher.h"
+#include "eq_oracle_base.h"
 
 #include <vector> 
 #include <memory>
@@ -28,12 +29,13 @@ class lsharp_algorithm : public algorithm_base {
   protected:
     vector< refinement* > construct_automaton_from_table(std::unique_ptr<state_merger>& merger, inputdata& id) const;
 
-    void complete_state(std::unique_ptr<state_merger>& merger, apta_node* n, base_teacher& teacher, inputdata& id, const vector<int>& alphabet) const;
+    void complete_state(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const vector<int>& alphabet) const;
     void proc_counterex(apta* aut, const std::vector<int>& counterex) const;
     refinement* extract_best_merge(refinement_set* rs) const;
 
   public:
-    lsharp_algorithm(std::unique_ptr<sul_base>& sul) : algorithm_base(sul){};
+    lsharp_algorithm(std::shared_ptr<sul_base>& sul, std::unique_ptr<base_teacher>& teacher, std::unique_ptr<eq_oracle_base>& oracle) 
+      : algorithm_base(sul, teacher, oracle){};
     void run(inputdata&& id) override;
 };
 

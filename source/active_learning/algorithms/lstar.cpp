@@ -81,15 +81,9 @@ void lstar_algorithm::run(inputdata&& id){
     cout << "WARNING: runs parameter set to " << ENSEMBLE_RUNS << ". This can cause the algorithm to run indefinitely." << endl;
   }
 
-  // TODO: make those dynamic later
-  base_teacher teacher(sul.get()); // TODO: make these generic when you can
-  input_file_oracle oracle(sul.get()); // TODO: make these generic when you can
-
   observation_table obs_table(id.get_alphabet());
 
-  if(sul->has_input_file()){
-    sul->pre(id);
-  }
+  sul->pre(id);
   
   auto eval = unique_ptr<evaluation_function>(get_evaluation());
   auto the_apta = unique_ptr<apta>(new apta());
@@ -108,7 +102,7 @@ void lstar_algorithm::run(inputdata&& id){
       for(const auto& current_column: column_names){
         if(obs_table.has_record(current_row, current_column)) continue;
 
-        const int answer = teacher.ask_membership_query(current_row, current_column, id);
+        const int answer = teacher->ask_membership_query(current_row, current_column, id);
         obs_table.insert_record(current_row, current_column, answer);
       }
       obs_table.mark_row_complete(current_row);
@@ -123,7 +117,7 @@ void lstar_algorithm::run(inputdata&& id){
         cout << "Model nr " << model_nr << endl;
       }
 
-      optional< pair< vector<int>, int > > query_result = oracle.equivalence_query(merger.get());
+      optional< pair< vector<int>, int > > query_result = oracle->equivalence_query(merger.get());
       if(!query_result){
         cout << "Found consistent automaton => Print." << endl;
         print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time

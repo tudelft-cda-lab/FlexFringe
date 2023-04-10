@@ -64,6 +64,3 @@ void input_file_sul::pre(inputdata& id){
     all_traces[current_sequence] = type;
   }
 }
-
-input_file_sul::input_file_sul() : sul_base(true){
-}

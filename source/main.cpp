@@ -58,7 +58,8 @@ void run() {
 
     if(OPERATION_MODE == "active_learning"){
         cout << "Run in active learning mode." << endl;
-        active_learning_namespace::run_active_learning();
+        auto al = active_learning_main_func();
+        al.run_active_learning();
         cout << "Finished running, terminating program." << endl;
         return;
     }

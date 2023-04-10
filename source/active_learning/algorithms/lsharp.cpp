@@ -34,7 +34,7 @@ using namespace active_learning_namespace;
  * 
  * @param aut 
  */
-void lsharp_algorithm::complete_state(unique_ptr<state_merger>& merger, apta_node* n, base_teacher& teacher, inputdata& id, const vector<int>& alphabet) const {
+void lsharp_algorithm::complete_state(unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const vector<int>& alphabet) const {
   for(const int symbol: alphabet){
     if(n->get_child(symbol) == nullptr){
       auto access_trace = n->get_access_trace();
@@ -46,7 +46,7 @@ void lsharp_algorithm::complete_state(unique_ptr<state_merger>& merger, apta_nod
       print_vector(seq); */
 
       seq.push_back(symbol);
-      const auto answer = teacher.ask_membership_query(seq, id);
+      const auto answer = teacher->ask_membership_query(seq, id);
       
       trace* new_trace = vector_to_trace(seq, id, answer);
       //cout << "Trace to apta: " << new_trace->to_string() << endl;
@@ -75,13 +75,7 @@ refinement* lsharp_algorithm::extract_best_merge(refinement_set* rs) const {
 void lsharp_algorithm::run(inputdata&& id){
   int n_runs = 0;
 
-  // TODO: make those dynamic later
-  base_teacher teacher(sul.get()); // TODO: make these generic when you can
-  input_file_oracle oracle(sul.get()); // TODO: make these generic when you can
-
-  if(sul->has_input_file()){
-    sul->pre(id);
-  }
+  sul->pre(id);
   
   auto eval = unique_ptr<evaluation_function>(get_evaluation());
   auto the_apta = unique_ptr<apta>(new apta());
@@ -92,7 +86,7 @@ void lsharp_algorithm::run(inputdata&& id){
   print_vector(alphabet);
 
   // init the root node, s.t. we have blue states to iterate over
-  complete_state(merger, the_apta->get_root(), teacher, id, alphabet);
+  complete_state(merger, the_apta->get_root(), id, alphabet);
   list< refinement* > refs;
   while(ENSEMBLE_RUNS > 0 && n_runs < ENSEMBLE_RUNS){
     if(n_runs % 100 == 0) cout << "Iteration " << n_runs << endl;
@@ -108,14 +102,14 @@ void lsharp_algorithm::run(inputdata&& id){
       //cout << "blue node: " << blue_node->get_number() << endl;
       
       // this is a difference with Vandraager, but we need it for statistical methods
-      complete_state(merger, blue_node, teacher, id, alphabet);
+      complete_state(merger, blue_node, id, alphabet);
 
       refinement_set possible_refs;
       for(red_state_iterator r_it = red_state_iterator(the_apta->get_root()); *r_it != nullptr; ++r_it){
         const auto red_node = *r_it;
         assert(red_node->is_red());
 
-        complete_state(merger, red_node, teacher, id, alphabet);
+        complete_state(merger, red_node, id, alphabet);
 
         refinement* ref = merger->test_merge(red_node, blue_node);
         if(ref != nullptr) possible_refs.insert(ref);
@@ -139,7 +133,7 @@ void lsharp_algorithm::run(inputdata&& id){
         print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".not_final"); // printing the final model each time
       }
 
-      optional< pair< vector<int>, int > > query_result = oracle.equivalence_query(merger.get());
+      optional< pair< vector<int>, int > > query_result = oracle->equivalence_query(merger.get());
       if(!query_result){
         cout << "Found consistent automaton => Print." << endl;
         print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time

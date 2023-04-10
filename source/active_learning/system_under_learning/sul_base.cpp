@@ -18,10 +18,6 @@
 using namespace std;
 
 ifstream sul_base::get_input_stream() const {
-  if(!parses_input_file){
-    throw logic_error("Cannot get input stream of SUL-class not supporting it.");
-  }
-
   ifstream input_stream(INPUT_FILE);  
   cout << "Input file: " << INPUT_FILE << endl;
     

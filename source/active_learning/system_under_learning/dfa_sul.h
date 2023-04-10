@@ -37,7 +37,7 @@ class dfa_sul : public sul_base {
     virtual const int query_trace(const std::vector<int>& query_trace, inputdata& id) const override;
 
   public:
-    dfa_sul() : sul_base(true){
+    dfa_sul(){
       sul = std::unique_ptr<apta>( new apta() );
     };
 

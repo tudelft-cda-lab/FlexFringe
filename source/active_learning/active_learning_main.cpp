@@ -15,8 +15,8 @@
 #include "lstar.h"
 #include "lsharp.h"
 
-#include "sul_base.h"
 #include "input_file_sul.h"
+#include "input_file_oracle.h"
 
 #include "parameters.h"
 #include "inputdata.h"
@@ -27,12 +27,11 @@
 
 #include <stdexcept>
 #include <fstream>
-#include <memory>
 
 using namespace std;
 using namespace active_learning_namespace;
 
-inputdata active_learning_namespace::get_inputdata(){
+inputdata active_learning_main_func::get_inputdata() const {
   bool read_csv = false;
   if(INPUT_FILE.compare(INPUT_FILE.length() - 4, INPUT_FILE.length(), ".csv") == 0){
       read_csv = true;
@@ -60,36 +59,61 @@ inputdata active_learning_namespace::get_inputdata(){
   return id;
 }
 
-void active_learning_namespace::run_active_learning(){
-/*   inputdata id; // = get_inputdata();
-  cout << "original addres" << &id << endl;
 
-  if(INPUT_FILE.compare(INPUT_FILE.length() - 5, INPUT_FILE.length(), ".json") != 0){
-    cout << "Reading input data" << endl;
-    id = get_inputdata();
-    cout << "new address" << &id << endl;
-  }
-  else{
-    cout << "Found neither abbadingo formatted file nor .csv formatted file. Treating provided input as SUT." << endl;
-  } */
+/**
+ * @brief Selects the SUL to be used.
+ * 
+ * @return shared_ptr<sul_base> The sul.
+ */
+shared_ptr<sul_base> active_learning_main_func::select_sul_class() const {
+  return shared_ptr<input_file_sul>(new input_file_sul());
+}
 
-  unique_ptr<sul_base> sul = unique_ptr<input_file_sul>(new input_file_sul());
+/**
+ * @brief Selects the teacher to be used.
+ * 
+ * @return unique_ptr<base_teacher> The teacher.
+ */
+unique_ptr<base_teacher> active_learning_main_func::select_teacher_class(shared_ptr<sul_base>& sul) const {
+  return unique_ptr<base_teacher>( new base_teacher(sul.get()) ); 
+}
+
+/**
+ * @brief Selects the oracle to be used.
+ * 
+ * @return unique_ptr<eq_oracle_base> The oracle.
+ */
+unique_ptr<eq_oracle_base> active_learning_main_func::select_oracle_class(shared_ptr<sul_base>& sul) const {
+  return unique_ptr<eq_oracle_base>( new input_file_oracle(sul.get()) );
+}
+
+/**
+ * @brief Selects the parameters the algorithm runs with and runs the algorithm.
+ * 
+ */
+void active_learning_main_func::run_active_learning(){
+
+  auto sul = select_sul_class();
+  auto teacher = select_teacher_class(sul);
+  auto oracle = select_oracle_class(sul);
 
   unique_ptr<algorithm_base> algorithm;
   if(ACTIVE_LEARNING_ALGORITHM == "l_star"){
-    algorithm = unique_ptr<algorithm_base>(new lstar_algorithm(sul));
+    algorithm = unique_ptr<algorithm_base>(new lstar_algorithm(sul, teacher, oracle));
   }
   else if(ACTIVE_LEARNING_ALGORITHM == "l_sharp"){
     STORE_ACCESS_STRINGS = true;
-    algorithm = unique_ptr<algorithm_base>(new lsharp_algorithm(sul));
+    algorithm = unique_ptr<algorithm_base>(new lsharp_algorithm(sul, teacher, oracle));
   }
   else{
     throw logic_error("Fatal error: Unknown active_learning_algorithm flag used: " + ACTIVE_LEARNING_ALGORITHM);
   }
   if(false){
-    // TODO
+    // TODO: make a check for the type of SUL you got
+    algorithm->run(inputdata());
   }
   else{
+    // we only want to read the inputdata when we learn passively or from sequences
     algorithm->run(get_inputdata());
   }
 }
