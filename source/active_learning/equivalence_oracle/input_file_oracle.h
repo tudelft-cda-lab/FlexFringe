@@ -20,7 +20,7 @@
 #include <optional>
 #include <utility>
 
-class input_file_oracle : eq_oracle_base {
+class input_file_oracle : public eq_oracle_base {
   protected:    
     virtual void reset_sul(){
       // we won't need this guy here

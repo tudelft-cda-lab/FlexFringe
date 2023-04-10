@@ -14,17 +14,23 @@
 
 #include "inputdata.h"
 #include "sul_base.h"
+#include "eq_oracle_base.h"
+#include "base_teacher.h"
 
 #include <memory>
 #include <utility>
 
 class algorithm_base {
   protected:
-    std::unique_ptr<sul_base> sul;
+    std::shared_ptr<sul_base> sul;
+    std::unique_ptr<base_teacher> teacher;
+    std::unique_ptr<eq_oracle_base> oracle;
 
   public:
     algorithm_base() = default; // TODO: delete
-    algorithm_base(std::unique_ptr<sul_base>& sul) : sul(std::move(sul)){};
+    algorithm_base(std::shared_ptr<sul_base>& sul, std::unique_ptr<base_teacher>& teacher, std::unique_ptr<eq_oracle_base>& oracle) 
+      : sul(sul), teacher(std::move(teacher)), oracle(std::move(oracle)) {};
+      
     virtual void run(inputdata&& id) = 0;
 };
 
