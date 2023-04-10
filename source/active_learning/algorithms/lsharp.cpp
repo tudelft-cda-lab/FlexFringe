@@ -93,6 +93,7 @@ void lsharp_algorithm::run(inputdata&& id){
 
   // init the root node, s.t. we have blue states to iterate over
   complete_state(merger, the_apta->get_root(), teacher, id, alphabet);
+  list< refinement* > refs;
   while(ENSEMBLE_RUNS > 0 && n_runs < ENSEMBLE_RUNS){
     if(n_runs % 100 == 0) cout << "Iteration " << n_runs << endl;
     
@@ -131,7 +132,7 @@ void lsharp_algorithm::run(inputdata&& id){
 
     if(no_isolated_states){
       // build hypothesis
-      const list< refinement* > refs = minimize_apta(merger.get());
+      refs = minimize_apta(merger.get());
 
       if(PRINT_ALL_MODELS){
         static int model_nr = 0;
@@ -161,7 +162,12 @@ void lsharp_algorithm::run(inputdata&& id){
     }
 
     ++n_runs;
+    if(ENSEMBLE_RUNS > 0 && n_runs == ENSEMBLE_RUNS){
+      cout << "Maximum of runs reached. Printing automaton." << endl;
+      for(auto top_ref: refs){
+        top_ref->doref(merger.get());
+      }
+      print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
+    }
   }
-  cout << "Maximum of runs reached. Printing automaton." << endl;
-  print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
 }
