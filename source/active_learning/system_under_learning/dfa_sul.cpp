@@ -43,15 +43,23 @@ void dfa_sul::pre(inputdata& id) {
     throw logic_error("Require a json formatted apta file as an SUT");
   }
 
-  sul->read_json(input_apta_stream);
+  sul->read_json(input_apta_stream); // alphabet will be stored in inputdata like this, too
 }
 
-
-bool dfa_sul::is_member(const std::vector<int>& query_trace) const {
-
+/**
+ * @brief Function unused with this SUL type.
+ */
+bool dfa_sul::is_member(const std::vector<int>& query_trace, ) const {  
+  return true;
 }
 
 
 const int dfa_sul::query_trace(const std::vector<int>& query_trace, inputdata& id) const {
+  // TODO: query/predict the apta, return the type as predicted
+  trace* tr;
+  add_sequence_to_trace(tr, query_trace);
 
+  const int pred_type = predict_type_from_trace(tr, sul.get(), id);
+
+  return pred_type;
 }

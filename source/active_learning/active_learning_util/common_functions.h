@@ -20,6 +20,7 @@
 #include "refinement.h"
 #include "definitions.h"
 #include "count_types.h"
+#include "inputdata.h"
 
 #include <vector>
 #include <list>
@@ -31,6 +32,8 @@ namespace active_learning_namespace{
   bool aut_accepts_trace(trace* tr, apta* aut); 
   bool aut_accepts_trace(trace* tr, apta* aut, const count_driven* const eval); 
 
+  const int predict_type_from_trace(trace* tr, apta* aut, inputdata& id); 
+
   void reset_apta(state_merger* merger, const std::list<refinement*>& refs);
   const std::list<refinement*> minimize_apta(state_merger* merger);
 
@@ -41,9 +44,6 @@ namespace active_learning_namespace{
   void update_tail(/*out*/ tail* t, const int symbol);
 
   void print_vector(const vector<int>& v);
-  
-  // for debugging observation table like data structures
-  void print_all_columns(const std::map<pref_suf_t, int>& row);
 }
 
 #endif

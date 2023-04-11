@@ -70,7 +70,7 @@ shared_ptr<sul_base> active_learning_main_func::select_sul_class() const {
 }
 
 /**
- * @brief Selects the teacher to be used.
+ * @brief Selects the teacher to be used. In case alternative teachers want to be written.
  * 
  * @return unique_ptr<base_teacher> The teacher.
  */
@@ -79,12 +79,12 @@ unique_ptr<base_teacher> active_learning_main_func::select_teacher_class(shared_
 }
 
 /**
- * @brief Selects the oracle to be used.
+ * @brief Selects the oracle to be used. In case alternative oracles want to be written.
  * 
  * @return unique_ptr<eq_oracle_base> The oracle.
  */
 unique_ptr<eq_oracle_base> active_learning_main_func::select_oracle_class(shared_ptr<sul_base>& sul) const {
-  return unique_ptr<eq_oracle_base>( new input_file_oracle(sul.get()) );
+  return unique_ptr<eq_oracle_base>( new input_file_oracle(sul) );
 }
 
 /**
@@ -110,6 +110,7 @@ void active_learning_main_func::run_active_learning(){
   }
   if(false){
     // TODO: make a check for the type of SUL you got
+    // we do not want to run the input file
     algorithm->run(inputdata());
   }
   else{

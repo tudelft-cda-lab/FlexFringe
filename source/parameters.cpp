@@ -135,3 +135,4 @@ int K = 0;
 
 // active learning parameters
 string ACTIVE_LEARNING_ALGORITHM = "l_star";
+string REJECTING_LABEL = "0";

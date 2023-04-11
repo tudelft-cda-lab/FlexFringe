@@ -153,5 +153,6 @@ extern bool SINK_TYPE;
 
 // active learning parameters
 extern string ACTIVE_LEARNING_ALGORITHM;
+extern string REJECTING_LABEL;
 
 #endif
