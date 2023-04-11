@@ -21,15 +21,16 @@
 #include <vector>
 #include <optional>
 #include <utility>
+#include <memory>
 
 class eq_oracle_base{
   protected:
-    sul_base* sul;
+    std::shared_ptr<sul_base> sul;
 
-    virtual void reset_sul() = 0; // TODO: change return type to what you need
+    virtual void reset_sul() = 0;
     virtual bool apta_accepts_trace(state_merger* merger, const vector<int>& tr, inputdata& id) const = 0;
   public:
-    eq_oracle_base(sul_base* sul) : sul(sul){};
+    eq_oracle_base(std::shared_ptr<sul_base>& sul) : sul(sul){};
     virtual std::optional< std::pair< std::vector<int>, int> > equivalence_query(state_merger* merger) = 0;
 };
 

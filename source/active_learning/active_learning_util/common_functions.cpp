@@ -14,9 +14,6 @@
 #include "definitions.h"
 #include "inputdata.h"
 
-// TODO: delete. Only for debuggging
-//#include "main_helpers.h"
-
 #include <iostream>
 #include <stdexcept>
 #include <algorithm>
@@ -59,6 +56,30 @@ bool active_learning_namespace::aut_accepts_trace(trace* tr, apta* aut){
 }
 
 /**
+ * @brief Predicts type from trace. Code is a subset of the predict.cpp functions, hence duplicate code. TODO: clean that up
+ * 
+ * @param tr The trace.
+ * @return const int The predicted type.
+ */
+const int active_learning_namespace::predict_type_from_trace(trace* tr, apta* aut, inputdata& id){
+    apta_node* n = aut->get_root();
+    tail* t = tr->get_head(); // TODO: get
+    for(int j = 0; j < t->get_length(); j++){
+        n = get_child_node(n, t);
+        if(n == nullptr){
+            return id.get_reverse_type(REJECTING_LABEL);
+        }
+        t = t->future();
+    }
+
+    apta_node* ending_state = n;
+    tail* ending_tail = t;
+    if(ending_tail->is_final()) ending_tail = ending_tail->past();
+
+    return ending_state->get_data()->predict_type(ending_tail);
+}
+
+/**
  * @brief This is the other version of the function. This one uses the types of the traces, 
  * i.e. it implements accepting and rejecting traces. Hence we get a different case, and this is 
  * the version that we use for e.g. L* and L#.
@@ -97,15 +118,10 @@ const list<refinement*> active_learning_namespace::minimize_apta(state_merger* m
     list<refinement*> refs;
     refinement* top_ref = merger->get_best_refinement();
 
-    //int x = 0;
     while(top_ref != 0){
         refs.push_back(top_ref);        
         top_ref->doref(merger);
         top_ref = merger->get_best_refinement();
-
-/*         if(PRINT_ALL_MODELS){
-            print_current_automaton(merger, "model_after_", to_string(++x) + ".refinement");
-        } */
     }
     return refs;
 }
@@ -136,13 +152,6 @@ void active_learning_namespace::update_tail(tail* t, const int symbol){
     int num_symbol_attributes = 0; //inputdata::get_num_symbol_attributes();
     if(num_symbol_attributes > 0){
       // TODO: we do not treat this one yet
-/*         l3.str(symbol_attr);
-        for(int i = 0; i < num_symbol_attributes; ++i){
-            if(i < num_symbol_attributes - 1) std::getline(l3,val,',');
-            else std::getline(l3,val);
-            td->attr[i] = symbol_attributes[i].get_value(val);
-        }
-        l3.clear(); */
     }
 }
 
@@ -219,17 +228,4 @@ void active_learning_namespace::print_vector(const vector<int>& v){
       cout << symbol << ",";
     }
     cout << endl;
-}
-
-/**
- * @brief For debugging purposes when using observation table. Prints columns of a row.
- * 
- * @param row A row of the observation table.
- */
-void active_learning_namespace::print_all_columns(const std::map<pref_suf_t, int>& row){
-    cout << "Here come all columns in this row: ";
-    for(const auto& col: row){
-        print_vector(col.first);
-    }
-    cout << " ...end of columns of this row." << endl;
 }
