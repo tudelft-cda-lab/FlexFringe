@@ -72,8 +72,8 @@ refinement* lsharp_algorithm::extract_best_merge(refinement_set* rs) const {
   return r;
 }
 
-void lsharp_algorithm::run(inputdata&& id){
-  int n_runs = 0;
+void lsharp_algorithm::run(inputdata& id){
+  int n_runs = 1;
 
   sul->pre(id);
   
@@ -88,8 +88,8 @@ void lsharp_algorithm::run(inputdata&& id){
   // init the root node, s.t. we have blue states to iterate over
   complete_state(merger, the_apta->get_root(), id, alphabet);
   list< refinement* > refs;
-  while(ENSEMBLE_RUNS > 0 && n_runs < ENSEMBLE_RUNS){
-    if(n_runs % 100 == 0) cout << "Iteration " << n_runs << endl;
+  while(ENSEMBLE_RUNS > 0 && n_runs <= ENSEMBLE_RUNS){
+    if(n_runs % 100 == 0) cout << "Iteration " << n_runs + 1 << endl;
     
     bool no_isolated_states = true; // avoid iterating over a changed data structure
     for(blue_state_iterator b_it = blue_state_iterator(the_apta->get_root()); *b_it != nullptr; ++b_it){
@@ -133,7 +133,7 @@ void lsharp_algorithm::run(inputdata&& id){
         print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".not_final"); // printing the final model each time
       }
 
-      optional< pair< vector<int>, int > > query_result = oracle->equivalence_query(merger.get());
+      optional< pair< vector<int>, int > > query_result = oracle->equivalence_query(merger.get(), teacher);
       if(!query_result){
         cout << "Found consistent automaton => Print." << endl;
         print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
@@ -156,7 +156,7 @@ void lsharp_algorithm::run(inputdata&& id){
     }
 
     ++n_runs;
-    if(ENSEMBLE_RUNS > 0 && n_runs == ENSEMBLE_RUNS){
+    if(ENSEMBLE_RUNS > 0 && n_runs > ENSEMBLE_RUNS){
       cout << "Maximum of runs reached. Printing automaton." << endl;
       for(auto top_ref: refs){
         top_ref->doref(merger.get());

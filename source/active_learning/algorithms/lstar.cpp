@@ -73,13 +73,9 @@ const list<refinement*> lstar_algorithm::construct_automaton_from_table(const ob
  * 
  * @param id The inputdata, already initialized with input file.
  */
-void lstar_algorithm::run(inputdata&& id){
+void lstar_algorithm::run(inputdata& id){
   bool terminated = false;
   int n_runs = 0;
-
-  if(ENSEMBLE_RUNS <= 0){
-    cout << "WARNING: runs parameter set to " << ENSEMBLE_RUNS << ". This can cause the algorithm to run indefinitely." << endl;
-  }
 
   observation_table obs_table(id.get_alphabet());
 
@@ -117,7 +113,7 @@ void lstar_algorithm::run(inputdata&& id){
         cout << "Model nr " << model_nr << endl;
       }
 
-      optional< pair< vector<int>, int > > query_result = oracle->equivalence_query(merger.get());
+      optional< pair< vector<int>, int > > query_result = oracle->equivalence_query(merger.get(), teacher);
       if(!query_result){
         cout << "Found consistent automaton => Print." << endl;
         print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
