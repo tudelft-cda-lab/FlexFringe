@@ -6,6 +6,7 @@ include_directories(
         "${CMAKE_CURRENT_SOURCE_DIR}/system_under_learning"
         "${CMAKE_CURRENT_SOURCE_DIR}/counterexample_strategies"
         "${CMAKE_CURRENT_SOURCE_DIR}/equivalence_oracle"
+        "${CMAKE_CURRENT_SOURCE_DIR}/equivalence_oracle/search_strategies"
         "${CMAKE_CURRENT_SOURCE_DIR}/algorithms"
         )
 
@@ -28,6 +29,11 @@ add_library(ActiveLearning STATIC
             equivalence_oracle/input_file_oracle.h
             equivalence_oracle/input_file_oracle.cpp
 
+            equivalence_oracle/search_strategies/search_base.h
+            equivalence_oracle/search_strategies/search_base.cpp
+            equivalence_oracle/search_strategies/breadth_first_search.h
+            equivalence_oracle/search_strategies/breadth_first_search.cpp
+
             memory/observation_table.h
             memory/observation_table.cpp
             memory/adaptive_distinguishing_sequences.h
@@ -37,6 +43,8 @@ add_library(ActiveLearning STATIC
             system_under_learning/sul_base.cpp
             system_under_learning/input_file_sul.h
             system_under_learning/input_file_sul.cpp
+            system_under_learning/dfa_sul.h
+            system_under_learning/dfa_sul.cpp
 
             teacher/base_teacher.h
             teacher/base_teacher.cpp

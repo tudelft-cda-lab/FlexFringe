@@ -31,7 +31,7 @@ class algorithm_base {
     algorithm_base(std::shared_ptr<sul_base>& sul, std::unique_ptr<base_teacher>& teacher, std::unique_ptr<eq_oracle_base>& oracle) 
       : sul(sul), teacher(std::move(teacher)), oracle(std::move(oracle)) {};
       
-    virtual void run(inputdata&& id) = 0;
+    virtual void run(inputdata& id) = 0;
 };
 
 #endif

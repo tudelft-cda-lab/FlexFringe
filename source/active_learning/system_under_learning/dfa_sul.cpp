@@ -11,6 +11,7 @@
 
 #include "dfa_sul.h"
 #include "parameters.h"
+#include "common_functions.h"
 
 #include <fstream>
 #include <stdexcept>
@@ -31,35 +32,42 @@ using namespace active_learning_namespace;
 void dfa_sul::pre(inputdata& id) {
   ifstream input_apta_stream;
 
+  // read_json stores alphabet and types in inputdata
   if(!APTA_FILE.empty()){
     input_apta_stream = ifstream(APTA_FILE);
     cout << "Reading apta file (SUT) - " << APTA_FILE << endl;
+    sut->read_json(input_apta_stream);
   }
-  else if (INPUT_FILE.compare(INPUT_FILE.length() - 5, INPUT_FILE.length(), ".json") != 0){
+  else if (INPUT_FILE.compare(INPUT_FILE.length() - 5, INPUT_FILE.length(), ".json") == 0){
     input_apta_stream = ifstream(INPUT_FILE);
     cout << "Reading input file (SUT) - " << INPUT_FILE << endl;
+    sut->read_json(input_apta_stream);
   }
-  else {
-    throw logic_error("Require a json formatted apta file as an SUT");
+  
+  else if (INPUT_FILE.compare(INPUT_FILE.length() - 4, INPUT_FILE.length(), ".dot") == 0){
+    [[deprecated]]
+    throw logic_error("Deprecated: Will not support dot files in the future.");
   }
 
-  sul->read_json(input_apta_stream); // alphabet will be stored in inputdata like this, too
+  else {
+    throw logic_error("Problem with reading input");
+  }
 }
 
 /**
  * @brief Function unused with this SUL type.
  */
-bool dfa_sul::is_member(const std::vector<int>& query_trace, ) const {  
+bool dfa_sul::is_member(const std::vector<int>& query_trace) const {  
   return true;
 }
 
 
 const int dfa_sul::query_trace(const std::vector<int>& query_trace, inputdata& id) const {
   // TODO: query/predict the apta, return the type as predicted
-  trace* tr;
+  trace* tr = mem_store::create_trace(&id);
   add_sequence_to_trace(tr, query_trace);
 
-  const int pred_type = predict_type_from_trace(tr, sul.get(), id);
+  const int pred_type = predict_type_from_trace(tr, sut.get(), id);
 
   return pred_type;
 }

@@ -16,6 +16,7 @@
 using namespace std;
 using namespace active_learning_namespace;
 
+[[deprecated]]
 bool input_file_oracle::apta_accepts_trace(state_merger* merger, const vector<int>& tr, inputdata& id) const {
   const static double THRESH = 1; // TODO: we need to set this guy somehow
 
@@ -26,7 +27,7 @@ bool input_file_oracle::apta_accepts_trace(state_merger* merger, const vector<in
   return score < THRESH;
 }
 
-optional< pair< vector<int>, int > > input_file_oracle::equivalence_query(state_merger* merger) {
+optional< pair< vector<int>, int > > input_file_oracle::equivalence_query(state_merger* merger, const std::unique_ptr<base_teacher>& teacher) {
   const count_driven* const eval_func = dynamic_cast<count_driven*>(merger->get_eval());
   if(eval_func == nullptr) throw logic_error("Must have a heuristic that derives from count_driven at this point.");
 

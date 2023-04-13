@@ -25,9 +25,10 @@ class sul_base{
   friend class eq_oracle_base;
 
   protected:
+
+
     virtual void post() = 0;
     virtual void step() = 0;
-
     virtual void reset() = 0;
 
     virtual bool is_member(const std::vector<int>& query_trace) const = 0;

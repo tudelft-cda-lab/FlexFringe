@@ -30,16 +30,16 @@ class input_file_sul : public sul_base {
   friend class base_teacher;
   friend class eq_oracle_base;
 
-  protected:
+  private:
     std::map< std::vector<int>, int > all_traces;
 
+  protected:
     virtual void post();
     virtual void step();
-
     virtual void reset(){};
 
-    bool is_member(const std::vector<int>& query_trace) const override;
-    const int query_trace(const std::vector<int>& query_trace, inputdata& id) const override;
+    virtual bool is_member(const std::vector<int>& query_trace) const override;
+    virtual const int query_trace(const std::vector<int>& query_trace, inputdata& id) const override;
   public:
     input_file_sul() = default;
 

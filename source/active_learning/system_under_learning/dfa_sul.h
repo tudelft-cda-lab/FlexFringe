@@ -14,6 +14,7 @@
 
 #include "inputdata.h"
 #include "apta.h"
+#include "sul_base.h"
 
 #include <fstream>
 #include <vector>
@@ -25,23 +26,23 @@ class dfa_sul : public sul_base {
   friend class eq_oracle_base;
 
   private:
-    std::unique_ptr<apta> sul;
+    std::unique_ptr<apta> sut;
 
   protected:
-    virtual void post(){};
-    virtual void step(){};
-
-    virtual void reset(){};
+    virtual void post() override {};
+    virtual void step() override {};
+    virtual void reset() override {};
 
     virtual bool is_member(const std::vector<int>& query_trace) const override;
     virtual const int query_trace(const std::vector<int>& query_trace, inputdata& id) const override;
 
   public:
     dfa_sul(){
-      sul = std::unique_ptr<apta>( new apta() );
-    };
+      sut = std::unique_ptr<apta>( new apta() );
+    }
 
     virtual void pre(inputdata& id) override;
+    void pre(inputdata& id, const bool overwrite_apta);
 };
 
 #endif
