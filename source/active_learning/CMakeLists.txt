@@ -28,6 +28,8 @@ add_library(ActiveLearning STATIC
             equivalence_oracle/eq_oracle_base.cpp
             equivalence_oracle/input_file_oracle.h
             equivalence_oracle/input_file_oracle.cpp
+            equivalence_oracle/active_sul_oracle.h
+            equivalence_oracle/active_sul_oracle.cpp
 
             equivalence_oracle/search_strategies/search_base.h
             equivalence_oracle/search_strategies/search_base.cpp

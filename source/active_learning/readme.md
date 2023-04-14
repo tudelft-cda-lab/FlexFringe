@@ -9,7 +9,7 @@ About the folder structure:
   6. Counterexample strategies: This is what you think it is.
   7. Util: Here we do some typedefs and some shared variables that a reasonable number of algorithms will use.
 
-We use Umbrello to open the class diagram.
+We use Umbrello to open the class diagram. Note: Not maintained at the moment
 
 Notes on code (for those who want to dive deeper): 
 - We use the terms SUL (system under learning) and SUT (system under test). They mean the same for us.

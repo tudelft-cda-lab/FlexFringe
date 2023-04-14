@@ -18,6 +18,7 @@
 #include "input_file_sul.h"
 #include "input_file_oracle.h"
 #include "dfa_sul.h"
+#include "active_sul_oracle.h"
 
 #include "parameters.h"
 #include "inputdata.h"
@@ -69,13 +70,11 @@ inputdata active_learning_main_func::get_inputdata() const {
  * 
  * @return shared_ptr<sul_base> The sul.
  */
-shared_ptr<sul_base> active_learning_main_func::select_sul_class() const {
-  if((INPUT_FILE.compare(INPUT_FILE.length() - 5, INPUT_FILE.length(), ".json") == 0) ||
-     (INPUT_FILE.compare(INPUT_FILE.length() - 4, INPUT_FILE.length(), ".dot") == 0) ||
-      !APTA_FILE.empty()){
-    return shared_ptr<dfa_sul>(new dfa_sul());
+shared_ptr<sul_base> active_learning_main_func::select_sul_class(const bool ACTIVE_SUL) const {
+  if(ACTIVE_SUL){
+    return shared_ptr<sul_base>(new dfa_sul());
   }
-  return shared_ptr<input_file_sul>(new input_file_sul());
+  return shared_ptr<sul_base>(new input_file_sul());
 }
 
 /**
@@ -83,7 +82,7 @@ shared_ptr<sul_base> active_learning_main_func::select_sul_class() const {
  * 
  * @return unique_ptr<base_teacher> The teacher.
  */
-unique_ptr<base_teacher> active_learning_main_func::select_teacher_class(shared_ptr<sul_base>& sul) const {
+unique_ptr<base_teacher> active_learning_main_func::select_teacher_class(shared_ptr<sul_base>& sul, const bool ACTIVE_SUL) const {
   return unique_ptr<base_teacher>( new base_teacher(sul.get()) ); 
 }
 
@@ -92,7 +91,10 @@ unique_ptr<base_teacher> active_learning_main_func::select_teacher_class(shared_
  * 
  * @return unique_ptr<eq_oracle_base> The oracle.
  */
-unique_ptr<eq_oracle_base> active_learning_main_func::select_oracle_class(shared_ptr<sul_base>& sul) const {
+unique_ptr<eq_oracle_base> active_learning_main_func::select_oracle_class(shared_ptr<sul_base>& sul, const bool ACTIVE_SUL) const {
+  if(ACTIVE_SUL){
+    return unique_ptr<eq_oracle_base>( new active_sul_oracle(sul) );
+  }
   return unique_ptr<eq_oracle_base>( new input_file_oracle(sul) );
 }
 
@@ -103,9 +105,13 @@ unique_ptr<eq_oracle_base> active_learning_main_func::select_oracle_class(shared
 void active_learning_main_func::run_active_learning(){
   assertm(ENSEMBLE_RUNS > 0, "nruns parameter must be larger than 0 for active learning.");
 
-  auto sul = select_sul_class();
-  auto teacher = select_teacher_class(sul);
-  auto oracle = select_oracle_class(sul);
+  const bool ACTIVE_SUL = (INPUT_FILE.compare(INPUT_FILE.length() - 5, INPUT_FILE.length(), ".json") == 0) ||
+                    (INPUT_FILE.compare(INPUT_FILE.length() - 4, INPUT_FILE.length(), ".dot") == 0) ||
+                    !APTA_FILE.empty();
+
+  auto sul = select_sul_class(ACTIVE_SUL);
+  auto teacher = select_teacher_class(sul, ACTIVE_SUL);
+  auto oracle = select_oracle_class(sul, ACTIVE_SUL);
 
   unique_ptr<algorithm_base> algorithm;
   if(ACTIVE_LEARNING_ALGORITHM == "l_star"){
@@ -120,9 +126,7 @@ void active_learning_main_func::run_active_learning(){
   }
 
   // TODO: duplicate if-statement
-  if((INPUT_FILE.compare(INPUT_FILE.length() - 5, INPUT_FILE.length(), ".json") == 0) ||
-     (INPUT_FILE.compare(INPUT_FILE.length() - 4, INPUT_FILE.length(), ".dot") == 0) ||
-      !APTA_FILE.empty()){
+  if(ACTIVE_SUL){
     // we do not want to run the input file
     inputdata id;
     inputdata_locator::provide(&id);

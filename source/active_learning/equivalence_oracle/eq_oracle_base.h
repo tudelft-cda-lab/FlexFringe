@@ -14,7 +14,7 @@
 
 #include "sul_base.h"
 #include "parameters.h"
-#include "search_strategies/search_base.h"
+#include "search_strategies/all_strategies.h"
 #include "base_teacher.h"
 
 #include "apta.h"
@@ -34,6 +34,15 @@ class eq_oracle_base{
     virtual bool apta_accepts_trace(state_merger* merger, const list<int>& tr, inputdata& id) const = 0;
   public:
     eq_oracle_base(std::shared_ptr<sul_base>& sul) : sul(sul){};
+
+    /**
+     * @brief Poses the equivalence query. Returns counterexample cex and true answer to cex if no equivalence proven.
+     * 
+     * @param merger The state-merger.
+     * @param teacher The teacher.
+     * @return std::optional< std::pair< std::list<int>, int> > Counterexample if not equivalent, else nullopt. Counterexample is pair of trace and the answer to the 
+     * counterexample as returned by the SUL.
+     */
     virtual std::optional< std::pair< std::list<int>, int> > equivalence_query(state_merger* merger, [[maybe_unused]] const std::unique_ptr<base_teacher>& teacher) = 0;
 };
 
