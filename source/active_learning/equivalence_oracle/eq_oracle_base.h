@@ -12,10 +12,10 @@
 #ifndef _EQ_ORACLE_BASE_H_
 #define _EQ_ORACLE_BASE_H_
 
-#include "sul_base.h"
-#include "parameters.h"
-#include "search_strategies/all_strategies.h"
+#include "sul_headers.h"
+#include "search_strategies/search_strategy_headers.h"
 #include "base_teacher.h"
+#include "parameters.h"
 
 #include "apta.h"
 #include "state_merger.h"

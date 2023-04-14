@@ -125,7 +125,6 @@ void active_learning_main_func::run_active_learning(){
     throw logic_error("Fatal error: Unknown active_learning_algorithm flag used: " + ACTIVE_LEARNING_ALGORITHM);
   }
 
-  // TODO: duplicate if-statement
   if(ACTIVE_SUL){
     // we do not want to run the input file
     inputdata id;
