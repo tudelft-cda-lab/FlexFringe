@@ -12,7 +12,6 @@
 #ifndef _DFA_SUL_H_
 #define _DFA_SUL_H_
 
-#include "inputdata.h"
 #include "apta.h"
 #include "sul_base.h"
 

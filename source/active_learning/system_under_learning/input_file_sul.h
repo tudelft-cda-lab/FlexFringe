@@ -14,14 +14,13 @@
 #define _INPUT_FILE_SUL_H_
 
 #include "sul_base.h"
-#include "i_parser.h"
-#include "inputdata.h"
+#include "source/input/parsers/i_parser.h"
+#include "source/input/inputdata.h"
 
 #include <list>
 #include <map>
 
 // only those should be able to access the system
-class teacher_base;
 class eq_oracle_base;
 
 class input_file_sul : public sul_base {

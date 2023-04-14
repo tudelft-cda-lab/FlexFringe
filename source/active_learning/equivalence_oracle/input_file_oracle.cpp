@@ -37,5 +37,5 @@ optional< pair< list<int>, int > > input_file_oracle::equivalence_query(state_me
       return make_optional< pair< list<int>, int > >(make_pair(sequence, type));
     }
   }
-  return nullopt; // empty optional
+  return nullopt;
 }

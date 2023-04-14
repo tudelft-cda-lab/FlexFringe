@@ -1,5 +1,5 @@
 /**
- * @file all_strategies.h
+ * @file search_strategy_headers.h
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
  * @brief 
  * @version 0.1

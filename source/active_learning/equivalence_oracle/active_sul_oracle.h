@@ -38,6 +38,7 @@ class active_sul_oracle : public eq_oracle_base {
   public:
     active_sul_oracle(std::shared_ptr<sul_base>& sul) : eq_oracle_base(sul) {
       search_strategy = std::unique_ptr<search_base>(new bfs_strategy(5));
+      assert(dynamic_cast<input_file_sul*>(sul.get()) == nullptr);
     };
 
     std::optional< std::pair< std::list<int>, int> > equivalence_query(state_merger* merger, [[maybe_unused]] const std::unique_ptr<base_teacher>& teacher);

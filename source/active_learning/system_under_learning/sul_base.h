@@ -18,9 +18,7 @@
 #include <list>
 #include <stdexcept>
 
-class teacher_base;
-
-class sul_base{
+class sul_base {
   friend class base_teacher;
   friend class eq_oracle_base;
 
