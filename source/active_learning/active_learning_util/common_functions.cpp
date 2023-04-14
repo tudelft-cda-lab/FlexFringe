@@ -112,7 +112,7 @@ bool active_learning_namespace::aut_accepts_trace(trace* tr, apta* aut, const co
  * to undo all the refinments and pose a fresh hypothesis later on.
  * 
  * @param aut The apta.
- * @return vector<refinement*> vector with the refinements done. 
+ * @return list<refinement*> list with the refinements done. 
  */
 const list<refinement*> active_learning_namespace::minimize_apta(state_merger* merger){
     list<refinement*> refs;
@@ -159,18 +159,18 @@ void active_learning_namespace::update_tail(tail* t, const int symbol){
  * @brief Add the sequence as a concatenation of tail-objects to the trace, so that flexfringe can work it out.
  * 
  * @param new_trace The trace to add to.
- * @param sequence Sequence in vector for.
+ * @param sequence Sequence in list for.
  */
-void active_learning_namespace::add_sequence_to_trace(trace* new_trace, const vector<int> sequence){
+void active_learning_namespace::add_sequence_to_trace(trace* new_trace, const list<int> sequence){
     new_trace->length = sequence.size();
     
     tail* new_tail = mem_store::create_tail(nullptr);
     new_tail->tr = new_trace;
     new_trace->head = new_tail;
 
-    int index = 0;
+    auto sequence_it = sequence.cbegin();
     for(int index = 0; index < sequence.size(); ++index){
-        const int symbol = sequence.at(index);
+        const int symbol = *sequence_it;
         active_learning_namespace::update_tail(new_tail, symbol);
         new_tail->td->index = index;
 
@@ -178,6 +178,8 @@ void active_learning_namespace::add_sequence_to_trace(trace* new_trace, const ve
         new_tail = mem_store::create_tail(nullptr);
         new_tail->tr = new_trace;
         old_tail->set_future(new_tail);
+
+        ++sequence_it;
     }
 
     new_tail->td->index = sequence.size();
@@ -190,21 +192,21 @@ void active_learning_namespace::add_sequence_to_trace(trace* new_trace, const ve
  * @brief What you think it does.
  * 
  */
-vector<int> active_learning_namespace::concatenate_strings(const vector<int>& pref1, const vector<int>& pref2){
-  vector<int> res(pref1);
+list<int> active_learning_namespace::concatenate_strings(const list<int>& pref1, const list<int>& pref2){
+  list<int> res(pref1);
   res.insert(res.end(), pref2.begin(), pref2.end());
   return res;
 }
 
 /**
- * @brief Turns a vector to a trace.
+ * @brief Turns a list to a trace.
  * 
- * @param vec The vector.
+ * @param vec The list.
  * @param id The inputdata.
  * @param trace_type Accepting or rejecting.
  * @return trace* The trace.
  */
-trace* active_learning_namespace::vector_to_trace(const vector<int>& vec, inputdata& id, const int trace_type){
+trace* active_learning_namespace::vector_to_trace(const list<int>& vec, inputdata& id, const int trace_type){
     static int trace_nr = 0;
 
     trace* new_trace = mem_store::create_trace(&id);
@@ -218,14 +220,14 @@ trace* active_learning_namespace::vector_to_trace(const vector<int>& vec, inputd
 }
 
 /**
- * @brief Print a vector of ints. For debugging purposes.
+ * @brief Print a list of ints. For debugging purposes.
  * 
- * @param v The vector.
+ * @param v The list.
  */
-void active_learning_namespace::print_vector(const vector<int>& v){
-    cout << "vec: ";
-    for(const auto symbol: v){
-      cout << symbol << ",";
-    }
+template<class it_T>
+void active_learning_namespace::print_sequence(it_T begin, it_T end){
+    cout << "seq: ";
+    for (; begin != end; ++begin)
+        cout << *begin << " ";
     cout << endl;
 }

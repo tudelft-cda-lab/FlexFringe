@@ -57,12 +57,12 @@ void dfa_sul::pre(inputdata& id) {
 /**
  * @brief Function unused with this SUL type.
  */
-bool dfa_sul::is_member(const std::vector<int>& query_trace) const {  
+bool dfa_sul::is_member(const std::list<int>& query_trace) const {  
   return true;
 }
 
 
-const int dfa_sul::query_trace(const std::vector<int>& query_trace, inputdata& id) const {
+const int dfa_sul::query_trace(const std::list<int>& query_trace, inputdata& id) const {
   // TODO: query/predict the apta, return the type as predicted
   trace* tr = mem_store::create_trace(&id);
   add_sequence_to_trace(tr, query_trace);

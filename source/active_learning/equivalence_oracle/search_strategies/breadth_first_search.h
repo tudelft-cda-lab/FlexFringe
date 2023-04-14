@@ -22,17 +22,15 @@ class bfs_strategy : public search_base {
     const int BFS_MAX_DEPTH;
     
     int depth;
-    std::list<int>::iterator alphabet_it;
 
-    std::stack< list<int> > curr_search;
-    std::stack< list<int> > old_search;
+    std::stack< std::list<int> > curr_search;
+    std::stack< std::list<int> > old_search;
   public:
     bfs_strategy(const int max_depth) : search_base(), BFS_MAX_DEPTH(max_depth) {
       depth = 0;
-      alphabet_it = nullptr;
     };
 
-    std::optional< const std::vector<int> > next(const std::shared_ptr<sul_base>& sul, const inputdata& id) const override;
+    std::optional< const std::list<int> > next(const std::shared_ptr<sul_base>& sul, const inputdata& id) override;
 };
 
 #endif

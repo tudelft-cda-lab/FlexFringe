@@ -13,7 +13,7 @@
 #define _AL_SEARCH_BASE_H_
 
 #include "sul_base.h"
-#include "inputdata.h"
+#include "source/input/inputdata.h"
 
 #include <list>
 #include <optional>
@@ -23,7 +23,7 @@ class search_base {
   public:
     search_base() = default;
 
-    virtual std:optional< const std::list<int> > next(const std::shared_ptr<sul_base>& sul, const inputdata& id) const = 0;
+    virtual std::optional< const std::list<int> > next(const std::shared_ptr<sul_base>& sul, const inputdata& id) = 0;
 };
 
 #endif

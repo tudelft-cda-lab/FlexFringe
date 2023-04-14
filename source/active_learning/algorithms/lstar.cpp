@@ -47,12 +47,12 @@ const list<refinement*> lstar_algorithm::construct_automaton_from_table(const ob
 
   // We iterate over all prefixes and suffixes. TODO: Can cause duplicates? Optimize later
   for(auto row_it = upper_table.cbegin(); row_it != upper_table.cend(); ++row_it){
-    const vector<int>& prefix = row_it->first;
+    const list<int>& prefix = row_it->first;
     const auto entry = row_it->second;
 
     //for(auto col_it = column_names.cbegin(); col_it != column_names.cend(); ++col_it){
     for(auto col_it = entry.cbegin(); col_it != entry.cend(); ++col_it){
-      const vector<int>& suffix = col_it->first;
+      const list<int>& suffix = col_it->first;
 
       const auto whole_prefix = concatenate_strings(prefix, suffix);
       const auto answer = obs_table.get_answer(prefix, suffix);
@@ -113,14 +113,14 @@ void lstar_algorithm::run(inputdata& id){
         cout << "Model nr " << model_nr << endl;
       }
 
-      optional< pair< vector<int>, int > > query_result = oracle->equivalence_query(merger.get(), teacher);
+      optional< pair< list<int>, int > > query_result = oracle->equivalence_query(merger.get(), teacher);
       if(!query_result){
         cout << "Found consistent automaton => Print." << endl;
         print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
         return;
       }
       else{
-        const vector<int>& cex = query_result.value().first;
+        const list<int>& cex = query_result.value().first;
         const int type = query_result.value().second;
         auto cex_tr = vector_to_trace(cex, id, type);
 

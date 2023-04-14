@@ -105,10 +105,10 @@ void trace::pop_front() {
  * @param is_access_trace Boolean indicating whether it is an access trace or not. Default = false.
  * @return const std::vector<int> The sequence of the trace.
  */
-const std::vector<int> trace::get_input_sequence(const bool is_access_trace) const {
-    std::vector<int> res;
+const std::list<int> trace::get_input_sequence(const bool is_access_trace) const {
+    std::list<int> res;
     tail* t = head;
-    if(t->get_symbol() == -1) return std::vector<int>(); // empty strings
+    if(t->get_symbol() == -1) return std::list<int>(); // empty strings
 
     while((!is_access_trace && t != end_tail) || (is_access_trace && t != nullptr)){
         res.push_back(t->get_symbol());

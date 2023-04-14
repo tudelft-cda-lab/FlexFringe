@@ -12,7 +12,9 @@
 #include "breadth_first_search.h"
 
 #include <stack>
+#include <list>
 #include <utility>
+#include <cassert>
 
 using namespace std;
 
@@ -23,15 +25,14 @@ using namespace std;
  * 
  * @param sul The SUl.
  * @param id The inputdata.
- * @return optional< const vector<int> > A counterexample if found.
+ * @return optional< const list<int> > A counterexample if found.
  */
-optional< const vector<int> > al_breadth_first_search::next(const shared_ptr<sul_base>& sul, const inputdata& id) const {
+optional< const list<int> > bfs_strategy::next(const shared_ptr<sul_base>& sul, const inputdata& id) {
   if(depth == BFS_MAX_DEPTH) return nullopt;
 
-  static const vector<int> alphabet = id.get_alphabet();
+  static const list<int> alphabet = id.get_alphabet();
   assert(alphabet.size() > 0);
-
-  if(alphabet_it == nullptr) alphabet_it = alphabet.begin();
+  static list<int>::const_iterator alphabet_it = alphabet.begin();
 
   [[unlikely]]
   if(depth == 0){
@@ -39,7 +40,7 @@ optional< const vector<int> > al_breadth_first_search::next(const shared_ptr<sul
     
     if(alphabet_it == alphabet.end()){
       ++depth;
-      alphabet_it = nullptr;
+      alphabet_it = alphabet.begin();
     }
 
     ++alphabet_it;
@@ -50,10 +51,10 @@ optional< const vector<int> > al_breadth_first_search::next(const shared_ptr<sul
   const auto& prefix = old_search.top();
   auto new_pref = list<int>(prefix);
   new_pref.push_back(*alphabet_it);
-  curr_search.push_back(std::move(new_pref));
+  curr_search.push(std::move(new_pref));
 
   if(alphabet_it == alphabet.end()){
-    alphabet_it = nullptr;
+    alphabet_it = alphabet.begin();
     old_search.pop();
   } 
 
@@ -61,7 +62,7 @@ optional< const vector<int> > al_breadth_first_search::next(const shared_ptr<sul
     ++depth;
     
     old_search = std::move(curr_search);
-    curr_search = stack<int>();
+    curr_search = stack< list<int> >();
     return old_search.top();
   }
 
