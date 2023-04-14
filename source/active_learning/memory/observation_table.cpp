@@ -29,7 +29,7 @@ using namespace active_learning_namespace;
  * 
  * @param alphabet We need the alphabet beforehand to know how to extend, see e.g. "Learning regular sets from queries and counterexamples" by Dana Angluin.
  */
-observation_table::observation_table(const vector<int>& alphabet) : alphabet(alphabet), checked_for_closedness(false) {
+observation_table::observation_table(const list<int>& alphabet) : alphabet(alphabet), checked_for_closedness(false) {
 
   // initialize the lower table properly
   for(const auto i: alphabet){
@@ -37,13 +37,13 @@ observation_table::observation_table(const vector<int>& alphabet) : alphabet(alp
 
     incomplete_rows.push_back(pref_suf_t(new_row_name)); // we do a copy to circumvent the destructor
     table_mapper[ pref_suf_t(new_row_name.begin(), new_row_name.end()) ] = upper_lower_t::lower; // TODO: do we need the copy of the prefix here?
-    lower_table[move(new_row_name)] = map<pref_suf_t, int>();
+    lower_table[std::move(new_row_name)] = map<pref_suf_t, int>();
   }
 
   const auto nullv = get_null_vector();
   incomplete_rows.push_back(nullv); // we do a copy to circumvent the destructor
   table_mapper[ pref_suf_t(nullv.begin(), nullv.end()) ] = upper_lower_t::lower; // TODO: do we need the copy of the prefix here?
-  lower_table[move(nullv)] = map<pref_suf_t, int>(); 
+  lower_table[std::move(nullv)] = map<pref_suf_t, int>(); 
 
   all_columns.insert(get_null_vector());
 };
@@ -241,7 +241,7 @@ const bool observation_table::is_closed() {
 /**
  * @brief Gets the incomplete rows. Helps speeding up the algorithm by saving the search.
  * 
- * @return const vector< pref_suf_t >& The vector of incomplete rows.
+ * @return const list< pref_suf_t >& The list of incomplete rows.
  */
 const list< pref_suf_t >& observation_table::get_incomplete_rows() const {
   return this->incomplete_rows;
@@ -324,7 +324,7 @@ void observation_table::extend_lower_table() {
  * 
  */
 void observation_table::print() const {
-  cout << "Upper table: " << endl;
+/*   cout << "Upper table: " << endl;
   for(auto it = upper_table.cbegin(); it != upper_table.cend(); ++it){
     const auto& row_name = it->first;
     print_vector(row_name);
@@ -333,7 +333,7 @@ void observation_table::print() const {
   cout << "Lower table:" << endl;
   for(auto it = lower_table.cbegin(); it != lower_table.cend(); ++it){
     const auto& row_name = it->first;
-    print_vector(row_name);
+    print_sequence(row_name);
   }
 
   cout << "Columns:" << endl;
@@ -344,5 +344,5 @@ void observation_table::print() const {
   cout << "Rows to close:" << endl;
   for(const auto r: incomplete_rows){
     print_vector(r);
-  }
+  } */
 }

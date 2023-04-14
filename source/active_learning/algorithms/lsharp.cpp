@@ -34,7 +34,7 @@ using namespace active_learning_namespace;
  * 
  * @param aut 
  */
-void lsharp_algorithm::complete_state(unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const vector<int>& alphabet) const {
+void lsharp_algorithm::complete_state(unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const list<int>& alphabet) const {
   for(const int symbol: alphabet){
     if(n->get_child(symbol) == nullptr){
       auto access_trace = n->get_access_trace();
@@ -56,7 +56,7 @@ void lsharp_algorithm::complete_state(unique_ptr<state_merger>& merger, apta_nod
   }
 }
 
-void lsharp_algorithm::proc_counterex(apta* aut, const std::vector<int>& counterex) const {
+void lsharp_algorithm::proc_counterex(apta* aut, const std::list<int>& counterex) const {
   // TODO: this is a counterexample strategy
 }
 
@@ -81,9 +81,9 @@ void lsharp_algorithm::run(inputdata& id){
   auto the_apta = unique_ptr<apta>(new apta());
   auto merger = unique_ptr<state_merger>(new state_merger(&id, eval.get(), the_apta.get()));
 
-  const vector<int> alphabet = id.get_alphabet();
+  const list<int> alphabet = id.get_alphabet();
   cout << "Alphabet: ";
-  print_vector(alphabet);
+  print_sequence< list<int>::const_iterator >(alphabet.begin(), alphabet.end());
 
   // init the root node, s.t. we have blue states to iterate over
   complete_state(merger, the_apta->get_root(), id, alphabet);
@@ -133,14 +133,14 @@ void lsharp_algorithm::run(inputdata& id){
         print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".not_final"); // printing the final model each time
       }
 
-      optional< pair< vector<int>, int > > query_result = oracle->equivalence_query(merger.get(), teacher);
+      optional< pair< list<int>, int > > query_result = oracle->equivalence_query(merger.get(), teacher);
       if(!query_result){
         cout << "Found consistent automaton => Print." << endl;
         print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
         return;
       }
       else{
-        const vector<int>& cex = query_result.value().first;
+        const list<int>& cex = query_result.value().first;
         const int type = query_result.value().second;
         auto cex_tr = vector_to_trace(cex, id, type);
         cout << "Found counterexample: " << cex_tr->to_string() << "\n"; //endl;

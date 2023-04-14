@@ -21,7 +21,7 @@
 #include "tail.h"
 #include "refinement.h"
 
-#include <vector> 
+#include <list> 
 #include <memory>
 #include <list>
 

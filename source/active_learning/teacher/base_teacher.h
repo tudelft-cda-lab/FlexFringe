@@ -16,7 +16,7 @@
 #include "sul_base.h"
 #include "definitions.h"
 
-#include <vector>
+#include <list>
 
 class base_teacher{
   protected:

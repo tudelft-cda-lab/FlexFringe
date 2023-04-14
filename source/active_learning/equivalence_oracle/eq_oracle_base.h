@@ -14,12 +14,13 @@
 
 #include "sul_base.h"
 #include "parameters.h"
-#include "search_base.h"
+#include "search_strategies/search_base.h"
+#include "base_teacher.h"
 
 #include "apta.h"
 #include "state_merger.h"
 
-#include <vector>
+#include <list>
 #include <optional>
 #include <utility>
 #include <memory>
@@ -30,10 +31,10 @@ class eq_oracle_base{
     std::unique_ptr<search_base> search_strategy;
 
     virtual void reset_sul() = 0;
-    virtual bool apta_accepts_trace(state_merger* merger, const vector<int>& tr, inputdata& id) const = 0;
+    virtual bool apta_accepts_trace(state_merger* merger, const list<int>& tr, inputdata& id) const = 0;
   public:
     eq_oracle_base(std::shared_ptr<sul_base>& sul) : sul(sul){};
-    virtual std::optional< std::pair< std::vector<int>, int> > equivalence_query(state_merger* merger, [[maybe_unused]] const std::unique_ptr<base_teacher>& teacher);
+    virtual std::optional< std::pair< std::list<int>, int> > equivalence_query(state_merger* merger, [[maybe_unused]] const std::unique_ptr<base_teacher>& teacher) = 0;
 };
 
 #endif

@@ -22,15 +22,15 @@
 #include "base_teacher.h"
 #include "eq_oracle_base.h"
 
-#include <vector> 
+#include <list> 
 #include <memory>
 
 class lsharp_algorithm : public algorithm_base {
   protected:
-    vector< refinement* > construct_automaton_from_table(std::unique_ptr<state_merger>& merger, inputdata& id) const;
+    std::list< refinement* > construct_automaton_from_table(std::unique_ptr<state_merger>& merger, inputdata& id) const;
 
-    void complete_state(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const vector<int>& alphabet) const;
-    void proc_counterex(apta* aut, const std::vector<int>& counterex) const;
+    void complete_state(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const std::list<int>& alphabet) const;
+    void proc_counterex(apta* aut, const std::list<int>& counterex) const;
     refinement* extract_best_merge(refinement_set* rs) const;
 
   public:

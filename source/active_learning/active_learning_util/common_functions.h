@@ -22,7 +22,7 @@
 #include "count_types.h"
 #include "inputdata.h"
 
-#include <vector>
+#include <list>
 #include <list>
 #include <map>
 
@@ -37,14 +37,15 @@ namespace active_learning_namespace{
   void reset_apta(state_merger* merger, const std::list<refinement*>& refs);
   const std::list<refinement*> minimize_apta(state_merger* merger);
 
-  std::vector<int> concatenate_strings(const std::vector<int>& pref1, const std::vector<int>& pref2);
-  trace* vector_to_trace(const std::vector<int>& vec, inputdata& id, const int trace_type);
+  std::list<int> concatenate_strings(const std::list<int>& pref1, const std::list<int>& pref2);
+  trace* vector_to_trace(const std::list<int>& vec, inputdata& id, const int trace_type);
 
-  void add_sequence_to_trace(trace* new_trace, const std::vector<int> sequence);
+  void add_sequence_to_trace(trace* new_trace, const std::list<int> sequence);
   void update_tail(/*out*/ tail* t, const int symbol);
 
+  template <class it_T>
   [[maybe_unused]]
-  void print_vector(const vector<int>& v);
+  void print_sequence(it_T begin, it_T end);
 }
 
 #endif

@@ -200,8 +200,8 @@ int inputdata::get_alphabet_size() {
     return alphabet.size();
 }
 
-const std::vector<int> inputdata::get_alphabet() const {
-    std::vector<int> res;
+const list<int> inputdata::get_alphabet() const {
+    std::list<int> res;
     for(const auto& mapping: r_alphabet){
         res.push_back(mapping.second);
     }

@@ -29,11 +29,11 @@ void input_file_sul::step(){
     // this one does not need step() yet, since we test it on abbadingo
 }
 
-bool input_file_sul::is_member(const vector<int>& query_trace) const {
+bool input_file_sul::is_member(const list<int>& query_trace) const {
     return all_traces.contains(query_trace);
 }
 
-const int input_file_sul::query_trace(const vector<int>& query_trace, inputdata& id) const {
+const int input_file_sul::query_trace(const list<int>& query_trace, inputdata& id) const {
   if(!this->is_member(query_trace)){
 
     static bool added_unknown_type = false;

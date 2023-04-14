@@ -17,7 +17,7 @@ using namespace std;
 using namespace active_learning_namespace;
 
 [[deprecated]]
-bool input_file_oracle::apta_accepts_trace(state_merger* merger, const vector<int>& tr, inputdata& id) const {
+bool input_file_oracle::apta_accepts_trace(state_merger* merger, const list<int>& tr, inputdata& id) const {
   const static double THRESH = 1; // TODO: we need to set this guy somehow
 
   trace* new_tr = vector_to_trace(tr, id, 1);
@@ -27,14 +27,14 @@ bool input_file_oracle::apta_accepts_trace(state_merger* merger, const vector<in
   return score < THRESH;
 }
 
-optional< pair< vector<int>, int > > input_file_oracle::equivalence_query(state_merger* merger, const std::unique_ptr<base_teacher>& teacher) {
+optional< pair< list<int>, int > > input_file_oracle::equivalence_query(state_merger* merger, const std::unique_ptr<base_teacher>& teacher) {
   const count_driven* const eval_func = dynamic_cast<count_driven*>(merger->get_eval());
   if(eval_func == nullptr) throw logic_error("Must have a heuristic that derives from count_driven at this point.");
 
   for(const auto& [sequence, type]: dynamic_cast<input_file_sul*>(sul.get())->get_all_traces()){
     trace* tr = vector_to_trace(sequence, *(merger->get_dat()), type);
     if(!active_learning_namespace::aut_accepts_trace(tr, merger->get_aut(), eval_func)){
-      return make_optional< pair< vector<int>, int > >(make_pair(sequence, type));
+      return make_optional< pair< list<int>, int > >(make_pair(sequence, type));
     }
   }
   return nullopt; // empty optional

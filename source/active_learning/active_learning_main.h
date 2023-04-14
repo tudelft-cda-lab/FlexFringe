@@ -17,7 +17,6 @@
 #include "base_teacher.h"
 #include "eq_oracle_base.h"
 
-#include <vector>
 #include <memory>
 class active_learning_main_func{
   private:
