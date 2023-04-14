@@ -23,7 +23,7 @@ class search_base {
   public:
     search_base() = default;
 
-    virtual std::optional< const std::list<int> > next(const std::shared_ptr<sul_base>& sul, const inputdata& id) = 0;
+    virtual std::optional< std::list<int> > next(const inputdata& id) = 0;
 };
 
 #endif

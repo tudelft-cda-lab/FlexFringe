@@ -22,9 +22,9 @@ class active_learning_main_func{
   private:
     inputdata get_inputdata() const;
     
-    std::shared_ptr<sul_base> select_sul_class() const;
-    std::unique_ptr<base_teacher> select_teacher_class(std::shared_ptr<sul_base>& sul) const;
-    std::unique_ptr<eq_oracle_base> select_oracle_class(std::shared_ptr<sul_base>& sul) const;
+    std::shared_ptr<sul_base> select_sul_class(const bool ACTIVE_SUL) const;
+    std::unique_ptr<base_teacher> select_teacher_class(std::shared_ptr<sul_base>& sul, const bool ACTIVE_SUL) const;
+    std::unique_ptr<eq_oracle_base> select_oracle_class(std::shared_ptr<sul_base>& sul, const bool ACTIVE_SUL) const;
   
   public:
     active_learning_main_func() = default;

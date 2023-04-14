@@ -1,0 +1,44 @@
+/**
+ * @file active_sul_oracle.cpp
+ * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
+ * @brief 
+ * @version 0.1
+ * @date 2023-04-14
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
+
+#include "active_sul_oracle.h"
+#include "common_functions.h"
+
+using namespace std;
+using namespace active_learning_namespace;
+
+std::optional< pair< list<int>, int> > active_sul_oracle::equivalence_query(state_merger* merger, const unique_ptr<base_teacher>& teacher) {  
+  inputdata& id = *(merger->get_dat());
+  apta& hypothesis = *(merger->get_aut());
+
+  std::optional< list<int> > query_string_opt = search_strategy->next(id);
+  while(query_string_opt != nullopt){
+    auto& query_string = query_string_opt.value();
+    int true_val = teacher->ask_membership_query(query_string, id);
+
+    trace* test_tr = vector_to_trace(query_string, id, 0); // type-argument irrelevant here
+
+    apta_node* n = hypothesis.get_root();
+    tail* t = test_tr->get_head();
+    for(int j = 0; j < t->get_length(); j++){
+        n = active_learning_namespace::get_child_node(n, t);
+        if(n == nullptr) return make_optional< pair< list<int>, int > >(make_pair(query_string, true_val));
+
+        t = t->future();
+    }
+    const int pred_val = n->get_data()->predict_type(t);
+    if(true_val != pred_val) return make_optional< pair< list<int>, int > >(make_pair(query_string, true_val));
+
+    query_string_opt = search_strategy->next(id);
+  }
+
+  return nullopt;
+}

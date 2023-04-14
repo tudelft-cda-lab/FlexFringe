@@ -30,7 +30,7 @@ class bfs_strategy : public search_base {
       depth = 0;
     };
 
-    std::optional< const std::list<int> > next(const std::shared_ptr<sul_base>& sul, const inputdata& id) override;
+    virtual std::optional< std::list<int> > next(const inputdata& id) override;
 };
 
 #endif

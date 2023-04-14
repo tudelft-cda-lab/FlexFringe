@@ -15,6 +15,7 @@
 #include <list>
 #include <utility>
 #include <cassert>
+#include <iostream>
 
 using namespace std;
 
@@ -27,7 +28,7 @@ using namespace std;
  * @param id The inputdata.
  * @return optional< const list<int> > A counterexample if found.
  */
-optional< const list<int> > bfs_strategy::next(const shared_ptr<sul_base>& sul, const inputdata& id) {
+optional< list<int> > bfs_strategy::next(const inputdata& id) {
   if(depth == BFS_MAX_DEPTH) return nullopt;
 
   static const list<int> alphabet = id.get_alphabet();
@@ -39,8 +40,11 @@ optional< const list<int> > bfs_strategy::next(const shared_ptr<sul_base>& sul, 
     old_search.push( list<int>{*alphabet_it} );
     
     if(alphabet_it == alphabet.end()){
+      cout << "Depth: " << depth << endl;
+
       ++depth;
       alphabet_it = alphabet.begin();
+      return old_search.top();
     }
 
     ++alphabet_it;
@@ -51,20 +55,24 @@ optional< const list<int> > bfs_strategy::next(const shared_ptr<sul_base>& sul, 
   const auto& prefix = old_search.top();
   auto new_pref = list<int>(prefix);
   new_pref.push_back(*alphabet_it);
-  curr_search.push(std::move(new_pref));
+  curr_search.push( std::move(new_pref) );
 
   if(alphabet_it == alphabet.end()){
     alphabet_it = alphabet.begin();
     old_search.pop();
+
+    if(old_search.empty()){
+      cout << "Depth: " << depth << endl;
+
+      ++depth;
+      old_search = std::move(curr_search);
+      curr_search = stack< list<int> >();
+      return old_search.top();
+    }
+    
+    return curr_search.top();
   } 
 
-  if(old_search.empty()){
-    ++depth;
-    
-    old_search = std::move(curr_search);
-    curr_search = stack< list<int> >();
-    return old_search.top();
-  }
-
+  ++alphabet_it;
   return curr_search.top();
 }

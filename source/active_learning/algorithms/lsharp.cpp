@@ -83,7 +83,7 @@ void lsharp_algorithm::run(inputdata& id){
 
   const list<int> alphabet = id.get_alphabet();
   cout << "Alphabet: ";
-  print_sequence< list<int>::const_iterator >(alphabet.begin(), alphabet.end());
+  //active_learning_namespace::print_sequence< list<int>::const_iterator >(alphabet.cbegin(), alphabet.cend());
 
   // init the root node, s.t. we have blue states to iterate over
   complete_state(merger, the_apta->get_root(), id, alphabet);
