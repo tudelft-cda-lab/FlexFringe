@@ -74,8 +74,6 @@ refinement* lsharp_algorithm::extract_best_merge(refinement_set* rs) const {
 
 void lsharp_algorithm::run(inputdata& id){
   int n_runs = 1;
-
-  sul->pre(id);
   
   auto eval = unique_ptr<evaluation_function>(get_evaluation());
   auto the_apta = unique_ptr<apta>(new apta());

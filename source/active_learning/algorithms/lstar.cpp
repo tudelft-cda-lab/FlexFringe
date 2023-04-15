@@ -78,8 +78,6 @@ void lstar_algorithm::run(inputdata& id){
   int n_runs = 0;
 
   observation_table obs_table(id.get_alphabet());
-
-  sul->pre(id);
   
   auto eval = unique_ptr<evaluation_function>(get_evaluation());
   auto the_apta = unique_ptr<apta>(new apta());
