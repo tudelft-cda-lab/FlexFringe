@@ -32,13 +32,13 @@ optional< list<int> > bfs_strategy::next(const inputdata& id) {
   if(depth == BFS_MAX_DEPTH) return nullopt;
 
   static const list<int> alphabet = id.get_alphabet();
+
   assert(alphabet.size() > 0);
   static list<int>::const_iterator alphabet_it = alphabet.begin();
 
   [[unlikely]]
   if(depth == 0){
-    old_search.push( list<int>{*alphabet_it} );
-    
+
     if(alphabet_it == alphabet.end()){
       cout << "Depth: " << depth << endl;
 
@@ -47,15 +47,10 @@ optional< list<int> > bfs_strategy::next(const inputdata& id) {
       return old_search.top();
     }
 
+    old_search.push( list<int>{*alphabet_it} );
     ++alphabet_it;
     return old_search.top();
   }
-
-  // Flow: take from old_search, append and put on current_search.
-  const auto& prefix = old_search.top();
-  auto new_pref = list<int>(prefix);
-  new_pref.push_back(*alphabet_it);
-  curr_search.push( std::move(new_pref) );
 
   if(alphabet_it == alphabet.end()){
     alphabet_it = alphabet.begin();
@@ -72,6 +67,11 @@ optional< list<int> > bfs_strategy::next(const inputdata& id) {
     
     return curr_search.top();
   } 
+
+  const auto& prefix = old_search.top();
+  auto new_pref = list<int>(prefix);
+  new_pref.push_back(*alphabet_it);
+  curr_search.push( std::move(new_pref) );
 
   ++alphabet_it;
   return curr_search.top();

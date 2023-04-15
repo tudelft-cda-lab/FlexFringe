@@ -43,9 +43,20 @@ namespace active_learning_namespace{
   void add_sequence_to_trace(trace* new_trace, const std::list<int> sequence);
   void update_tail(/*out*/ tail* t, const int symbol);
 
+  /**
+   * @brief For debugging
+   */
   template <class it_T>
   [[maybe_unused]]
-  void print_sequence(it_T begin, it_T end);
+  void print_sequence(it_T begin, it_T end){
+    cout << "seq: ";
+    for (; begin != end; ++begin)
+        cout << *begin << " ";
+    cout << endl;
+  }
+
+  [[maybe_unused]]
+  void print_list(const list<int>& l);
 }
 
 #endif

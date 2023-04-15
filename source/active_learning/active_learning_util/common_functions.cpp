@@ -220,14 +220,11 @@ trace* active_learning_namespace::vector_to_trace(const list<int>& vec, inputdat
 }
 
 /**
- * @brief Print a list of ints. For debugging purposes.
- * 
- * @param v The list.
+ * @brief For debugging.
  */
-template<class it_T>
-void active_learning_namespace::print_sequence(it_T begin, it_T end){
-    cout << "seq: ";
-    for (; begin != end; ++begin)
-        cout << *begin << " ";
+void active_learning_namespace::print_list(const list<int>& l){
+    cout << "List: ";
+    for (const auto s: l)
+        cout << s << " ";
     cout << endl;
 }

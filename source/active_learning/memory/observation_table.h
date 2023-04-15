@@ -37,7 +37,7 @@ class observation_table{
     bool checked_for_closedness;
     const std::list<int> alphabet;
     std::set<active_learning_namespace::pref_suf_t> all_columns;
-    std::map< active_learning_namespace::pref_suf_t, obs_table_namespace::upper_lower_t> table_mapper; // prefix in upper table or lower table?
+    std::map< active_learning_namespace::pref_suf_t, obs_table_namespace::upper_lower_t> table_mapper; // decides if prefix in upper table or lower table
     std::list< active_learning_namespace::pref_suf_t > incomplete_rows;
 
     // the actual table

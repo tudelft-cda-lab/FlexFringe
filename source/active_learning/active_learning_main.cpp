@@ -83,7 +83,7 @@ shared_ptr<sul_base> active_learning_main_func::select_sul_class(const bool ACTI
  * @return unique_ptr<base_teacher> The teacher.
  */
 unique_ptr<base_teacher> active_learning_main_func::select_teacher_class(shared_ptr<sul_base>& sul, const bool ACTIVE_SUL) const {
-  return unique_ptr<base_teacher>( new base_teacher(sul.get()) ); 
+  return unique_ptr<base_teacher>( new base_teacher(sul) ); 
 }
 
 /**
@@ -130,11 +130,14 @@ void active_learning_main_func::run_active_learning(){
     inputdata id;
     inputdata_locator::provide(&id);
     
+    sul->pre(id);
     algorithm->run(id);
   }
   else{
     // we only want to read the inputdata when we learn passively or from sequences
     inputdata id = get_inputdata();
+    
+    sul->pre(id);
     algorithm->run(id);
   }
 }
