@@ -43,12 +43,9 @@ void dfa_sul::pre(inputdata& id) {
     cout << "Reading input file (SUT) - " << INPUT_FILE << endl;
     sut->read_json(input_apta_stream);
   }
-  
   else if (INPUT_FILE.compare(INPUT_FILE.length() - 4, INPUT_FILE.length(), ".dot") == 0){
-    [[deprecated]]
-    throw logic_error("Deprecated: Will not support dot files in the future.");
+    // TODO: throw in a benchmark parser
   }
-
   else {
     throw logic_error("Problem with reading input");
   }
@@ -68,6 +65,5 @@ const int dfa_sul::query_trace(const std::list<int>& query_trace, inputdata& id)
   add_sequence_to_trace(tr, query_trace);
 
   const int pred_type = predict_type_from_trace(tr, sut.get(), id);
-
   return pred_type;
 }

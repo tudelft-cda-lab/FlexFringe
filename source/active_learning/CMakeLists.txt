@@ -47,6 +47,11 @@ add_library(ActiveLearning STATIC
             system_under_learning/input_file_sul.cpp
             system_under_learning/dfa_sul.h
             system_under_learning/dfa_sul.cpp
+            
+            system_under_learning/dfa_parsers/benchmarkparser_base.h
+            system_under_learning/dfa_parsers/benchmarkparser_base.cpp
+            system_under_learning/dfa_parsers/benchmark_dfaparser.h
+            system_under_learning/dfa_parsers/benchmark_dfaparser.cpp
 
             teacher/base_teacher.h
             teacher/base_teacher.cpp
