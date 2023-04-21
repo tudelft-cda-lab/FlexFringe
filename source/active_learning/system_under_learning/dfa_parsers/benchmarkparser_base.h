@@ -14,11 +14,10 @@
 #define _BENCHMARKPARSER_BASE_H_
 
 #include "apta.h"
-#include "line_info.h"
+#include "graph_information.h"
 
 #include <fstream>
 #include <memory>
-#include <optional>
 #include <list>
 
 /**
@@ -34,8 +33,7 @@ protected:
     * @return std::unique_ptr<apta> The ready apta.
     */
     virtual std::unique_ptr<apta> read_input(ifstream& input_stream) const = 0;
-
-    virtual std::optional<line_info> readline(ifstream& input_stream) const = 0;
+    virtual std::unique_ptr<graph_base> readline(ifstream& input_stream) const = 0;
 public:
     benchmarkparser_base() = default;
     std::unique_ptr<apta> get_apta() const;

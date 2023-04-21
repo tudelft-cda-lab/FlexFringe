@@ -23,8 +23,8 @@
 class benchmark_dfaparser : public benchmarkparser_base {
 protected:
     virtual std::unique_ptr<apta> read_input(ifstream& input_stream) const override;
+    virtual std::unique_ptr<graph_base> readline(ifstream& input_stream) const override;
     
-    virtual std::optional<line_info> readline(ifstream& input_stream) const override;
 public:
     benchmark_dfaparser() = default;
 };
