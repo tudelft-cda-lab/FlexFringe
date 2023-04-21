@@ -96,7 +96,9 @@ namespace graph_information {
    */
   struct graph_node : public graph_base {
     public:
-      graph_node
+      
+
+      graph_node() = default;
   };
 
 }
