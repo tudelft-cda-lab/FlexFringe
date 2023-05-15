@@ -19,6 +19,7 @@
 #include <fstream>
 #include <memory>
 #include <list>
+#include <utility>
 
 /**
  * @brief This base class parses the files from the benchmark given by https://automata.cs.ru.nl/Syntax/Overview
@@ -33,7 +34,7 @@ protected:
     * @return std::unique_ptr<apta> The ready apta.
     */
     virtual std::unique_ptr<apta> read_input(ifstream& input_stream) const = 0;
-    virtual std::unique_ptr<graph_base> readline(ifstream& input_stream) const = 0;
+    virtual std::unique_ptr<graph_information::graph_base> readline(ifstream& input_stream) const;
 public:
     benchmarkparser_base() = default;
     std::unique_ptr<apta> get_apta() const;

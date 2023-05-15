@@ -15,21 +15,7 @@
 #include <string>
 
 namespace graph_information {
-
-  /**
-   * @brief Enum class to identify the representation of a line. Helps raise legibility.
-   * 
-   */
-  enum class linetype {
-    initial_state,
-    initial_transition, // e.g. __start0 -> s1
-    initial_transition_label, // __start0 [label="" shape="none"]
-    state,
-    transition,
-
-    uninitialized
-  };
-
+  
   /**
    * @brief Used for polymorphism.
    * 
@@ -37,6 +23,8 @@ namespace graph_information {
   struct graph_base {
     public:
      graph_base() = default; 
+
+     virtual ~graph_base() = default;
   };
 
   /**
@@ -77,8 +65,7 @@ namespace graph_information {
   };
 
   /**
-   * @brief Carries the information of initial transitions. While the actual graph does not require this data structure, 
-   * the formatting calls for it. Makes readability much easier (imo).
+   * @brief Carries the information of initial transitions.
    * 
    */
   struct initial_transition_information : public graph_base {
@@ -88,7 +75,7 @@ namespace graph_information {
       std::string data;
 
       initial_transition_information() = default;
-  }
+  };
 
   /**
    * @brief Obviously a state.
@@ -96,7 +83,8 @@ namespace graph_information {
    */
   struct graph_node : public graph_base {
     public:
-      
+      std::string id;
+      std::string shape;
 
       graph_node() = default;
   };
