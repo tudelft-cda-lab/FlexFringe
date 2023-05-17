@@ -24,7 +24,7 @@ namespace graph_information {
     public:
      graph_base() = default; 
 
-     virtual ~graph_base() = default;
+     virtual ~graph_base() = default; // force it to get a vtable
   };
 
   /**
