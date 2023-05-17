@@ -205,6 +205,8 @@ public:
     friend class inputdata;
     friend class IInputData; // TODO: rename
     friend class state_merger;
+
+    friend class benchmark_dfaparser;
 };
 
 /**
