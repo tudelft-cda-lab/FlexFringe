@@ -22,6 +22,8 @@
 #include <cassert>
 #include <map>
 #include <set>
+#include <stack>
+#include <functional>
 
 using namespace std;
 using namespace graph_information;
@@ -37,7 +39,6 @@ using namespace graph_information;
  */
 unique_ptr<apta> benchmark_dfaparser::read_input(ifstream& input_stream) const {
   string initial_state; // node_id
-  //map<string, pair<string, string> > initial_transition_information; // transition_id, <label, data> 
   map<string, list< pair<string, string> > > edges; // s1, list< <s2, label> >
   map<string, string> nodes; // s, shape
 
@@ -57,7 +58,6 @@ unique_ptr<apta> benchmark_dfaparser::read_input(ifstream& input_stream) const {
     else if(dynamic_cast<transition_element*>(line_info.get()) != nullptr){
       //inputdata_locator::get()->type_from_string(i);
       //transition_element* li = dynamic_cast<transition_element*>(line_info.get());
-      inputdata_locator::get()->symbol_from_string(line_info->symbol);
       if(!edges.contains(line_info->s1)){
         edges[line_info->s1] = list< pair<string, string> >;
       }
@@ -75,29 +75,56 @@ unique_ptr<apta> benchmark_dfaparser::read_input(ifstream& input_stream) const {
 
   unique_ptr<apta> sut = unique_ptr<apta>(new apta());
 
-  map<string, int> seen_nodes;
-  map<int, apta_node*> int_to_node_map;
+  apta_node* current_node = mem_store::create_node(nullptr);
+  sut->root = current_node;
 
-  seen_nodes[initial_state] = seen_nodes.size();
-  apta_node* root = mem_store::create_node(nullptr);
-  sut->get_root() = root;
+  stack< reference_wrapper<string> > current_layer;
+  current_layer.push(initial_state);
 
-  // TODO: we can do a stack for the nodes
-  for (const auto& [id, shape] : nodes){
-    const int node_number = seen_nodes.size();
-    seen_nodes[id] = node_number;
+  stack< reference_wrapper<string> > next_layer;
+  map< reference_wrapper<string>, apta_node* > id_to_node_map;
+  id_to_node_map[initial_state] = current_node;
+  set< reference_wrapper<string> > completed_states; // to deal with loops in automaton
 
-    apta_node* new_node = mem_store::create_node(nullptr);
-    new_node->set_number(node_number);
-    int_to_node_map[node_number] = new_node;
-  }
+  int depth = 0;
+  int node_number = 0;
+  while(true){
+    while(!current_layer.empty()){
+      const string& s1 = current_layer.top();
+      if(completed_states.contains(s1)) continue;
 
-  // TODO: implement graph building efficiently
-  for(const auto& [s1, s2_label_pair_list] : edges){
-    const auto& s2 = s2_label_pair.first;
-    const auto& label = s2_label_pair.second;
+      current_node = id_to_node_map.at(s1);
+      current_node->depth = depth;
+      current_node->number = node_number;
 
+      for(const auto& [s2, label]: edges.at(s1)){ // walking through the list of edges
+        apta_node* next_node;
+        if(!id_to_node_map.contains(s2)){
+          next_node = mem_store::create_node(nullptr);
+          id_to_node_map[s2] = next_node;
+          next_node->number = ++node_number;
+        }
+        else{
+          next_node = id_to_node_map[s2];
+        }
+        
+        const int symbol = inputdata_locator::get()->symbol_from_string(label);
+        current_node->set_child(symbol, next_node);
 
+        // question: my approach works for trees. What about state machines?
+        if(!completed_states.contains(s2)) next_layer.push(s2);
+        // TODO: squeeze in the typing here as well in the form of traces
+      }
+
+      current_layer.pop();
+      completed_states.insert(s1);
+    }
+
+    ++depth;
+    if(next_layer.empty()) break;
+
+    current_layer = std::move(next_layer);
+    next_layer = stack< reference_wrapper<string> >;
   }
 
   return std::move(sut);

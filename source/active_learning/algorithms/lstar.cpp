@@ -45,7 +45,7 @@ const list<refinement*> lstar_algorithm::construct_automaton_from_table(const ob
   const auto& lower_table = obs_table.get_lower_table();
   const auto& column_names = obs_table.get_column_names();
 
-  // We iterate over all prefixes and suffixes. TODO: Can cause duplicates? Optimize later
+  // We iterate over all prefixes and suffixes. TODO: Can cause duplicates?
   for(auto row_it = upper_table.cbegin(); row_it != upper_table.cend(); ++row_it){
     const list<int>& prefix = row_it->first;
     const auto entry = row_it->second;
