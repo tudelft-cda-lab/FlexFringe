@@ -49,7 +49,7 @@ unique_ptr<graph_base> benchmarkparser_base::readline(ifstream& input_stream) co
   if(line.rfind('{') != std::string::npos){
     return unique_ptr<graph_base>(new header_line());
   }  
-
+  [[unlikely]]
   else if(line.rfind('}') == std::string::npos){
 
     // test for correct formatting in block
@@ -80,14 +80,19 @@ unique_ptr<graph_base> benchmarkparser_base::readline(ifstream& input_stream) co
       string& symbol_ref = cells.at(1);
       const auto begin_idx_s = symbol_ref.find_first_of('\"') + 1;
       const auto end_idx_s = symbol_ref.find_last_of('\"');
-      const string symbol = symbol_ref.substr(begin_idx_s, end_idx_s - begin_idx_s - 1);
-      dynamic_cast<initial_transition_information*>(res.get())->symbol = std::move(symbol);
+      if(end_idx_s != begin_idx_s + 1){ // make sure that label is not empty
+        const string symbol = symbol_ref.substr(begin_idx_s, end_idx_s - begin_idx_s - 1);
+        dynamic_cast<initial_transition_information*>(res.get())->symbol = std::move(symbol);
+      }
 
+      // TODO: we'll possibly have to update this one in further cases down the road
       string& data_ref = cells.at(2);
       const auto begin_idx_d = data_ref.find_first_of('\"') + 1;
       const auto end_idx_d = data_ref.find_last_of('\"');
-      const string data = data_ref.substr(begin_idx_d, end_idx_d - begin_idx_d);
-      dynamic_cast<initial_transition_information*>(res.get())->data = std::move(data);
+      if(end_idx_d != begin_idx_d + 1){
+        const string data = data_ref.substr(begin_idx_d, end_idx_d - begin_idx_d);
+        dynamic_cast<initial_transition_information*>(res.get())->data = std::move(data);
+      }
     }
   }
   else if(cells.at(1).compare("->") == 0){
@@ -100,7 +105,8 @@ unique_ptr<graph_base> benchmarkparser_base::readline(ifstream& input_stream) co
     const string s2 = s2_ref.substr(0, pos_1);
     dynamic_cast<transition_element*>(res.get())->s2 = std::move(s2);
 
-    const string label_str = "label=\"";
+    // note: no empty labels expected here
+    const string label_str = "label=\""; 
     const auto label_pos = s2_ref.find(label_str, pos_1 + 1) + label_str.size();
     const auto label_end_pos = s2_ref.find_first_of('\"', label_pos);
     const string label = s2_ref.substr(label_pos, label_end_pos - label_pos);
@@ -112,6 +118,7 @@ unique_ptr<graph_base> benchmarkparser_base::readline(ifstream& input_stream) co
     res = unique_ptr<graph_node>(new graph_node());
     dynamic_cast<graph_node*>(res.get())->id = cell.at(0);
 
+    // note: shape is expected to be never empty 
     const string shape_str = "shape=\"";
     string& data_ref = cells.at(1);
     const auto shape_pos = data_ref.find(shape_str, 1) + shape_str.size(); // 1 because starts with '['
