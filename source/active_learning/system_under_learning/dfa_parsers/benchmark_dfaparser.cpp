@@ -13,6 +13,7 @@
 #include "ctype.h"
 #include "mem_store.h"
 #include "source/input/inputdatalocator.h"
+#include "common_functions.h"
 
 #include <string>
 #include <sstream>
@@ -48,7 +49,7 @@ unique_ptr<apta> benchmark_dfaparser::read_input(ifstream& input_stream) const {
     [[unlikely]]
     if(dynamic_cast<initial_transition*>(line_info.get()) != nullptr){
       assert(("Only one initial state expected. Wrong input file?", initial_state.size() == 0));
-      initial_state = line_info->state;
+      initial_state = dynamic_cast<initial_transition*>(line_info.get())->state;
     }
     else if(dynamic_cast<initial_transition_information*>(line_info.get()) != nullptr){
       // Not needed for DFAs
@@ -58,14 +59,16 @@ unique_ptr<apta> benchmark_dfaparser::read_input(ifstream& input_stream) const {
     else if(dynamic_cast<transition_element*>(line_info.get()) != nullptr){
       //inputdata_locator::get()->type_from_string(i);
       //transition_element* li = dynamic_cast<transition_element*>(line_info.get());
-      if(!edges.contains(line_info->s1)){
-        edges[line_info->s1] = list< pair<string, string> >;
+      auto li_ptr = dynamic_cast<transition_element*>(line_info.get());
+      if(!edges.contains(li_ptr->s1)){
+        edges[li_ptr->s1] = list< pair<string, string> >();
       }
-      edges[line_info->s1] = push_back( make_pair(line_info->s2, line_info->symbol) );
+      edges[li_ptr->s1].push_back( make_pair(li_ptr->s2, li_ptr->symbol) );
     }
     else if(dynamic_cast<graph_node*>(line_info.get()) != nullptr){
       //graph_node* gn = dynamic_cast<graph_node*>(line_info.get());
-      nodes[line_info->id] = line_info->shape;
+      auto li_ptr = dynamic_cast<graph_node*>(line_info.get());
+      nodes[li_ptr->id] = li_ptr->shape;
     }
     else{
       throw logic_error("Unexpected object returned. Wrong input file?");
@@ -88,18 +91,21 @@ unique_ptr<apta> benchmark_dfaparser::read_input(ifstream& input_stream) const {
 
   int depth = 0;
   int node_number = 0;
+
   while(true){
     while(!current_layer.empty()){
-      const string& s1 = current_layer.top();
-      if(completed_states.contains(s1)) continue;
+      string& s1 = current_layer.top();
+      if(completed_states.count(s1) > 0) continue;
 
       current_node = id_to_node_map.at(s1);
       current_node->depth = depth;
       current_node->number = node_number;
 
-      for(const auto& [s2, label]: edges.at(s1)){ // walking through the list of edges
+      trace* current_access_trace = current_node->access_trace;
+
+      for(auto& [s2, label]: edges.at(s1)){ // walking through the list of edges
         apta_node* next_node;
-        if(!id_to_node_map.contains(s2)){
+        if(id_to_node_map.count(s2) == 0){
           next_node = mem_store::create_node(nullptr);
           id_to_node_map[s2] = next_node;
           next_node->number = ++node_number;
@@ -111,9 +117,17 @@ unique_ptr<apta> benchmark_dfaparser::read_input(ifstream& input_stream) const {
         const int symbol = inputdata_locator::get()->symbol_from_string(label);
         current_node->set_child(symbol, next_node);
 
+        trace* new_access_trace = mem_store::create_trace(current_access_trace);
+        tail* new_tail = mem_store::create_tail(nullptr);
+        active_learning_namespace::update_tail(new_tail, symbol);
+        new_tail->td->index = current_access_trace->end_tail->td->index + 1;
+        new_access_trace->end_tail = new_tail;
+        new_access_trace->finalize();
+
+        next_node->access_trace = new_access_trace;
+
         // question: my approach works for trees. What about state machines?
-        if(!completed_states.contains(s2)) next_layer.push(s2);
-        // TODO: squeeze in the typing here as well in the form of traces
+        if(completed_states.count(s2) == 0) next_layer.push(s2);
       }
 
       current_layer.pop();
@@ -124,7 +138,7 @@ unique_ptr<apta> benchmark_dfaparser::read_input(ifstream& input_stream) const {
     if(next_layer.empty()) break;
 
     current_layer = std::move(next_layer);
-    next_layer = stack< reference_wrapper<string> >;
+    next_layer = stack< reference_wrapper<string> >();
   }
 
   return std::move(sut);

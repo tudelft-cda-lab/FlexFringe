@@ -7,6 +7,34 @@ trace::trace(inputdata* inputData) {
     initialize(inputData);
 }
 
+/**
+ * @brief Construct a new trace::trace object
+ * 
+ * Do copies of the tails leading to this one as well. We do
+ * NOT copy the final element indicating that the end of the trace.
+ * 
+ * @param id Inputdata
+ * @param other The other strace
+ */
+trace::trace(inputdata* id, trace* other){
+    initialize(inputData);
+
+    head = mem_store::create_tail(other->head);
+    tail* other_tail = other->head;
+    tail* this_tail = this->head;
+
+    while(other_tail->get_symbol() != -1){
+        tail* new_tail = mem_store::create_tail(other_tail);
+        this_tail->future_tail = new_tail;
+        new_tail->past_tail = this_tail;
+
+        this_tail = new_tail;
+        other_tail = other_tail->future_tail;
+    }
+
+    end_tail = this_tail;
+}
+
 void trace::initialize(inputdata* inputData) {
     this->inputData = inputData;
     sequence = -1;
