@@ -45,13 +45,11 @@ unique_ptr<graph_base> benchmarkparser_base::readline(ifstream& input_stream) co
   std::getline(input_stream, line);
   if(line.empty()) return unique_ptr<graph_base>(nullptr);
 
-  [[unlikely]]
-  if(line.rfind('{') != std::string::npos){
+  
+  if(line.rfind('{') != std::string::npos)[[unlikely]]{
     return unique_ptr<graph_base>(new header_line());
   }  
-  [[unlikely]]
-  else if(line.rfind('}') == std::string::npos){
-
+  else if(line.rfind('}') == std::string::npos)[[unlikely]]{
     // test for correct formatting in block
     stringstream final_line(line);
     list<string> final_line_split;

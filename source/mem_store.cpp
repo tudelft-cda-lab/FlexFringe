@@ -175,6 +175,16 @@ trace *mem_store::create_trace(inputdata* inputData) {
     return t;
 }
 
+trace *mem_store::create_trace(trace* other_trace, inputdata* inputData) {
+    if (inputData == nullptr) {
+        // Will crash if no InputData can be located
+        inputData = inputdata_locator::get();
+    }
+
+    trace* t = new trace(inputData, other_trace);
+    return t;
+}
+
 void mem_store::delete_tail(tail * t) {
     assert(t != nullptr);
     tail_store.push_front(t);

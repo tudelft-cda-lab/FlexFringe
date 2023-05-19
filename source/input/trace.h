@@ -18,6 +18,7 @@ private:
     // Only mem store is allowed to create and destroy
     friend class mem_store;
     explicit trace(inputdata*);
+    explicit trace(inputdata*, trace*); // copy another trace
     ~trace();
 
 public:
