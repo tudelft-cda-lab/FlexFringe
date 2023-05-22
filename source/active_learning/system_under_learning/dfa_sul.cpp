@@ -45,6 +45,9 @@ void dfa_sul::pre(inputdata& id) {
   }
   else if (INPUT_FILE.compare(INPUT_FILE.length() - 4, INPUT_FILE.length(), ".dot") == 0){
     // TODO: throw in a benchmark parser
+    input_dfa_stream = ifstream(INPUT_FILE);
+    benchmark_dfaparser parser = benchmark_dfaparser();
+    sut.reset(parser.read_input(input_dfa_stream));
   }
   else {
     throw logic_error("Problem with reading input");
