@@ -131,7 +131,7 @@ unique_ptr<graph_base> benchmarkparser_base::readline(ifstream& input_stream) co
   return res;
 }
 
-unique_ptr<apta> benchmarkparser_base::get_apta() const {
+/* unique_ptr<apta> benchmarkparser_base::get_apta() const {
   ifstream input_apta_stream;
   assert( ("Input must be .dot formatted.", 
     INPUT_FILE.compare(INPUT_FILE.length() - 4, INPUT_FILE.length(), ".dot") == 0 ||
@@ -157,4 +157,4 @@ unique_ptr<apta> benchmarkparser_base::get_apta() const {
   }
 
   return std::move(sut);
-}
+} */

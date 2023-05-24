@@ -23,8 +23,8 @@
 #include "inputdata.h"
 
 #include <list>
-#include <list>
 #include <map>
+#include <functional>
 
 namespace active_learning_namespace{
 
@@ -42,6 +42,21 @@ namespace active_learning_namespace{
 
   void add_sequence_to_trace(trace* new_trace, const std::list<int> sequence);
   void update_tail(/*out*/ tail* t, const int symbol);
+
+
+  /**
+   * @brief Compares reference-wrappers of a type.
+   * 
+   */
+  template<typename T>
+  struct ref_wrapper_comparator{
+  public:
+    ref_wrapper_comparator() = default;
+
+    constexpr bool operator()(const std::reference_wrapper<T>& left, const std::reference_wrapper<T>& right ) const { 
+      return left.get() < right.get();
+    }
+  };
 
   /**
    * @brief For debugging
