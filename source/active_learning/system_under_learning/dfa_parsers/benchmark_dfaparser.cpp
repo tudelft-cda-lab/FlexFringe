@@ -25,15 +25,16 @@
 #include <set>
 #include <stack>
 #include <functional>
+#include <iostream>
 
 using namespace std;
 using namespace graph_information;
 
 /**
- * @brief Read the input, returns a ready apta. 
+ * @brief Read the input and construct a ready apta from it. 
  * 
- * Node: This function is definitely not optimized on an algorithmic level. You can do that later, but it should not
- * matter that much, since we only call it once, and it should still be relatively cheap.
+ * TODO: We can possibly split the reading and the construction into two parts, making them more 
+ * reusable and debugable.
  * 
  * @param input_stream 
  * @return unique_ptr<apta> 
@@ -45,18 +46,7 @@ unique_ptr<apta> benchmark_dfaparser::read_input(ifstream& input_stream) const {
 
   unique_ptr<graph_base> line_info = readline(input_stream);
   while(line_info){
-
-    [[unlikely]]
-    if(dynamic_cast<initial_transition*>(line_info.get()) != nullptr){
-      assert(("Only one initial state expected. Wrong input file?", initial_state.size() == 0));
-      initial_state = dynamic_cast<initial_transition*>(line_info.get())->state;
-    }
-    else if(dynamic_cast<initial_transition_information*>(line_info.get()) != nullptr){
-      // Not needed for DFAs
-      //inputdata_locator::get()->symbol_from_string(line_info->symbol);
-      //initial_transition_information[line_info->start_id] = make_pair(line_info->symbol, line_info->data);
-    }
-    else if(dynamic_cast<transition_element*>(line_info.get()) != nullptr){
+    if(dynamic_cast<transition_element*>(line_info.get()) != nullptr){
       //inputdata_locator::get()->type_from_string(i);
       //transition_element* li = dynamic_cast<transition_element*>(line_info.get());
       auto li_ptr = dynamic_cast<transition_element*>(line_info.get());
@@ -69,6 +59,18 @@ unique_ptr<apta> benchmark_dfaparser::read_input(ifstream& input_stream) const {
       //graph_node* gn = dynamic_cast<graph_node*>(line_info.get());
       auto li_ptr = dynamic_cast<graph_node*>(line_info.get());
       nodes[li_ptr->id] = li_ptr->shape;
+    }
+    else if(dynamic_cast<initial_transition*>(line_info.get()) != nullptr)[[unlikely]]{
+      assert(("Only one initial state expected. Wrong input file?", initial_state.size() == 0));
+      initial_state = dynamic_cast<initial_transition*>(line_info.get())->state;
+    }
+    else if(dynamic_cast<initial_transition_information*>(line_info.get()) != nullptr)[[unlikely]]{
+      // Not needed for DFAs
+      //inputdata_locator::get()->symbol_from_string(line_info->symbol);
+      //initial_transition_information[line_info->start_id] = make_pair(line_info->symbol, line_info->data);
+    }
+    else if(dynamic_cast<header_line*>(line_info.get()) != nullptr)[[unlikely]]{
+      // do nothing, but don't continue
     }
     else{
       throw logic_error("Unexpected object returned. Wrong input file?");
@@ -95,6 +97,7 @@ unique_ptr<apta> benchmark_dfaparser::read_input(ifstream& input_stream) const {
   while(true){
     while(!current_layer.empty()){
       string& s1 = current_layer.top();
+      
       if(completed_states.count(s1) > 0) continue;
 
       current_node = id_to_node_map.at(s1);
@@ -117,13 +120,22 @@ unique_ptr<apta> benchmark_dfaparser::read_input(ifstream& input_stream) const {
         const int symbol = inputdata_locator::get()->symbol_from_string(label);
         current_node->set_child(symbol, next_node);
 
-        trace* new_access_trace = mem_store::create_trace(current_access_trace);
+        trace* new_access_trace;
         tail* new_tail = mem_store::create_tail(nullptr);
         active_learning_namespace::update_tail(new_tail, symbol);
-        new_tail->td->index = current_access_trace->end_tail->td->index + 1;
+        
+        if(depth > 0){
+          // the root node has no valid access trace
+          new_access_trace = mem_store::create_trace(inputdata_locator::get(), current_access_trace); 
+          new_tail->td->index = current_access_trace->end_tail->td->index + 1;
+        } 
+        else [[unlikely]] {
+          new_access_trace = mem_store::create_trace();
+          new_tail->td->index = 1; // TODO: start from 0 or 1?
+        } 
+
         new_access_trace->end_tail = new_tail;
         new_access_trace->finalize();
-
         next_node->access_trace = new_access_trace;
 
         // question: my approach works for trees. What about state machines?

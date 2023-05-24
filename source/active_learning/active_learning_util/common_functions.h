@@ -40,7 +40,7 @@ namespace active_learning_namespace{
   std::list<int> concatenate_strings(const std::list<int>& pref1, const std::list<int>& pref2);
   trace* vector_to_trace(const std::list<int>& vec, inputdata& id, const int trace_type);
 
-  void add_sequence_to_trace(trace* new_trace, const std::list<int> sequence);
+  void add_sequence_to_trace(/*out*/ trace* new_trace, const std::list<int> sequence);
   void update_tail(/*out*/ tail* t, const int symbol);
 
 

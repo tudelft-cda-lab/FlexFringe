@@ -17,7 +17,7 @@ trace::trace(inputdata* inputData) {
  * @param other The other strace
  */
 trace::trace(inputdata* id, trace* other){
-    initialize(inputData);
+    initialize(id);
 
     head = mem_store::create_tail(other->head);
     tail* other_tail = other->head;

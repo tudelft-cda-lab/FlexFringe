@@ -43,13 +43,14 @@ const bool DEBUG = false;
 unique_ptr<graph_base> benchmarkparser_base::readline(ifstream& input_stream) const {
   string line, cell;
   std::getline(input_stream, line);
+
   if(line.empty()) return unique_ptr<graph_base>(nullptr);
 
   
   if(line.rfind('{') != std::string::npos)[[unlikely]]{
     return unique_ptr<graph_base>(new header_line());
   }  
-  else if(line.rfind('}') == std::string::npos)[[unlikely]]{
+  else if(line.rfind('}') != std::string::npos)[[unlikely]]{
     // test for correct formatting in block
     stringstream final_line(line);
     list<string> final_line_split;
@@ -68,7 +69,7 @@ unique_ptr<graph_base> benchmarkparser_base::readline(ifstream& input_stream) co
     // either an initial transition, e.g. " __start0 -> s1 " or a label of it, e.g. " __start0 [label="" shape="none"] "
     if(cells.at(1).compare("->") == 0){
       res = unique_ptr<initial_transition>(new initial_transition());
-      dynamic_cast<initial_transition*>(res.get())->state = std::move(cells.at(1));
+      dynamic_cast<initial_transition*>(res.get())->state = std::move(cells.at(2));
       dynamic_cast<initial_transition*>(res.get())->start_id = std::move(cells.at(0));
     }
     else{
@@ -112,9 +113,9 @@ unique_ptr<graph_base> benchmarkparser_base::readline(ifstream& input_stream) co
 
     // TODO: we do not use data at this stage, yet
   }
-  else if(cells.size()==2){
+  else if(cells.size()==3){
     res = unique_ptr<graph_node>(new graph_node());
-    dynamic_cast<graph_node*>(res.get())->id = cell.at(0);
+    dynamic_cast<graph_node*>(res.get())->id = cells.at(0);
 
     // note: shape is expected to be never empty 
     const string shape_str = "shape=\"";
@@ -123,6 +124,8 @@ unique_ptr<graph_base> benchmarkparser_base::readline(ifstream& input_stream) co
     const auto shape_end_pos = data_ref.find_first_of('\"', shape_pos);
     const string shape = data_ref.substr(shape_pos, shape_end_pos - shape_pos);
     dynamic_cast<graph_node*>(res.get())->shape = std::move(shape);
+
+    // TODO: we don't use the label of the node at this stage
   }
   else{
     throw logic_error("Wrong input file? Up until now only DFAs supported.");

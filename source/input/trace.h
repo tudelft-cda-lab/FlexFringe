@@ -13,7 +13,7 @@ private:
     friend class tail;
     friend class apta_node;
 
-    inputdata* inputData;
+    inputdata* inputData; // TODO: why is this here?
 
     // Only mem store is allowed to create and destroy
     friend class mem_store;
