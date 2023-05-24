@@ -35,6 +35,7 @@ class active_sul_oracle : public eq_oracle_base {
      */
     [[deprecated]]
     virtual bool apta_accepts_trace(state_merger* merger, const list<int>& tr, inputdata& id) const override {return true;}
+  
   public:
     active_sul_oracle(std::shared_ptr<sul_base>& sul) : eq_oracle_base(sul) {
       search_strategy = std::unique_ptr<search_base>(new bfs_strategy(5));

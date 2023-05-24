@@ -158,7 +158,7 @@ void mem_store::delete_trace(trace* trace) {
     trace_store.push_front(trace);
 }
 
-trace *mem_store::create_trace(inputdata* inputData) {
+trace *mem_store::create_trace(inputdata* inputData, trace* other_trace) {
     if (inputData == nullptr) {
         // Will crash if no InputData can be located
         inputData = inputdata_locator::get();
@@ -169,19 +169,12 @@ trace *mem_store::create_trace(inputdata* inputData) {
         t = trace_store.front();
         trace_store.pop_front();
         t->initialize(inputData);
-    } else {
+    } else if(other_trace == nullptr) {
         t = new trace(inputData);
     }
-    return t;
-}
-
-trace *mem_store::create_trace(trace* other_trace, inputdata* inputData) {
-    if (inputData == nullptr) {
-        // Will crash if no InputData can be located
-        inputData = inputdata_locator::get();
+    else{
+        t = new trace(inputData, other_trace);
     }
-
-    trace* t = new trace(inputData, other_trace);
     return t;
 }
 
