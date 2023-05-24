@@ -28,16 +28,18 @@
  */
 class benchmarkparser_base {
 protected:
-    /**
-    * @brief Parses the input file, returns a ready apta to be used by the dfa_sul.
-    * 
+    /** 
     * @return std::unique_ptr<apta> The ready apta.
     */
-    virtual std::unique_ptr<apta> read_input(ifstream& input_stream) const = 0;
     virtual std::unique_ptr<graph_information::graph_base> readline(ifstream& input_stream) const;
+    
 public:
     benchmarkparser_base() = default;
-    std::unique_ptr<apta> get_apta() const;
+
+    /**
+    * @brief Parses the input file, returns a ready apta to be used by the dfa_sul.
+    */
+    virtual std::unique_ptr<apta> read_input(ifstream& input_stream) const = 0;
 };
 
 

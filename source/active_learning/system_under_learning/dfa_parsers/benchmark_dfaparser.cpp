@@ -85,9 +85,9 @@ unique_ptr<apta> benchmark_dfaparser::read_input(ifstream& input_stream) const {
   current_layer.push(initial_state);
 
   stack< reference_wrapper<string> > next_layer;
-  map< reference_wrapper<string>, apta_node* > id_to_node_map;
+  map< reference_wrapper<string>, apta_node*, active_learning_namespace::ref_wrapper_comparator<string> > id_to_node_map;
   id_to_node_map[initial_state] = current_node;
-  set< reference_wrapper<string> > completed_states; // to deal with loops in automaton
+  set< reference_wrapper<string>, active_learning_namespace::ref_wrapper_comparator<string> > completed_states; // to deal with loops in automaton
 
   int depth = 0;
   int node_number = 0;

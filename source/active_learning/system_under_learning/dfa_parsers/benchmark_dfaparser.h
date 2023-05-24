@@ -20,13 +20,10 @@
  * For now we only implement the DFAs.
  * 
  */
-class benchmark_dfaparser : public benchmarkparser_base {
-protected:
-    virtual std::unique_ptr<apta> read_input(ifstream& input_stream) const override;
-    //virtual std::unique_ptr<graph_base> readline(ifstream& input_stream) const override;
-    
+class benchmark_dfaparser : public benchmarkparser_base {    
 public:
     benchmark_dfaparser() = default;
+    virtual std::unique_ptr<apta> read_input(ifstream& input_stream) const override;
 };
 
 
