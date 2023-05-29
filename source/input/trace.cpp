@@ -22,11 +22,13 @@ trace::trace(inputdata* id, trace* other){
     head = mem_store::create_tail(other->head);
     tail* other_tail = other->head;
     tail* this_tail = this->head;
+    this_tail->tr = this;
 
     while(other_tail->get_symbol() != -1){
         tail* new_tail = mem_store::create_tail(other_tail);
         this_tail->future_tail = new_tail;
         new_tail->past_tail = this_tail;
+        new_tail->tr = this;
 
         this_tail = new_tail;
         other_tail = other_tail->future_tail;
@@ -35,18 +37,48 @@ trace::trace(inputdata* id, trace* other){
     end_tail = this_tail;
 }
 
-void trace::initialize(inputdata* inputData) {
+void trace::initialize(inputdata* inputData, trace* other_trace) {
     this->inputData = inputData;
-    sequence = -1;
-    length = -1;
-    type = -1;
-    trace_attr = new double[inputData->get_num_trace_attributes()];
-    for(int i = 0; i < this->inputData->get_num_trace_attributes(); ++i){
-        trace_attr[i] = 0.0;
+    if(other_trace != nullptr){    
+        sequence = -1;
+        length = -1;
+        type = -1;
+        trace_attr = new double[inputData->get_num_trace_attributes()];
+        for(int i = 0; i < this->inputData->get_num_trace_attributes(); ++i){
+            trace_attr[i] = 0.0;
+        }
+        head = nullptr;
+        end_tail = nullptr;
+        refs = 1;
     }
-    head = nullptr;
-    end_tail = nullptr;
-    refs = 1;
+    else{
+        length = other_trace->length;
+        type = other_trace->type;
+        sequence = other_trace->sequence;
+        trace_attr = new double[inputData->get_num_trace_attributes()];
+        for(int i = 0; i < this->inputData->get_num_trace_attributes(); ++i){
+            trace_attr[i] = other_trace->trace_attr[i];
+        }
+        refs = other_trace->refs;
+
+        // copy tail content of other trace
+        head = mem_store::create_tail(other_trace->head);
+        tail* other_tail = other_trace->head;
+        tail* this_tail = this->head;
+        this_tail->tr = this;
+
+        while(other_tail->get_symbol() != -1){
+            tail* new_tail = mem_store::create_tail(other_tail);
+            this_tail->future_tail = new_tail;
+            new_tail->past_tail = this_tail;
+            new_tail->tr = this;
+
+            this_tail = new_tail;
+            other_tail = other_tail->future_tail;
+        }
+
+        end_tail = this_tail;    
+    }
 }
 
 trace::~trace(){

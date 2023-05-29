@@ -165,10 +165,20 @@ trace *mem_store::create_trace(inputdata* inputData, trace* other_trace) {
     }
 
     trace* t;
-    if(!trace_store.empty()) {
+    if(!trace_store.empty() && other_trace == nullptr) {
         t = trace_store.front();
         trace_store.pop_front();
         t->initialize(inputData);
+    } else if(!trace_store.empty() && other_trace != nullptr){
+        t = trace_store.front();
+        trace_store.pop_front();
+        t->initialize(other_trace);
+
+/*         past_tail = nullptr;
+        future_tail = nullptr;
+        next_in_list = nullptr;
+        split_from = nullptr;
+        split_to = nullptr; */
     } else if(other_trace == nullptr) {
         t = new trace(inputData);
     }

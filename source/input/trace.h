@@ -35,7 +35,7 @@ public:
     tail* head;
     tail* end_tail;
 
-    void initialize(inputdata *inputData);
+    void initialize(inputdata *inputData, trace* other_trace = nullptr);
     void finalize();
 
     inline int get_type() const{ return type; }
