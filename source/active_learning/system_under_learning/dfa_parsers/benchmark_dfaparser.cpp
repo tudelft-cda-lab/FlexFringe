@@ -21,8 +21,7 @@
 #include <list>
 #include <utility>
 #include <cassert>
-#include <map>
-#include <set>
+#include <unordered_map>
 #include <stack>
 #include <functional>
 #include <iostream>
@@ -41,8 +40,8 @@ using namespace graph_information;
  */
 unique_ptr<apta> benchmark_dfaparser::read_input(ifstream& input_stream) const {
   string initial_state; // node_id
-  map<string, list< pair<string, string> > > edges; // s1, list< <s2, label> >
-  map<string, string> nodes; // s, shape
+  unordered_map<string, list< pair<string, string> > > edges; // s1, list< <s2, label> >
+  unordered_map<string, string> nodes; // s, shape
 
   unique_ptr<graph_base> line_info = readline(input_stream);
   while(line_info){
@@ -53,16 +52,16 @@ unique_ptr<apta> benchmark_dfaparser::read_input(ifstream& input_stream) const {
       if(!edges.contains(li_ptr->s1)){
         edges[li_ptr->s1] = list< pair<string, string> >();
       }
-      edges[li_ptr->s1].push_back( make_pair(li_ptr->s2, li_ptr->symbol) );
+      edges[li_ptr->s1].push_back( make_pair( std::move(li_ptr->s2), std::move(li_ptr->symbol)) );
     }
     else if(dynamic_cast<graph_node*>(line_info.get()) != nullptr){
       //graph_node* gn = dynamic_cast<graph_node*>(line_info.get());
       auto li_ptr = dynamic_cast<graph_node*>(line_info.get());
-      nodes[li_ptr->id] = li_ptr->shape;
+      nodes[li_ptr->id] = std::move(li_ptr->shape);
     }
     else if(dynamic_cast<initial_transition*>(line_info.get()) != nullptr)[[unlikely]]{
       assert(("Only one initial state expected. Wrong input file?", initial_state.size() == 0));
-      initial_state = dynamic_cast<initial_transition*>(line_info.get())->state;
+      initial_state = std::move( dynamic_cast<initial_transition*>(line_info.get())->state );
     }
     else if(dynamic_cast<initial_transition_information*>(line_info.get()) != nullptr)[[unlikely]]{
       // Not needed for DFAs
@@ -78,80 +77,7 @@ unique_ptr<apta> benchmark_dfaparser::read_input(ifstream& input_stream) const {
     line_info = readline(input_stream);
   }
 
-  unique_ptr<apta> sut = unique_ptr<apta>(new apta());
-
-  apta_node* current_node = mem_store::create_node(nullptr);
-  sut->root = current_node;
-
-  stack< reference_wrapper<string> > current_layer;
-  current_layer.push(initial_state);
-
-  stack< reference_wrapper<string> > next_layer;
-  map< reference_wrapper<string>, apta_node*, active_learning_namespace::ref_wrapper_comparator<string> > id_to_node_map;
-  id_to_node_map[initial_state] = current_node;
-  set< reference_wrapper<string>, active_learning_namespace::ref_wrapper_comparator<string> > completed_states; // to deal with loops in automaton
-
-  int depth = 0;
-  int node_number = 0;
-
-  while(true){
-    while(!current_layer.empty()){
-      string& s1 = current_layer.top();
-      
-      if(completed_states.count(s1) > 0) continue;
-
-      current_node = id_to_node_map.at(s1);
-      current_node->depth = depth;
-      current_node->number = node_number;
-
-      trace* current_access_trace = current_node->access_trace;
-
-      for(auto& [s2, label]: edges.at(s1)){ // walking through the list of edges
-        apta_node* next_node;
-        if(id_to_node_map.count(s2) == 0){
-          next_node = mem_store::create_node(nullptr);
-          id_to_node_map[s2] = next_node;
-          next_node->number = ++node_number;
-        }
-        else{
-          next_node = id_to_node_map[s2];
-        }
-        
-        const int symbol = inputdata_locator::get()->symbol_from_string(label);
-        current_node->set_child(symbol, next_node);
-
-        trace* new_access_trace;
-        tail* new_tail = mem_store::create_tail(nullptr);
-        active_learning_namespace::update_tail(new_tail, symbol);
-        
-        if(depth > 0){
-          // the root node has no valid access trace
-          new_access_trace = mem_store::create_trace(inputdata_locator::get(), current_access_trace); 
-          new_tail->td->index = current_access_trace->end_tail->td->index + 1;
-        } 
-        else [[unlikely]] {
-          new_access_trace = mem_store::create_trace();
-          new_tail->td->index = 1; // TODO: start from 0 or 1?
-        } 
-
-        new_access_trace->end_tail = new_tail;
-        new_access_trace->finalize();
-        next_node->access_trace = new_access_trace;
-
-        // question: my approach works for trees. What about state machines?
-        if(completed_states.count(s2) == 0) next_layer.push(s2);
-      }
-
-      current_layer.pop();
-      completed_states.insert(s1);
-    }
-
-    ++depth;
-    if(next_layer.empty()) break;
-
-    current_layer = std::move(next_layer);
-    next_layer = stack< reference_wrapper<string> >();
-  }
+  auto sut = construct_apta(initial_state, edges, nodes);
 
   return std::move(sut);
 }
