@@ -12,13 +12,16 @@
 #include "benchmarkparser_base.h"
 #include "parameters.h"
 #include "inputdatalocator.h"
+#include "common_functions.h"
 
 #include <fstream> 
 #include <utility>
 #include <cassert>
 #include <stdexcept>
 #include <vector>
-#include <reference_wrapper>
+#include <functional>
+#include <stack>
+#include <unordered_set>
 
 using namespace std;
 using namespace graph_information;
@@ -154,30 +157,40 @@ unique_ptr<apta> benchmarkparser_base::construct_apta(const string_view initial_
   /* ************************** step 1: construct traces ******************************** 
   ************************************************************************************ */
 
-  unordered_map< reference_wrapper<string>, list<trace*> > node_to_trace_map;
-  stack< reference_wrapper<string> > nodes_to_visit;
+  unordered_map< string_view, list<trace*> > node_to_trace_map;
+  stack< string_view > nodes_to_visit;
+  unordered_set<string_view> visited_nodes;
+
   nodes_to_visit.push(initial_state);
 
   trace* new_trace = mem_store::create_trace(nullptr);
   new_trace->length = 0;
   new_trace->sequence = 0;
-  transaction_safe_dynamic->sequence = 0;
+  new_trace->sequence = 0;
 
   tail* new_tail = mem_store::create_tail(nullptr);
-  new_tail->index = 0;
+  new_tail->td->index = 0;
   new_trace->head = new_tail;
-  tr->end_tail = new_tail;
-  new_tail->new_trace = new_trace;
+  new_trace->end_tail = new_tail;
+  new_tail->tr = new_trace;
   
-  node_to_trace_map[initial_state] = new_trace;
+  node_to_trace_map[initial_state] = list<trace*>();
+  node_to_trace_map.at(initial_state).push_back(new_trace);
 
   int sequence_nr = 0;
   while(!nodes_to_visit.empty()){
-    string& s1 = nodes_to_visit.top();
-    for(auto& [s2, label]: edges[s1]){
+    string_view s1 = nodes_to_visit.top();
+
+    nodes_to_visit.pop();
+    if(visited_nodes.contains(s1)) continue;
+
+    for(auto& node_label_pair: edges.at(string(s1)) ){
+    //for(int j = 0; j < edges[static_cast<string>(s1)].size())
+      auto& s2 = node_label_pair.first;
+      auto& label = node_label_pair.second;
       if(!node_to_trace_map.contains(s2)) node_to_trace_map[s2] = list<trace*>();
 
-      trace* old_trace = node_to_trace_map.at(s1);
+      trace* old_trace = node_to_trace_map.at(s1).front(); // we can pick any access trace of parent nodes
       
       new_trace = mem_store::create_trace(inputdata_locator::get(), old_trace);
       new_trace->length = old_trace->length + 1;
@@ -188,13 +201,14 @@ unique_ptr<apta> benchmarkparser_base::construct_apta(const string_view initial_
       const int symbol = inputdata_locator::get()->symbol_from_string(label);
 
       new_tail->td->symbol = symbol;
-      new_tail->index = old_trace->end_tail->td->index + 1;
-      new_tail->tr = tr;
+      new_tail->td->index = old_trace->end_tail->td->index + 1;
+      new_tail->tr = new_trace;
       old_end_tail->future_tail = new_tail;
       new_tail->past_tail = old_end_tail;
 
-      node_to_trace_map[s2].push_back(tr);
+      node_to_trace_map[s2].push_back(new_trace);
     }
+    visited_nodes.insert(s1);
   }
 
   /* ************************ step 1: construct automaton ************************* 
@@ -204,28 +218,29 @@ unique_ptr<apta> benchmarkparser_base::construct_apta(const string_view initial_
 
   apta_node* current_node = mem_store::create_node(nullptr);
   sut->root = current_node;
+  int node_number = 0;
 
   for(auto& [node_name, current_traces]: node_to_trace_map){
     for(trace* tr: current_traces){
       int depth = 0;
       tail* t = tr->head;  
       while(t != nullptr){
-          current_node->size = node->size + 1;
+          ++(current_node->size);
           current_node->add_tail(t);
           current_node->data->add_tail(t);
 
           depth++;
           if(t->is_final()){
-              current_node->final = node->final + 1;
+              current_node->final = current_node->final + 1;
           } else {
               int symbol = t->get_symbol();
               if(current_node->child(symbol) == nullptr){
                   auto* next_node = mem_store::create_node(nullptr);
                   current_node->set_child(symbol, next_node);
-                  next_node->source = node;
+                  next_node->source = current_node;
 
                   next_node->depth  = depth;
-                  next_node->number = ++(this->node_number);
+                  next_node->number = ++node_number;
               }
               current_node = current_node->child(symbol)->find();
           }
@@ -235,5 +250,4 @@ unique_ptr<apta> benchmarkparser_base::construct_apta(const string_view initial_
   }
 
   return sut;
-
 }

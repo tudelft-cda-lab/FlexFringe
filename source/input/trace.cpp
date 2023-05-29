@@ -39,7 +39,7 @@ trace::trace(inputdata* id, trace* other){
 
 void trace::initialize(inputdata* inputData, trace* other_trace) {
     this->inputData = inputData;
-    if(other_trace != nullptr){    
+    if(other_trace == nullptr){    
         sequence = -1;
         length = -1;
         type = -1;

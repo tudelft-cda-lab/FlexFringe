@@ -207,6 +207,7 @@ public:
     friend class state_merger;
 
     friend class benchmark_dfaparser;
+    friend class benchmarkparser_base;
 };
 
 /**
@@ -389,6 +390,7 @@ public:
     friend class state_merger;
 
     friend class benchmark_dfaparser;
+    friend class benchmarkparser_base;
 
     set<apta_node *> *get_sources();
 };
