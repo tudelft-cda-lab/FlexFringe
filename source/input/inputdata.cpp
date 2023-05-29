@@ -340,6 +340,10 @@ tail *inputdata::access_tail(tail *t) {
     return res;
 }
 
+explicit void inputdata::add_trace(trace* tr) noexcept {
+    this->traces.push_back(tr);
+}
+
 int inputdata::get_num_sequences() {
     return num_sequences;
 }

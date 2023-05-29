@@ -20,6 +20,7 @@
 #include <memory>
 #include <list>
 #include <utility>
+#include <unordered_map>
 
 /**
  * @brief This base class parses the files from the benchmark given by https://automata.cs.ru.nl/Syntax/Overview
@@ -32,6 +33,10 @@ protected:
     * @return std::unique_ptr<apta> The ready apta.
     */
     virtual std::unique_ptr<graph_information::graph_base> readline(ifstream& input_stream) const;
+
+    std::unique_ptr<apta> construct_apta(const std::string_view initial_state, 
+                                         const std::unordered_map<std::string, std::list< std::pair<std::string, std::string> > >& edges,
+                                         const std::unordered_map<std::string, std::string>& nodes) const;
     
 public:
     benchmarkparser_base() = default;

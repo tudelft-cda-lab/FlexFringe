@@ -119,6 +119,8 @@ public:
     trace* access_trace(tail *t);
     tail* access_tail(tail *t);
 
+    explicit void add_trace(trace* tr) noexcept;
+
     Iterator begin() {return traces.begin();}
     Iterator end() {return traces.end();}
 };
