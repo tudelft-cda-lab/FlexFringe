@@ -172,7 +172,7 @@ trace *mem_store::create_trace(inputdata* inputData, trace* other_trace) {
     } else if(!trace_store.empty() && other_trace != nullptr){
         t = trace_store.front();
         trace_store.pop_front();
-        t->initialize(other_trace);
+        t->initialize(inputData, other_trace);
 
 /*         past_tail = nullptr;
         future_tail = nullptr;
