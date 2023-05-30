@@ -173,6 +173,10 @@ unique_ptr<apta> benchmarkparser_base::construct_apta(const string_view initial_
   new_trace->head = new_tail;
   new_trace->end_tail = new_tail;
   new_tail->tr = new_trace;
+
+  string_view type_str = nodes.at(static_cast<string>(initial_state));
+  int type = inputdata_locator::get()->type_from_string(static_cast<string>(type_str));
+  new_trace->type = type;
   
   node_to_trace_map[initial_state] = list<trace*>();
   node_to_trace_map.at(initial_state).push_back(new_trace);
@@ -196,6 +200,10 @@ unique_ptr<apta> benchmarkparser_base::construct_apta(const string_view initial_
       new_trace->length = old_trace->length + 1;
       new_trace->sequence = ++sequence_nr;
 
+      type_str = nodes.at(static_cast<string>(s2));
+      type = inputdata_locator::get()->type_from_string(static_cast<string>(type_str));
+      new_trace->type = type;
+
       tail* old_end_tail = new_trace->end_tail;
       new_tail = mem_store::create_tail(nullptr);
       const int symbol = inputdata_locator::get()->symbol_from_string(label);
@@ -211,7 +219,7 @@ unique_ptr<apta> benchmarkparser_base::construct_apta(const string_view initial_
     visited_nodes.insert(s1);
   }
 
-  /* ************************ step 1: construct automaton ************************* 
+  /* ************************ step 2: construct automaton ************************* 
   ****************************************************************************** */  
 
   unique_ptr<apta> sut = unique_ptr<apta>(new apta());
