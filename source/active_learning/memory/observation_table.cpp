@@ -295,13 +295,11 @@ void observation_table::extend_lower_table() {
   set<pref_suf_t> all_row_names;
   for(auto it = lower_table.cbegin(); it != lower_table.cend(); ++it){
     const auto& row_name = it->first;
-    //if(row_name.at(0) == active_learning_namespace::EPS) continue;
     all_row_names.insert(row_name);
   }
 
   for(auto it = upper_table.cbegin(); it != upper_table.cend(); ++it){
     const auto& row_name = it->first;
-    //if(row_name.at(0) == active_learning_namespace::EPS) continue;
     all_row_names.insert(row_name);
   }
 

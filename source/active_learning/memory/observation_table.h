@@ -18,7 +18,6 @@
 #include <map>
 #include <set>
 #include <list>
-//#include <functional>
 
 namespace obs_table_namespace{
   enum class upper_lower_t{
@@ -27,7 +26,6 @@ namespace obs_table_namespace{
   };
 
   typedef std::map< active_learning_namespace::pref_suf_t, int > row_type; // reference is all_columns
-  //typedef std::map< std::reference_wrapper< active_learning_namespace::pref_suf_t >, int> row_type; // reference is all_columns
   typedef std::map< active_learning_namespace::pref_suf_t, row_type > table_type;
 }
  
@@ -50,7 +48,7 @@ class observation_table{
     void move_to_upper_table(const active_learning_namespace::pref_suf_t& row);
 
     active_learning_namespace::pref_suf_t get_null_vector() const noexcept {
-      return active_learning_namespace::pref_suf_t(); //active_learning_namespace::pref_suf_t{active_learning_namespace::EPS};
+      return active_learning_namespace::pref_suf_t();
     }
 
     const active_learning_namespace::pref_suf_t map_prefix(const active_learning_namespace::pref_suf_t& column) const;
