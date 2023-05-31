@@ -229,14 +229,11 @@ void print_time(const T start_time, const T batch_start_time, const unsigned int
  * @return int 
  */
 int stream_object::stream_mode(state_merger* merger, ifstream& input_stream, inputdata* id, parser* input_parser) {
-    const int BATCH_SIZE = 500; // it was 500 in the original experiments
     unsigned int seq_nr = 0;
     bool last_sequence = false;
 
     P_PERCENT = static_cast<int>(id->get_max_sequences() / 10); // to track the percent
     cout << "P_PERCENT: " << P_PERCENT << endl;
-
-//    if(!CONVERT_RAW_DATA) id->read_abbadingo_header(input_stream);
 
     ofstream time_doc("times_per_batch.txt");
 
@@ -245,7 +242,6 @@ int stream_object::stream_mode(state_merger* merger, ifstream& input_stream, inp
     auto start_time = std::chrono::system_clock::now();
 
     while(true) {
-      //merger->reset(); // TODO: should we use this?
       int read_lines = 0;
       auto batch_start_time = std::chrono::system_clock::now();
       while (read_lines < BATCH_SIZE){
