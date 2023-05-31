@@ -29,14 +29,15 @@
  */
 class benchmarkparser_base {
 protected:
+
     /** 
     * @return std::unique_ptr<apta> The ready apta.
     */
     virtual std::unique_ptr<graph_information::graph_base> readline(ifstream& input_stream) const;
 
-    std::unique_ptr<apta> construct_apta(const std::string_view initial_state, 
-                                         const std::unordered_map<std::string, std::list< std::pair<std::string, std::string> > >& edges,
-                                         const std::unordered_map<std::string, std::string>& nodes) const;
+    virtual std::unique_ptr<apta> construct_apta(const std::string_view initial_state, 
+                                                 const std::unordered_map<std::string, std::list< std::pair<std::string, std::string> > >& edges,
+                                                 const std::unordered_map<std::string, std::string>& nodes) const = 0;
     
 public:
     benchmarkparser_base() = default;
@@ -44,8 +45,7 @@ public:
     /**
     * @brief Parses the input file, returns a ready apta to be used by the dfa_sul.
     */
-    virtual std::unique_ptr<apta> read_input(ifstream& input_stream) const = 0;
+    virtual std::unique_ptr<apta> read_input(ifstream& input_stream) const;
 };
-
 
 #endif

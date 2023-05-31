@@ -4,7 +4,7 @@ include_directories(
         "${CMAKE_CURRENT_SOURCE_DIR}/memory"
         "${CMAKE_CURRENT_SOURCE_DIR}/teacher"
         "${CMAKE_CURRENT_SOURCE_DIR}/system_under_learning"
-        "${CMAKE_CURRENT_SOURCE_DIR}/system_under_learning/dfa_parsers"
+        "${CMAKE_CURRENT_SOURCE_DIR}/system_under_learning/benchmark_parsers"
         "${CMAKE_CURRENT_SOURCE_DIR}/counterexample_strategies"
         "${CMAKE_CURRENT_SOURCE_DIR}/equivalence_oracle"
         "${CMAKE_CURRENT_SOURCE_DIR}/equivalence_oracle/search_strategies"
@@ -49,10 +49,10 @@ add_library(ActiveLearning STATIC
             system_under_learning/dfa_sul.h
             system_under_learning/dfa_sul.cpp
             
-            system_under_learning/dfa_parsers/benchmarkparser_base.h
-            system_under_learning/dfa_parsers/benchmarkparser_base.cpp
-            system_under_learning/dfa_parsers/benchmark_dfaparser.h
-            system_under_learning/dfa_parsers/benchmark_dfaparser.cpp
+            system_under_learning/benchmark_parsers/benchmarkparser_base.h
+            system_under_learning/benchmark_parsers/benchmarkparser_base.cpp
+            system_under_learning/benchmark_parsers/benchmark_dfaparser.h
+            system_under_learning/benchmark_parsers/benchmark_dfaparser.cpp
 
             teacher/base_teacher.h
             teacher/base_teacher.cpp

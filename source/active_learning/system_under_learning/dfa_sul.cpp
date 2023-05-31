@@ -20,6 +20,8 @@
 using namespace std;
 using namespace active_learning_namespace;
 
+const bool DEBUG = true;
+
 /**
  * @brief This function does two tests: First it checks if there's an APTA file, and if yes reads it.
  * If this check fails it checks if the input file is json formatted, and if yes reads that one. Otherwise
@@ -49,6 +51,19 @@ void dfa_sul::pre(inputdata& id) {
     auto input_dfa_stream = ifstream(INPUT_FILE);
     auto parser = benchmark_dfaparser();
     sut = parser.read_input(input_dfa_stream);
+
+    if(DEBUG){
+      stringstream dot_output_buf;
+      sut->print_dot(dot_output_buf);
+      string dot_output = "// produced with flexfringe // " + COMMAND + '\n'+ dot_output_buf.str();
+
+      ofstream output1("read_machine.dot");
+      if (output1.fail()) {
+          throw std::ofstream::failure("Unable to open file for writing.");
+      }
+      output1 << dot_output;
+      output1.close();
+    }
   }
   else {
     throw logic_error("Problem with reading input");
