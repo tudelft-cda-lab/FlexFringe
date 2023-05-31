@@ -16,7 +16,6 @@
 #include "csvparser.h"
 
 #include <iostream>
-#include <set>
 #include <string>
 
 using namespace std;

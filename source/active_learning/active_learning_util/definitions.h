@@ -13,13 +13,9 @@
 #define _ACTIVE_LEARNING_DEFINITIONS_H_
 
 #include <list>
-#include <map>
 #include <string>
 
 namespace active_learning_namespace{
-  [[deprecated]]
-  const int EPS = -1; // empty symbol special character. flexfringe does not map to -1 by design.
-  
   typedef std::list<int> pref_suf_t;
 }
 

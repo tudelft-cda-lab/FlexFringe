@@ -23,7 +23,6 @@
 #include "inputdata.h"
 
 #include <list>
-#include <map>
 #include <functional>
 
 namespace active_learning_namespace{
@@ -71,7 +70,7 @@ namespace active_learning_namespace{
   }
 
   [[maybe_unused]]
-  void print_list(const list<int>& l);
+  void print_list(const std::list<int>& l);
 }
 
 #endif
