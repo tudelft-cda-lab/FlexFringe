@@ -12,6 +12,7 @@ endif()
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 option(COMPILE_DOCS "This is settable from the command line" OFF)
+#set(CMAKE_MESSAGE_LOG_LEVEL WARNING)
 
 add_subdirectory(source/utility/lexy)
 add_subdirectory(source/utility/fmt-9.1.0)
@@ -19,9 +20,10 @@ add_subdirectory(source/utility/fmt-9.1.0)
 if (MSVC)
     add_compile_options("/W4" "$<$<CONFIG:RELEASE>:/O2>")
 else()
-    add_compile_options("-Wall" "-Wextra"
+    add_compile_options(
                         "$<$<CONFIG:RELEASE>:-O3>"
-                        "$<$<CONFIG:DEBUG>:-g>")
+                        "$<$<CONFIG:DEBUG>:-g>"
+                        "-fcompare-debug-second") # This flag is only for me, to suppress notes
 endif()
 
 add_compile_definitions(LOGURU_WITH_STREAMS=1)
