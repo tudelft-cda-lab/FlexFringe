@@ -22,6 +22,7 @@
 #include <functional>
 #include <queue>
 #include <unordered_set>
+#include <unordered_map>
 
 using namespace std;
 using namespace graph_information;
@@ -140,112 +141,54 @@ unique_ptr<graph_base> benchmarkparser_base::readline(ifstream& input_stream) co
 }
 
 /**
- * @brief Does what you think it does.
+ * @brief Read the input and construct a ready apta from it. 
  * 
- * We build the graph successively breadth-first from the root node.
+ * TODO: We can possibly split the reading and the construction into two parts, making them more 
+ * reusable and debugable.
  * 
- * @param initial_state Initial state, needed to identify the root node.
- * @param edges state1, list< <state2, label> >.
- * @param nodes state, shape.
- * @return unique_ptr<apta> The sut. 
+ * @param input_stream 
+ * @return unique_ptr<apta> 
  */
-unique_ptr<apta> benchmarkparser_base::construct_apta(const string_view initial_state, 
-                                const unordered_map<string, list< pair<string, string> > >& edges,
-                                const unordered_map<string, string>& nodes) const {
+unique_ptr<apta> benchmarkparser_base::read_input(ifstream& input_stream) const {
+  string initial_state; // node_id
+  unordered_map<string, list< pair<string, string> > > edges; // s1, list< <s2, label> >
+  unordered_map<string, string> nodes; // s, shape
 
-  unordered_map< string_view, list<trace*> > node_to_trace_map; // <s2, l> l = list of all traces leading to s2 
-  unordered_map< string_view, apta_node* > string_to_node_map;
-
-  queue< string_view > nodes_to_visit;
-  unordered_set<string_view> visited_nodes;
-  nodes_to_visit.push(initial_state);
-
-  unique_ptr<apta> sut = unique_ptr<apta>(new apta());
-  inputdata* id = inputdata_locator::get();
-
-  apta_node* current_node = mem_store::create_node(nullptr);
-  sut->root = current_node;
-  int node_number = 0;
-
-  string_to_node_map[initial_state] = sut->root;
-  node_to_trace_map[initial_state] = list<trace*>();
-
-  int sequence_nr = 0;
-  int depth = 0;
-  while(!nodes_to_visit.empty()){
-    string_view s1 = nodes_to_visit.front();
-    nodes_to_visit.pop();
-
-    if(visited_nodes.contains(s1)) continue;
-
-    current_node = string_to_node_map.at(s1);
-    current_node->depth = depth;
-    current_node->red = true;
-
-    for(auto& node_label_pair: edges.at(string(s1)) ){
-      auto& s2 = node_label_pair.first;
-      auto& label = node_label_pair.second;
-
-      tail* new_tail = mem_store::create_tail(nullptr);
-      const int symbol = id->symbol_from_string(label);
-      new_tail->td->symbol = symbol;
-
-      trace* new_trace;
-      if(s1 == initial_state){
-        new_trace = mem_store::create_trace(id);
-        new_trace->length = 1;
-
-        new_tail->td->index = 0;
-        new_trace->head = new_tail;
-        new_trace->end_tail = new_tail;
+  unique_ptr<graph_base> line_info = readline(input_stream);
+  while(line_info){
+    if(dynamic_cast<transition_element*>(line_info.get()) != nullptr){
+      //inputdata_locator::get()->type_from_string(i);
+      //transition_element* li = dynamic_cast<transition_element*>(line_info.get());
+      auto li_ptr = dynamic_cast<transition_element*>(line_info.get());
+      if(!edges.contains(li_ptr->s1)){
+        edges[li_ptr->s1] = list< pair<string, string> >();
       }
-      else{
-        trace* old_trace = node_to_trace_map.at(s1).front(); // TODO @Sicco: could we safely pick the access trace of the parent node? 
-        new_trace = mem_store::create_trace(id, old_trace);
-        new_trace->length = old_trace->length + 1;
-        new_tail->td->index = old_trace->end_tail->td->index + 1;
-
-        tail* old_end_tail = new_trace->end_tail;
-
-        old_end_tail->future_tail = new_tail;
-        new_tail->past_tail = old_end_tail;
-        new_trace->end_tail = new_tail;
-      }
-
-      string_view type_str = nodes.at(static_cast<string>(s2));
-      const int type = id->type_from_string(static_cast<string>(type_str));
-      new_trace->type = type;
-      new_trace->finalize();
-
-      new_trace->sequence = ++sequence_nr;
-      new_tail->tr = new_trace;
-
-      apta_node* next_node;
-      if(!string_to_node_map.contains(s2)){
-        next_node = mem_store::create_node(nullptr);
-        string_to_node_map[s2] = next_node;
-        next_node->source = current_node;
-
-        node_to_trace_map[s2] = list<trace*>();
-      }
-      else{
-        next_node = string_to_node_map[s2];
-      }
-      current_node->set_child(symbol, next_node);
-      current_node->add_tail(new_tail);
-      current_node->data->add_tail(new_tail);
-
-      // add the final probs as well
-      next_node->add_tail(new_tail->future());
-      next_node->data->add_tail(new_tail->future());
-
-      id->add_trace(new_trace);
-      node_to_trace_map.at(s2).push_back(new_trace);
-      nodes_to_visit.push(s2);
+      edges[li_ptr->s1].push_back( make_pair( std::move(li_ptr->s2), std::move(li_ptr->symbol)) );
     }
-    visited_nodes.insert(s1);
-    depth++;
+    else if(dynamic_cast<graph_node*>(line_info.get()) != nullptr){
+      //graph_node* gn = dynamic_cast<graph_node*>(line_info.get());
+      auto li_ptr = dynamic_cast<graph_node*>(line_info.get());
+      nodes[li_ptr->id] = std::move(li_ptr->shape);
+    }
+    else if(dynamic_cast<initial_transition*>(line_info.get()) != nullptr)[[unlikely]]{
+      assert(("Only one initial state expected. Wrong input file?", initial_state.size() == 0));
+      initial_state = std::move( dynamic_cast<initial_transition*>(line_info.get())->state );
+    }
+    else if(dynamic_cast<initial_transition_information*>(line_info.get()) != nullptr)[[unlikely]]{
+      // Not needed for DFAs
+      //inputdata_locator::get()->symbol_from_string(line_info->symbol);
+      //initial_transition_information[line_info->start_id] = make_pair(line_info->symbol, line_info->data);
+    }
+    else if(dynamic_cast<header_line*>(line_info.get()) != nullptr)[[unlikely]]{
+      // do nothing, but don't continue
+    }
+    else{
+      throw logic_error("Unexpected object returned. Wrong input file?");
+    }
+    line_info = readline(input_stream);
   }
+
+  auto sut = construct_apta(initial_state, edges, nodes);
 
   return std::move(sut);
 }

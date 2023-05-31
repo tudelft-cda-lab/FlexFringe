@@ -20,10 +20,13 @@
  * For now we only implement the DFAs.
  * 
  */
-class benchmark_dfaparser : public benchmarkparser_base {    
+class benchmark_dfaparser : public benchmarkparser_base {
+protected:
+    virtual std::unique_ptr<apta> construct_apta(const std::string_view initial_state, 
+                                                 const std::unordered_map<std::string, std::list< std::pair<std::string, std::string> > >& edges,
+                                                 const std::unordered_map<std::string, std::string>& nodes) const override;
 public:
     benchmark_dfaparser() = default;
-    virtual std::unique_ptr<apta> read_input(ifstream& input_stream) const override;
 };
 
 
