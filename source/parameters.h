@@ -113,6 +113,8 @@ extern int DIFF_MAX_LENGTH;
 
 extern bool STORE_ACCESS_STRINGS;
 
+extern int BATCH_SIZE;
+
 // Count-min-sketches
 extern int NROWS_SKETCHES;
 extern int NCOLUMNS_SKETCHES;
