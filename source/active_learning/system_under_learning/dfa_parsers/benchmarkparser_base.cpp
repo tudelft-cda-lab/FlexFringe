@@ -217,8 +217,6 @@ unique_ptr<apta> benchmarkparser_base::construct_apta(const string_view initial_
       new_trace->type = type;
       new_trace->finalize();
 
-      cout << "S2: " << s2 << ", type: " << type_str << ", mapped type: " << type << endl;
-
       new_trace->sequence = ++sequence_nr;
       new_tail->tr = new_trace;
 
@@ -235,7 +233,11 @@ unique_ptr<apta> benchmarkparser_base::construct_apta(const string_view initial_
       }
       current_node->set_child(symbol, next_node);
       current_node->add_tail(new_tail);
-      current_node->data->add_tail(new_tail);       
+      current_node->data->add_tail(new_tail);
+
+      // add the final probs as well
+      next_node->add_tail(new_tail->future());
+      next_node->data->add_tail(new_tail->future());
 
       id->add_trace(new_trace);
       node_to_trace_map.at(s2).push_back(new_trace);
