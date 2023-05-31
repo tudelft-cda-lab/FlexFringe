@@ -49,6 +49,19 @@ unique_ptr<apta> benchmark_dfaparser::construct_apta(const string_view initial_s
   unordered_map< string_view, list<trace*> > node_to_trace_map; // <s2, l> l = list of all traces leading to s2 
   unordered_map< string_view, apta_node* > string_to_node_map;
 
+  cout << "Initial state: " << initial_state << "\n\n" << endl;
+
+  cout << "S1: " << endl;
+  for(auto& [s1, shape]: nodes){
+    cout << s1 << endl;
+  }
+
+  cout << "S2: " << endl;
+
+  for(auto& [s2, l]: edges){
+    cout << s2 << endl;
+  }
+
   queue< string_view > nodes_to_visit;
   unordered_set<string_view> visited_nodes;
   nodes_to_visit.push(initial_state);
@@ -74,6 +87,11 @@ unique_ptr<apta> benchmark_dfaparser::construct_apta(const string_view initial_s
     current_node = string_to_node_map.at(s1);
     current_node->depth = depth;
     current_node->red = true;
+
+    if(!edges.contains(static_cast<string>(s1))){
+      // this is a sink node, it does not have outgoing edges
+      continue;
+    }
 
     for(auto& node_label_pair: edges.at(string(s1)) ){
       auto& s2 = node_label_pair.first;

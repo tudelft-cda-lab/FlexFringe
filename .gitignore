@@ -5,6 +5,8 @@ build/
 test-reports/
 *.o
 *.a
+data/*
+!data/active_learning/test_dfas/*
 
 # Binaries
 runtests
