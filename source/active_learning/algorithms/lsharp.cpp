@@ -24,13 +24,15 @@
 
 #include <list>
 
-const bool PRINT_ALL_MODELS = false;
+const bool PRINT_ALL_MODELS = true;
 
 using namespace std;
 using namespace active_learning_namespace;
 
 /**
  * @brief Take a node and complete it wrt to the alphabet.
+ * 
+ * TODO: shall we check if we already have this node? If yes, then we don't need to do anything.
  * 
  * @param aut 
  */
@@ -42,22 +44,17 @@ void lsharp_algorithm::complete_state(unique_ptr<state_merger>& merger, apta_nod
       pref_suf_t seq;
       if(n->get_number() != -1) seq = access_trace->get_input_sequence(true);
 
-/*       if(n->get_number() != -1) cout << "node number: " << n->get_number() << ", access trace: " << access_trace->to_string() << ", seq: ";
-      print_vector(seq); */
-
       seq.push_back(symbol);
       const auto answer = teacher->ask_membership_query(seq, id);
       
       trace* new_trace = vector_to_trace(seq, id, answer);
-      //cout << "Trace to apta: " << new_trace->to_string() << endl;
-
       id.add_trace_to_apta(new_trace, merger->get_aut(), set<int>());
     }
   }
 }
 
 void lsharp_algorithm::proc_counterex(apta* aut, const std::list<int>& counterex) const {
-  // TODO: this is a counterexample strategy
+  // TODO: this is a counterexample strategy. Do we need it here?
 }
 
 refinement* lsharp_algorithm::extract_best_merge(refinement_set* rs) const {
@@ -81,7 +78,7 @@ void lsharp_algorithm::run(inputdata& id){
 
   const list<int> alphabet = id.get_alphabet();
   cout << "Alphabet: ";
-  //active_learning_namespace::print_sequence< list<int>::const_iterator >(alphabet.cbegin(), alphabet.cend());
+  active_learning_namespace::print_sequence< list<int>::const_iterator >(alphabet.cbegin(), alphabet.cend());
 
   // init the root node, s.t. we have blue states to iterate over
   complete_state(merger, the_apta->get_root(), id, alphabet);
@@ -89,23 +86,20 @@ void lsharp_algorithm::run(inputdata& id){
   while(ENSEMBLE_RUNS > 0 && n_runs <= ENSEMBLE_RUNS){
     if(n_runs % 100 == 0) cout << "Iteration " << n_runs + 1 << endl;
     
-    bool no_isolated_states = true; // avoid iterating over a changed data structure
+    bool no_isolated_states = true; // avoid iterating over a changed data structure (apta)
     for(blue_state_iterator b_it = blue_state_iterator(the_apta->get_root()); *b_it != nullptr; ++b_it){
 
       const auto blue_node = *b_it;
       if(blue_node->get_size() == 0) continue;
-      assert(!blue_node->is_red()); 
-
-      //if(!blue_node->is_blue()) continue; // blue_state_iterator gives us blue and white nodes
-      //cout << "blue node: " << blue_node->get_number() << endl;
+      assert(!blue_node->is_red()); // TODO: delete. Responsibility of the iterator
       
-      // this is a difference with Vandraager, but we need it for statistical methods
+      // this is a difference with Vandraager (they only complete red nodes), but we need it for statistical methods
       complete_state(merger, blue_node, id, alphabet);
 
       refinement_set possible_refs;
       for(red_state_iterator r_it = red_state_iterator(the_apta->get_root()); *r_it != nullptr; ++r_it){
         const auto red_node = *r_it;
-        assert(red_node->is_red());
+        assert(red_node->is_red()); // TODO: delete. Responsibility of the iterator
 
         complete_state(merger, red_node, id, alphabet);
 
@@ -140,6 +134,11 @@ void lsharp_algorithm::run(inputdata& id){
       else{
         const list<int>& cex = query_result.value().first;
         const int type = query_result.value().second;
+        if(type < 0){
+          // we need to delete this state and make sure it won't be used again
+          
+        }
+
         auto cex_tr = vector_to_trace(cex, id, type);
         cout << "Found counterexample: " << cex_tr->to_string() << "\n"; //endl;
 
