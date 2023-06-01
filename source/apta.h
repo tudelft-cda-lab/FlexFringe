@@ -118,6 +118,10 @@ public:
     merged_APTA_iterator& operator++() { increment(); return *this; }
 };
 
+/**
+ * @brief Iterates over the APTA nodes in the merged APTA, blue and white states
+ * 
+ */
 class blue_state_iterator : public merged_APTA_iterator {
 public:
     
