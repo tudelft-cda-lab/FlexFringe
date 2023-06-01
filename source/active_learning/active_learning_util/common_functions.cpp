@@ -67,7 +67,7 @@ const int active_learning_namespace::predict_type_from_trace(trace* tr, apta* au
     for(int j = 0; j < t->get_length(); j++){
         n = get_child_node(n, t);
         if(n == nullptr){
-            return id.get_reverse_type(REJECTING_LABEL);
+            return -1; // Invariant: inputdata will never map to negative values. 
         }
         t = t->future();
     }

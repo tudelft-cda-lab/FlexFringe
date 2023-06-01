@@ -23,6 +23,8 @@ std::optional< pair< list<int>, int> > active_sul_oracle::equivalence_query(stat
   while(query_string_opt != nullopt){
     auto& query_string = query_string_opt.value();
     int true_val = teacher->ask_membership_query(query_string, id);
+    
+    if(true_val < 0)return make_optional< pair< list<int>, int> >(query_string, true_val); // target automaton cannot be parsed with this query string
 
     trace* test_tr = vector_to_trace(query_string, id, 0); // type-argument irrelevant here
 

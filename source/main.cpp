@@ -389,8 +389,9 @@ int main(int argc, char *argv[]){
     
     // here come the active learning parameters
     app.add_option("--active_learning_algorithm", ACTIVE_LEARNING_ALGORITHM, "The basic algorithm that runs through. Current options are (l_star). DEFAULT: l_star");
+    // TODO: shall we delete the rejecting_label option?
     app.add_option("--rejecting_label", REJECTING_LABEL, "The label as a string that is used for rejecting (non-accepting) behavior. Only in active learning mode. DEFAULT: 0");
-
+    
     CLI11_PARSE(app, argc, argv)
 
     loguru::g_stderr_verbosity = loguru::Verbosity_OFF;

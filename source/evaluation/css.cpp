@@ -164,7 +164,7 @@ const vector<int> css_data::get_symbols_as_list(tail* t) const {
 
             const int symbol = t->get_symbol();
             if(symbol == -1){ // termination symbol via flexfringe-convention
-                shingles.push_back(set<int>{-1}); // code cannot become -1
+                shingles.push_back(set<int>{-1}); // code cannot be negative, hence no clash possible 
                 break;
             }
             // map the symbols to integer values from 1 to ALPHABET_SIZE
