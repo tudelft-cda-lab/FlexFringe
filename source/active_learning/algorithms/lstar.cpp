@@ -54,11 +54,16 @@ const list<refinement*> lstar_algorithm::construct_automaton_from_table(const ob
     for(auto col_it = entry.cbegin(); col_it != entry.cend(); ++col_it){
       const list<int>& suffix = col_it->first;
 
+      const int answer = obs_table.get_answer(prefix, suffix);
+      if(answer == -1){
+        // we do not want to add this state to the automaton.
+         continue;
+      }
+
       const auto whole_prefix = concatenate_strings(prefix, suffix);
-      const auto answer = obs_table.get_answer(prefix, suffix);
 
       trace* new_trace = vector_to_trace(whole_prefix, id, answer);
-      id.add_trace_to_apta(new_trace, merger->get_aut(), set<int>());
+      id.add_trace_to_apta(new_trace, merger->get_aut());
     }
   }
 
