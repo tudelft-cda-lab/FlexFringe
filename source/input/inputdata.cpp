@@ -236,12 +236,12 @@ std::string inputdata::string_from_type(int type) {
 
 void inputdata::add_traces_to_apta(apta *the_apta) {
     for (auto *tr: traces) {
-        add_trace_to_apta(tr, the_apta, set<int>()); // TODO: make this one an optional
+        add_trace_to_apta(tr, the_apta); // TODO: make this one an optional
         if (!ADD_TAILS) tr->erase();
     }
 }
 
-void inputdata::add_trace_to_apta(trace* tr, apta* the_apta, const set<int>& states_to_append_to){
+void inputdata::add_trace_to_apta(trace* tr, apta* the_apta, set<int>* states_to_append_to){
     int depth = 0;
     apta_node* node = the_apta->root;
     /*if(node->access_trace == nullptr){
@@ -274,11 +274,11 @@ void inputdata::add_trace_to_apta(trace* tr, apta* the_apta, const set<int>& sta
                     break;
                 }
                 // case 1 of the red-blue-threshold: We get an already merged APTA
-                if(RED_BLUE_THRESHOLD!=0 && !states_to_append_to.empty() && !node->is_red() && !node->is_blue()){
+                if(RED_BLUE_THRESHOLD!=0 && states_to_append_to != nullptr && !node->is_red() && !node->is_blue()){
                     break;
                 }
                 // case 2: we get an apta that is unmerged, yet we want to keep track of the states we append to
-                if(RED_BLUE_THRESHOLD!=0 && !states_to_append_to.empty() && (states_to_append_to.count(node->get_number()) == 0)){
+                if(RED_BLUE_THRESHOLD!=0 && states_to_append_to != nullptr && (states_to_append_to->count(node->get_number()) == 0)){
                     break;
                 } 
                 auto* next_node = mem_store::create_node(nullptr);

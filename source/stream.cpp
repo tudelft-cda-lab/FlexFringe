@@ -316,7 +316,7 @@ int stream_object::stream_mode(state_merger* merger, ifstream& input_stream, inp
         trace* new_trace = trace_opt.value();
         new_trace->sequence = seq_nr;
         
-        id->add_trace_to_apta(new_trace, merger->get_aut(), this->states_to_append_to);
+        id->add_trace_to_apta(new_trace, merger->get_aut(), &(this->states_to_append_to));
         if(!ADD_TAILS) new_trace->erase();
       }
 

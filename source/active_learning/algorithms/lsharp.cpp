@@ -45,10 +45,11 @@ void lsharp_algorithm::complete_state(unique_ptr<state_merger>& merger, apta_nod
       if(n->get_number() != -1) seq = access_trace->get_input_sequence(true);
 
       seq.push_back(symbol);
-      const auto answer = teacher->ask_membership_query(seq, id);
+      const int answer = teacher->ask_membership_query(seq, id);
+      if(answer == -1) continue;
       
       trace* new_trace = vector_to_trace(seq, id, answer);
-      id.add_trace_to_apta(new_trace, merger->get_aut(), set<int>());
+      id.add_trace_to_apta(new_trace, merger->get_aut());
     }
   }
 }
@@ -135,8 +136,9 @@ void lsharp_algorithm::run(inputdata& id){
         const list<int>& cex = query_result.value().first;
         const int type = query_result.value().second;
         if(type < 0){
-          // we need to delete this state and make sure it won't be used again
-          
+          // we ignore this state. We have to watch out that counterexample are not reused, i.e. the counterexample strategy should not 
+          // return the same counterexample twice.
+          continue;
         }
 
         auto cex_tr = vector_to_trace(cex, id, type);
@@ -148,7 +150,7 @@ void lsharp_algorithm::run(inputdata& id){
           static int model_nr = 0;
           print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_undo");
         }
-        id.add_trace_to_apta(cex_tr, merger->get_aut(), set<int>());
+        id.add_trace_to_apta(cex_tr, merger->get_aut());
       }
     }
 
