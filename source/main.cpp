@@ -380,6 +380,8 @@ int main(int argc, char *argv[]){
     app.add_option("--minhashsize", MINHASH_SIZE, "Perform Min-Hash scheme on the ngrams. Only works in conjunction with --conditionalprob turned on. Default=false");
     app.add_option("--alphabetsize", ALPHABET_SIZE, "An upper estimate on the alphabet size. Only needed with minhash-function turned on, in order to perform the permutation. Larger estimate increases runtime. Default=0");
 
+    app.add_option("--batchsize", BATCH_SIZE, "Batchsize for streaming. Default=500");
+
     app.add_option("-e,--epsilon", EPSILON, "Epsilon parameter, determining approximation error.");
     app.add_option("-D,--delta", DELTA, "Delta param, the error rate.");
     app.add_option("--mu", MU, "Distinguishability parameter.");

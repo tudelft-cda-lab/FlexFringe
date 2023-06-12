@@ -135,7 +135,6 @@ void stream_object::greedyrun_retry_merges(state_merger* merger, const int seq_n
  * @return int 
  */
 int stream_object::stream_mode(state_merger* merger, ifstream& input_stream, inputdata* id, parser* input_parser) {
-    const int BATCH_SIZE = 500; // it was 500 in the original experiments
     unsigned int seq_nr = 0;
     bool last_sequence = false;
 
@@ -144,7 +143,6 @@ int stream_object::stream_mode(state_merger* merger, ifstream& input_stream, inp
     unsigned int n_runs = 0;
 
     while(true) {
-      //merger->reset(); // TODO: should we use this?
       int read_lines = 0;
       while (read_lines < BATCH_SIZE){
         if(input_stream.eof()){
