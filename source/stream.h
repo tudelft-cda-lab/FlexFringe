@@ -15,8 +15,6 @@
 class stream_object{
 
 private:
-  // TODO: remove global objects, make them local
-  //int STREAM_COUNT = 0;
   int batch_number; // TODO: naming
   refinement_list* currentrun;
   refinement_list* nextrun;
