@@ -359,6 +359,7 @@ void inputdata::read_csv_file(istream &input_stream) {
     while(!input_stream.eof()) {
         trace *tr = read_csv_row(input_stream);
 
+        //cerr << tr->to_string() << endl;
         if (tr != nullptr && tr->get_end()->is_final()) {
             //add_trace_to_apta(tr, the_apta);
             //if (!ADD_TAILS) tr->erase();
@@ -439,7 +440,7 @@ void trace::reverse(){
 
 void inputdata::add_traces_to_apta(apta* the_apta) {
     for (auto *tr: all_traces) {
-        //cerr << tr->to_string() << endl;
+        cerr << tr->to_string() << endl;
         add_trace_to_apta(tr, the_apta);
         if (!ADD_TAILS) tr->erase();
     }

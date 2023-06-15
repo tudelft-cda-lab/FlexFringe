@@ -582,7 +582,7 @@ void predict_csv(state_merger* m, istream& input, ofstream& output){
     inputdata* id = m->get_dat();
     rownr = -1;
 
-    output << "first row nr; last row nr; abbadingo trace; state sequence; score sequence";
+    output << "row nr; last row nr; abbadingo trace; state sequence; score sequence";
     if(SLIDING_WINDOW) output << "; root_cause; score per sw tail; score first sw tail; root cause sw tail score; row nrs first sw tail";
     if(PREDICT_ALIGN) output << "; alignment; num misaligned";
     if(PREDICT_TRACE) output << "; sum scores; mean scores; min score";
