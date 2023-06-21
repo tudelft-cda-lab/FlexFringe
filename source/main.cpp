@@ -113,16 +113,14 @@ void run() {
     inputdata id;
     inputdata_locator::provide(&id);
 
-    if(read_csv) {
-        auto input_parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
-        id.read(&input_parser);
-    } else {
-        auto input_parser = abbadingoparser(input_stream);
-        id.read(&input_parser);
-    }
-
-    if(OPERATION_MODE != "stream"){
-        
+    if(OPERATION_MODE != "stream" && OPERATION_MODE != "predict"){
+        if(read_csv) {
+            auto input_parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
+            id.read(&input_parser);
+        } else {
+            auto input_parser = abbadingoparser(input_stream);
+            id.read(&input_parser);
+        }
     }
 
     apta* the_apta = new apta();
@@ -164,11 +162,11 @@ void run() {
         stream_object stream_obj;
         if(read_csv) {
             auto input_parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
-            //stream_obj.stream_mode(merger, input_stream, id, parser);
+            stream_obj.stream_mode(merger, input_stream, &id, &input_parser);
             //id.read(&input_parser);
         } else {
             auto input_parser = abbadingoparser(input_stream);
-            //stream_obj.stream_mode(merger, input_stream, id, parser);
+            stream_obj.stream_mode(merger, input_stream, &id, &input_parser);
             //id.read(&input_parser);
         }
         print_current_automaton(merger, OUTPUT_FILE, ".final");

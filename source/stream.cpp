@@ -21,11 +21,25 @@
 #include <chrono> // for measuring performance
 #include <fstream> // for measuring performance
 
-const bool RETRY_MERGES = false; // if true use new streaming scheme, else use the old one
-const bool PRINT_ALL_MODELS = false; // for debugging purposes
+const bool RETRY_MERGES = true; // if true use new streaming scheme, else use the old one
 const bool EXPERIMENTAL_RUN = true;
+void stream_object::greedyrun_no_undo(state_merger* merger, const int seq_nr, const bool last_sequence, const int n_runs){
+    static int count_printouts = 1;
 
-int P_PERCENT = 0; // to get each i-th percentage. We print the model then
+    int c2 = 0;
+
+    refinement* top_ref;
+    top_ref = merger->get_best_refinement();
+    while(top_ref != 0){
+      top_ref->doref(merger);
+      top_ref = merger->get_best_refinement();
+    }
+
+    if(seq_nr % 100 == 0  || last_sequence){
+      cout << "Processed " << count_printouts << " batches" << endl;
+      ++count_printouts;
+    }
+}
 
 void stream_object::greedyrun_retry_merges(state_merger* merger, const int seq_nr, const bool last_sequence, const int n_runs){
     static int count_printouts = 1;
@@ -40,15 +54,6 @@ void stream_object::greedyrun_retry_merges(state_merger* merger, const int seq_n
     refinement* top_ref;
 
     this->states_to_append_to.clear();
-
-    if(PRINT_ALL_MODELS){
-      merger->todot();
-      std::ostringstream oss2;
-      oss2 << "model_before_" << this->batch_number << ".dot";
-      ofstream output1(oss2.str().c_str());
-      output1 << merger->dot_output;
-      output1.close();
-    }
 
     // for tracking the refinements
     static ofstream outf;
@@ -66,33 +71,14 @@ void stream_object::greedyrun_retry_merges(state_merger* merger, const int seq_n
     else{
         top_ref = currentrun->front();
         currentrun->pop_front();
-        //if(top_ref->testref(merger) == false){
-          // nothing
-        //}
     }
 
-    // TODO: delete unused refinements
     while(top_ref != 0){
         if(top_ref->test_ref_structural(merger)){
           if(top_ref->test_ref_consistency(merger)){
             nextrun->push_back(top_ref);
             refinement_stack.push(top_ref);
             top_ref->doref(merger);
-
-            if(PRINT_ALL_MODELS){
-              merger->todot();
-              std::ostringstream oss2;
-              oss2 << "batch_" << this->batch_number << "_" << c2 << ".dot";
-              ofstream output1(oss2.str().c_str());
-              output1 << merger->dot_output;
-              output1.close();
-
-              ++c2;
-            }
-
-            //if(track_refinements){
-            //  outf << top_ref->get_string(merger) << ", " << "or" << endl; // or for old-refinement
-            //}
           }
         }
         else{
@@ -114,17 +100,6 @@ void stream_object::greedyrun_retry_merges(state_merger* merger, const int seq_n
       refinement_stack.push(top_ref);
       top_ref->doref(merger);
 
-      if(PRINT_ALL_MODELS){
-        merger->todot();
-        std::ostringstream oss2;
-        oss2 << "batch_" << this->batch_number << "_" << c2 << ".dot";
-        ofstream output1(oss2.str().c_str());
-        output1 << merger->dot_output;
-        output1.close();
-
-        ++c2;
-      }
-
       queue<refinement*> tmp;
       while(!failed_refs.empty()){
         top_ref = failed_refs.front();
@@ -134,21 +109,6 @@ void stream_object::greedyrun_retry_merges(state_merger* merger, const int seq_n
             nextrun->push_back(top_ref);
             refinement_stack.push(top_ref);
             top_ref->doref(merger);
-
-            if(PRINT_ALL_MODELS){
-              merger->todot();
-              std::ostringstream oss2;
-              oss2 << "batch_" << this->batch_number << "_" << c2 << ".dot";
-              ofstream output1(oss2.str().c_str());
-              output1 << merger->dot_output;
-              output1.close();
-
-              ++c2;
-            }
-
-            //if(track_refinements){
-            //  outf << top_ref->get_string(merger) << ", " << "fr" << endl;
-            //}
           }
         }
         else{
@@ -158,22 +118,10 @@ void stream_object::greedyrun_retry_merges(state_merger* merger, const int seq_n
       failed_refs = tmp;
 
       top_ref = merger->get_best_refinement();
-      //if(track_refinements && top_ref != 0){
-      //  outf << top_ref->get_string(merger) << ", " << "gbr" << endl;
-      //}
     }
 
-    if(PRINT_ALL_MODELS){
-      merger->todot();
-      std::ostringstream oss2;
-      oss2 << "model_after_" << this->batch_number << ".dot";
-      ofstream output1(oss2.str().c_str());
-      output1 << merger->dot_output;
-      output1.close();
-    }
-
-    if(seq_nr > count_printouts * P_PERCENT || last_sequence){
-      cout << "Processed " << count_printouts * 10 << " percent" << endl;
+    if(seq_nr % 100 == 0  || last_sequence){
+      cout << "Processed " << count_printouts << " batches" << endl;
       ++count_printouts;
     }
 
@@ -198,25 +146,6 @@ void stream_object::greedyrun_retry_merges(state_merger* merger, const int seq_n
     nextrun = new refinement_list();
 }
 
-template<typename T>
-void print_time(const T start_time, const T batch_start_time, const unsigned int n_runs, ofstream& time_doc){
-  stringstream time_string;
-  auto end_time = std::chrono::system_clock::now();
-
-  auto total_duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
-  auto total_duration_s = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time).count();
-  auto total_duration_min = std::chrono::duration_cast<std::chrono::minutes>(end_time - start_time).count();
-  auto total_duration_h = std::chrono::duration_cast<std::chrono::hours>(end_time - start_time).count();
-
-  auto batch_duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - batch_start_time).count();
-  auto batch_duration_s = std::chrono::duration_cast<std::chrono::seconds>(end_time - batch_start_time).count();
-  auto batch_duration_min = std::chrono::duration_cast<std::chrono::minutes>(end_time - batch_start_time).count();
-  auto batch_duration_h = std::chrono::duration_cast<std::chrono::hours>(end_time - batch_start_time).count();
-
-  time_string << "Runs:" << n_runs << " Total(ms):" << total_duration_ms << " Total(s):" << total_duration_s << " Total(min):" << total_duration_min << " Total(h):" << total_duration_h << " Batch(ms):" << batch_duration_ms << " Batch(s):" << batch_duration_s << " Batch(min):" << batch_duration_min << " Batch(h):" << batch_duration_h << endl;
-  time_doc << time_string.str();
-}
-
 /**
  * @brief Runs the stream mode.
  * 
@@ -232,18 +161,11 @@ int stream_object::stream_mode(state_merger* merger, ifstream& input_stream, inp
     unsigned int seq_nr = 0;
     bool last_sequence = false;
 
-    P_PERCENT = static_cast<int>(id->get_max_sequences() / 10); // to track the percent
-    cout << "P_PERCENT: " << P_PERCENT << endl;
-
-    ofstream time_doc("times_per_batch.txt");
-
     // for performance measurement
     unsigned int n_runs = 0;
-    auto start_time = std::chrono::system_clock::now();
 
     while(true) {
       int read_lines = 0;
-      auto batch_start_time = std::chrono::system_clock::now();
       while (read_lines < BATCH_SIZE){
         if(input_stream.eof()){
           last_sequence = true;
@@ -271,29 +193,26 @@ int stream_object::stream_mode(state_merger* merger, ifstream& input_stream, inp
 
       if(RETRY_MERGES) greedyrun_retry_merges(merger, seq_nr, last_sequence, n_runs);
       else greedyrun_no_undo(merger, seq_nr, last_sequence, n_runs);
-
-      print_time(start_time, batch_start_time, n_runs, time_doc);
-      time_doc.flush();
       ++(this->batch_number);
       ++n_runs;
 
       if(input_stream.eof()){
-        if(RETRY_MERGES) {
+        if(RETRY_MERGES){
+          // one more step, because we undid refinements earlier
           greedyrun_retry_merges(merger, seq_nr, last_sequence, n_runs);
 
           if(currentrun->size() == 0){
             cerr << "Error: Currentrun object empty after running the whole input. No output to be generated." << endl;
             throw new exception;
           }
-          if (RETRY_MERGES){
-            for(auto top_ref: *currentrun){
-                top_ref->doref(merger);
-            }
+
+          for(auto top_ref: *currentrun){
+              top_ref->doref(merger);
           }
         }
 
+
         cout << "Finished parsing file. End of program." << endl;
-        time_doc.close();
         return 0;
       }
     }
