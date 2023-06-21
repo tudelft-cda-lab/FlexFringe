@@ -490,6 +490,8 @@ void predict_trace(state_merger* m, ofstream& output, trace* tr){
 }
 
 void predict_csv(state_merger* m, istream& input, ofstream& output){
+    throw std::runtime_error("Not implemented yet");
+
     inputdata* id = m->get_dat();
     rownr = -1;
 
@@ -524,7 +526,8 @@ void predict_csv(state_merger* m, istream& input, ofstream& output){
 //    }
 }
 
-void predict(state_merger* m, istream& input, ofstream& output){
+
+void predict(state_merger* m, inputdata& idat, ofstream& output){
     output << "row nr; abbadingo trace; state sequence; score sequence";
     if(SLIDING_WINDOW) output << "; score per sw tail; score first sw tail; root cause sw tail score; row nrs first sw tail";
     if(PREDICT_ALIGN) output << "; alignment; num misaligned";
@@ -534,11 +537,11 @@ void predict(state_merger* m, istream& input, ofstream& output){
     output << endl;
 
     // TODO fix
-    auto predict_inputdata = inputdata();
-    auto parser = abbadingoparser(input);
-    predict_inputdata.read(&parser);
+/*     auto predict_inputdata = inputdata();
+    auto parser = abbadingoparser(idat);
+    predict_inputdata.read(&parser); */
 
-    for (auto trace: predict_inputdata) {
+    for (auto trace: idat) {
         predict_trace(m, output, trace);
         add_visits(m, trace);
         trace->erase();

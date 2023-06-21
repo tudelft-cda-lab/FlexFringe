@@ -87,3 +87,18 @@ TEST_CASE( "Smoke test: greedy edsm on stamina 1_training", "[smoke]" ) {
 
 //    delete merger;
 }
+
+TEST_CASE( "Smoke test: abbadingo input data with empty traces", "[smoke]" ) {
+    ifstream input_stream("data/PAutomaC-competition_sets/1.pautomac.train.dat");
+    if (!input_stream) {
+        cerr << "Error: " << strerror(errno);
+    }
+    REQUIRE(input_stream);
+
+    inputdata id;
+    inputdata_locator::provide(&id);
+    auto parser = abbadingoparser(input_stream);
+    id.read(&parser);
+
+    REQUIRE(id.get_num_sequences() == 20000);
+}
