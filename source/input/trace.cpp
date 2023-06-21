@@ -57,13 +57,24 @@ string trace::to_string(){
  * Adds a sentinel tail (with symbol -1) at the end of this trace
  */
 void trace::finalize() {
-    tail* new_end_tail = mem_store::create_tail(nullptr);
-    new_end_tail->tr = this;
-    new_end_tail->td->index = this->end_tail->get_index() + 1;
+    if (!this->is_finalized()) {
+        tail* new_end_tail = mem_store::create_tail(nullptr);
+        new_end_tail->tr = this;
+        new_end_tail->td->index = this->end_tail->get_index() + 1;
 
-    // Add final tail to trace
-    this->end_tail->set_future(new_end_tail);
-    this->end_tail = new_end_tail;
+        // Add final tail to trace
+        this->end_tail->set_future(new_end_tail);
+        this->end_tail = new_end_tail;
+    }
+}
+
+/**
+ * A trace is finalized when the last tail has a symbol of -1
+ * which is not counted against the lenght of the trace
+ * @return
+ */
+bool trace::is_finalized() {
+    return this->end_tail->is_final();
 }
 
 /**
@@ -84,3 +95,5 @@ void trace::pop_front() {
     if (this->head == nullptr) { return; }
     this->head->past_tail = nullptr;
 }
+
+
