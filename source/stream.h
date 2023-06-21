@@ -42,7 +42,6 @@ public:
   void greedyrun_no_undo(state_merger* merger, const int seq_nr, const bool last_sequence, const int n_runs);
 
   void greedyrun_retry_merges(state_merger* merger, const int seq_nr, const bool last_sequence, const int n_runs); // for experiments
-  void greedyrun_always_best_refinement(state_merger* merger, const int seq_nr, const bool last_sequence, const int n_runs); // for experiments
 };
 
 #endif
