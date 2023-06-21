@@ -115,7 +115,7 @@ void run() {
     inputdata id;
     inputdata_locator::provide(&id);
 
-    if(OPERATION_MODE != "stream" && OPERATION_MODE != "predict"){
+    if(OPERATION_MODE != "stream" /* && OPERATION_MODE != "predict" */){
         if(read_csv) {
             auto input_parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
             id.read(&input_parser);
