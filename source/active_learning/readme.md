@@ -7,7 +7,8 @@ About the folder structure:
   4. Memory: Some sort of cache or other utility structures that store history and the databases to query from. Contains the observation tables as well. 
   5. System under learning: This is an abstraction of the system. It potentially needs to be implemented for your use case. We provide abstract base class. 
   6. Counterexample strategies: This is what you think it is.
-  7. Util: Here we do some typedefs and some shared variables that a reasonable number of algorithms will use.
+  7. Databases: Here we provide the database, mainly in conjunction with streaming, not for standalone active learning algorithms.
+  8. Util: Here we do some typedefs and some shared variables that a reasonable number of algorithms will use.
 
 We use Umbrello to open the class diagram. **Note:** Not maintained at the moment
 

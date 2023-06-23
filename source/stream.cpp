@@ -17,22 +17,42 @@
 #include <iostream>
 #include <cstdlib>
 #include <stack>
+#include <optional>
 
 #include <chrono> // for measuring performance
 #include <fstream> // for measuring performance
 
 const bool RETRY_MERGES = true;
 const bool EXPERIMENTAL_RUN = true;
+const bool DO_ACTIVE_LEARNING = false;
 
 int P_PERCENT = 0; // to get each i-th percentage. We print the model then
+
+refinement* stream_object::determine_next_refinement(state_merger* merger){
+  if(!DO_ACTIVE_LEARNING) return merger->get_best_refinement();
+
+  optional<node_to_refinement_map_T> node_to_ref_map_opt;
+  auto possible_refs = merger->get_possible_refinements(node_to_ref_map_opt); // TODO: be careful about no refinements possible here and check length of your map first
+  if(possible_refs->empty()) return nullptr; 
+  else if(possible_refs->size() == 1){
+    refinement* res = *rs->begin();
+    delete possible_refs;
+    return res; 
+  }
+
+  // TODO: Do the strategy on the refinements here
+  
+
+  delete possible_refs;
+}
 
 void stream_object::greedyrun_no_undo(state_merger* merger, const int seq_nr, const bool last_sequence, const int n_runs){
 
     refinement* top_ref;
-    top_ref = merger->get_best_refinement();
+    top_ref = determine_next_refinement(merger);
     while(top_ref != 0){
       top_ref->doref(merger);
-      top_ref = merger->get_best_refinement();
+      top_ref = determine_next_refinement(merger);
     }
 }
 
@@ -47,7 +67,7 @@ void stream_object::greedyrun_retry_merges(state_merger* merger, const int seq_n
     this->states_to_append_to.clear();
 
     if(currentrun->empty()){
-      top_ref = merger->get_best_refinement();
+      top_ref = determine_next_refinement(merger);
     }
     else{
         top_ref = currentrun->front();
@@ -75,7 +95,7 @@ void stream_object::greedyrun_retry_merges(state_merger* merger, const int seq_n
         }
     }
 
-    top_ref = merger->get_best_refinement();
+    top_ref = determine_next_refinement(merger);
     while(top_ref != 0){
       nextrun->push_back(top_ref);
       refinement_stack.push(top_ref);
@@ -98,7 +118,7 @@ void stream_object::greedyrun_retry_merges(state_merger* merger, const int seq_n
       }
       failed_refs = tmp;
 
-      top_ref = merger->get_best_refinement();
+      top_ref = determine_next_refinement(merger);
     }
 
     if(seq_nr > count_printouts * P_PERCENT || last_sequence){
