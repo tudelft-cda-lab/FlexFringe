@@ -124,6 +124,8 @@ public:
 
     Iterator begin() {return traces.begin();}
     Iterator end() {return traces.end();}
+
+    void clear_traces() noexcept{this->traces.clear();}
 };
 
 #endif //FLEXFRINGE_IREADER_H

@@ -9,18 +9,21 @@
  * 
  */
 
-#ifndef DATABASE_BASE
-#define DATABASE_BASE
+#ifndef DATABASE_BASE_H_
+#define DATABASE_BASE_H_
 
 #include <fstream>
 
 class database_base {
   protected:
-    virtual void initialize(std::ifstream& input) = 0;
+    virtual void initialize() = 0;
   public:
-    database_base(std::ifstream& input){
-      initialize(input);
+    database_base(){
+      initialize();
     }
+
+    virtual bool is_member(const std::list<int>& query_trace) const = 0;
+    virtual bool get_suffixes_with_counts(trace* prefix) = 0;
 };
 
 #endif

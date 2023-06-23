@@ -167,7 +167,7 @@ int stream_object::stream_mode(state_merger* merger, ifstream& input_stream, inp
       while (read_lines < BATCH_SIZE){
         if(input_stream.eof()){
           last_sequence = true;
-          break; // TODO: for experiments, delete afterwards
+          break; // TODO: for experiments, delete afterwards since this will terminate the algortithm, but not necessarily the stream
         }
 
         ++read_lines;

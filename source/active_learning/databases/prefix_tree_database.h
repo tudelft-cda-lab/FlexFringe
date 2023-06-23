@@ -31,6 +31,8 @@ class prefix_tree_database : public database_base {
     prefix_tree_database(){
       database_base::database_base();
     }
+
+    virtual bool is_member(const std::list<int>& query_trace) const override;
 };
 
 #endif
