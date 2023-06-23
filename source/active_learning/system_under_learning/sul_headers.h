@@ -12,3 +12,4 @@
 #include "sul_base.h"
 #include "input_file_sul.h"
 #include "dfa_sul.h"
+#include "database_sul.h"

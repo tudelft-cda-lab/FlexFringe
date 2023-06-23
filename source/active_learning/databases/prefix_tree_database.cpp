@@ -15,14 +15,21 @@
 #include "input/inputdatalocator.h"
 #include "input/parsers/csvparser.h"
 #include "source/input/parsers/abbadingoparser.h"
+#include "common_functions.h"
+#include "trace.h"
+#include "inputdatalocator.h"
 
 using namespace std;
+using namespace active_learning_namespace;
 
 virtual void prefix_tree_database::initialize(){
-  // open stream, build the apta
   bool read_csv = false;
   if(APTA_FILE.compare(APTA_FILE.length() - 4, APTA_FILE.length(), ".csv") == 0){
       read_csv = true;
+  }
+
+  if(read_csv && INPUT_FILE.compare(INPUT_FILE.length() - 4, INPUT_FILE.length(), ".csv") != 0){
+    throw std::runtime_error("Error: Input and aptafile must be formatted the same to map to the same alphabet. Terminating.");
   }
 
   ifstream input_stream(APTA_FILE);  
@@ -42,6 +49,20 @@ virtual void prefix_tree_database::initialize(){
       auto input_parser = abbadingoparser(input_stream);
       id.read(&input_parser);
   }
+
+  the_tree = unique_ptr<apta>(new apta());
+  id->add_traces_to_apta(the_tree.get());
   input_stream.close();
-  return id;
+  id->clear_traces();
+}
+
+/**
+ * @brief Checks if trace is in database. Type does not matter, as 
+ * it is simply a "is in a set" query.
+ * 
+ * @param query_trace The trace we query.
+ */
+bool is_member(const std::list<int>& query_trace) const {
+  trace* tr = active_learning_namespace::vector_to_trace(query_trace, inputdata_locator::get());
+  return active_learning_namespace::aut_accepts_trace(trace* tr, apta* aut);
 }

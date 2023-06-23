@@ -37,7 +37,7 @@ namespace active_learning_namespace{
   const std::list<refinement*> minimize_apta(state_merger* merger);
 
   std::list<int> concatenate_strings(const std::list<int>& pref1, const std::list<int>& pref2);
-  trace* vector_to_trace(const std::list<int>& vec, inputdata& id, const int trace_type);
+  trace* vector_to_trace(const std::list<int>& vec, inputdata& id, const int trace_type = 0);
 
   void add_sequence_to_trace(/*out*/ trace* new_trace, const std::list<int> sequence);
   void update_tail(/*out*/ tail* t, const int symbol);
