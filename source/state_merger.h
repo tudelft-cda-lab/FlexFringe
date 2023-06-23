@@ -10,6 +10,7 @@
 #include <map>
 #include <unordered_map>
 #include <string>
+#include <optional>
 
 class state_merger;
 
@@ -19,6 +20,8 @@ class state_merger;
 #include "mem_store.h"
 
 using namespace std;
+
+typedef std::unordered_map< int, std::list<refinement*> > node_to_refinement_map_T; 
 
 /**
  * @brief The state merger. Contains the prefix and performs the merges, undoes them etc.
@@ -79,8 +82,9 @@ public:
     void undo_extend(apta_node* blue);
 
     /* find refinements */
-    refinement_set* get_possible_refinements();
+    refinement_set* get_possible_refinements(optional< node_to_refinement_map_T& > node_to_ref_map_opt = std::nullopt);
     refinement* get_best_refinement();
+    void insert_ref_into_map(refinement* ref, node_to_refinement_map_T& node_to_ref_map) const noexcept;
 
     refinement* test_splits(apta_node* blue);
     refinement* test_merge(apta_node*,apta_node*);

@@ -241,7 +241,7 @@ void inputdata::add_traces_to_apta(apta *the_apta) {
     }
 }
 
-void inputdata::add_trace_to_apta(trace* tr, apta* the_apta, set<int>* states_to_append_to){
+void inputdata::add_trace_to_apta(trace* tr, apta* the_apta, unordered_set<int>* states_to_append_to){
     int depth = 0;
     apta_node* node = the_apta->root;
     /*if(node->access_trace == nullptr){

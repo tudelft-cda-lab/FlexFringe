@@ -7,6 +7,7 @@
 
 #include <sstream>
 #include <stack>
+#include <unordered_set>
 
 /**
  * @brief Class to realize the streaming mode, when observing a stream of data, e.g. network data.
@@ -19,11 +20,13 @@ private:
   refinement_list* currentrun;
   refinement_list* nextrun;
 
-  set<int> states_to_append_to; // keeping track of states that we can append to with ease
+  std::unordered_set<int> states_to_append_to; // keeping track of states that we can append to with ease
   reader_strategy* parser_strategy;
 
   void greedyrun_no_undo(state_merger* merger, const int seq_nr, const bool last_sequence, const int n_runs);
   void greedyrun_retry_merges(state_merger* merger, const int seq_nr, const bool last_sequence, const int n_runs); // for experiments
+
+  refinement* determine_next_refinement(state_merger* merger);
 
 public:
   /**

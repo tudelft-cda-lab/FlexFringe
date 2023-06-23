@@ -907,10 +907,16 @@ refinement* state_merger::test_splits(apta_node* blue){
  * behavior depends on input parameters
  * the merge score is used as key in the returned refinement_set
  * returns an empty set if none exists (given the input parameters)
+ * 
+ * If the optional is provided, then the function keeps track of the nodes 
+ * and which refiment they map to. This can be used to further select refiments
+ * or gain insight into the current state of the algorithm.
  */
 
-refinement_set* state_merger::get_possible_refinements(){
+refinement_set* state_merger::get_possible_refinements(optional< node_to_refinement_map_T& > node_to_ref_map_opt){
     auto* result = new refinement_set();
+
+    const bool TRACK_STATES = node_to_ref_map_opt != std::nullopt; 
     
     state_set blue_its = state_set();
     bool found_non_sink = false;
@@ -936,6 +942,8 @@ refinement_set* state_merger::get_possible_refinements(){
                 if(ref != nullptr){
                     result->insert(ref);
                     found = true;
+
+                    if(TRACK_STATES) insert_ref_into_map(ref, node_to_ref_map_opt.value());
                 }
             }
         }
@@ -948,6 +956,8 @@ refinement_set* state_merger::get_possible_refinements(){
             if(ref != nullptr){
                 result->insert(ref);
                 found = true;
+
+                if(TRACK_STATES) insert_ref_into_map(ref, node_to_ref_map_opt.value());
             }
         }
         
@@ -961,6 +971,8 @@ refinement_set* state_merger::get_possible_refinements(){
                 if(ref != nullptr){
                     result->insert(ref);
                     found = true;
+
+                    if(TRACK_STATES) insert_ref_into_map(ref, node_to_ref_map_opt.value());
                 }
             }
         }
@@ -981,6 +993,19 @@ refinement_set* state_merger::get_possible_refinements(){
 }
 
 /**
+ * @brief Small helper function to make code more readable. Does what it says.
+ * 
+ */
+void state_merger::insert_ref_into_map(refinement* ref, node_to_refinement_map_T& node_to_ref_map) const noexcept {
+    int s1 = ref->red->get_number();
+    node_to_ref_map[s1] = ref;
+    if(dynamic_cast<merge_refinement*>(ref) != nullptr){
+        int s2 = dynamic_cast<merge_refinement*>(ref)->blue->get_number();
+        node_to_ref_map[s2] = ref;
+    }
+}
+
+/**
  * @brief Returns the highest scoring refinement.
  * 
  * Returns the highest scoring refinement given the current sets of red and blue states
@@ -997,7 +1022,7 @@ refinement* state_merger::get_best_refinement() {
         }
     }
 
-    delete rs;
+    delete rs; // can this actually erase the refinement that we did?
     return r;
 }
 

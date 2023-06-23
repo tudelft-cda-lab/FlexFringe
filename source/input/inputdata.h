@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <unordered_set>
 #include <istream>
 #include <memory>
 #include <unordered_map>
@@ -49,7 +50,7 @@ protected:
 private:
 
     // The trace IDs of which we already processed the trace attributes
-    std::set<std::string> processed_trace_ids {};
+    std::set<std::string> processed_trace_ids {}; // TODO: should we use string_view and unordered_set here?
 
     void process_trace_attributes(symbol_info &symbolinfo, trace* tr);
     void process_symbol_attributes(symbol_info &symbolinfo, tail* t);
@@ -70,7 +71,7 @@ public:
                                                  std::unordered_map<std::string, trace*> &trace_map);
 
     void add_traces_to_apta(apta *the_apta);
-    void add_trace_to_apta(trace *tr, apta *the_apta, std::set<int>* states_to_append_to=nullptr);
+    void add_trace_to_apta(trace *tr, apta *the_apta, std::unordered_set<int>* states_to_append_to=nullptr);
 
     std::string& get_symbol(int a);
     int get_reverse_symbol(std::string a);
