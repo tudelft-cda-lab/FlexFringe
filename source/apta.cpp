@@ -555,6 +555,32 @@ set<apta_node*>* apta_node::get_sources(){
     return sources;
 }
 
+/**
+ * @brief Sifts the apta from a given trace on, returns the corresponding state after parsing.
+ * Can be used to e.g. find a state using its access trace. 
+ * 
+ * @param tr The trace.
+ * @return apta_node* The node.
+ */
+apta_node* apta::sift(trace* tr) const {
+    apta_node* n = this->root;
+    tail* t = tr->head;
+    if(t == nullptr){
+        return n;
+    }
+
+    while(!(t->future()->is_final()) || t->future() != nullptr){
+        n = n->child(t->get_symbol()); // TODO: what to do if access trace does not exist?
+        t = t->future();
+
+        if(n==nullptr) {
+            return nullptr;
+        }
+    }
+    
+    return n;
+}
+
 /* iterators for the APTA and merged APTA */
 APTA_iterator::APTA_iterator(apta_node* start){
     base = start;

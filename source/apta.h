@@ -189,6 +189,8 @@ public:
     ~apta();
     inline void set_context(state_merger* m){ merger = m; }
 
+    apta_node* sift(trace* tr) const;
+
     /** reading and writing an apta to and from file */
     void print_dot(iostream& output);
     void print_json(iostream& output);
