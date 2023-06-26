@@ -111,13 +111,16 @@ void run() {
 
     inputdata id;
     inputdata_locator::provide(&id);
-    if(read_csv) {
-        auto parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
-        id.read(&parser);
-    } else {
-        auto parser = abbadingoparser(input_stream);
-        id.read(&parser);
+    if(OPERATION_MODE != "streaming" && OPERATION_MODE != "predict"){
+        if(read_csv) {
+            auto parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
+            id.read(&parser);
+        } else {
+            auto parser = abbadingoparser(input_stream);
+            id.read(&parser);
+        }
     }
+
 
     apta* the_apta = new apta();
     auto* merger = new state_merger(&id, eval, the_apta);
@@ -202,6 +205,16 @@ void run() {
             ifstream input_apta_stream(APTA_FILE);
             cerr << "reading apta file - " << APTA_FILE << endl;
             the_apta->read_json(input_apta_stream);
+
+            print_current_automaton(merger, OUTPUT_FILE, ".tom_final"); // TODO: delete. Only for debugging
+
+            if(read_csv) {
+                auto parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
+                id.read(&parser);
+            } else {
+                auto parser = abbadingoparser(input_stream);
+                id.read(&parser);
+            }
 
             std::ostringstream res_stream;
             res_stream << APTA_FILE << ".result";
