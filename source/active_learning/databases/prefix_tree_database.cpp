@@ -19,6 +19,10 @@
 #include "trace.h"
 #include "inputdatalocator.h"
 
+#include <stack>
+#include <pair>
+#include <utility>
+
 using namespace std;
 using namespace active_learning_namespace;
 
@@ -91,12 +95,27 @@ void prefix_tree_database::update_state_with_statistics(apta_node* n){
  * returns a list of the tails including the fitting statistics to update the 
  * nodes and tail_data of the nodes of the starting node.
  * 
+ * Sidenote: I did implement this in an iterative manner, because the trees can
+ * potentially become very large.
+ * 
  * @param start The node to update. We start here.
  * @return std::list< std::unique_ptr<tail> > List of appropriately set tails.
  */
 list< unique_ptr<tail> > prefix_tree_database::extract_tails_from_tree(const apta_node* const start) {
-  list< unique_ptr<tail> > res;
-  apta_node* const it = start;
+  list< unique_ptr<trace> > res; // we use traces for their copy constructor
+
+  apta_node* const current_node = start;
+  trace* current_trace = nullptr;
+
+  stack< pair<apta_node*, trace*> > nodes_to_traverse;
+  do {
+    auto symbols = current_node->get_all_transition_symbols();
+    for(auto symbol: symbols) {
+      trace* nt = mem_store::create_trace(inputdata_locator::get(), current_trace);
+
+      nodes_to_traverse.push_back(current_node->get_child(symbol));
+    }
+  } while(!nodes_to_traverse.empty());
   
   return res;
 }

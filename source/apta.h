@@ -358,6 +358,14 @@ public:
         return nullptr;
     };
 
+    list<int> get_all_transition_symbols() const {
+        list<int> res;
+        for(const auto& [symbol, guard_ptr] : guards) {
+            res.push_back(symbol);
+        }
+        return res;
+    }
+
     /** red, blue, white, and sinks */
 
     inline bool is_red(){

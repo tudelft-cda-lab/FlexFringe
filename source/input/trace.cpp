@@ -11,7 +11,8 @@ trace::trace(inputdata* inputData) {
  * @brief Construct a new trace::trace object
  * 
  * Do copies of the tails leading to this one as well. We do
- * NOT copy the final element indicating that the end of the trace.
+ * NOT copy the final element indicating that the end of the trace 
+ * if there is one.
  * 
  * @param id Inputdata
  * @param other The other strace
