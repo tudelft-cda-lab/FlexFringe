@@ -62,7 +62,41 @@ virtual void prefix_tree_database::initialize(){
  * 
  * @param query_trace The trace we query.
  */
-bool is_member(const std::list<int>& query_trace) const {
+bool prefix_tree_database::is_member(const std::list<int>& query_trace) const {
   trace* tr = active_learning_namespace::vector_to_trace(query_trace, inputdata_locator::get());
   return active_learning_namespace::aut_accepts_trace(trace* tr, apta* aut);
+}
+
+/**
+ * @brief Takes in a node, and updates its statistics accordingly. 
+ * Statistics are feature of the currently used merge-check.
+ * 
+ * @param n The node to be updated.
+ */
+void prefix_tree_database::update_state_with_statistics(apta_node* n){
+  trace* access_trace = n->get_access_trace();
+  if(access_trace->end_tail->is_final()){
+    access_trace->end_tail = access_trace->end_tail->past();
+  }
+
+  apta_node* n_db = the_tree->sift(access_trace);
+
+  // what now? Assumption: we have exact statistics. I can either use add_tail now and sample from the subtree, or I can use a new method.
+  // can I manipulate add_tail to use the statistics? The DFS
+
+}
+
+/**
+ * @brief Performs a DFS search through the apta starting from node start and 
+ * returns a list of the tails including the fitting statistics to update the 
+ * nodes and tail_data of the nodes of the starting node.
+ * 
+ * @param start The node to update. We start here.
+ * @return std::list< std::unique_ptr<tail> > List of appropriately set tails.
+ */
+list< unique_ptr<tail> > prefix_tree_database::extract_tails_from_tree(const apta_node* const start) {
+  list< unique_ptr<tail> > res;
+  apta_node* const it = start;
+  
+  return res;
 }
