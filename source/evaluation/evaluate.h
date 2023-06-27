@@ -84,6 +84,9 @@ public:
     virtual void add_tail(tail* t);
     virtual void del_tail(tail* t);
 
+    /** TODO: shall we unify these functions with add_tail()? */
+    virtual void add_statistics(tail* t);
+
 /** Update values when merging */
     virtual void update(evaluation_data* other);
 /** Undo updates when undoing merge */
