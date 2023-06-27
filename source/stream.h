@@ -43,7 +43,6 @@ public:
   };
   
   int stream_mode(state_merger* merger, ifstream& input_stream, inputdata* id, parser* input_parser); 
-
 };
 
 #endif

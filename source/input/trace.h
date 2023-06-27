@@ -37,6 +37,7 @@ public:
 
     void initialize(inputdata *inputData, trace* other_trace = nullptr);
     void finalize();
+    bool is_finalized();
 
     inline int get_type() const{ return type; }
     inline int get_length(){ return length; }

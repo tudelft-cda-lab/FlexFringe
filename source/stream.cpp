@@ -26,7 +26,23 @@ const bool RETRY_MERGES = true;
 const bool EXPERIMENTAL_RUN = true;
 const bool DO_ACTIVE_LEARNING = false;
 
-int P_PERCENT = 0; // to get each i-th percentage. We print the model then
+void stream_object::greedyrun_no_undo(state_merger* merger, const int seq_nr, const bool last_sequence, const int n_runs){
+    static int count_printouts = 1;
+
+    int c2 = 0;
+
+    refinement* top_ref;
+    top_ref = merger->get_best_refinement();
+    while(top_ref != 0){
+      top_ref->doref(merger);
+      top_ref = merger->get_best_refinement();
+    }
+
+    if(seq_nr % 100 == 0  || last_sequence){
+      cout << "Processed " << count_printouts << " batches" << endl;
+      ++count_printouts;
+    }
+}
 
 refinement* stream_object::determine_next_refinement(state_merger* merger){
   if(!DO_ACTIVE_LEARNING) return merger->get_best_refinement();
@@ -158,8 +174,7 @@ int stream_object::stream_mode(state_merger* merger, ifstream& input_stream, inp
     unsigned int seq_nr = 0;
     bool last_sequence = false;
 
-    P_PERCENT = static_cast<int>(id->get_max_sequences() / 10); // to track the percent
-    cout << "P_PERCENT: " << P_PERCENT << endl;
+    // for performance measurement
     unsigned int n_runs = 0;
 
     while(true) {
@@ -191,12 +206,12 @@ int stream_object::stream_mode(state_merger* merger, ifstream& input_stream, inp
 
       if(RETRY_MERGES) greedyrun_retry_merges(merger, seq_nr, last_sequence, n_runs);
       else greedyrun_no_undo(merger, seq_nr, last_sequence, n_runs);
-
       ++(this->batch_number);
       ++n_runs;
 
       if(input_stream.eof()){
-        if(RETRY_MERGES) {
+        if(RETRY_MERGES){
+          // one more step, because we undid refinements earlier
           greedyrun_retry_merges(merger, seq_nr, last_sequence, n_runs);
 
           for(auto top_ref: *currentrun){
