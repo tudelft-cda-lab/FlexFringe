@@ -177,6 +177,8 @@ tail_data::tail_data() {
     auto inputdata = inputdata_locator::get();
     index = -1;
     symbol = -1;
+    statistics = 0;
+    final_statistics = 0;
     attr = new double[inputdata->get_num_symbol_attributes()];
     for(int i = 0; i < inputdata->get_num_symbol_attributes(); ++i){
         attr[i] = 0.0;
@@ -195,6 +197,8 @@ void tail_data::initialize() {
     auto inputdata = inputdata_locator::get();
     index = -1;
     symbol = -1;
+    statistics = 0;
+    final_statistics = 0;
     attr = new double[inputdata->get_num_symbol_attributes()];
     for(int i = 0; i < inputdata->get_num_symbol_attributes(); ++i){
         attr[i] = 0.0;

@@ -85,9 +85,10 @@ void prefix_tree_database::update_state_with_statistics(apta_node* n){
 
   apta_node* n_db = the_tree->sift(access_trace);
 
-  // what now? Assumption: we have exact statistics. I can either use add_tail now and sample from the subtree, or I can use a new method.
-  // can I manipulate add_tail to use the statistics? The DFS
-
+  auto outgoing_traces = extract_tails_from_tree(n_db);
+  for(trace* tr: outgoing_traces){
+    n->td->add_tail_statistics(tr->head);
+  }
 }
 
 /**
@@ -108,13 +109,61 @@ list< unique_ptr<tail> > prefix_tree_database::extract_tails_from_tree(const apt
   trace* current_trace = nullptr;
 
   stack< pair<apta_node*, trace*> > nodes_to_traverse;
+  unordered_set<int> visited_states;
+
   do {
     auto symbols = current_node->get_all_transition_symbols();
-    for(auto symbol: symbols) {
-      trace* nt = mem_store::create_trace(inputdata_locator::get(), current_trace);
 
-      nodes_to_traverse.push_back(current_node->get_child(symbol));
+    if(symbols.empty()){
+      // we hit a leaf node, pull backwards
+      current_trace->update_final_statistics(current_node->get_size());
+      current_trace->end_tail->update_statistics(current_node->get_size());
+      res->push_back(current_trace);
+    } 
+    if(visited_nodes.contains(current_node->get_number()) ){
+      // a step backwards through the DFS
+      int next_counts = 0;
+      for(auto symbol: symbols){ 
+        next_counts += current_node->get_child(symbol)->get_size();
+      }
+
+      current_trace->update_final_statistics(current_node->get_size() - next_counts);
+      current_trace->end_tail->update_statistics(current_node->get_size());
+      res->push_back(current_trace);
     }
+    else{
+      for(auto symbol: symbols){ 
+        trace* new_trace = mem_store::create_trace(inputdata_locator::get(), current_trace);
+        if(current_trace == nullptr){
+          [[unlikely]]
+          tail* new_tail = mem_store::create_tail(nullptr);
+          active_learning_namespace::update_tail(new_tail, symbol);
+
+          new_trace->length = 1;
+          new_tail->tr = new_trace;
+          new_trace->head = new_tail;
+          new_trace->end_tail = new_tail;
+        }
+        else{
+          tail* old_tail = new_trace->end_tail;
+          tail* new_tail = mem_store::create_tail(nullptr);
+          active_learning_namespace::update_tail(new_tail, symbol);
+          old_tail->future_tail = new_tail;
+          new_tail->past_tail = old_tail; 
+
+          new_trace->length = current_trace->get_length()+1;
+          new_tail->tr = new_trace;
+          new_trace->end_tail = new_tail;
+        }
+      }
+
+      nodes_to_traverse.push_back( make_pair(current_node->get_child(symbol), new_trace) );
+    }
+
+    [current_node, current_trace] = nodes_to_traverse.top();
+    visited_nodes.insert(current_node->get_number());
+
+    nodes_to_traverse.pop();
   } while(!nodes_to_traverse.empty());
   
   return res;
