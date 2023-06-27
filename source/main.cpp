@@ -125,6 +125,7 @@ void run() {
         }
     }
 
+
     apta* the_apta = new apta();
     auto* merger = new state_merger(&id, eval, the_apta);
     the_apta->set_context(merger);
