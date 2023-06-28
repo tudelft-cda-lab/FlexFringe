@@ -254,7 +254,6 @@ private:
     /** variables used for splitting */
     /** singly linked list containing all tails in this state */
     tail* tails_head;
-    void add_tail(tail* t);
     /** list of previously performed splits in this state, stored for pre_splitting */
     split_list* performed_splits;
     /** the source can change due to splitting (we do not create new nodes when all tails are split)
@@ -277,6 +276,8 @@ public:
     inline int get_depth(){ return depth; }
     inline void set_red(bool b){ red = b; };
     inline apta_node* rep(){ return representative; }
+
+    void add_tail(tail* t);
 
     /** this gets merged with node, replacing head of list */
     inline void merge_with(apta_node* node){

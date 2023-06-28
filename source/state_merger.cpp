@@ -913,10 +913,10 @@ refinement* state_merger::test_splits(apta_node* blue){
  * or gain insight into the current state of the algorithm.
  */
 
-refinement_set* state_merger::get_possible_refinements(optional< node_to_refinement_map_T& > node_to_ref_map_opt){
+refinement_set* state_merger::get_possible_refinements(shared_ptr<node_to_refinement_map_T> node_to_ref_map_opt){
     auto* result = new refinement_set();
 
-    const bool TRACK_STATES = node_to_ref_map_opt != std::nullopt; 
+    const bool TRACK_STATES = node_to_ref_map_opt != nullptr; 
     
     state_set blue_its = state_set();
     bool found_non_sink = false;
@@ -943,7 +943,7 @@ refinement_set* state_merger::get_possible_refinements(optional< node_to_refinem
                     result->insert(ref);
                     found = true;
 
-                    if(TRACK_STATES) insert_ref_into_map(ref, node_to_ref_map_opt.value());
+                    if(TRACK_STATES) insert_ref_into_map(ref, *node_to_ref_map_opt);
                 }
             }
         }
@@ -957,7 +957,7 @@ refinement_set* state_merger::get_possible_refinements(optional< node_to_refinem
                 result->insert(ref);
                 found = true;
 
-                if(TRACK_STATES) insert_ref_into_map(ref, node_to_ref_map_opt.value());
+                if(TRACK_STATES) insert_ref_into_map(ref, *node_to_ref_map_opt);
             }
         }
         
@@ -972,7 +972,7 @@ refinement_set* state_merger::get_possible_refinements(optional< node_to_refinem
                     result->insert(ref);
                     found = true;
 
-                    if(TRACK_STATES) insert_ref_into_map(ref, node_to_ref_map_opt.value());
+                    if(TRACK_STATES) insert_ref_into_map(ref, *node_to_ref_map_opt);
                 }
             }
         }
@@ -998,10 +998,10 @@ refinement_set* state_merger::get_possible_refinements(optional< node_to_refinem
  */
 void state_merger::insert_ref_into_map(refinement* ref, node_to_refinement_map_T& node_to_ref_map) const noexcept {
     int s1 = ref->red->get_number();
-    node_to_ref_map[s1] = ref;
+    node_to_ref_map[s1].push_back(ref);
     if(dynamic_cast<merge_refinement*>(ref) != nullptr){
         int s2 = dynamic_cast<merge_refinement*>(ref)->blue->get_number();
-        node_to_ref_map[s2] = ref;
+        node_to_ref_map[s2].push_back(ref);
     }
 }
 

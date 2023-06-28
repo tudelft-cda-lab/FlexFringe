@@ -26,32 +26,14 @@ const bool RETRY_MERGES = true;
 const bool EXPERIMENTAL_RUN = true;
 const bool DO_ACTIVE_LEARNING = false;
 
-void stream_object::greedyrun_no_undo(state_merger* merger, const int seq_nr, const bool last_sequence, const int n_runs){
-    static int count_printouts = 1;
-
-    int c2 = 0;
-
-    refinement* top_ref;
-    top_ref = merger->get_best_refinement();
-    while(top_ref != 0){
-      top_ref->doref(merger);
-      top_ref = merger->get_best_refinement();
-    }
-
-    if(seq_nr % 100 == 0  || last_sequence){
-      cout << "Processed " << count_printouts << " batches" << endl;
-      ++count_printouts;
-    }
-}
-
 refinement* stream_object::determine_next_refinement(state_merger* merger){
   if(!DO_ACTIVE_LEARNING) return merger->get_best_refinement();
 
-  optional<node_to_refinement_map_T> node_to_ref_map_opt;
+  shared_ptr<node_to_refinement_map_T> node_to_ref_map_opt = make_shared<node_to_refinement_map_T>();
   auto possible_refs = merger->get_possible_refinements(node_to_ref_map_opt); // TODO: be careful about no refinements possible here and check length of your map first
   if(possible_refs->empty()) return nullptr; 
   else if(possible_refs->size() == 1){
-    refinement* res = *rs->begin();
+    refinement* res = *(possible_refs->begin());
     delete possible_refs;
     return res; 
   }
@@ -135,11 +117,6 @@ void stream_object::greedyrun_retry_merges(state_merger* merger, const int seq_n
       failed_refs = tmp;
 
       top_ref = determine_next_refinement(merger);
-    }
-
-    if(seq_nr > count_printouts * P_PERCENT || last_sequence){
-      cout << "Processed " << count_printouts * 10 << " percent" << endl;
-      ++count_printouts;
     }
 
     // undo the merges
