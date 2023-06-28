@@ -20,13 +20,11 @@
 #include "inputdatalocator.h"
 
 #include <stack>
-#include <pair>
-#include <utility>
 
 using namespace std;
 using namespace active_learning_namespace;
 
-virtual void prefix_tree_database::initialize(){
+void prefix_tree_database::initialize(){
   bool read_csv = false;
   if(APTA_FILE.compare(APTA_FILE.length() - 4, APTA_FILE.length(), ".csv") == 0){
       read_csv = true;
@@ -48,10 +46,10 @@ virtual void prefix_tree_database::initialize(){
   auto id = inputdata_locator::get();
   if(read_csv) {
       auto input_parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
-      id.read(&input_parser);
+      id->read(&input_parser);
   } else {
       auto input_parser = abbadingoparser(input_stream);
-      id.read(&input_parser);
+      id->read(&input_parser);
   }
 
   the_tree = unique_ptr<apta>(new apta());
@@ -67,8 +65,8 @@ virtual void prefix_tree_database::initialize(){
  * @param query_trace The trace we query.
  */
 bool prefix_tree_database::is_member(const std::list<int>& query_trace) const {
-  trace* tr = active_learning_namespace::vector_to_trace(query_trace, inputdata_locator::get());
-  return active_learning_namespace::aut_accepts_trace(trace* tr, apta* aut);
+  trace* tr = active_learning_namespace::vector_to_trace(query_trace, *(inputdata_locator::get()));
+  return active_learning_namespace::aut_accepts_trace(tr, the_tree.get());
 }
 
 /**
@@ -85,9 +83,12 @@ void prefix_tree_database::update_state_with_statistics(apta_node* n){
 
   apta_node* n_db = the_tree->sift(access_trace);
 
-  auto outgoing_traces = extract_tails_from_tree(n_db);
-  for(trace* tr: outgoing_traces){
-    n->td->add_tail_statistics(tr->head);
+  list< pair<trace*, int> > trace_count_list = extract_tails_from_tree(n_db);
+  for(auto& [tr, count]: trace_count_list){
+    for(int i = 0; i < count; ++i){
+      n->add_tail(tr->head);
+      n->get_data()->add_tail(tr->head);
+    }
   }
 }
 
@@ -102,23 +103,22 @@ void prefix_tree_database::update_state_with_statistics(apta_node* n){
  * @param start The node to update. We start here.
  * @return std::list< std::unique_ptr<tail> > List of appropriately set tails.
  */
-list< unique_ptr<tail> > prefix_tree_database::extract_tails_from_tree(const apta_node* const start) {
-  list< unique_ptr<trace> > res; // we use traces for their copy constructor
+list< pair<trace*, int> > prefix_tree_database::extract_tails_from_tree(apta_node* start) {
+  list< pair<trace*, int> > res; // we use traces for their copy constructor
 
-  apta_node* const current_node = start;
+  apta_node* current_node = start;
   trace* current_trace = nullptr;
 
   stack< pair<apta_node*, trace*> > nodes_to_traverse;
-  unordered_set<int> visited_states;
+  unordered_set<int> visited_nodes;
 
   do {
     auto symbols = current_node->get_all_transition_symbols();
 
     if(symbols.empty()){
       // we hit a leaf node, pull backwards
-      current_trace->update_final_statistics(current_node->get_size());
-      current_trace->end_tail->update_statistics(current_node->get_size());
-      res->push_back(current_trace);
+      current_trace->finalize();
+      res.push_back( make_pair(current_trace, current_node->get_size()) );
     } 
     if(visited_nodes.contains(current_node->get_number()) ){
       // a step backwards through the DFS
@@ -127,9 +127,8 @@ list< unique_ptr<tail> > prefix_tree_database::extract_tails_from_tree(const apt
         next_counts += current_node->get_child(symbol)->get_size();
       }
 
-      current_trace->update_final_statistics(current_node->get_size() - next_counts);
-      current_trace->end_tail->update_statistics(current_node->get_size());
-      res->push_back(current_trace);
+      current_trace->finalize();
+      res.push_back( make_pair( current_trace, current_node->get_size() - next_counts));
     }
     else{
       for(auto symbol: symbols){ 
@@ -155,12 +154,12 @@ list< unique_ptr<tail> > prefix_tree_database::extract_tails_from_tree(const apt
           new_tail->tr = new_trace;
           new_trace->end_tail = new_tail;
         }
+        nodes_to_traverse.push( make_pair(current_node->get_child(symbol), new_trace) );
       }
-
-      nodes_to_traverse.push_back( make_pair(current_node->get_child(symbol), new_trace) );
     }
 
-    [current_node, current_trace] = nodes_to_traverse.top();
+    current_node = nodes_to_traverse.top().first;
+    current_trace = nodes_to_traverse.top().second;
     visited_nodes.insert(current_node->get_number());
 
     nodes_to_traverse.pop();

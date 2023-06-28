@@ -244,18 +244,10 @@ void inputdata::add_traces_to_apta(apta *the_apta) {
 void inputdata::add_trace_to_apta(trace* tr, apta* the_apta, unordered_set<int>* states_to_append_to){
     int depth = 0;
     apta_node* node = the_apta->root;
-    /*if(node->access_trace == nullptr){
-        node->access_trace = mem_store::create_trace();
-    }*/
 
     if(REVERSE_TRACES){
         tr->reverse();
     }
-
-    //set<int> states_to_append_to;
-    //if(states_to_append_to_opt){
-    //    states_to_append_to = states_to_append_to_opt.value();
-    //}
 
     tail* t = tr->head;
 

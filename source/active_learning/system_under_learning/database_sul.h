@@ -35,7 +35,7 @@ class dabase_sul : public sul_base {
     
   public:
     dabase_sul(){
-      database = std::unique_ptr<database_base>(new prefix_tree_database());
+      database = std::make_unique<prefix_tree_database>();
     };
     virtual void pre(inputdata& id) override;
 };

@@ -1,5 +1,6 @@
 include_directories(
         "${CMAKE_CURRENT_SOURCE_DIR}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/databases"
         "${CMAKE_CURRENT_SOURCE_DIR}/active_learning_util"
         "${CMAKE_CURRENT_SOURCE_DIR}/memory"
         "${CMAKE_CURRENT_SOURCE_DIR}/teacher"
@@ -9,7 +10,6 @@ include_directories(
         "${CMAKE_CURRENT_SOURCE_DIR}/equivalence_oracle"
         "${CMAKE_CURRENT_SOURCE_DIR}/equivalence_oracle/search_strategies"
         "${CMAKE_CURRENT_SOURCE_DIR}/algorithms"
-        "${CMAKE_CURRENT_SOURCE_DIR}/databases"
         )
 
 add_library(ActiveLearning STATIC
@@ -27,6 +27,11 @@ add_library(ActiveLearning STATIC
             algorithms/lstar.cpp
             algorithms/lsharp.h
             algorithms/lsharp.cpp
+
+            databases/database_base.h
+            databases/database_headers.h
+            databases/prefix_tree_database.h
+            databases/prefix_tree_database.cpp
 
             equivalence_oracle/eq_oracle_base.h
             equivalence_oracle/eq_oracle_base.cpp
@@ -59,8 +64,4 @@ add_library(ActiveLearning STATIC
 
             teacher/base_teacher.h
             teacher/base_teacher.cpp
-
-            databases/database_base.h
-            databases/prefix_tree_database.h
-            databases/prefix_tree_database.cpp
 )

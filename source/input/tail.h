@@ -13,10 +13,6 @@ public:
     int symbol;
     double* attr;
 
-    // statistics only used with active learning
-    int statistics; 
-    int final_statistics;
-
     std::string data;
 
     int tail_nr;
@@ -60,11 +56,6 @@ public:
     std::string get_data();
     bool is_final();
     int get_nr();
-
-    void update_statistics(int s){ this->td->statistics = s; }
-    int get_statistics(){ return this->td->statistics; }
-    void update_final_statistics(int fs){ this->td->final_statistics = fs; }
-    int get_final_statistics(){ return this->td->final_statistics; }
 
     void set_future(tail* ft);
     std::string to_string();

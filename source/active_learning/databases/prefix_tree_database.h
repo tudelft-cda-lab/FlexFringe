@@ -21,18 +21,17 @@
 #include <fstream>
 #include <memory>
 #include <list>
+#include <utility>
 
 class prefix_tree_database : public database_base {
   protected:
 
     std::unique_ptr<apta> the_tree;
 
-    virtual void initialize();
-    std::list< std::unique_ptr<tail> > extract_tails_from_tree(const apta_node* const start);
+    virtual void initialize() override;
+    std::list< std::pair<trace*, int> > extract_tails_from_tree(apta_node* start);
   public:
-    prefix_tree_database(){
-      database_base::database_base();
-    }
+    prefix_tree_database() : database_base::database_base() {}
 
     virtual bool is_member(const std::list<int>& query_trace) const override;
     virtual void update_state_with_statistics(apta_node* n) override;

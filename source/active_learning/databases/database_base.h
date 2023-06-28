@@ -25,7 +25,7 @@ class database_base {
     }
 
     virtual bool is_member(const std::list<int>& query_trace) const = 0;
-    virtual bool get_suffixes_with_counts(trace* prefix) = 0;
+    //virtual bool get_suffixes_with_counts(trace* prefix) = 0;
     virtual void update_state_with_statistics(apta_node* n) = 0;
 };
 
