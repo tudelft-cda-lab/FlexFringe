@@ -16,17 +16,16 @@
  * @brief Explanation in class desription, see header-file.
  */
 refinement* evidence_based_strategy::perform(refinement_set* possible_refs, shared_ptr<node_to_refinement_map_T> node_to_ref_map) {
-  refinement* top_ref = possible_refs->top();
+  refinement* top_ref = *(possible_refs->begin());
   apta_node* red_node = top_ref->red;
 
   // update the red and the blue state of the highest scoring refinement
-  this->database_connector->update_state_with_statistics(red);
+  this->database_connector->update_state_with_statistics(red_node);
 
   if(dynamic_cast<merge_refinement*>(top_ref) != nullptr){
     apta_node* blue_node = dynamic_cast<merge_refinement*>(top_ref)->blue;
-    this->database_connector->update_state_with_statistics(blue);
+    this->database_connector->update_state_with_statistics(blue_node);
   }
 
-  state_merger* merger = this->aut->get_context();
-  return merger->get_best_refinement();
+  return this->merger->get_best_refinement();
 }

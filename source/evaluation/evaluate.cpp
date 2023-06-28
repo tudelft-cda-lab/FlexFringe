@@ -25,9 +25,6 @@ void evaluation_data::add_tail(tail* t){
 void evaluation_data::del_tail(tail* t){
 };
 
-void evaluation_data::add_statistics(tail* t){
-};
-
 void evaluation_data::update(evaluation_data* right){
     if(node_type == -1){
         node_type = right->node_type;
