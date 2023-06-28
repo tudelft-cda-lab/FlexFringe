@@ -8,7 +8,7 @@
 #include "dfasat.h"
 #include "evaluation_factory.h"
 #include "searcher.h"
-#include "parameters.h"
+#include "refinement_selection_strategies.h"
 
 #include <vector>
 #include <cmath>
@@ -26,20 +26,31 @@ const bool RETRY_MERGES = true;
 const bool EXPERIMENTAL_RUN = true;
 const bool DO_ACTIVE_LEARNING = false;
 
+using namespace std;
+
 refinement* stream_object::determine_next_refinement(state_merger* merger){
   if(!DO_ACTIVE_LEARNING) return merger->get_best_refinement();
 
+  static bool initialized = false;
+  static shared_ptr<database_sul> database_connector;
+  static unique_ptr<evidence_based_strategy> selection_strategy;
+
+  if(!initialized){
+    selection_strategy = make_unique<evidence_based_strategy>(database_connector, merger);
+    database_connector = make_shared<database_sul>();
+  }
+
   shared_ptr<node_to_refinement_map_T> node_to_ref_map_opt = make_shared<node_to_refinement_map_T>();
   auto possible_refs = merger->get_possible_refinements(node_to_ref_map_opt); // TODO: be careful about no refinements possible here and check length of your map first
-  if(possible_refs->empty()) return nullptr; 
+  if(possible_refs->empty()) return nullptr;
   else if(possible_refs->size() == 1){
     refinement* res = *(possible_refs->begin());
     delete possible_refs;
     return res; 
   }
-
-  // TODO: Do the strategy on the refinements here
-  
+  else{
+    refinement* res = selection_strategy->perform(possible_refs, node_to_ref_map_opt);
+  }
 
   delete possible_refs;
 }

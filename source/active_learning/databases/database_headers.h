@@ -1,7 +1,7 @@
 /**
  * @file database_headers.h
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
- * @brief 
+ * @brief Just for convenience.
  * @version 0.1
  * @date 2023-06-23
  * 

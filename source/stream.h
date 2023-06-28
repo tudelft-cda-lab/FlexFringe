@@ -3,11 +3,14 @@
 
 #include "refinement.h"
 #include "state_merger.h"
+#include "parameters.h"
 #include "input/parsers/reader_strategy.h"
+#include "active_learning/system_under_learning/database_sul.h"
 
 #include <sstream>
 #include <stack>
 #include <unordered_set>
+#include <memory>
 
 /**
  * @brief Class to realize the streaming mode, when observing a stream of data, e.g. network data.
@@ -40,6 +43,7 @@ public:
     nextrun = new refinement_list();
 
     parser_strategy = new in_order();
+
   };
   
   int stream_mode(state_merger* merger, ifstream& input_stream, inputdata* id, parser* input_parser); 
