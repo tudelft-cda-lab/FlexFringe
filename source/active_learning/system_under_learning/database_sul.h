@@ -13,12 +13,13 @@
 #ifndef _DATABASE_SUL_H_
 #define _DATABASE_SUL_H_
 
-#include "database_headers.h"
+//#include "database_headers.h" // TODO: I don't get why it does not find this one on my machine
+#include "source/active_learning/databases/database_headers.h"
 #include "sul_base.h"
 
 #include <memory>
 
-class dabase_sul : public sul_base {
+class database_sul : public sul_base {
   friend class base_teacher;
   friend class eq_oracle_base;
 
@@ -34,10 +35,14 @@ class dabase_sul : public sul_base {
     virtual const int query_trace(const std::list<int>& query_trace, inputdata& id) const override;
     
   public:
-    dabase_sul(){
+    database_sul(){
       database = std::make_unique<prefix_tree_database>();
     };
     virtual void pre(inputdata& id) override;
+
+    void update_state_with_statistics(apta_node* n){
+      this->database->update_state_with_statistics(n);
+    }
 };
 
 #endif

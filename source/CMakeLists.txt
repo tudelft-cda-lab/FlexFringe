@@ -59,6 +59,8 @@ add_library(Source STATIC
         differencing.cpp differencing.h
         ensemble.cpp ensemble.h
         dfa_properties.cpp dfa_properties.h
+        refinement_selection_strategies.h refinement_selection_strategies.cpp
+
         input/trace.cpp
         input/trace.h
         input/inputdatalocator.cpp
