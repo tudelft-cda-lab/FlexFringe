@@ -10,6 +10,8 @@
 #include "searcher.h"
 #include "refinement_selection_strategies.h"
 
+#include "main_helpers.h" // TODO: only for debugging
+
 #include <vector>
 #include <cmath>
 #include <string>
@@ -22,9 +24,8 @@
 #include <chrono> // for measuring performance
 #include <fstream> // for measuring performance
 
-const bool RETRY_MERGES = true;
+const bool RETRY_MERGES = false;
 const bool EXPERIMENTAL_RUN = true;
-const bool DO_ACTIVE_LEARNING = false;
 
 using namespace std;
 
@@ -38,21 +39,29 @@ refinement* stream_object::determine_next_refinement(state_merger* merger){
   if(!initialized){
     selection_strategy = make_unique<evidence_based_strategy>(database_connector, merger);
     database_connector = make_shared<database_sul>();
+    initialized = true;
   }
 
   shared_ptr<node_to_refinement_map_T> node_to_ref_map_opt = make_shared<node_to_refinement_map_T>();
   auto possible_refs = merger->get_possible_refinements(node_to_ref_map_opt); // TODO: be careful about no refinements possible here and check length of your map first
-  if(possible_refs->empty()) return nullptr;
-  else if(possible_refs->size() == 1){
-    refinement* res = *(possible_refs->begin());
-    delete possible_refs;
+  if(possible_refs->empty()){
+    cout << "Got a nullptr" << endl;
+    return nullptr;
+  } 
+  
+  refinement* res;
+  if(possible_refs->size() == 1){
+    cout << "Identified" << endl;
+    res = *(possible_refs->begin());
     return res; 
   }
   else{
-    refinement* res = selection_strategy->perform(possible_refs, node_to_ref_map_opt);
+    cout << "Run the strategy" << endl;
+    res = selection_strategy->perform(possible_refs, node_to_ref_map_opt);
   }
 
   delete possible_refs;
+  return res;
 }
 
 void stream_object::greedyrun_no_undo(state_merger* merger, const int seq_nr, const bool last_sequence, const int n_runs){
@@ -128,6 +137,8 @@ void stream_object::greedyrun_retry_merges(state_merger* merger, const int seq_n
       failed_refs = tmp;
 
       top_ref = determine_next_refinement(merger);
+      cout << "Refinement: " << endl; 
+      top_ref->print();
     }
 
     // undo the merges
@@ -142,6 +153,11 @@ void stream_object::greedyrun_retry_merges(state_merger* merger, const int seq_n
       }
     }
 
+    ++c;
+    if(c % 50 == 0){
+      cout << "batch nr. " << c << endl;
+    }
+    
     delete currentrun;
     currentrun = nextrun;
     nextrun = new refinement_list();
@@ -161,6 +177,8 @@ void stream_object::greedyrun_retry_merges(state_merger* merger, const int seq_n
 int stream_object::stream_mode(state_merger* merger, ifstream& input_stream, inputdata* id, parser* input_parser) {
     unsigned int seq_nr = 0;
     bool last_sequence = false;
+
+    if(DO_ACTIVE_LEARNING) cout << "Using active learning in conjuntion with streaming." << endl;
 
     // for performance measurement
     unsigned int n_runs = 0;
@@ -187,8 +205,13 @@ int stream_object::stream_mode(state_merger* merger, ifstream& input_stream, inp
         }
         trace* new_trace = trace_opt.value();
         new_trace->sequence = seq_nr;
-        
+
+        states_to_append_to.insert(merger->get_aut()->get_root()->get_number());
         id->add_trace_to_apta(new_trace, merger->get_aut(), &(this->states_to_append_to));
+        
+        //static int x = 0;
+        //print_current_automaton(merger, "automaton_", std::to_string(++x));
+
         if(!ADD_TAILS) new_trace->erase();
       }
 
@@ -200,7 +223,7 @@ int stream_object::stream_mode(state_merger* merger, ifstream& input_stream, inp
       if(input_stream.eof()){
         if(RETRY_MERGES){
           // one more step, because we undid refinements earlier
-          greedyrun_retry_merges(merger, seq_nr, last_sequence, n_runs);
+          greedyrun_retry_merges(merger, seq_nr, last_sequence, n_runs); // TODO: is this one needed?
 
           for(auto top_ref: *currentrun){
               top_ref->doref(merger);

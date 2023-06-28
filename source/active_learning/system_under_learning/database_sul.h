@@ -38,8 +38,8 @@ class database_sul : public sul_base {
     database_sul(){
       database = std::make_unique<prefix_tree_database>();
     };
-    virtual void pre(inputdata& id) override;
 
+    virtual void pre(inputdata& id) override;
     void update_state_with_statistics(apta_node* n){
       this->database->update_state_with_statistics(n);
     }
