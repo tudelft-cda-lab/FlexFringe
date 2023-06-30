@@ -572,14 +572,19 @@ apta_node* apta::sift(trace* tr) const {
         return n;
     }
 
-    while(!(t->future()->is_final()) || t->future() != nullptr){
+    const int trace_length = tr->get_length();
+    int c = 0;
+    while( t->future() != nullptr/*  && !(t->future()->is_final()) */ ){
         n = n->child(t->get_symbol()); // TODO: what to do if access trace does not exist?
         t = t->future();
 
         if(n==nullptr) {
             return nullptr;
         }
+        ++c;
     }
+
+    if(c < trace_length) return nullptr; // not siftable, state does not exist
     
     return n;
 }

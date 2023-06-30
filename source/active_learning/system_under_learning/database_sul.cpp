@@ -14,7 +14,6 @@
 using namespace std;
 
 void database_sul::pre(inputdata& id) {
-  //database->initialize();
 }
 
 bool database_sul::is_member(const std::list<int>& query_trace) const {

@@ -11,8 +11,8 @@
  * 
  */
 
-#ifndef PREFIX_DATABASE
-#define PREFIX_DATABASE
+#ifndef _PREFIX_TREE_DATABASE_H_
+#define _PREFIX_TREE_DATABASE_H_
 
 #include "database_base.h"
 #include "apta.h"
