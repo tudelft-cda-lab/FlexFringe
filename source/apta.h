@@ -175,7 +175,6 @@ typedef set<apta_node*, size_compare> state_set;
  * of apta_nodes.
  * @see apta_node
  */
-
 class apta{
 private:
     state_merger* merger; /**< merger context for convenience */

@@ -24,7 +24,7 @@
 #include <chrono> // for measuring performance
 #include <fstream> // for measuring performance
 
-const bool RETRY_MERGES = false;
+const bool RETRY_MERGES = true;
 const bool EXPERIMENTAL_RUN = true;
 
 using namespace std;
@@ -53,7 +53,6 @@ refinement* stream_object::determine_next_refinement(state_merger* merger){
   if(possible_refs->size() == 1){
     cout << "Identified" << endl;
     res = *(possible_refs->begin());
-    return res; 
   }
   else{
     cout << "Run the strategy" << endl;
@@ -65,13 +64,26 @@ refinement* stream_object::determine_next_refinement(state_merger* merger){
 }
 
 void stream_object::greedyrun_no_undo(state_merger* merger, const int seq_nr, const bool last_sequence, const int n_runs){
-
     refinement* top_ref;
     top_ref = determine_next_refinement(merger);
     while(top_ref != 0){
       top_ref->doref(merger);
       top_ref = determine_next_refinement(merger);
     }
+}
+
+/**
+ * @brief Insert the states of the refinements into the states_to_append_to()
+ * set.
+ * 
+ * @param ref The refinement whose states we want to remember.
+ */
+void stream_object::remember_state(refinement* ref){
+  this->states_to_append_to.insert(ref->red->get_number());
+  
+  if(ref->type() == refinement_type::merge_rf_type){
+    this->states_to_append_to.insert(dynamic_cast<merge_refinement*>(ref)->blue->get_number());
+  }
 }
 
 void stream_object::greedyrun_retry_merges(state_merger* merger, const int seq_nr, const bool last_sequence, const int n_runs){
@@ -114,7 +126,7 @@ void stream_object::greedyrun_retry_merges(state_merger* merger, const int seq_n
     }
 
     top_ref = determine_next_refinement(merger);
-    while(top_ref != 0){
+    while(top_ref != nullptr){
       nextrun->push_back(top_ref);
       refinement_stack.push(top_ref);
       top_ref->doref(merger);
@@ -137,9 +149,9 @@ void stream_object::greedyrun_retry_merges(state_merger* merger, const int seq_n
       failed_refs = tmp;
 
       top_ref = determine_next_refinement(merger);
-      cout << "Refinement: " << endl; 
-      top_ref->print();
     }
+
+    //print_current_automaton(merger, "Machine_", to_string(this->batch_number));
 
     // undo the merges
     while(!refinement_stack.empty()){
@@ -147,16 +159,22 @@ void stream_object::greedyrun_retry_merges(state_merger* merger, const int seq_n
       top_ref->undo(merger);
       refinement_stack.pop();
 
-      states_to_append_to.insert(top_ref->red->get_number());
-      if(top_ref->type() == refinement_type::merge_rf_type){
-        states_to_append_to.insert(dynamic_cast<merge_refinement*>(top_ref)->blue->get_number());
-      }
+      //cout << "States to append to before:";
+      //for(auto x: states_to_append_to) cout << " " << x;
+      //cout << endl; 
+
+      remember_state(top_ref);
+
+      //cout << "Undoing: "; top_ref->print();
+      //cout << "States to append to after:";
+      //for(auto x: states_to_append_to) cout << " " << x;
+      //cout << endl;
     }
 
-    ++c;
-    if(c % 50 == 0){
-      cout << "batch nr. " << c << endl;
-    }
+/*     ++c;
+    if(c % 1 == 0){
+      cout << "\n\nbatch nr. " << c << endl;
+    } */
     
     delete currentrun;
     currentrun = nextrun;
@@ -206,7 +224,7 @@ int stream_object::stream_mode(state_merger* merger, ifstream& input_stream, inp
         trace* new_trace = trace_opt.value();
         new_trace->sequence = seq_nr;
 
-        states_to_append_to.insert(merger->get_aut()->get_root()->get_number());
+        //states_to_append_to.insert(merger->get_aut()->get_root()->get_number());
         id->add_trace_to_apta(new_trace, merger->get_aut(), &(this->states_to_append_to));
         
         //static int x = 0;
@@ -219,6 +237,8 @@ int stream_object::stream_mode(state_merger* merger, ifstream& input_stream, inp
       else greedyrun_no_undo(merger, seq_nr, last_sequence, n_runs);
       ++(this->batch_number);
       ++n_runs;
+
+      //print_current_automaton(merger, "Batch_", to_string(this->batch_number));
 
       if(input_stream.eof()){
         if(RETRY_MERGES){

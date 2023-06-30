@@ -266,7 +266,7 @@ void css_data::undo(evaluation_data *right) {
 void css_data::print_state_label(iostream& output){
     alergia_data::print_state_label(output);
 
-    output << "\n\nSketches:\n";
+/*     output << "\n\nSketches:\n";
     for(auto sketch: this->sketches){
         for(const auto& row: sketch.getSketch()){
             for(auto symbol: row){
@@ -276,7 +276,7 @@ void css_data::print_state_label(iostream& output){
         }
         output << "final: " << sketch.getFinalCounts() << "\n";
     }
-    output << "\n\n";
+    output << "\n\n"; */
 };
 
 /**

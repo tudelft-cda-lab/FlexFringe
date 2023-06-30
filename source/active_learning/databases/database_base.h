@@ -20,9 +20,7 @@ class database_base {
   protected:
     virtual void initialize() = 0;
   public:
-    database_base(){
-      initialize();
-    }
+    database_base() = default;
 
     virtual bool is_member(const std::list<int>& query_trace) const = 0;
     //virtual bool get_suffixes_with_counts(trace* prefix) = 0;
