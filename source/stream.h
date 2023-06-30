@@ -31,6 +31,8 @@ private:
 
   refinement* determine_next_refinement(state_merger* merger);
 
+  void remember_state(refinement* ref);
+
 public:
   /**
    * @brief Construct a new stream object object
