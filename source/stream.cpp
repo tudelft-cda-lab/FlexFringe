@@ -37,8 +37,8 @@ refinement* stream_object::determine_next_refinement(state_merger* merger){
   static unique_ptr<evidence_based_strategy> selection_strategy;
 
   if(!initialized){
-    selection_strategy = make_unique<evidence_based_strategy>(database_connector, merger);
     database_connector = make_shared<database_sul>();
+    selection_strategy = make_unique<evidence_based_strategy>(database_connector, merger);
     initialized = true;
   }
 
