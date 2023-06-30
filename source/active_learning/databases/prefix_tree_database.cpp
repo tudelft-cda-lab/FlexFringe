@@ -83,6 +83,7 @@ void prefix_tree_database::update_state_with_statistics(apta_node* n){
   //}
 
   apta_node* n_db = the_tree->sift(access_trace);
+  if(n_db == nullptr) return; // state does not exist
 
   list< pair<trace*, int> > trace_count_list = extract_tails_from_tree(n_db);
   for(auto& [tr, count]: trace_count_list){

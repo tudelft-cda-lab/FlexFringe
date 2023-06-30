@@ -45,17 +45,17 @@ refinement* stream_object::determine_next_refinement(state_merger* merger){
   shared_ptr<node_to_refinement_map_T> node_to_ref_map_opt = make_shared<node_to_refinement_map_T>();
   auto possible_refs = merger->get_possible_refinements(node_to_ref_map_opt); // TODO: be careful about no refinements possible here and check length of your map first
   if(possible_refs->empty()){
-    cout << "Got a nullptr" << endl;
+    //cout << "Got a nullptr" << endl;
     return nullptr;
   } 
   
   refinement* res;
   if(possible_refs->size() == 1){
-    cout << "Identified" << endl;
+    //cout << "Identified" << endl;
     res = *(possible_refs->begin());
   }
   else{
-    cout << "Run the strategy" << endl;
+    //cout << "Run the strategy" << endl;
     res = selection_strategy->perform(possible_refs, node_to_ref_map_opt);
   }
 
