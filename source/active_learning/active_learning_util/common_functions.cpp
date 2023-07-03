@@ -13,6 +13,7 @@
 #include "parameters.h"
 #include "definitions.h"
 #include "inputdata.h"
+#include "inputdatalocator.h"
 
 #include <iostream>
 #include <stdexcept>
@@ -77,6 +78,43 @@ const int active_learning_namespace::predict_type_from_trace(trace* tr, apta* au
     if(ending_tail->is_final()) ending_tail = ending_tail->past();
 
     return ending_state->get_data()->predict_type(ending_tail);
+}
+
+/**
+ * @brief Concatenates the two traces. Append tr2 to tr1. Takes the trace object of tr1 and appends the tails of tr2 on it,
+ * if tr1 is a valid trace. If tr1 is uninitizalized (e.g. the access trace of the root node), is simply returns tr2.
+ * 
+ * @param tr1 The basic trace. 
+ * @param tr2 The trace we append to it.
+ * @return trace* The resulting trace.
+ */
+trace* active_learning_namespace::concatenate_traces(trace* tr1, trace* tr2){
+    trace* res;
+    if(tr1->get_length() == -1){
+        // the access trace of the root node
+        res = mem_store::create_trace(inputdata_locator::get(), tr2);
+        return res;
+    }
+    
+    res = mem_store::create_trace(inputdata_locator::get(), tr1);
+    if(res->is_finalized()){
+        tail* end_tail = res->end_tail;
+        mem_store::delete_tail(end_tail);
+    }
+
+    // TODO: do we create a memory-leak with our creation of traces here?
+    tail* parser = tr2->head;
+    while(parser != nullptr){
+        tail* nt = mem_store::create_tail(parser);
+        res->end_tail->set_future(nt);
+        res->end_tail = nt;
+    }
+
+    if(!res->is_finalized()){
+        res->finalize();
+    }
+
+    return res;
 }
 
 /**

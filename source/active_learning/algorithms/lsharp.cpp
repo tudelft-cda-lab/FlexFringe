@@ -49,7 +49,7 @@ void lsharp_algorithm::complete_state(unique_ptr<state_merger>& merger, apta_nod
       if(answer == -1) continue;
       
       trace* new_trace = vector_to_trace(seq, id, answer);
-      id.add_trace_to_apta(new_trace, merger->get_aut());
+      id.add_trace_to_apta(new_trace, merger->get_aut(), false);
     }
   }
 }
@@ -150,7 +150,7 @@ void lsharp_algorithm::run(inputdata& id){
           static int model_nr = 0;
           print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_undo");
         }
-        id.add_trace_to_apta(cex_tr, merger->get_aut());
+        id.add_trace_to_apta(cex_tr, merger->get_aut(), false);
       }
     }
 
