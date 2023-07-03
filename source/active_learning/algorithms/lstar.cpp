@@ -63,7 +63,7 @@ const list<refinement*> lstar_algorithm::construct_automaton_from_table(const ob
       const auto whole_prefix = concatenate_strings(prefix, suffix);
 
       trace* new_trace = vector_to_trace(whole_prefix, id, answer);
-      id.add_trace_to_apta(new_trace, merger->get_aut());
+      id.add_trace_to_apta(new_trace, merger->get_aut(), false);
     }
   }
 

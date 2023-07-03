@@ -225,7 +225,7 @@ int stream_object::stream_mode(state_merger* merger, ifstream& input_stream, inp
         new_trace->sequence = seq_nr;
 
         //states_to_append_to.insert(merger->get_aut()->get_root()->get_number());
-        id->add_trace_to_apta(new_trace, merger->get_aut(), &(this->states_to_append_to));
+        id->add_trace_to_apta(new_trace, merger->get_aut(), true, &(this->states_to_append_to));
         
         //static int x = 0;
         //print_current_automaton(merger, "automaton_", std::to_string(++x));

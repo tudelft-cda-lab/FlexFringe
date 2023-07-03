@@ -236,14 +236,14 @@ std::string inputdata::string_from_type(int type) {
     return types[type];
 }
 
-void inputdata::add_traces_to_apta(apta *the_apta) {
+void inputdata::add_traces_to_apta(apta *the_apta, const bool use_thresholds) {
     for (auto *tr: traces) {
-        add_trace_to_apta(tr, the_apta);
+        add_trace_to_apta(tr, the_apta, use_thresholds);
         if (!ADD_TAILS) tr->erase();
     }
 }
 
-void inputdata::add_trace_to_apta(trace* tr, apta* the_apta, unordered_set<int>* states_to_append_to){
+void inputdata::add_trace_to_apta(trace* tr, apta* the_apta, const bool use_thresholds, unordered_set<int>* states_to_append_to){
     int depth = 0;
     apta_node* node = the_apta->root;
 
@@ -272,17 +272,17 @@ void inputdata::add_trace_to_apta(trace* tr, apta* the_apta, unordered_set<int>*
         } else {
             int symbol = t->get_symbol();
             if(node->child(symbol) == nullptr){
-                if(RED_BLUE_THRESHOLD==0 && node->size < PARENT_SIZE_THRESHOLD){
+                if(use_thresholds && RED_BLUE_THRESHOLD==0 && node->size < PARENT_SIZE_THRESHOLD){
                     //cout << "Not appended due to size" << endl;
                     break;
                 }
                 // case 1 of the red-blue-threshold: Old streaming strategy. We already have a merged apta.
-                if(RED_BLUE_THRESHOLD!=0 && states_to_append_to != nullptr && !states_to_append_to->empty() && !node->is_red() && !node->is_blue()){
+                else if(use_thresholds && RED_BLUE_THRESHOLD!=0 && states_to_append_to != nullptr && !states_to_append_to->empty() && !node->is_red() && !node->is_blue()){
                     //cout << "Not appended due to neither red nor blue" << endl;
                     break;
                 }
                 // case 2: we get an apta that is unmerged, yet we want to keep track of the states we append to
-                else if(RED_BLUE_THRESHOLD!=0 && states_to_append_to != nullptr && !states_to_append_to->empty() && states_to_append_to->contains(node->get_number()) ){
+                else if(use_thresholds && RED_BLUE_THRESHOLD!=0 && states_to_append_to != nullptr && !states_to_append_to->empty() && states_to_append_to->contains(node->get_number()) ){
                     //cout << "Not appended because not in states_to_append_to" << endl;
                     break;
                 } 

@@ -53,7 +53,7 @@ void prefix_tree_database::initialize(){
   }
 
   the_tree = make_unique<apta>();
-  id->add_traces_to_apta(the_tree.get());
+  id->add_traces_to_apta(the_tree.get(), false);
 
   input_stream.close();
   id->clear_traces();
@@ -61,7 +61,7 @@ void prefix_tree_database::initialize(){
 
 /**
  * @brief Checks if trace is in database. Type does not matter, as 
- * it is simply a "is in a set" query.
+ * it is simply a "is in a 'set' of seen traces" query.
  * 
  * @param query_trace The trace we query.
  */
@@ -107,6 +107,7 @@ void prefix_tree_database::update_state_with_statistics(apta_node* n){
  */
 list< pair<trace*, int> > prefix_tree_database::extract_tails_from_tree(apta_node* start) {
   list< pair<trace*, int> > res; // we use traces for their copy constructor
+  trace* access_trace_to_start = start->get_access_trace();
 
   apta_node* current_node = start;
   trace* current_trace = nullptr;
@@ -120,6 +121,11 @@ list< pair<trace*, int> > prefix_tree_database::extract_tails_from_tree(apta_nod
     if(symbols.empty()){
       // we hit a leaf node, pull backwards
       current_trace->finalize();
+
+      trace* concatenated_tr = active_learning_namespace::concatenate_traces(access_trace_to_start, current_trace);
+      current_trace->type = active_learning_namespace::predict_type_from_trace( concatenated_tr, the_tree.get(), *(inputdata_locator::get()) );
+      mem_store::delete_trace(concatenated_tr);
+      
       res.push_back( make_pair(current_trace, current_node->get_size()) );
     } 
     if(visited_nodes.contains(current_node->get_number()) ){
@@ -128,8 +134,12 @@ list< pair<trace*, int> > prefix_tree_database::extract_tails_from_tree(apta_nod
       for(auto symbol: symbols){ 
         next_counts += current_node->get_child(symbol)->get_size();
       }
-
       current_trace->finalize();
+
+      trace* concatenated_tr = active_learning_namespace::concatenate_traces(access_trace_to_start, current_trace);
+      current_trace->type = active_learning_namespace::predict_type_from_trace( concatenated_tr, the_tree.get(), *(inputdata_locator::get()) );
+      mem_store::delete_trace(concatenated_tr);
+
       res.push_back( make_pair( current_trace, current_node->get_size() - next_counts));
     }
     else{

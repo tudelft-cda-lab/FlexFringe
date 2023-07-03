@@ -32,6 +32,7 @@ namespace active_learning_namespace{
   bool aut_accepts_trace(trace* tr, apta* aut, const count_driven* const eval); 
 
   const int predict_type_from_trace(trace* tr, apta* aut, inputdata& id); 
+  trace* concatenate_traces(trace* tr1, trace* tr2);
 
   void reset_apta(state_merger* merger, const std::list<refinement*>& refs);
   const std::list<refinement*> minimize_apta(state_merger* merger);
