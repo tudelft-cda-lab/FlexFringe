@@ -215,21 +215,24 @@ void run() {
             ifstream input_apta_stream(APTA_FILE);
             cerr << "reading apta file - " << APTA_FILE << endl;
             the_apta->read_json(input_apta_stream);
+            cout << "Finished reading apta file." << endl;
+
+            std::ostringstream res_stream;
+            res_stream << APTA_FILE << ".result";
+            ofstream output(res_stream.str().c_str());
 
             // TODO: @Sicco think about where to put these things to avoid duplicate code and havea nice flow
             if(read_csv) {
                 auto input_parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
                 id.read(&input_parser);
+                predict_csv(merger, input_stream, output);
             } else {
                 auto input_parser = abbadingoparser(input_stream);
-                id.read(&input_parser);
+                //id.read(&input_parser);
+                cout << "starting to predict" << endl;
+                predict(merger, id, output, &input_parser);
             }
 
-            std::ostringstream res_stream;
-            res_stream << APTA_FILE << ".result";
-            ofstream output(res_stream.str().c_str());
-            if(read_csv) predict_csv(merger, input_stream, output);
-            else predict(merger, id, output);
             output.close();
         } else {
             cerr << "require a json formatted apta file to make predictions" << endl;
