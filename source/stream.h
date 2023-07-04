@@ -32,10 +32,17 @@ public:
   stream_object(){
     batch_number = 0;
 
+    // TODO: make those smart pointers
     currentrun = new refinement_list();
     nextrun = new refinement_list();
 
     parser_strategy = new in_order();
+  }
+
+  ~stream_object(){
+    delete currentrun;
+    delete nextrun;
+    delete parser_strategy;
   }
   
   int stream_mode(state_merger* merger, ifstream& input_stream, inputdata* id, parser* input_parser); 
