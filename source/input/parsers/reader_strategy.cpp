@@ -69,7 +69,10 @@ std::optional<trace *> in_order::read(parser &input_parser, inputdata &idata) {
         if (!cur_symbol_maybe.has_value()) {
             // We are done with the last trace, if we had any symbols at all
             if (last_id.has_value()) {
-                return trace_map.at(last_id.value());
+                auto trace = trace_map.at(last_id.value());
+                // Remove last_id to prevent returning the last trace infinitely
+                last_id = std::nullopt;
+                return trace;
             }
             // Otherwise there was no trace
             break;
