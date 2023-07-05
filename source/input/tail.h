@@ -12,7 +12,7 @@ class tail_data{
 public:
     int index;
     int symbol;
-    double* attr;
+    std::unique_ptr<double[]> attr;
 
     std::string data;
 
