@@ -56,7 +56,7 @@ void tail::set_future(tail* ft){
  * copies values from existing tail but does not put into any list
  * initialize_after_adding_traces re-used a previously declared but erased tail */
 tail::tail(){
-    td = new tail_data();
+    td = std::make_shared<tail_data>();
     past_tail = nullptr;
     future_tail = nullptr;
     next_in_list = nullptr;
@@ -71,7 +71,7 @@ tail::tail(tail* ot){
         td = ot->td;
         tr = ot->tr;
     } else {
-        td = new tail_data();
+        td = std::make_shared<tail_data>();
         tr = nullptr;
     }
     past_tail = nullptr;
@@ -86,7 +86,7 @@ void tail::initialize(tail* ot){
         td = ot->td;
         tr = ot->tr;
     } else {
-        td = new tail_data();
+        td = std::make_shared<tail_data>();
         tr = nullptr;
     }
     past_tail = nullptr;
@@ -127,7 +127,8 @@ string tail::to_string(){
 
 tail::~tail(){
     if(split_from == nullptr){
-        delete td;
+        // Set shared taildata pointer to null
+        td = nullptr;
     }
     //if(future_tail != nullptr) delete future_tail;
 }
