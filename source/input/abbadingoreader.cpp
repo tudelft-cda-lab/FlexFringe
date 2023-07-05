@@ -71,7 +71,7 @@ void abbadingo_inputdata::read_abbadingo_symbol(istream &input_stream, tail* new
     string temp, temp_symbol, data, type_string, type_attr, symbol_string, symbol_attr, val;
     std::stringstream l1, l2, l3;
 
-    tail_data* td = new_tail->td;
+    auto td = new_tail->td;
 
     input_stream >> temp;
     l1.str(temp);
