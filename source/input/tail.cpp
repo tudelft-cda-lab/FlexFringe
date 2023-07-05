@@ -178,7 +178,7 @@ tail_data::tail_data() {
     auto inputdata = inputdata_locator::get();
     index = -1;
     symbol = -1;
-    attr = new double[inputdata->get_num_symbol_attributes()];
+    attr = std::make_unique<double[]>(inputdata->get_num_symbol_attributes());
     for(int i = 0; i < inputdata->get_num_symbol_attributes(); ++i){
         attr[i] = 0.0;
     }
@@ -196,7 +196,7 @@ void tail_data::initialize() {
     auto inputdata = inputdata_locator::get();
     index = -1;
     symbol = -1;
-    attr = new double[inputdata->get_num_symbol_attributes()];
+    attr = std::make_unique<double[]>(inputdata->get_num_symbol_attributes());
     for(int i = 0; i < inputdata->get_num_symbol_attributes(); ++i){
         attr[i] = 0.0;
     }
