@@ -580,6 +580,8 @@ void predict_trace(state_merger* m, ofstream& output, trace* tr){
 
 void predict_csv(state_merger* m, istream& input, ofstream& output){
     inputdata* id = m->get_dat();
+    id->read_csv_file(input);
+
     rownr = -1;
 
     output << "row nr; last row nr; abbadingo trace; state sequence; score sequence";
@@ -590,14 +592,15 @@ void predict_csv(state_merger* m, istream& input, ofstream& output){
     if(PREDICT_SYMBOL) output << "; next trace symbol; next symbol probability; predicted symbol; predicted symbol probability";
     output << "; type" << endl;
 
-    while(!input.eof()) {
+    for(auto it = id->traces_start(); it != id->traces_end(); it++) {
         rownr += 1;
-        trace* tr = id->read_csv_row(input);
+        trace* tr = *it;
         if(tr == nullptr) continue;
         if(!tr->get_end()->is_final()){
             continue;
         }
         predict_trace(m, output, tr);
+        /*
         tail* tail_it = tr->get_head();
         //cerr << "predicted " << tr->to_string() << " " << tail_it->get_nr() << " " << tail_it->tr->get_sequence() << endl;
         for(int i = 0; i < SLIDING_WINDOW_STRIDE; i++){
@@ -609,7 +612,9 @@ void predict_csv(state_merger* m, istream& input, ofstream& output){
             tail_to_delete->tr->erase();
             tail_it = tail_it->future();
         }
+        */
     }
+    delete id;
 }
 
 void predict(state_merger* m, istream& input, ofstream& output){
