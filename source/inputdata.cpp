@@ -364,7 +364,7 @@ void inputdata::read_csv_file(istream &input_stream) {
             //add_trace_to_apta(tr, the_apta);
             //if (!ADD_TAILS) tr->erase();
             all_traces.push_back(tr);
-            cerr << tr->to_string() << endl;
+            //cerr << tr->to_string() << endl;
         }
     }
 

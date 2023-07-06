@@ -362,6 +362,9 @@ void apta::read_json(istream& input_stream){
         string symbol = e["name"];
         //if symbol not in alphabet, add it
         int symbol_nr = inputdata::symbol_from_string(symbol);
+        string symb = inputdata::string_from_symbol(symbol_nr);
+
+        cerr << symbol << " == " << symb << endl;
 
         string source_string = e["source"];
         string target_string = e["target"];
