@@ -41,6 +41,32 @@ void stream_object::greedyrun_no_undo(state_merger* merger, const int seq_nr, co
     }
 }
 
+void print_current_automaton_stream(state_merger* merger, const string& output_file, const string& append_string){
+    if (OUTPUT_TYPE == "dot" || OUTPUT_TYPE == "both") {
+        merger->print_dot(output_file + append_string + ".dot");
+    }
+    if (OUTPUT_TYPE == "json" || OUTPUT_TYPE == "both") {
+        merger->print_json(output_file + append_string + ".json");
+    }
+    if(OUTPUT_SINKS && !PRINT_WHITE){
+        bool red_undo = PRINT_RED;
+        PRINT_RED = false;
+        bool white_undo = PRINT_WHITE;
+        PRINT_WHITE= true;
+        bool blue_undo = PRINT_BLUE;
+        PRINT_BLUE = true;
+        if (OUTPUT_TYPE == "dot" || OUTPUT_TYPE == "both") {
+            merger->print_dot(output_file + append_string + "sinks.dot");
+        }
+        if (OUTPUT_TYPE == "json" || OUTPUT_TYPE == "both") {
+            merger->print_json(output_file + append_string + "sinks.json");
+        }
+        PRINT_RED = red_undo;
+        PRINT_WHITE = white_undo;
+        PRINT_BLUE = blue_undo;
+    }
+}
+
 void stream_object::greedyrun_retry_merges(state_merger* merger, const int seq_nr, const bool last_sequence, const int n_runs){
     static int count_printouts = 1;
 
@@ -120,9 +146,13 @@ void stream_object::greedyrun_retry_merges(state_merger* merger, const int seq_n
       top_ref = merger->get_best_refinement();
     }
 
-    if(seq_nr % 100 == 0  || last_sequence){
+    ++count_printouts;
+    if(count_printouts % 100 == 0  || last_sequence){
       cout << "Processed " << count_printouts << " batches" << endl;
-      ++count_printouts;
+    }
+
+    if(count_printouts % 1000 == 0){
+      print_current_automaton_stream(merger, "model_batch_nr_", to_string(count_printouts));
     }
 
     // undo the merges
@@ -210,7 +240,6 @@ int stream_object::stream_mode(state_merger* merger, ifstream& input_stream, inp
               top_ref->doref(merger);
           }
         }
-
 
         cout << "Finished parsing file. End of program." << endl;
         return 0;
