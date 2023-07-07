@@ -125,7 +125,6 @@ void run() {
         }
     }
 
-
     apta* the_apta = new apta();
     auto* merger = new state_merger(&id, eval, the_apta);
     the_apta->set_context(merger);
@@ -161,16 +160,15 @@ void run() {
     } else if(OPERATION_MODE == "stream") {
         cout << "stream mode selected" << endl;
         LOG_S(INFO) << "Stream mode selected, starting run";
+        eval->initialize_before_adding_traces();
 
         stream_object stream_obj;
         if(read_csv) {
             auto input_parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
             stream_obj.stream_mode(merger, input_stream, &id, &input_parser);
-            //id.read(&input_parser);
         } else {
             auto input_parser = abbadingoparser(input_stream);
             stream_obj.stream_mode(merger, input_stream, &id, &input_parser);
-            //id.read(&input_parser);
         }
         print_current_automaton(merger, OUTPUT_FILE, ".final");
     } else if(OPERATION_MODE == "search") {
