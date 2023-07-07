@@ -74,6 +74,8 @@ void lsharp_algorithm::run(inputdata& id){
   int n_runs = 1;
   
   auto eval = unique_ptr<evaluation_function>(get_evaluation());
+  eval->initialize_before_adding_traces();
+  
   auto the_apta = unique_ptr<apta>(new apta());
   auto merger = unique_ptr<state_merger>(new state_merger(&id, eval.get(), the_apta.get()));
 
