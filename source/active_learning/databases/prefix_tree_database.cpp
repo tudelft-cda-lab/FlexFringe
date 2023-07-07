@@ -78,13 +78,12 @@ bool prefix_tree_database::is_member(const std::list<int>& query_trace) const {
  */
 void prefix_tree_database::update_state_with_statistics(apta_node* n){
   trace* access_trace = n->get_access_trace();
-  //if(access_trace->end_tail->is_final()){
-  //  access_trace->end_tail = access_trace->end_tail->past();
-  //}
 
   apta_node* n_db = the_tree->sift(access_trace);
   if(n_db == nullptr) return; // state does not exist
 
+  n->reset_data();
+  
   list< pair<trace*, int> > trace_count_list = extract_tails_from_tree(n_db);
   for(auto& [tr, count]: trace_count_list){
     for(int i = 0; i < count; ++i){

@@ -460,6 +460,10 @@ void apta_node::initialize(apta_node* n){
     if(performed_splits != nullptr) performed_splits->clear();
 }
 
+void apta_node::reset_data() noexcept {
+    data->initialize();
+}
+
 apta_node* apta_node::child(tail* t){
         int symbol = t->get_symbol();
         for(auto it = guards.lower_bound(symbol); it != guards.upper_bound(symbol); ++it){
