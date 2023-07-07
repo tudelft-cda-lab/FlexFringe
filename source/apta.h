@@ -275,6 +275,7 @@ public:
     inline int get_depth(){ return depth; }
     inline void set_red(bool b){ red = b; };
     inline apta_node* rep(){ return representative; }
+    void reset_data() noexcept; 
 
     void add_tail(tail* t);
 
