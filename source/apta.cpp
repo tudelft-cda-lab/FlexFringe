@@ -304,7 +304,7 @@ void apta::print_sinks_json(iostream& output) const{
 
 void apta::read_json(istream& input_stream){
     json read_apta = json::parse(input_stream);
-    abbadingo_inputdata idat;    
+    // abbadingo_inputdata idat;
 
     map<int, apta_node*> states;
     //for each json line
@@ -330,7 +330,8 @@ void apta::read_json(istream& input_stream){
         string trace = n["trace"];
         istringstream trace_stream(trace);
         node->access_trace = mem_store::create_trace();
-        idat.read_abbadingo_sequence(trace_stream,node->access_trace);
+        // TODO: verify this with Sicco (robert)
+        // idat.read_abbadingo_sequence(trace_stream,node->access_trace);
     }
     for (int i = 1; i < read_apta["nodes"].size(); ++i) {
         json n = read_apta["nodes"][i];
@@ -345,7 +346,10 @@ void apta::read_json(istream& input_stream){
 
         string symbol = e["name"];
         //if symbol not in alphabet, add it
-        int symbol_nr = idat.symbol_from_string(symbol);
+        int symbol_nr = inputdata_locator::get()->symbol_from_string(symbol);
+
+        //string symb = inputdata_locator::get()->string_from_symbol(symbol_nr);
+        //cout << symbol << " == " << symb << endl;
 
         string source_string = e["source"];
         string target_string = e["target"];

@@ -85,16 +85,16 @@ void run() {
 
     inputdata id;
     inputdata_locator::provide(&id);
-
-    if(OPERATION_MODE!="stream" && OPERATION_MODE!="predict"){
+    if(OPERATION_MODE != "streaming" && OPERATION_MODE != "predict"){
         if(read_csv) {
-            auto input_parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
-            id.read(&input_parser);
+            auto parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
+            id.read(&parser);
         } else {
-            auto input_parser = abbadingoparser(input_stream);
-            id.read(&input_parser);
+            auto parser = abbadingoparser(input_stream);
+            id.read(&parser);
         }
     }
+
 
     apta* the_apta = new apta();
     state_merger* merger = new state_merger(&id, eval, the_apta);
@@ -188,13 +188,14 @@ void run() {
             cout << "reading apta file - " << APTA_FILE << endl;
             the_apta->read_json(input_apta_stream);
 
-            // this is so we use the correct alphabet when reading.
+            //print_current_automaton(merger, OUTPUT_FILE, ".tom_final"); // TODO: delete. Only for debugging
+
             if(read_csv) {
-                auto input_parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
-                id.read(&input_parser);
+                auto parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
+                id.read(&parser);
             } else {
-                auto input_parser = abbadingoparser(input_stream);
-                id.read(&input_parser);
+                auto parser = abbadingoparser(input_stream);
+                id.read(&parser);
             }
 
             std::ostringstream res_stream;

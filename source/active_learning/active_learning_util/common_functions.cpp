@@ -144,7 +144,7 @@ void active_learning_namespace::reset_apta(state_merger* merger, const list<refi
 void active_learning_namespace::update_tail(tail* t, const int symbol){
     static int num_tails = 0;
 
-    tail_data* td = t->td;
+    auto td = t->td;
     td->symbol = symbol;
     //td->data = ""; // TODO: does not work yet with attributes
     td->tail_nr = num_tails++;
