@@ -111,6 +111,7 @@ void lsharp_algorithm::run(inputdata& id){
 
       if( possible_refs.size()>0 ){
         refinement* best_merge = extract_best_merge(&possible_refs);
+        // identify states. These will be kept throughout the algorithm
         if(dynamic_cast<extend_refinement*>(best_merge) != 0){
           best_merge->doref(merger.get());
           no_isolated_states = false;
@@ -132,26 +133,29 @@ void lsharp_algorithm::run(inputdata& id){
         print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".not_final"); // printing the final model each time
       }
 
-      optional< pair< list<int>, int > > query_result = oracle->equivalence_query(merger.get(), teacher);
-      if(!query_result){
-        cout << "Found consistent automaton => Print." << endl;
-        print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
-        return;
-      }
-      else{
-        const list<int>& cex = query_result.value().first;
-        const int type = query_result.value().second;
-        if(type < 0){
-          // we ignore this state. We have to watch out that counterexample are not reused, i.e. the counterexample strategy should not 
-          // return the same counterexample twice.
-          continue;
+      // TODO: is the loop below guaranteed to terminate?
+      while(true){
+        /* While loop to check the type. type is < 0 if sul cannot properly respond to query, e.g. when the string 
+        we ask cannot be parsed in automaton. We ignore those cases, as they lead to extra states in hypothesis. 
+        This puts a burden on the equivalence oracle to make sure no quey is asked twice, else we end 
+        up in infinite loop.*/
+        optional< pair< list<int>, int > > query_result = oracle->equivalence_query(merger.get(), teacher);
+        if(!query_result){
+          cout << "Found consistent automaton => Print." << endl;
+          print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
+          return;
         }
 
+        const int type = query_result.value().second;
+        if(type < 0) continue;
+
+        const list<int>& cex = query_result.value().first;
         auto cex_tr = vector_to_trace(cex, id, type);
         cout << "Found counterexample: " << cex_tr->to_string() << "\n"; //endl;
 
         reset_apta(merger.get(), refs); // note: does not reset the identified red states we had before
         id.add_trace_to_apta(cex_tr, merger->get_aut());
+        break;
       }
     }
 
