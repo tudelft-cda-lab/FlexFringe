@@ -73,7 +73,8 @@ refinement* lsharp_algorithm::extract_best_merge(refinement_set* rs) const {
 void lsharp_algorithm::run(inputdata& id){
   int n_runs = 1;
   
-  auto eval = unique_ptr<evaluation_function>(get_evaluation());
+  auto eval = unique_ptr<evaluation_function>(get_evaluation()); // TODO: initialize
+  eval->initialize_before_adding_traces();
   auto the_apta = unique_ptr<apta>(new apta());
   auto merger = unique_ptr<state_merger>(new state_merger(&id, eval.get(), the_apta.get()));
 
@@ -119,6 +120,11 @@ void lsharp_algorithm::run(inputdata& id){
 
     if(no_isolated_states){
       // build hypothesis
+      if(PRINT_ALL_MODELS){
+        static int model_nr = 0;
+        print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".before_ref");
+      }
+
       refs = minimize_apta(merger.get());
 
       if(PRINT_ALL_MODELS){
@@ -145,11 +151,6 @@ void lsharp_algorithm::run(inputdata& id){
         cout << "Found counterexample: " << cex_tr->to_string() << "\n"; //endl;
 
         reset_apta(merger.get(), refs); // note: does not reset the identified red states we had before
-
-        if(PRINT_ALL_MODELS){
-          static int model_nr = 0;
-          print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_undo");
-        }
         id.add_trace_to_apta(cex_tr, merger->get_aut());
       }
     }

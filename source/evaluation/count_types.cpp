@@ -1,11 +1,13 @@
 #include "state_merger.h"
 #include "evaluate.h"
 #include "evaluation_factory.h"
-#include <map>
-#include <set>
 #include "parameters.h"
 #include "count_types.h"
 #include "input/inputdatalocator.h"
+
+#include <map>
+#include <set>
+#include <unordered_set>
 
 REGISTER_DEF_TYPE(count_driven);
 REGISTER_DEF_DATATYPE(count_data);
@@ -198,11 +200,43 @@ bool count_driven::consistent(state_merger *merger, apta_node* left, apta_node* 
     auto* l = (count_data*)left->get_data();
     auto* r = (count_data*)right->get_data();
 
+    unordered_set<int> checked_types;
+
     for(auto & final_count : l->final_counts){
         int type = final_count.first;
         int count = final_count.second;
+
+        if(!r->final_counts.contains(type)){
+            inconsistency_found = true;
+            return false;
+        }
+
         if(count != 0){
             for(auto & final_count2 : r->final_counts){
+                int type2 = final_count2.first;
+                int count2 = final_count2.second;
+                if(count2 != 0 && type2 != type){
+                    inconsistency_found = true;
+                    return false;
+                }
+            }
+        }
+        checked_types.insert(type);
+    }
+
+    // checking the other way, too
+    for(auto & final_count : r->final_counts){
+        int type = final_count.first;
+        if(checked_types.contains(type)) continue;
+
+        if(!l->final_counts.contains(type)){
+            inconsistency_found = true;
+            return false;
+        }
+
+        int count = final_count.second;
+        if(count != 0){
+            for(auto & final_count2 : l->final_counts){
                 int type2 = final_count2.first;
                 int count2 = final_count2.second;
                 if(count2 != 0 && type2 != type){
