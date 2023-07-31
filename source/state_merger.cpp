@@ -997,10 +997,10 @@ refinement_set* state_merger::get_possible_refinements(shared_ptr<node_to_refine
  * 
  */
 void state_merger::insert_ref_into_map(refinement* ref, node_to_refinement_map_T& node_to_ref_map) const noexcept {
-    int s1 = ref->red->get_number();
+    auto s1 = ref->red;
     node_to_ref_map[s1].insert(ref);
     if(dynamic_cast<merge_refinement*>(ref) != nullptr){
-        int s2 = dynamic_cast<merge_refinement*>(ref)->blue->get_number();
+        auto s2 = dynamic_cast<merge_refinement*>(ref)->blue;
         node_to_ref_map[s2].insert(ref);
     }
 }
