@@ -362,7 +362,7 @@ tail *inputdata::make_tail(const string &symbol,
                            const vector<string> &data) {
 
     tail *new_tail = mem_store::create_tail(nullptr);
-    tail_data *td = new_tail->td;
+    auto td = new_tail->td;
 
     if (!symbol.empty()) {
         // Add symbol to the alphabet if it isn't in there already

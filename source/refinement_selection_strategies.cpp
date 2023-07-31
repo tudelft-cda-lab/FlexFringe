@@ -46,9 +46,9 @@ refinement* evidence_based_strategy::perform(refinement_set* possible_refs, shar
     apta_node* blue_node = dynamic_cast<merge_refinement*>(top_ref)->blue;
   }
 
-  unordered_set< refinement* >& refs_under_consideration = node_to_ref_map[red_node]; // it's ok to modify this list at this stage
+  unordered_set< refinement* >& refs_under_consideration = node_to_ref_map->at(red_node); // it's ok to modify this list at this stage
   if(blue_node != nullptr){
-    for(refinement* ref: node_to_ref_map[blue_node]) refs_under_consideration.insert(ref);
+    for(refinement* ref: node_to_ref_map->at(blue_node)) refs_under_consideration.insert(ref);
   }
 
   unordered_set<int> updated_nodes;

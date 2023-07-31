@@ -23,7 +23,7 @@ class state_merger;
 
 using namespace std;
 
-typedef std::unordered_map< int, std::unordered_set<refinement*> > node_to_refinement_map_T;
+typedef std::unordered_map< apta_node*, std::unordered_set<refinement*> > node_to_refinement_map_T;
 
 /**
  * @brief The state merger. Contains the prefix and performs the merges, undoes them etc.
