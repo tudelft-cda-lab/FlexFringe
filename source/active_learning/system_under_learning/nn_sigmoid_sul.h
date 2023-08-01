@@ -10,12 +10,12 @@
  * 
  */
 
-#ifndef _NN_SOFTMAX_SUL_H_
-#define _NN_SOFTMAX_SUL_H_
+#ifndef _NN_SIGMOID_SUL_H_
+#define _NN_SIGMOID_SUL_H_
 
 #include "sul_base.h"
 
-class nn_softmax_sul {
+class nn_sigmoid_sul {
   friend class base_teacher;
   friend class eq_oracle_base;
 
@@ -31,7 +31,8 @@ class nn_softmax_sul {
     virtual const int query_trace(const std::list<int>& query_trace, inputdata& id) const;
     
   public:
-    nn_softmax_sul() = default; // abstract anyway
+    nn_sigmoid_sul() = default; // abstract anyway
+    ~nn_sigmoid_sul();
 
     void pre(inputdata& id);
 };
