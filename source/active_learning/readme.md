@@ -14,3 +14,7 @@ We use Umbrello to open the class diagram. **Note:** Not maintained at the momen
 
 Notes on code (for those who want to dive deeper): 
 - We use the terms SUL (system under learning) and SUT (system under test). They mean the same for us.
+
+# Learning Neural Networks
+
+TODO: describe here how to use the python scripts and that
