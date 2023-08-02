@@ -21,6 +21,63 @@ using namespace std;
 const auto PROGRAM_PATH = "python_test";
 //const auto PROGRAM_PATH = "python_test.py";
 
+int main(){
+    Py_Initialize();
+
+    // this is so we can find the module
+    PyRun_SimpleString("import os");
+    PyRun_SimpleString("import sys");
+    PyRun_SimpleString("sys.path.append(os.getcwd())");
+
+    //auto fp = fopen(PROGRAM_PATH, "r");
+    //PyRun_SimpleFile(fp, PROGRAM_PATH + ".py");
+    //PyRun_File(fp, PROGRAM_PATH, 0, nullptr, nullptr);
+
+    cout << "Program path: " << PROGRAM_PATH << endl;
+    PyObject* pName = PyUnicode_FromString(PROGRAM_PATH);
+
+    auto s = PyUnicode_AsUTF8(PyObject_Str(pName));
+    cout << "The name: " << s << endl;
+
+    PyObject* pModule = PyImport_Import(pName);
+    if(pModule){
+        // test simple function
+        cout << "Test with simple return value: " << endl;
+ 		PyObject* pFunc1 = PyObject_GetAttrString(pModule, "test_no_arg");
+		if(pFunc1 && PyCallable_Check(pFunc1)){
+			PyObject* pValue = PyObject_CallObject(pFunc1, NULL);
+			cout << "Return value with no args: " << PyLong_AsLong(pValue) << endl;
+		}
+		else{
+			cout << "Something went wrong" << endl;
+		}
+
+        // test function with global variable
+        cout << "Test with global variable: " << endl;
+ 		PyObject* pFunc2 = PyObject_GetAttrString(pModule, "test_with_global");
+		if(pFunc2 && PyCallable_Check(pFunc2)){
+			PyObject* pValue = PyObject_CallObject(pFunc2, NULL);
+			cout << "Return value with global variable call 1: " << PyLong_AsLong(pValue) << endl;
+		}
+        if(pFunc2 && PyCallable_Check(pFunc2)){
+			PyObject* pValue = PyObject_CallObject(pFunc2, NULL);
+			cout << "Return value with global variable call 2: " << PyLong_AsLong(pValue) << endl;
+		}
+		else{
+			cout << "Something went wrong" << endl;
+		}
+	}
+	else
+	{
+		cout << "ERROR: Module not imported\n" << endl;
+	}
+    //query_trace(module);
+
+    Py_Finalize();
+    return 0;
+}
+
+
 /** executes the module module 
     *
     * @param module: string containing the name of the module
@@ -125,47 +182,4 @@ int query_trace(const std::string& module/* ,
     } */
 
     return ret;
-}
-
-
-int main(){
-    Py_Initialize();
-    //PyRun_SimpleString("import sys");
-
-    auto fp = fopen(PROGRAM_PATH, "r");
-    //PyRun_SimpleFile(fp, PROGRAM_PATH + ".py");
-    //PyRun_File(fp, PROGRAM_PATH, 0, nullptr, nullptr);
-
-    cout << "Program path: " << PROGRAM_PATH << endl;
-    PyObject* pName = PyUnicode_FromString(PROGRAM_PATH);
-
-    auto s = PyUnicode_AsUTF8(PyObject_Str(pName));
-    cout << "The name: " << s << endl;
-    //cout << "The name: " << PyObject_Str(pName) << endl;
-
-    PyObject* pModule = PyImport_Import(pName);
-    if(pModule)
-	{
-        cout << "Module loaded" << endl;
-/* 		CPyObject pFunc = PyObject_GetAttrString(pModule, "getInteger");
-		if(pFunc && PyCallable_Check(pFunc))
-		{
-			CPyObject pValue = PyObject_CallObject(pFunc, NULL);
-
-			printf_s("C: getInteger() = %ld\n", PyLong_AsLong(pValue));
-		}
-		else
-		{
-			printf("ERROR: function getInteger()\n");
-		} */
-
-	}
-	else
-	{
-		cout << "ERROR: Module not imported\n" << endl;
-	}
-    //query_trace(module);
-
-    Py_Finalize();
-    return 0;
 }
