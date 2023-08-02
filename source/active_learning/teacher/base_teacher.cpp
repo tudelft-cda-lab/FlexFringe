@@ -15,7 +15,7 @@ using namespace std;
 using namespace active_learning_namespace;
 
 /**
- * @brief Asks the tarecher a membership query. In case the automaton cannot be parsed with the query, it returns -1. Else the mapping as 
+ * @brief Asks the teacher a membership query. In case the automaton cannot be parsed with the query, it returns -1. Else the mapping as 
  * defined by the inputdata.
  * 
  * @param prefix S.e.

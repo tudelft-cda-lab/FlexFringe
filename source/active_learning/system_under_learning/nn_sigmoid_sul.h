@@ -13,28 +13,23 @@
 #ifndef _NN_SIGMOID_SUL_H_
 #define _NN_SIGMOID_SUL_H_
 
-#include "sul_base.h"
+#include "nn_sul_base.h"
 
-class nn_sigmoid_sul {
+class nn_sigmoid_sul : nn_sul_base {
   friend class base_teacher;
   friend class eq_oracle_base;
 
-  private:
-    cppflow::model model; // TODO: change the path, load in pre()
-
   protected:
-    virtual void post() = 0;
-    virtual void step() = 0;
-    virtual void reset() = 0;
+    virtual void post(){};
+    virtual void step(){};
+    virtual void reset(){};
 
     virtual bool is_member(const std::list<int>& query_trace) const;
     virtual const int query_trace(const std::list<int>& query_trace, inputdata& id) const;
     
   public:
-    nn_sigmoid_sul() = default; // abstract anyway
+    nn_sigmoid_sul() : PYTHON_MODULE_NAME("nn_connector_sigmoid.py"){}; // abstract anyway
     ~nn_sigmoid_sul();
-
-    void pre(inputdata& id);
 };
 
 #endif

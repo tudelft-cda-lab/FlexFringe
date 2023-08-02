@@ -28,19 +28,6 @@ const int nn_sigmoid_sul::query_trace(const std::list<int>& query_trace, inputda
 }
 
 /**
- * @brief Initializes the python environment.
- * 
- * @param id 
- */
-void nn_sigmoid_sul::pre(inputdata& id){
-  //model = cppflow::model("coolpredictor");
-  
-  Py_Initialize(); // start python interpreter
-  PyRun_SimpleString("import sys");
-  PyRun_SimpleString("./python/nn_connector_sigmoid_output.py");
-}
-
-/**
  * @brief Destroy the nn sigmoid sul::nn sigmoid sul object
  * 
  */
