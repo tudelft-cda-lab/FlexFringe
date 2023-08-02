@@ -3,6 +3,8 @@
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
  * @brief Test file to check the python connector. Tutorial on how to connect C++ and Python: 
  * https://www.codeproject.com/Articles/820116/Embedding-Python-program-in-a-C-Cplusplus-code
+ * 
+ * Full APUI reference: https://docs.python.org/3/c-api/index.html
  * @version 0.1
  * @date 2023-07-31
  * 
@@ -57,11 +59,40 @@ int main(){
  		PyObject* pFunc2 = PyObject_GetAttrString(pModule, "test_with_global");
 		if(pFunc2 && PyCallable_Check(pFunc2)){
 			PyObject* pValue = PyObject_CallObject(pFunc2, NULL);
-			cout << "Return value with global variable call 1: " << PyLong_AsLong(pValue) << endl;
+			cout << "Return value with global variable call: " << PyLong_AsLong(pValue) << endl;
 		}
-        if(pFunc2 && PyCallable_Check(pFunc2)){
-			PyObject* pValue = PyObject_CallObject(pFunc2, NULL);
-			cout << "Return value with global variable call 2: " << PyLong_AsLong(pValue) << endl;
+		else{
+			cout << "Something went wrong" << endl;
+		}
+
+        PyObject* intarg = PyLong_FromLong(5);
+        cout << "Test with argument and global variable: " << endl;
+ 		PyObject* pFunc3 = PyObject_GetAttrString(pModule, "test_with_global_and_arg");
+		if(pFunc3 && PyCallable_Check(pFunc3)){
+			PyObject* pValue = PyObject_CallOneArg(pFunc3, intarg);
+			cout << "Return value with global variable call: " << PyLong_AsLong(pValue) << endl;
+		}
+		else{
+			cout << "Something went wrong" << endl;
+		}
+
+        // finally, try an array, because we will use that with out NNs
+        cout << "Test with the list" << endl;
+        PyObject* testlist = PyList_New(3);
+        PyObject* intarg0 = PyLong_FromLong(1);
+        PyObject* intarg1 = PyLong_FromLong(2);
+        PyObject* intarg2 = PyLong_FromLong(3);
+        int r = PyList_SetItem(testlist, 0, intarg0);
+        if(r==-1) cout << "Out of bounds encountered" << endl;
+        r = PyList_SetItem(testlist, 1, intarg1);
+        if(r==-1) cout << "Out of bounds encountered" << endl;
+        r = PyList_SetItem(testlist, 2, intarg2);
+        if(r==-1) cout << "Out of bounds encountered" << endl;
+
+        PyObject* pFunc4 = PyObject_GetAttrString(pModule, "test_list");
+		if(pFunc4 && PyCallable_Check(pFunc4)){
+			PyObject* pValue = PyObject_CallOneArg(pFunc4, testlist);
+			cout << "Return value of testlist call: " << PyLong_AsLong(pValue) << endl;
 		}
 		else{
 			cout << "Something went wrong" << endl;
@@ -95,7 +126,7 @@ int main(){
     * "v" : "value of the measure" [string containing float]
     * "p" : "precision of the measure" [string containing float]
     */
-int query_trace(const std::string& module/* , 
+int query_trace(const std::string& module /* , 
                         string_string_map& configuration_map,
                         std::vector<string_string_map*>& values_list */) {
 
@@ -110,7 +141,6 @@ int query_trace(const std::string& module/* ,
 #endif
 
     cout << Py_TYPE(pName) << endl;
-
 
     // Load the module object
     pModule = PyImport_Import(pName);
@@ -129,7 +159,7 @@ int query_trace(const std::string& module/* ,
         return 0;
     }
 
-/*     // pFunc is also a borrowed reference 
+    // pFunc is also a borrowed reference 
     pFunc = PyDict_GetItemString(pDict, "push_to_datastore");
 
     if (pFunc == NULL) {
@@ -140,7 +170,7 @@ int query_trace(const std::string& module/* ,
     }
 
 
-    if (PyCallable_Check(pFunc)) {
+/*     if (PyCallable_Check(pFunc)) {
         pArgs = PyTuple_New(2);
 
         // values
