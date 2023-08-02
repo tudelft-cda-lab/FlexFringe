@@ -1,7 +1,9 @@
 # IDE / output / build stuff
 .idea/
 cmake-build-*/
-build/
+*build/*
+*.vscode*
+*__pycache__*
 test-reports/
 *.o
 *.a
