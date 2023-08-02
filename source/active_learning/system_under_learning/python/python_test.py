@@ -1,3 +1,7 @@
+"""
+This file is solely for testing purposes of the C/Python API
+"""
+
 x = 0
 
 print("Printing from within the script")
@@ -19,6 +23,16 @@ def test_with_global_and_arg(i: int):
     x += i
     print("Inside test with arg")
     return x
+
+def test_list(l: list):
+    l.append(1)
+    l.append(2)
+
+    res = 0
+    for li in l:
+        res += li
+    
+    return res
 
 if __name__ == "__main__":
     print(test_no_arg())
