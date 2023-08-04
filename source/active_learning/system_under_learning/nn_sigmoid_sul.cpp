@@ -28,6 +28,19 @@ const int nn_sigmoid_sul::query_trace(const std::list<int>& query_trace, inputda
 }
 
 /**
+ * @brief Like our conventional query_trace, but instead it returns the probability
+ * of a string as assigned by the Network. Useful for e.g. the TAYSIR competition
+ * (International Conference of Grammatical Inference, Rabat 2023)
+ * 
+ * @param query_trace 
+ * @param id 
+ * @return const float 
+ */
+const float nn_sigmoid_sul::get_sigmoid_output(const std::list<int>& query_trace, inputdata& id) const {
+
+}
+
+/**
  * @brief Destroy the nn sigmoid sul::nn sigmoid sul object
  * 
  */
