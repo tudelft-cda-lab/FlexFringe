@@ -3,12 +3,8 @@ Connects to a sigmoid output network, i.e. a network with
 binary output.
 """
 
-# ---------------- Just for testing purposes -----------------
 
-x = 0
 
-def test(i: int):
-    x += i
-    return x
 
-# --------------- End test ------------------------------------
+if __name__ == "__main__":
+    raise Exception("This script is not meant as a standalone.")
