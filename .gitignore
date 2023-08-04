@@ -9,6 +9,7 @@ test-reports/
 *.a
 data/*
 !data/active_learning/test_dfas/*
+*ipynb*
 
 # Binaries
 runtests
