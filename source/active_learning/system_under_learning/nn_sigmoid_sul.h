@@ -25,8 +25,13 @@ class nn_sigmoid_sul : nn_sul_base {
     virtual void reset(){};
 
     virtual bool is_member(const std::list<int>& query_trace) const;
-    virtual const int query_trace(const std::list<int>& query_trace, inputdata& id) const;
     
+    virtual const int query_trace(const std::list<int>& query_trace, inputdata& id) const {
+      throw logic_error("Not implemented yet. Above 0.5 is one type, below is another.");
+    }
+
+    const float get_sigmoid_output(const std::list<int>& query_trace, inputdata& id) const;
+
   public:
     nn_sigmoid_sul() : PYTHON_MODULE_NAME("nn_connector_sigmoid.py"){}; // abstract anyway
     ~nn_sigmoid_sul();
