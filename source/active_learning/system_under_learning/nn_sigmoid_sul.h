@@ -20,6 +20,9 @@ class nn_sigmoid_sul : nn_sul_base {
   friend class eq_oracle_base;
 
   protected:
+    const std::string PYTHON_SCRIPT_PATH = "python/network_benchmarks"; // relative path to where python scripts are
+    const std::string PYTHON_MODULE_NAME = "nn_connector_sigmoid_output_toy_example.py";
+
     virtual void post(){};
     virtual void step(){};
     virtual void reset(){};
@@ -33,7 +36,7 @@ class nn_sigmoid_sul : nn_sul_base {
     const float get_sigmoid_output(const std::list<int>& query_trace, inputdata& id) const;
 
   public:
-    nn_sigmoid_sul() : PYTHON_MODULE_NAME("nn_connector_sigmoid.py"){}; // abstract anyway
+    nn_sigmoid_sul() : PYTHON_MODULE_NAME("network_benchmarks/nn_connector_sigmoid.py"){};
     ~nn_sigmoid_sul();
 };
 

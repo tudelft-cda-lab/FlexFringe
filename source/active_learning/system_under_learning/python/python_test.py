@@ -1,5 +1,6 @@
 """
 This file is solely for testing purposes of the C/Python API
+Documentation: https://docs.python.org/3/c-api/index.html
 """
 
 x = 0
@@ -34,9 +35,14 @@ def test_list(l: list):
     
     return res
 
+def test_dict():
+    res = {"Food": 1, "Drinks": 0}
+    return res
+
 if __name__ == "__main__":
     print(test_no_arg())
     print(test_with_global())
     print(test_with_global())
     print(test_with_global_and_arg(4))
     print(test_with_global_and_arg(5))
+    print(test_dict())

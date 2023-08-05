@@ -34,12 +34,6 @@ def do_query(seq: list):
   """
   global model
   assert(model is not None)
-
-  global alphabet
-  global ALPHABET_NAME
-
-  if alphabet is None:
-     alphabet = pk.load(open(ALPHABET_NAME, "rb"))
   
   seq_mapped = [alphabet[symbol] for symbol in seq] # TODO: resolve the mismatch that can happen in between the two alphabets here, set alph in flexfringe
   seq_mapped = np.array(seq_mapped)
@@ -53,12 +47,22 @@ def do_query(seq: list):
 
 
 def get_alphabet():
-    """Returns the alphabet, so we can set the internal alphabet of Flexfringe accordingly.
-    """
-    global alphabet
+  """Returns the alphabet, so we can set the internal alphabet of Flexfringe accordingly.
+  Alphabet must be of dict()-type, mapping input alphabet of type str() to internal 
+  representation in integer values.
 
-    assert(alphabet is not None)
-    return alphabet
+  Side effect (must be implemented!): If the alphabet is uninitialized (None), set the alphabet accordingly.
+
+  alphabet: dict() [str : int]
+  """
+  global alphabet
+  global ALPHABET_NAME
+
+  if alphabet is None:
+    alphabet = pk.load(open(ALPHABET_NAME, "rb"))
+
+  assert(alphabet is not None)
+  return alphabet
 
 
 if __name__ == "__main__":

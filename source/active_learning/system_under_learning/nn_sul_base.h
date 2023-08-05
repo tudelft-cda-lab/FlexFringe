@@ -2,6 +2,9 @@
  * @file nn_sul_base.h
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
  * @brief Base for neural network queries.
+ * 
+ * Documentation of CPython-API: https://docs.python.org/3/c-api/index.html
+
  * @version 0.1
  * @date 2023-08-02
  * 
@@ -26,6 +29,8 @@ class nn_sul_base : sul_base {
     const std::string PYTHON_MODULE_NAME = "";
 
     PyObject* pModule;
+    PyObject* query_func;
+    PyObject* alphabet_func;
 
     virtual void post() = 0;
     virtual void step() = 0;
