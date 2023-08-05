@@ -17,6 +17,8 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
+#include <utility>
 
 using namespace std;
 
@@ -76,7 +78,7 @@ int main(){
 			cout << "Something went wrong" << endl;
 		}
 
-        // finally, try an array, because we will use that with out NNs
+        // try an array, because we will use that with out NNs
         cout << "Test with the list" << endl;
         PyObject* testlist = PyList_New(3);
         PyObject* intarg0 = PyLong_FromLong(1);
@@ -93,6 +95,38 @@ int main(){
 		if(pFunc4 && PyCallable_Check(pFunc4)){
 			PyObject* pValue = PyObject_CallOneArg(pFunc4, testlist);
 			cout << "Return value of testlist call: " << PyLong_AsLong(pValue) << endl;
+		}
+		else{
+			cout << "Something went wrong" << endl;
+		}
+
+        // test a dictionary. We'll need that for setting and getting the alphabet as set by the neural network
+        cout << "Test with the dictionary: " << endl;
+ 		PyObject* pFunc5 = PyObject_GetAttrString(pModule, "test_dict");
+		if(pFunc5 && PyCallable_Check(pFunc5)){
+			PyObject* pValue = PyObject_CallObject(pFunc5, NULL);
+            PyObject* keys = PyDict_Keys(pValue);
+            // TODO: there are no error checks here
+            
+            std::vector<std::string> key_vec;
+            std::vector<int> values;
+
+            auto size = static_cast<int>(PyList_Size(keys));
+            cout << "Size of the dict: " << size << ", should be 2." << endl;
+            for(int i = 0; i < size; ++i){
+                PyObject* pleft = PyList_GetItem(keys, static_cast<Py_ssize_t>(i));
+                PyObject* pright = PyDict_GetItem(pValue, pleft);
+
+                std::string left = PyUnicode_AsUTF8(PyObject_Str(pleft));// pyUnicode_fromString(pleft);
+                int right = PyLong_AsLong(pright);
+
+                cout << "Key: " << left << ", right: " << right << endl;
+
+                key_vec.push_back(std::move(left));
+                values.push_back(std::move(right));
+            }
+
+			//cout << "Return value with global variable call: " << PyLong_AsLong(pValue) << endl;
 		}
 		else{
 			cout << "Something went wrong" << endl;

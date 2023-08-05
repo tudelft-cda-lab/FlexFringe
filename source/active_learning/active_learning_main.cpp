@@ -126,7 +126,7 @@ void active_learning_main_func::run_active_learning(){
   }
 
   if(ACTIVE_SUL){
-    // we do not want to run the input file
+    // we do not want to run the input file, alphabet and input data must be inferred from SUL
     inputdata id;
     inputdata_locator::provide(&id);
     
