@@ -29,11 +29,9 @@ class nn_sigmoid_sul : nn_sul_base {
 
     virtual bool is_member(const std::list<int>& query_trace) const;
     
-    virtual const int query_trace(const std::list<int>& query_trace, inputdata& id) const {
-      throw logic_error("Not implemented yet. Above 0.5 is one type, below is another.");
-    }
+    virtual const int query_trace(const std::list<int>& query_trace, inputdata& id) const override;
 
-    const float get_sigmoid_output(const std::list<int>& query_trace, inputdata& id) const;
+    const float get_sigmoid_output(const std::list<int>& query_trace) const;
 
   public:
     nn_sigmoid_sul() = default;

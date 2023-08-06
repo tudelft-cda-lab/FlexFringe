@@ -13,3 +13,7 @@
 #include "input_file_sul.h"
 #include "dfa_sul.h"
 #include "database_sul.h"
+
+// NN queries
+#include "nn_sul_base.h"
+#include "nn_sigmoid_sul.h"

@@ -27,7 +27,10 @@ using namespace std;
  */
 void nn_sul_base::set_list_item(PyObject* pylist, PyObject* item, const int idx) const {
   int r = PyList_SetItem(pylist, idx, item);
-  if(r==-1) throw bad_alloc("Error when setting items in python-list.");
+  if(r==-1){
+    cerr << "Error when setting items in python-list." << endl;  
+    throw bad_alloc();
+  } 
 }
 
 /**
@@ -48,7 +51,7 @@ void nn_sul_base::pre(inputdata& id){
   PyRun_SimpleString(cmd.str().c_str());
 
   // load the module
-  PyObject* pName = PyUnicode_FromString(PROGRAM_PATH);
+  PyObject* pName = PyUnicode_FromString(PYTHON_MODULE_NAME.c_str());
   if(pName == NULL){
     Py_DECREF(pName);
     cerr << "Error in retrieving the name string of the program path. Terminating program." << endl;
@@ -94,11 +97,11 @@ void nn_sul_base::pre(inputdata& id){
   }
 
   map<string, int> mapped_alphabet;
-  PyObject* p_keys = PyDict_Keys(pValue);
+  PyObject* p_keys = PyDict_Keys(p_alphabet);
   const auto size = static_cast<int>(PyList_Size(p_keys));
   for(int i = 0; i < size; ++i){
     PyObject* p_key = PyList_GetItem(p_keys, static_cast<Py_ssize_t>(i));
-    PyObject* p_value = PyDict_GetItem(pValue, pleft);
+    PyObject* p_value = PyDict_GetItem(p_alphabet, p_key);
 
     std::string left;
     int right;
@@ -120,7 +123,7 @@ void nn_sul_base::pre(inputdata& id){
     mapped_alphabet[std::move(left)] = std::move(right);
   }
 
-  id.set_r_alphabet(std::move(mapped_alphabet));
+  id.set_alphabet(std::move(mapped_alphabet));
 
   Py_INCREF(pName);
   Py_INCREF(pModule);
