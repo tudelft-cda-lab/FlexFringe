@@ -15,6 +15,8 @@
 #ifndef _NN_SUL_BASE_H_
 #define _NN_SUL_BASE_H_
 
+#include "sul_base.h"
+
 #include <string>
 
 #define PY_SSIZE_T_CLEAN // recommended, see https://docs.python.org/3/extending/extending.html#a-simple-example

@@ -151,16 +151,16 @@ int inputdata::get_reverse_type(std::string a) {
  * @param r_alphabet Map with string-to-int mapping.
  */
 void inputdata::set_alphabet(map<string, int>&& r_alphabet){
-    this->r_alphabet = r_alphabet();
+    this->r_alphabet = r_alphabet;
     
     unordered_map<int, string> alphabet_mapping;
     vector<int> values;
-    for(auto [key, value]: r_alphabet){
+    for(auto const& [key, value] : r_alphabet){
         alphabet_mapping[value] = key;
-        values.push_back(key);
+        values.push_back(value);
     }
 
-    alphabet.clear();
+    this->alphabet.clear();
     std::sort(values.begin(), values.end());
     for(auto symbol: values){
         alphabet.push_back(alphabet_mapping.at(symbol));
