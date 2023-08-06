@@ -13,7 +13,7 @@
 
 #include <sstream>
 #include <iostream>
-#include <unordered_map>
+#include <map> // TODO: make this one and the one in r_alphabet unordered
 
 using namespace std;
 
@@ -80,7 +80,7 @@ void nn_sul_base::pre(inputdata& id){
     exit(1);
   }
 
-  unordered_map<string, int> mapped_alphabet;
+  map<string, int> mapped_alphabet;
   PyObject* p_keys = PyDict_Keys(pValue);
   const auto size = static_cast<int>(PyList_Size(p_keys));
   for(int i = 0; i < size; ++i){
@@ -107,8 +107,7 @@ void nn_sul_base::pre(inputdata& id){
     mapped_alphabet[std::move(left)] = std::move(right);
   }
 
-  // TODO: set the internal alphabet with this one now
-  
+  id.set_r_alphabet(std::move(mapped_alphabet));
 
   Py_INCREF(pName);
   Py_INCREF(pModule);

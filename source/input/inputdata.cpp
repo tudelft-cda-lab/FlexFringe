@@ -2,6 +2,9 @@
 #include "apta.h"
 #include "stringutil.h"
 
+#include <unordered_map>
+#include <algorithm>
+
 //#include "inputdatalocator.h"
 
 using namespace std;
@@ -139,6 +142,29 @@ const std::map<std::string, int>& inputdata::get_r_types() const {
 
 int inputdata::get_reverse_type(std::string a) {
     return r_types[a];
+}
+
+/**
+ * @brief Sets the r_alphabet and re-initializes the normal 
+ * alphabet with the values given by r_alphabet.
+ * 
+ * @param r_alphabet Map with string-to-int mapping.
+ */
+void inputdata::set_alphabet(map<string, int>&& r_alphabet){
+    this->r_alphabet = r_alphabet();
+    
+    unordered_map<int, string> alphabet_mapping;
+    vector<int> values;
+    for(auto [key, value]: r_alphabet){
+        alphabet_mapping[value] = key;
+        values.push_back(key);
+    }
+
+    alphabet.clear();
+    std::sort(values.begin(), values.end());
+    for(auto symbol: values){
+        alphabet.push_back(alphabet_mapping.at(symbol));
+    }
 }
 
 attribute *inputdata::get_trace_attribute(int attr) {
