@@ -36,7 +36,7 @@ class nn_sigmoid_sul : nn_sul_base {
     const float get_sigmoid_output(const std::list<int>& query_trace, inputdata& id) const;
 
   public:
-    nn_sigmoid_sul() : PYTHON_MODULE_NAME("network_benchmarks/nn_connector_sigmoid.py"){};
+    nn_sigmoid_sul() = default;
     ~nn_sigmoid_sul();
 };
 

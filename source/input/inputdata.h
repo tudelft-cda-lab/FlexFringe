@@ -10,6 +10,7 @@
 #include <memory>
 #include <unordered_map>
 #include <optional>
+#include <string>
 
 #include "input/trace.h"
 #include "input/attribute.h"
@@ -77,7 +78,7 @@ public:
     int get_reverse_symbol(std::string a);
     const std::string& get_type(int a);
     int get_reverse_type(std::string a);
-    void set_alphabet(map<string, int>&& r_alphabet);
+    void set_alphabet(std::map<std::string, int>&& r_alphabet);
 
     /* gets an attribute, first symbol attributes, then trace attributes */
     attribute* get_trace_attribute(int attr);
