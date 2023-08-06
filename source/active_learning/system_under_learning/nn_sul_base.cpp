@@ -14,8 +14,21 @@
 #include <sstream>
 #include <iostream>
 #include <map> // TODO: make this one and the one in r_alphabet unordered
+#include <stdexcept>
 
 using namespace std;
+
+/**
+ * @brief Inserts element into list, raises exception if it didn't work.
+ * 
+ * @param pylist The list
+ * @param item The item
+ * @param idx The index
+ */
+void nn_sul_base::set_list_item(PyObject* pylist, PyObject* item, const int idx) const {
+  int r = PyList_SetItem(pylist, idx, item);
+  if(r==-1) throw bad_alloc("Error when setting items in python-list.");
+}
 
 /**
  * @brief Initializes the python environment and 

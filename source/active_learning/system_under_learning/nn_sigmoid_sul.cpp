@@ -17,10 +17,29 @@ bool nn_sigmoid_sul::is_member(const std::list<int>& query_trace) const {
   return true;
 }
 
-const int nn_sigmoid_sul::query_trace(const std::list<int>& query_trace, inputdata& id) const {
-  
-  auto output = model(input);
 
+
+const int nn_sigmoid_sul::query_trace(const std::list<int>& query_trace, inputdata& id) const {
+ double nn_output = get_sigmoid_output(query_trace);
+ int res = nn_output < 0.5 ? 0 : 1;
+ return res;// TODO: make sure that there is no mismatch between the types
+}
+
+/**
+ * @brief Does what you think it does.
+ * 
+ * @param query_trace 
+ * @return const double 
+ */
+const double nn_sigmoid_sul::get_sigmoid_output(const std::list<int>& query_trace) const {
+  PyObject* pylist = PyList_New(query_trace.size());
+  for(int i=0; i < query_trace.size(); ++i){
+    PyObject* pysymbol = PyLong_FromLong(query_trace.at(i));
+    set_list_item(pylist, pysymbol, i);
+  }
+
+  PyObject* pyquery_result = PyObject_CallOneArg(query_func, pylist);
+  return PyFloat_AsDouble(pyquery_result);
 }
 
 /**

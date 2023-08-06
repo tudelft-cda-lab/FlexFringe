@@ -39,6 +39,7 @@ class nn_sul_base : sul_base {
     virtual bool is_member(const std::list<int>& query_trace) const = 0;
     virtual const int query_trace(const std::list<int>& query_trace, inputdata& id) const = 0;
     
+    void set_list_item(PyObject* pylist, PyObject* item, const int idx) const;
   public:
     nn_sul_base() = default; // abstract anyway
 
