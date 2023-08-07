@@ -45,23 +45,25 @@ void nn_sul_base::pre(inputdata& id){
   PyRun_SimpleString("import os");
 
   stringstream cmd;
-  cmd << "sys.path.append( os.path.join(os.getcwd(), ";
+  cmd << "sys.path.append( os.path.join(os.getcwd(), \"";
   cmd << PYTHON_SCRIPT_PATH;
-  cmd << "))";
+  cmd << "\") )";
+
   PyRun_SimpleString(cmd.str().c_str());
+  //PyRun_SimpleString("print(sys.path)"); // useful for debugging
 
   // load the module
   PyObject* pName = PyUnicode_FromString(PYTHON_MODULE_NAME.c_str());
   if(pName == NULL){
-    Py_DECREF(pName);
     cerr << "Error in retrieving the name string of the program path. Terminating program." << endl;
     exit(1);
   }
 
+  cout << "Name of the python module: " << PyUnicode_AsUTF8(PyObject_Str(pName)) << endl;
+
   pModule = PyImport_Import(pName);
   if(pModule == NULL){
     Py_DECREF(pName);
-    Py_DECREF(pModule);
     cerr << "Error in loading python module " << PYTHON_MODULE_NAME << ". Terminating program." << endl;
     exit(1);
   }
@@ -70,7 +72,6 @@ void nn_sul_base::pre(inputdata& id){
   if(query_func == NULL || !PyCallable_Check(query_func)){
     Py_DECREF(pName);
     Py_DECREF(pModule);
-    Py_DECREF(query_func);
     cerr << "Problem in loading the query function. Terminating program." << endl;
     exit(1);
   }
@@ -80,7 +81,6 @@ void nn_sul_base::pre(inputdata& id){
     Py_DECREF(pName);
     Py_DECREF(pModule);
     Py_DECREF(query_func);
-    Py_DECREF(alphabet_func);
     cerr << "Problem in loading the get_alphabet function. Terminating program." << endl;
     exit(1);
   }
@@ -114,8 +114,8 @@ void nn_sul_base::pre(inputdata& id){
       Py_DECREF(pModule);
       Py_DECREF(query_func);
       Py_DECREF(alphabet_func);
-      Py_DECREF(p_key);
-      Py_DECREF(p_value);
+      //Py_DECREF(p_key); // TODO: this is not very correct, I need to check individually
+      //Py_DECREF(p_value); // TODO: this is not very correct, I need to check individually
       cerr << "Alphabet dict returned by get_alphabet() must be a string->int dictionary." << endl;
       exit(1);
     }

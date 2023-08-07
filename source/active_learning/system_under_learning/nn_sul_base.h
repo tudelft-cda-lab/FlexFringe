@@ -22,13 +22,16 @@
 #define PY_SSIZE_T_CLEAN // recommended, see https://docs.python.org/3/extending/extending.html#a-simple-example
 #include <Python.h>
 
-class nn_sul_base : sul_base {
+class nn_sul_base : public sul_base {
   friend class base_teacher;
   friend class eq_oracle_base;
 
   protected:
-    const std::string PYTHON_SCRIPT_PATH = "python"; // relative path to where python scripts are
-    const std::string PYTHON_MODULE_NAME = "";
+    const std::string PYTHON_SCRIPT_PATH; // relative path from flexfringe executable to where python scripts are
+    const std::string PYTHON_MODULE_NAME;
+
+    nn_sul_base(const std::string& PYTHON_SCRIPT_PATH, const std::string& PYTHON_MODULE_NAME) :
+      PYTHON_SCRIPT_PATH(PYTHON_SCRIPT_PATH), PYTHON_MODULE_NAME(PYTHON_MODULE_NAME){};
 
     PyObject* pModule;
     PyObject* query_func;
@@ -43,8 +46,6 @@ class nn_sul_base : sul_base {
     
     void set_list_item(PyObject* pylist, PyObject* item, const int idx) const;
   public:
-    nn_sul_base() = default; // abstract anyway
-
     virtual void pre(inputdata& id) override;
 };
 
