@@ -32,28 +32,16 @@ const int nn_sigmoid_sul::query_trace(const std::list<int>& query_trace, inputda
  * @return const double 
  */
 const double nn_sigmoid_sul::get_sigmoid_output(const std::list<int>& query_trace) const {
-  PyObject* pylist = PyList_New(query_trace.size());
-  for(int i=0; i < query_trace.size(); ++i){
-    PyObject* pysymbol = PyLong_FromLong(query_trace.at(i));
-    set_list_item(pylist, pysymbol, i);
+  PyObject* p_list = PyList_New(query_trace.size());
+  int i = 0;
+  for(const int symbol: query_trace){
+    PyObject* p_symbol = PyLong_FromLong(symbol);
+    set_list_item(p_list, p_symbol, i);
+    ++i;
   }
 
-  PyObject* pyquery_result = PyObject_CallOneArg(query_func, pylist);
-  return PyFloat_AsDouble(pyquery_result);
-}
-
-/**
- * @brief Like our conventional query_trace, but instead it returns the probability
- * of a string as assigned by the Network. Useful for e.g. the TAYSIR competition
- * (International Conference of Grammatical Inference, Rabat 2023)
- * 
- * @param query_trace 
- * @param id 
- * @return const float 
- */
-const float nn_sigmoid_sul::get_sigmoid_output(const std::list<int>& query_trace, inputdata& id) const {
-  assert(query_func != NULL);
-  
+  PyObject* p_query_result = PyObject_CallOneArg(query_func, p_list);
+  return PyFloat_AsDouble(p_query_result);
 }
 
 /**

@@ -31,7 +31,7 @@ class nn_sigmoid_sul : nn_sul_base {
     
     virtual const int query_trace(const std::list<int>& query_trace, inputdata& id) const override;
 
-    const float get_sigmoid_output(const std::list<int>& query_trace) const;
+    const double get_sigmoid_output(const std::list<int>& query_trace) const;
 
   public:
     nn_sigmoid_sul() = default;

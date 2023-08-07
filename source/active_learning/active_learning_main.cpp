@@ -15,7 +15,13 @@
 #include "lstar.h"
 #include "lsharp.h"
 
-#include "sul_headers.h"
+//#include "sul_headers.h"
+
+#include "input_file_sul.h"
+#include "input_file_oracle.h"
+#include "dfa_sul.h"
+#include "active_sul_oracle.h"
+#include "nn_sigmoid_sul.h"
 
 #include "parameters.h"
 #include "inputdata.h"
@@ -70,8 +76,8 @@ inputdata active_learning_main_func::get_inputdata() const {
 shared_ptr<sul_base> active_learning_main_func::select_sul_class(const bool ACTIVE_SUL) const {
   if(ACTIVE_SUL){
     // TODO: select the SUL better than you do here
-    if(( INPUT_FILE.compare(INPUT_FILE.length() - 3, INPUT_FILE.length(), ".py") == 0) ) {
-      return shared_ptr<sul_base>(new nn_sigmoid_sul());
+    if( INPUT_FILE.compare(INPUT_FILE.length() - 3, INPUT_FILE.length(), ".py") == 0 ) {
+      //return shared_ptr<sul_base>(new nn_sigmoid_sul());
     }
 
     return shared_ptr<sul_base>(new dfa_sul());

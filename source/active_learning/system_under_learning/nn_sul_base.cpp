@@ -25,8 +25,8 @@ using namespace std;
  * @param item The item
  * @param idx The index
  */
-void nn_sul_base::set_list_item(PyObject* pylist, PyObject* item, const int idx) const {
-  int r = PyList_SetItem(pylist, idx, item);
+void nn_sul_base::set_list_item(PyObject* p_list, PyObject* p_item, const int idx) const {
+  int r = PyList_SetItem(p_list, idx, p_item);
   if(r==-1){
     cerr << "Error when setting items in python-list." << endl;  
     throw bad_alloc();
@@ -103,13 +103,13 @@ void nn_sul_base::pre(inputdata& id){
     PyObject* p_key = PyList_GetItem(p_keys, static_cast<Py_ssize_t>(i));
     PyObject* p_value = PyDict_GetItem(p_alphabet, p_key);
 
-    std::string left;
-    int right;
+    std::string key;
+    int value;
     try{
-      left = PyUnicode_AsUTF8(PyObject_Str(pleft));// pyUnicode_fromString(pleft);
-      right = PyLong_AsLong(pright);
+      key = PyUnicode_AsUTF8(PyObject_Str(p_key));// pyUnicode_fromString(pleft);
+      value = PyLong_AsLong(p_value);
     }
-    catch{
+    catch(...){
       Py_DECREF(pName);
       Py_DECREF(pModule);
       Py_DECREF(query_func);
@@ -120,7 +120,7 @@ void nn_sul_base::pre(inputdata& id){
       exit(1);
     }
 
-    mapped_alphabet[std::move(left)] = std::move(right);
+    mapped_alphabet[std::move(key)] = std::move(value);
   }
 
   id.set_alphabet(std::move(mapped_alphabet));
