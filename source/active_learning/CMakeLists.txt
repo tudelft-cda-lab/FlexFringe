@@ -73,7 +73,4 @@ add_library(ActiveLearning STATIC
             teacher/base_teacher.cpp
 )
 
-# needed for the Neural Network, to call Python scripts
-find_package(PythonLibs REQUIRED)
-include_directories(${PYTHON_INCLUDE_DIRS})
 target_link_libraries(ActiveLearning ${PYTHON_LIBRARIES})

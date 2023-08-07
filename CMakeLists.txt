@@ -29,6 +29,10 @@ endif()
 add_compile_definitions(LOGURU_WITH_STREAMS=1)
 #add_compile_definitions(CATCH_CONFIG_EXPERIMENTAL_REDIRECT=1)
 
+# needed for the Neural Network, to call Python scripts
+find_package(PythonLibs REQUIRED)
+include_directories(${PYTHON_INCLUDE_DIRS})
+
 include_directories("${PROJECT_SOURCE_DIR}"
                     "${PROJECT_SOURCE_DIR}/source"
                     "${PROJECT_SOURCE_DIR}/source/evaluation"
