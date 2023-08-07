@@ -15,14 +15,14 @@
 
 #include "nn_sul_base.h"
 
-class nn_sigmoid_sul : nn_sul_base {
+class nn_sigmoid_sul : public nn_sul_base {
   friend class base_teacher;
   friend class eq_oracle_base;
 
   protected:
-    const std::string PYTHON_SCRIPT_PATH = "python/network_benchmarks"; // relative path to where python scripts are
-    const std::string PYTHON_MODULE_NAME = "nn_connector_sigmoid_output_toy_example.py";
-
+    const std::string PYTHON_SCRIPT_PATH;
+    const std::string PYTHON_MODULE_NAME;
+    
     virtual void post(){};
     virtual void step(){};
     virtual void reset(){};
@@ -34,7 +34,8 @@ class nn_sigmoid_sul : nn_sul_base {
     const double get_sigmoid_output(const std::list<int>& query_trace) const;
 
   public:
-    nn_sigmoid_sul() = default;
+    // TODO: these paths need to be set
+    nn_sigmoid_sul() : nn_sul_base("source/active_learning/system_under_learning/python/network_benchmarks", "nn_connector_sigmoid_output_toy_example"){};
     ~nn_sigmoid_sul();
 };
 

@@ -21,6 +21,7 @@
 #include "input_file_oracle.h"
 #include "dfa_sul.h"
 #include "active_sul_oracle.h"
+#include "nn_sul_base.h"
 #include "nn_sigmoid_sul.h"
 
 #include "parameters.h"
@@ -77,7 +78,8 @@ shared_ptr<sul_base> active_learning_main_func::select_sul_class(const bool ACTI
   if(ACTIVE_SUL){
     // TODO: select the SUL better than you do here
     if( INPUT_FILE.compare(INPUT_FILE.length() - 3, INPUT_FILE.length(), ".py") == 0 ) {
-      //return shared_ptr<sul_base>(new nn_sigmoid_sul());
+      cout << "I'm here" << endl;
+      return shared_ptr<sul_base>(new nn_sigmoid_sul());
     }
 
     return shared_ptr<sul_base>(new dfa_sul());
@@ -115,6 +117,7 @@ void active_learning_main_func::run_active_learning(){
 
   const bool ACTIVE_SUL = (INPUT_FILE.compare(INPUT_FILE.length() - 5, INPUT_FILE.length(), ".json") == 0) ||
                     (INPUT_FILE.compare(INPUT_FILE.length() - 4, INPUT_FILE.length(), ".dot") == 0) ||
+                    (INPUT_FILE.compare(INPUT_FILE.length() - 3, INPUT_FILE.length(), ".py") == 0) ||
                     !APTA_FILE.empty();
 
   auto sul = select_sul_class(ACTIVE_SUL);
