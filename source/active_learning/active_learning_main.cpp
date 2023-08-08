@@ -78,7 +78,6 @@ shared_ptr<sul_base> active_learning_main_func::select_sul_class(const bool ACTI
   if(ACTIVE_SUL){
     // TODO: select the SUL better than you do here
     if( INPUT_FILE.compare(INPUT_FILE.length() - 3, INPUT_FILE.length(), ".py") == 0 ) {
-      cout << "I'm here" << endl;
       return shared_ptr<sul_base>(new nn_sigmoid_sul());
     }
 

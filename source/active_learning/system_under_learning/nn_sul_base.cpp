@@ -87,7 +87,7 @@ void nn_sul_base::pre(inputdata& id){
 
   // TODO: set the alphabet here
   PyObject* p_alphabet = PyObject_CallObject(alphabet_func, NULL);
-  if(!PyDict_Check(p_alphabet)){
+  if(p_alphabet == NULL || !PyDict_Check(p_alphabet)){
     Py_DECREF(pName);
     Py_DECREF(pModule);
     Py_DECREF(query_func);
