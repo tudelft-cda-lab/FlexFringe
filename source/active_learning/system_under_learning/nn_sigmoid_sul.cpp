@@ -10,6 +10,9 @@
  */
 
 #include "nn_sigmoid_sul.h"
+#include "inputdatalocator.h"
+
+#include <unordered_set>
 
 using namespace std;
 
@@ -18,11 +21,25 @@ bool nn_sigmoid_sul::is_member(const std::list<int>& query_trace) const {
 }
 
 
-
+/**
+ * @brief Queries trace, returns result.
+ * 
+ * Side effect: Check if the inferred type is part of the types in inputdata. If no, set.
+ * 
+ * @param query_trace 
+ * @param id 
+ * @return const int 
+ */
 const int nn_sigmoid_sul::query_trace(const std::list<int>& query_trace, inputdata& id) const {
- double nn_output = get_sigmoid_output(query_trace);
- int res = nn_output < 0.5 ? 0 : 1;
- return res;// TODO: make sure that there is no mismatch between the types
+  double nn_output = get_sigmoid_output(query_trace);
+  int res = nn_output < 0.5 ? 0 : 1;
+
+  static unordered_set<int> inferred_types;
+  if(!inferred_types.contains(res)){
+    inferred_types.insert(res);
+    inputdata_locator::get()->add_type(std::to_string(res));
+  }
+  return res;// TODO: make sure that there is no mismatch between the types
 }
 
 /**

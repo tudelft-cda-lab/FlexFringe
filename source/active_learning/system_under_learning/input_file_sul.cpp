@@ -44,7 +44,7 @@ const int input_file_sul::query_trace(const list<int>& query_trace, inputdata& i
         unk_t_string = unk_t_string + to_string(counter);
       }
 
-      id.add_unknown_type(unk_t_string);
+      id.add_type(unk_t_string);
       added_unknown_type = true;
     }
 

@@ -91,7 +91,7 @@ public:
     int get_num_sequences();
     int get_max_sequences();
 
-    void add_unknown_type(const std::string& t);
+    void add_type(const std::string& t);
     const std::map<std::string, int>& get_r_types() const;
 
     /* attribute properties:
