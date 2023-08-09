@@ -87,36 +87,12 @@ void nn_sul_base::pre(inputdata& id){
     exit(1);
   }
 
-  alphabet_func = PyObject_GetAttrString(p_module, "get_alphabet");
-  if(alphabet_func == NULL || !PyCallable_Check(alphabet_func)){
-    Py_DECREF(p_name);
-    Py_DECREF(p_module);
-    Py_DECREF(query_func);
-    cerr << "Problem in loading the get_alphabet function. Terminating program." << endl;
-    exit(1);
-  }
-
-  // TODO: set the alphabet here
   PyObject* p_model_path = PyUnicode_FromString(APTA_FILE.c_str());
   if(p_model_path == NULL){
     Py_DECREF(p_name);
     Py_DECREF(p_module);
     Py_DECREF(query_func);
-    Py_DECREF(alphabet_func);
     cerr << "p_model_path could not be set correctly." << endl;
-    exit(1);
-  }
-
-  cout << "Loading alphabet in python module." << endl;
-  PyObject* p_alphabet = PyObject_CallOneArg(alphabet_func, p_model_path);
-  if(p_alphabet == NULL || !PyDict_Check(p_alphabet)){
-    Py_DECREF(p_name);
-    Py_DECREF(p_module);
-    Py_DECREF(query_func);
-    Py_DECREF(alphabet_func);
-    cerr << "get_alphabet() function in python script did not return a dictionary-type. Is \
-    the path to the aptafile correct and contains the alphabet? Alphabet has correct name \
-    as in python script?" << endl;
     exit(1);
   }
 
@@ -125,7 +101,6 @@ void nn_sul_base::pre(inputdata& id){
     Py_DECREF(p_name);
     Py_DECREF(p_module);
     Py_DECREF(query_func);
-    Py_DECREF(alphabet_func);
     Py_DECREF(p_model_path);
     cerr << "Problem in loading the load_model function. Terminating program." << endl;
     exit(1);
@@ -137,9 +112,34 @@ void nn_sul_base::pre(inputdata& id){
     Py_DECREF(p_name);
     Py_DECREF(p_module);
     Py_DECREF(query_func);
-    Py_DECREF(alphabet_func);
     Py_DECREF(p_model_path);
     cerr << "Unexpected return from calling the load_model-function. Function should not return value. Did an exception happen?" << endl;
+    exit(1);
+  }
+
+  alphabet_func = PyObject_GetAttrString(p_module, "get_alphabet");
+  if(alphabet_func == NULL || !PyCallable_Check(alphabet_func)){
+    Py_DECREF(p_name);
+    Py_DECREF(p_module);
+    Py_DECREF(query_func);
+    Py_DECREF(load_model_func);
+    Py_DECREF(p_model_path);
+    cerr << "Problem in loading the get_alphabet function. Terminating program." << endl;
+    exit(1);
+  }
+
+  cout << "Loading alphabet in python module." << endl;
+  PyObject* p_alphabet = PyObject_CallOneArg(alphabet_func, p_model_path);
+  if(p_alphabet == NULL || !PyDict_Check(p_alphabet)){
+    Py_DECREF(p_name);
+    Py_DECREF(p_module);
+    Py_DECREF(query_func);
+    Py_DECREF(alphabet_func);
+    Py_DECREF(load_model_func);
+    Py_DECREF(p_model_path);
+    cerr << "get_alphabet() function in python script did not return a dictionary-type. Is \
+    the path to the aptafile correct and contains the alphabet? Alphabet has correct name \
+    as in python script?" << endl;
     exit(1);
   }
 
@@ -162,6 +162,8 @@ void nn_sul_base::pre(inputdata& id){
       Py_DECREF(p_module);
       Py_DECREF(query_func);
       Py_DECREF(alphabet_func);
+      Py_DECREF(load_model_func);
+      Py_DECREF(p_model_path);
       //Py_DECREF(p_key); // TODO: this is not very correct, I need to check individually
       //Py_DECREF(p_value); // TODO: this is not very correct, I need to check individually
       cerr << "Alphabet dict returned by get_alphabet() must be a string->int dictionary." << endl;
