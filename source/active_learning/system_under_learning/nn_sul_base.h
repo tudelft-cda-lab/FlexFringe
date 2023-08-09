@@ -27,15 +27,12 @@ class nn_sul_base : public sul_base {
   friend class eq_oracle_base;
 
   protected:
-    const std::string PYTHON_SCRIPT_PATH; // relative path from flexfringe executable to where python scripts are
-    const std::string PYTHON_MODULE_NAME;
-
-    nn_sul_base(const std::string& PYTHON_SCRIPT_PATH, const std::string& PYTHON_MODULE_NAME) :
-      PYTHON_SCRIPT_PATH(PYTHON_SCRIPT_PATH), PYTHON_MODULE_NAME(PYTHON_MODULE_NAME){};
+    nn_sul_base() = default;
 
     PyObject* pModule;
     PyObject* query_func;
     PyObject* alphabet_func;
+    PyObject* load_model_func;
 
     virtual void post() = 0;
     virtual void step() = 0;
