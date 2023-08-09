@@ -15,7 +15,7 @@ ALPHABET_NAME = "alphabet_mapping.pk" # this is the name of the alphabet. Assume
 model = None
 alphabet = None
 
-def load_model(path_to_model: str):
+def load_nn_model(path_to_model: str):
   """Loads a model and writes it into the global model-variable
 
   Args:
@@ -45,7 +45,7 @@ def do_query(seq: list):
   for i, sym in enumerate(seq):
     seq_one_hot[0, i, alphabet[sym]] = 1
   
-  y_pred = model.predict(seq_one_hot)
+  y_pred = model.predict(seq_one_hot, verbose=0)
   return float(y_pred[0])
 
 
@@ -66,7 +66,7 @@ def get_alphabet(path_to_model: str):
   global alphabet
   global ALPHABET_NAME
 
-  alphabet_dir = os.path.split(path_to_model)
+  alphabet_dir, _ = os.path.split(path_to_model)
   path_to_alphabet = os.path.join(alphabet_dir, ALPHABET_NAME)
 
   if alphabet is None:
@@ -74,7 +74,6 @@ def get_alphabet(path_to_model: str):
 
   assert(alphabet is not None)
   return alphabet
-
 
 if __name__ == "__main__":
     raise Exception("This script is not meant as a standalone.")

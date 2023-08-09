@@ -46,13 +46,14 @@ void nn_sul_base::pre(inputdata& id){
   PyRun_SimpleString("import os");
 
   // set the path accordingly
-  std::string PYTHON_SCRIPT_PATH; int pos;
+  std::string PYTHON_SCRIPT_PATH; std::string PYTHON_MODULE_NAME; int pos;
   #if defined(_WIN32)
     pos = static_cast<int>(APAFILE.find_last_of("\\"));
   #else 
     pos = static_cast<int>(INPUT_FILE.find_last_of("/"));
   #endif
   PYTHON_SCRIPT_PATH = INPUT_FILE.substr(0, pos);
+  PYTHON_MODULE_NAME = INPUT_FILE.substr(pos+1, INPUT_FILE.size()-pos-4); // -pos-4 to get rid off the .py ending
 
   stringstream cmd;
   cmd << "sys.path.append( os.path.join(os.getcwd(), \"";
@@ -63,13 +64,13 @@ void nn_sul_base::pre(inputdata& id){
   //PyRun_SimpleString("print(sys.path)"); // useful for debugging
 
   // load the module
-  PyObject* p_name = PyUnicode_FromString(INPUT_FILE.c_str());
+  PyObject* p_name = PyUnicode_FromString(PYTHON_MODULE_NAME.c_str());
   if(p_name == NULL){
     cerr << "Error in retrieving the name string of the program path. Terminating program." << endl;
     exit(1);
   }
 
-  cout << "Name of the python module: " << PyUnicode_AsUTF8(PyObject_Str(p_name)) << endl;
+  cout << "Loading module: " << PyUnicode_AsUTF8(PyObject_Str(p_name)) << endl;
 
   p_module = PyImport_Import(p_name);
   if(p_module == NULL){
@@ -96,7 +97,7 @@ void nn_sul_base::pre(inputdata& id){
   }
 
   // TODO: set the alphabet here
-  PyObject* p_model_path = PyUnicode_FromString(APTA_FILE);
+  PyObject* p_model_path = PyUnicode_FromString(APTA_FILE.c_str());
   if(p_model_path == NULL){
     Py_DECREF(p_name);
     Py_DECREF(p_module);
@@ -106,19 +107,20 @@ void nn_sul_base::pre(inputdata& id){
     exit(1);
   }
 
-  PyObject* p_alphabet = PyObject_CallObject(alphabet_func, p_model_path);
+  cout << "Loading alphabet in python module." << endl;
+  PyObject* p_alphabet = PyObject_CallOneArg(alphabet_func, p_model_path);
   if(p_alphabet == NULL || !PyDict_Check(p_alphabet)){
     Py_DECREF(p_name);
     Py_DECREF(p_module);
     Py_DECREF(query_func);
     Py_DECREF(alphabet_func);
-    cerr << "get_alphabet() function in python script did not return a dictionary-type. Is 
-    the path to the aptafile correct and contains the alphabet? Alphabet has correct name 
+    cerr << "get_alphabet() function in python script did not return a dictionary-type. Is \
+    the path to the aptafile correct and contains the alphabet? Alphabet has correct name \
     as in python script?" << endl;
     exit(1);
   }
 
-  load_model_func = PyObject_GetAttrString(p_module, "load_model");
+  load_model_func = PyObject_GetAttrString(p_module, "load_nn_model");
   if(load_model_func == NULL || !PyCallable_Check(load_model_func)){
     Py_DECREF(p_name);
     Py_DECREF(p_module);
@@ -129,8 +131,19 @@ void nn_sul_base::pre(inputdata& id){
     exit(1);
   }
 
-  PyObject* Py_None = PyObject_CallObject(load_model_func, p_model_path);
+  cout << "Loading the Neural network model in python module." << endl;
+  PyObject* p_load_return = PyObject_CallOneArg(load_model_func, p_model_path);
+  if(p_load_return != Py_None){
+    Py_DECREF(p_name);
+    Py_DECREF(p_module);
+    Py_DECREF(query_func);
+    Py_DECREF(alphabet_func);
+    Py_DECREF(p_model_path);
+    cerr << "Unexpected return from calling the load_model-function. Function should not return value. Did an exception happen?" << endl;
+    exit(1);
+  }
 
+  cout << "Setting internal flexfringe alphabet, inferred from the network's training alphabet" << endl;
   map<string, int> mapped_alphabet;
   PyObject* p_keys = PyDict_Keys(p_alphabet);
   const auto size = static_cast<int>(PyList_Size(p_keys));

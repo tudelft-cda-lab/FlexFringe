@@ -29,7 +29,7 @@ class nn_sul_base : public sul_base {
   protected:
     nn_sul_base() = default;
 
-    PyObject* pModule;
+    PyObject* p_module;
     PyObject* query_func;
     PyObject* alphabet_func;
     PyObject* load_model_func;
