@@ -17,7 +17,7 @@ model = None
 alphabet = None
 ALPHABET_NAME = None # must be set
 
-def load_model(path_to_model: str):
+def load_nn_model(path_to_model: str):
   """Loads a model and writes it into the global model-variable
 
   Args:
