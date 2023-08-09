@@ -34,12 +34,16 @@ const int nn_sigmoid_sul::query_trace(const std::list<int>& query_trace, inputda
   double nn_output = get_sigmoid_output(query_trace);
   int res = nn_output < 0.5 ? 0 : 1;
 
-  static unordered_set<int> inferred_types;
-  if(!inferred_types.contains(res)){
-    inferred_types.insert(res);
-    inputdata_locator::get()->add_type(std::to_string(res));
-  }
   return res;// TODO: make sure that there is no mismatch between the types
+}
+
+/**
+ * @brief Initialize the types to 0 and 1. Which is which depends on how the network was trained.
+ * 
+ */
+void nn_sigmoid_sul::init_types() const {
+  inputdata_locator::get()->add_type(std::string("Type 0"));
+  inputdata_locator::get()->add_type(std::string("Type 1"));
 }
 
 /**

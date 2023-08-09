@@ -178,5 +178,7 @@ void nn_sul_base::pre(inputdata& id){
   Py_INCREF(query_func);
   Py_INCREF(alphabet_func);
 
+  init_types();
+
   cout << "Python module " << INPUT_FILE << " loaded and initialized successfully." << endl;
 }

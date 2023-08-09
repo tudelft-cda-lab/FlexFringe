@@ -1,5 +1,6 @@
 """
-Test for the connector on our simple benchmarks.
+Connects to a sigmoid output network, i.e. a network with 
+binary output.
 """
 
 import os
