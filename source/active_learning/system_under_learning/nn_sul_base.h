@@ -42,6 +42,8 @@ class nn_sul_base : public sul_base {
     virtual const int query_trace(const std::list<int>& query_trace, inputdata& id) const = 0;
     
     void set_list_item(PyObject* pylist, PyObject* item, const int idx) const;
+    virtual void init_types() const = 0; // we need to set the internal types of flexfringe according to the types we expect
+
   public:
     virtual void pre(inputdata& id) override;
 };
