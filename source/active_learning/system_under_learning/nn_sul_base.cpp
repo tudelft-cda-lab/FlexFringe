@@ -10,6 +10,7 @@
  */
 
 #include "nn_sul_base.h"
+#include "parameters.h"
 
 #include <sstream>
 #include <iostream>
@@ -44,6 +45,15 @@ void nn_sul_base::pre(inputdata& id){
   PyRun_SimpleString("import sys");
   PyRun_SimpleString("import os");
 
+  // set the path accordingly
+  std::string PYTHON_SCRIPT_PATH; int pos;
+  #if defined(_WIN32)
+    pos = static_cast<int>(APAFILE.find_last_of("\\"));
+  #else 
+    pos = static_cast<int>(INPUT_FILE.find_last_of("/"));
+  #endif
+  PYTHON_SCRIPT_PATH = INPUT_FILE.substr(0, pos);
+
   stringstream cmd;
   cmd << "sys.path.append( os.path.join(os.getcwd(), \"";
   cmd << PYTHON_SCRIPT_PATH;
@@ -53,48 +63,73 @@ void nn_sul_base::pre(inputdata& id){
   //PyRun_SimpleString("print(sys.path)"); // useful for debugging
 
   // load the module
-  PyObject* pName = PyUnicode_FromString(PYTHON_MODULE_NAME.c_str());
-  if(pName == NULL){
+  PyObject* p_name = PyUnicode_FromString(INPUT_FILE.c_str());
+  if(p_name == NULL){
     cerr << "Error in retrieving the name string of the program path. Terminating program." << endl;
     exit(1);
   }
 
-  cout << "Name of the python module: " << PyUnicode_AsUTF8(PyObject_Str(pName)) << endl;
+  cout << "Name of the python module: " << PyUnicode_AsUTF8(PyObject_Str(p_name)) << endl;
 
-  pModule = PyImport_Import(pName);
-  if(pModule == NULL){
-    Py_DECREF(pName);
-    cerr << "Error in loading python module " << PYTHON_MODULE_NAME << ". Terminating program." << endl;
+  p_module = PyImport_Import(p_name);
+  if(p_module == NULL){
+    Py_DECREF(p_name);
+    cerr << "Error in loading python module " << INPUT_FILE << ". Terminating program." << endl;
     exit(1);
   }
 
-  query_func = PyObject_GetAttrString(pModule, "do_query");
+  query_func = PyObject_GetAttrString(p_module, "do_query");
   if(query_func == NULL || !PyCallable_Check(query_func)){
-    Py_DECREF(pName);
-    Py_DECREF(pModule);
+    Py_DECREF(p_name);
+    Py_DECREF(p_module);
     cerr << "Problem in loading the query function. Terminating program." << endl;
     exit(1);
   }
 
-  alphabet_func = PyObject_GetAttrString(pModule, "get_alphabet");
+  alphabet_func = PyObject_GetAttrString(p_module, "get_alphabet");
   if(alphabet_func == NULL || !PyCallable_Check(alphabet_func)){
-    Py_DECREF(pName);
-    Py_DECREF(pModule);
+    Py_DECREF(p_name);
+    Py_DECREF(p_module);
     Py_DECREF(query_func);
     cerr << "Problem in loading the get_alphabet function. Terminating program." << endl;
     exit(1);
   }
 
   // TODO: set the alphabet here
-  PyObject* p_alphabet = PyObject_CallObject(alphabet_func, NULL);
-  if(p_alphabet == NULL || !PyDict_Check(p_alphabet)){
-    Py_DECREF(pName);
-    Py_DECREF(pModule);
+  PyObject* p_model_path = PyUnicode_FromString(APTA_FILE);
+  if(p_model_path == NULL){
+    Py_DECREF(p_name);
+    Py_DECREF(p_module);
     Py_DECREF(query_func);
     Py_DECREF(alphabet_func);
-    cerr << "get_alphabet() function in python script did not return a dictionary-type." << endl;
+    cerr << "p_model_path could not be set correctly." << endl;
     exit(1);
   }
+
+  PyObject* p_alphabet = PyObject_CallObject(alphabet_func, p_model_path);
+  if(p_alphabet == NULL || !PyDict_Check(p_alphabet)){
+    Py_DECREF(p_name);
+    Py_DECREF(p_module);
+    Py_DECREF(query_func);
+    Py_DECREF(alphabet_func);
+    cerr << "get_alphabet() function in python script did not return a dictionary-type. Is 
+    the path to the aptafile correct and contains the alphabet? Alphabet has correct name 
+    as in python script?" << endl;
+    exit(1);
+  }
+
+  load_model_func = PyObject_GetAttrString(p_module, "load_model");
+  if(load_model_func == NULL || !PyCallable_Check(load_model_func)){
+    Py_DECREF(p_name);
+    Py_DECREF(p_module);
+    Py_DECREF(query_func);
+    Py_DECREF(alphabet_func);
+    Py_DECREF(p_model_path);
+    cerr << "Problem in loading the load_model function. Terminating program." << endl;
+    exit(1);
+  }
+
+  PyObject* Py_None = PyObject_CallObject(load_model_func, p_model_path);
 
   map<string, int> mapped_alphabet;
   PyObject* p_keys = PyDict_Keys(p_alphabet);
@@ -110,8 +145,8 @@ void nn_sul_base::pre(inputdata& id){
       value = PyLong_AsLong(p_value);
     }
     catch(...){
-      Py_DECREF(pName);
-      Py_DECREF(pModule);
+      Py_DECREF(p_name);
+      Py_DECREF(p_module);
       Py_DECREF(query_func);
       Py_DECREF(alphabet_func);
       //Py_DECREF(p_key); // TODO: this is not very correct, I need to check individually
@@ -125,10 +160,10 @@ void nn_sul_base::pre(inputdata& id){
 
   id.set_alphabet(std::move(mapped_alphabet));
 
-  Py_INCREF(pName);
-  Py_INCREF(pModule);
+  Py_INCREF(p_name);
+  Py_INCREF(p_module);
   Py_INCREF(query_func);
   Py_INCREF(alphabet_func);
 
-  cout << "Python module " << PYTHON_MODULE_NAME << " loaded and initialized successfully." << endl;
+  cout << "Python module " << INPUT_FILE << " loaded and initialized successfully." << endl;
 }

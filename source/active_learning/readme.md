@@ -10,11 +10,20 @@ About the folder structure:
   7. Databases: Here we provide the database, mainly in conjunction with streaming, not for standalone active learning algorithms.
   8. Util: Here we do some typedefs and some shared variables that a reasonable number of algorithms will use.
 
-We use Umbrello to open the class diagram. **Note:** Not maintained at the moment
+We use Umbrello to open the class diagram. **Note:** The class diagram is not maintained at the moment.
 
 Notes on code (for those who want to dive deeper): 
 - We use the terms SUL (system under learning) and SUT (system under test). They mean the same for us.
 
-# Learning Neural Networks
+# Learning (Distilling) Neural Networks
 
-TODO: describe here how to use the python scripts and that
+When learning neural networks, python scripts have to be used. We provide a template in the subdirectory system_under_learning/python/nn_connector_template.py,
+for reference please consult it's doc-strings and the already implemented scripts. The python script is a wrapper around the network. **Important**: Since
+flexfringe needs to know what kind of strings it can ask the network, we need to load an alphabet. At the moment we require the alphabet to reside in the 
+same directory as the model that we want to load.
+
+To run Neural nets with flexfringe (e.g. query them using active learning) the --ini-file parameter is the casual one, but we expect as the input-file the 
+file to the python script that you want to execute. The other parameters are as follows:
+
+- aptafile: This is the relative path from the executable to the network. It will be provided to the python script upon loading the network.
+- input-file: The last argument of flexfringe by convention. This is the relative path to the python-script.

@@ -2,25 +2,28 @@
 Test for the connector on our simple benchmarks.
 """
 
+import os
+
 import numpy as np
 import pickle as pk
 
 import tensorflow.keras
 from tensorflow.keras.models import load_model
 
-MODEL_NAME = "nn_scripts/model_problem_1.h5"
-ALPHABET_NAME = "nn_scripts/alphabet_mapping.pk"
+ALPHABET_NAME = "alphabet_mapping.pk" # this is the name of the alphabet. Assumed to be in the same directory as the model
 
 model = None
 alphabet = None
 
+def load_model(path_to_model: str):
+  """Loads a model and writes it into the global model-variable
 
-def load_model():
-  """Load a model and writes it into the global model-variable
+  Args:
+      path_to_model (str): Full absolute path to the model. In flexfringe, this is
+      the aptafile-argument.
   """
   global model
-  global MODEL_NAME
-  model = load_model(MODEL_NAME)
+  model = load_model(path_to_model)
   print("Model loaded successfully")
 
 
@@ -46,20 +49,28 @@ def do_query(seq: list):
   return float(y_pred[0])
 
 
-def get_alphabet():
+def get_alphabet(path_to_model: str):
   """Returns the alphabet, so we can set the internal alphabet of Flexfringe accordingly.
   Alphabet must be of dict()-type, mapping input alphabet of type str() to internal 
   representation in integer values.
 
   Side effect (must be implemented!): If the alphabet is uninitialized (None), set the alphabet accordingly.
 
-  alphabet: dict() [str : int]
+  Args:
+      path_to_model (str): Full absolute path to the model. In flexfringe, this is
+      the aptafile-argument (used to infer the path to the alphabet. Must be in same dir.).
+
+  Returns:
+      alphabet: dict() [str : int]
   """
   global alphabet
   global ALPHABET_NAME
 
+  alphabet_dir = os.path.split(path_to_model)
+  path_to_alphabet = os.path.join(alphabet_dir, ALPHABET_NAME)
+
   if alphabet is None:
-    alphabet = pk.load(open(ALPHABET_NAME, "rb"))
+    alphabet = pk.load(open(path_to_alphabet, "rb"))
 
   assert(alphabet is not None)
   return alphabet

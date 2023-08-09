@@ -20,8 +20,6 @@ class nn_sigmoid_sul : public nn_sul_base {
   friend class eq_oracle_base;
 
   protected:
-    const std::string PYTHON_SCRIPT_PATH;
-    const std::string PYTHON_MODULE_NAME;
     
     virtual void post(){};
     virtual void step(){};
@@ -35,7 +33,7 @@ class nn_sigmoid_sul : public nn_sul_base {
 
   public:
     // TODO: these paths need to be set
-    nn_sigmoid_sul() : nn_sul_base("source/active_learning/system_under_learning/python/network_benchmarks", "nn_connector_sigmoid_output_toy_example"){};
+    nn_sigmoid_sul() = default;
     ~nn_sigmoid_sul();
 };
 
