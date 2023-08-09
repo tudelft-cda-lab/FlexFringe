@@ -3,6 +3,7 @@
 #include "stringutil.h"
 
 #include <unordered_map>
+#include <unordered_set>
 #include <algorithm>
 
 //#include "inputdatalocator.h"
@@ -125,9 +126,14 @@ const std::string& inputdata::get_type(int a) {
  * @param t The type-string to add. Will be used when printing and 
  * internally.
  */
-void inputdata::add_unknown_type(const std::string& t) {
-    types.push_back(t);
-    r_types[t] = r_types.size();
+void inputdata::add_type(const std::string& t) {
+    static unordered_set<std::string> seen_types;
+    if(!seen_types.contains(t)){
+        types.push_back(t);
+        r_types[t] = r_types.size();
+        
+        seen_types.insert(t);
+    }
 }
 
 /**
