@@ -38,7 +38,7 @@ def do_query(seq: list):
   """
   global model
   assert(model is not None)
-  
+
   seq_mapped = [alphabet[symbol] for symbol in seq] # TODO: resolve the mismatch that can happen in between the two alphabets here, set alph in flexfringe
   seq_mapped = np.array(seq_mapped)
 
