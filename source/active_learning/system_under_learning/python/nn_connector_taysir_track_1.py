@@ -40,11 +40,12 @@ def do_query(seq: list):
   global model
   assert(model is not None)
   
-  seq_mapped = [alphabet[symbol] for symbol in seq] # TODO: resolve the mismatch that can happen in between the two alphabets here, set alph in flexfringe
-  seq_one_hot = model.one_hot_encode(seq_mapped)
+  #seq_mapped = [alphabet[symbol] for symbol in seq] # TODO: resolve the mismatch that can happen in between the two alphabets here, set alph in flexfringe
   
-  y_pred = model.predict(seq_one_hot, verbose=0)
-  return float(y_pred[0])
+  seq_one_hot = model.one_hot_encode(seq)
+  y_pred = model.predict(seq_one_hot)
+  
+  return float(y_pred)
 
 
 def get_alphabet(path_to_model: str):
@@ -78,4 +79,4 @@ def get_alphabet(path_to_model: str):
   return alphabet
 
 if __name__ == "__main__":
-    raise Exception("This script is not meant as a standalone.")
+  raise Exception("This script is not meant as a standalone.")
