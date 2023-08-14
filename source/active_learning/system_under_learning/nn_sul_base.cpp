@@ -16,6 +16,7 @@
 #include <iostream>
 #include <map> // TODO: make this one and the one in r_alphabet unordered
 #include <stdexcept>
+#include <string>
 
 using namespace std;
 
@@ -130,7 +131,7 @@ void nn_sul_base::pre(inputdata& id){
 
   cout << "Loading alphabet in python module." << endl;
   PyObject* p_alphabet = PyObject_CallOneArg(alphabet_func, p_model_path);
-  if(p_alphabet == NULL || !PyDict_Check(p_alphabet)){
+  if(p_alphabet == NULL || !PyList_Check(p_alphabet)){
     Py_DECREF(p_name);
     Py_DECREF(p_module);
     Py_DECREF(query_func);
@@ -144,18 +145,14 @@ void nn_sul_base::pre(inputdata& id){
   }
 
   cout << "Setting internal flexfringe alphabet, inferred from the network's training alphabet" << endl;
-  map<string, int> mapped_alphabet;
-  PyObject* p_keys = PyDict_Keys(p_alphabet);
-  const auto size = static_cast<int>(PyList_Size(p_keys));
+  list<string> mapped_alphabet;
+  const auto size = static_cast<int>(PyList_Size(p_alphabet));
   for(int i = 0; i < size; ++i){
-    PyObject* p_key = PyList_GetItem(p_keys, static_cast<Py_ssize_t>(i));
-    PyObject* p_value = PyDict_GetItem(p_alphabet, p_key);
+    PyObject* p_item = PyList_GetItem(p_alphabet, static_cast<Py_ssize_t>(i));
 
-    std::string key;
-    int value;
+    std::string item;
     try{
-      key = PyUnicode_AsUTF8(PyObject_Str(p_key));// pyUnicode_fromString(pleft);
-      value = PyLong_AsLong(p_value);
+      item = PyUnicode_AsUTF8(PyObject_Str(p_item));
     }
     catch(...){
       Py_DECREF(p_name);
@@ -164,13 +161,13 @@ void nn_sul_base::pre(inputdata& id){
       Py_DECREF(alphabet_func);
       Py_DECREF(load_model_func);
       Py_DECREF(p_model_path);
-      //Py_DECREF(p_key); // TODO: this is not very correct, I need to check individually
-      //Py_DECREF(p_value); // TODO: this is not very correct, I need to check individually
-      cerr << "Alphabet dict returned by get_alphabet() must be a string->int dictionary." << endl;
+      Py_DECREF(p_item);
+      cerr << "Alphabet returned by Python script must be a list of strings." << endl;
       exit(1);
     }
 
-    mapped_alphabet[std::move(key)] = std::move(value);
+    Py_DECREF(p_item);
+    mapped_alphabet.push_back(std::move(item));
   }
 
   id.set_alphabet(std::move(mapped_alphabet));

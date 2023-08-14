@@ -29,7 +29,7 @@ class nn_sigmoid_sul : public nn_sul_base {
     
     virtual const int query_trace(const std::list<int>& query_trace, inputdata& id) const override;
 
-    const double get_sigmoid_output(const std::list<int>& query_trace) const;
+    const double get_sigmoid_output(const std::list<int>& query_trace, inputdata& id) const;
     virtual void init_types() const override;
   public:
     // TODO: these paths need to be set

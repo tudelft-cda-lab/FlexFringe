@@ -13,6 +13,7 @@
 #include "inputdatalocator.h"
 
 #include <unordered_set>
+#include <string>
 
 using namespace std;
 
@@ -31,7 +32,7 @@ bool nn_sigmoid_sul::is_member(const std::list<int>& query_trace) const {
  * @return const int 
  */
 const int nn_sigmoid_sul::query_trace(const std::list<int>& query_trace, inputdata& id) const {
-  double nn_output = get_sigmoid_output(query_trace);
+  double nn_output = get_sigmoid_output(query_trace, id);
   int res = nn_output < 0.5 ? 0 : 1;
 
   return res;// TODO: make sure that there is no mismatch between the types
@@ -52,11 +53,12 @@ void nn_sigmoid_sul::init_types() const {
  * @param query_trace 
  * @return const double 
  */
-const double nn_sigmoid_sul::get_sigmoid_output(const std::list<int>& query_trace) const {
+const double nn_sigmoid_sul::get_sigmoid_output(const std::list<int>& query_trace, inputdata& id) const {
   PyObject* p_list = PyList_New(query_trace.size());
   int i = 0;
   for(const int symbol: query_trace){
-    PyObject* p_symbol = PyLong_FromLong(symbol);
+    std::string mapped_symbol = id.get_symbol(symbol);
+    PyObject* p_symbol = PyUnicode_FromString(mapped_symbol.c_str());
     set_list_item(p_list, p_symbol, i);
     ++i;
   }
