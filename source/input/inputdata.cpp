@@ -154,22 +154,25 @@ int inputdata::get_reverse_type(std::string a) {
  * @brief Sets the r_alphabet and re-initializes the normal 
  * alphabet with the values given by r_alphabet.
  * 
+ * This function is up to now only used in active learning. It's purpose is to 
+ * connect the internal alphabet of flexfringe to the external alphabet of the 
+ * system under test, so that flexfringe can ask "the right questions". Hence 
+ * flexfringe will send a string to the system under test, and it is the 
+ * responsibility of the system under test to make meaning of this. The system 
+ * under test will however tell flexfringe what strings it will potentially expect,
+ * and this is where this function comes in.
+ * 
+ * TODO: we actually only need to know the strings, hence change the function signature 
+ * to set<string>
+ * 
  * @param r_alphabet Map with string-to-int mapping.
  */
-void inputdata::set_alphabet(map<string, int>&& r_alphabet){
-    this->r_alphabet = r_alphabet;
-    
-    unordered_map<int, string> alphabet_mapping;
-    vector<int> values;
-    for(auto const& [key, value] : r_alphabet){
-        alphabet_mapping[value] = key;
-        values.push_back(value);
-    }
-
+void inputdata::set_alphabet(list<string>&& mapped_alphabet){
+    this->r_alphabet.clear();
     this->alphabet.clear();
-    std::sort(values.begin(), values.end());
-    for(auto symbol: values){
-        alphabet.push_back(alphabet_mapping.at(symbol));
+    for(auto& symbol_string : mapped_alphabet){
+        this->r_alphabet[symbol_string] = this->alphabet.size();
+        this->alphabet.push_back(symbol_string);
     }
 }
 

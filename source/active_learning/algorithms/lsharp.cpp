@@ -24,7 +24,7 @@
 
 #include <list>
 
-const bool PRINT_ALL_MODELS = true;
+const bool PRINT_ALL_MODELS = false;
 
 using namespace std;
 using namespace active_learning_namespace;
@@ -131,7 +131,7 @@ void lsharp_algorithm::run(inputdata& id){
 
       if(PRINT_ALL_MODELS){
         static int model_nr = 0;
-        print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".not_final"); // printing the final model each time
+        print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_ref"); // printing the final model each time
       }
 
       // TODO: is the loop below guaranteed to terminate?

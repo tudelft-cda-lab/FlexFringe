@@ -15,7 +15,7 @@ import torch
 import mlflow
 
 model = None
-alphabet = None
+r_alphabet = None
 
 def load_nn_model(path_to_model: str):
   """Loads a model and writes it into the global model-variable
@@ -25,8 +25,24 @@ def load_nn_model(path_to_model: str):
       the aptafile-argument.
   """
   global model
+  if model is not None:
+    print("Model already loaded")
+    return
   model = mlflow.pytorch.load_model(path_to_model)
   print("Model loaded successfully")
+
+def map_sequence(seq: list):
+  """Maps the sequences from the flexfringe input (integer values starting from zero
+  strings, depending on implementation) to the input as needed by the network.
+
+  Args:
+      seq (list): The sequence as a list.
+
+  Returns:
+      list() or equivalent sequence type: The sequence mapped so that the network can take it.
+  """
+  global r_alphabet
+  return [r_alphabet[symbol] for symbol in seq] # to compensate for mismatch in between flexfringe and network input
 
 
 def do_query(seq: list):
@@ -40,7 +56,7 @@ def do_query(seq: list):
   global model
   assert(model is not None)
   
-  #seq_mapped = [alphabet[symbol] for symbol in seq] # TODO: resolve the mismatch that can happen in between the two alphabets here, set alph in flexfringe
+  seq_mapped = map_sequence(seq)
   
   seq_one_hot = model.one_hot_encode(seq)
   y_pred = model.predict(seq_one_hot)
@@ -63,7 +79,7 @@ def get_alphabet(path_to_model: str):
       alphabet: dict() [str : int]
   """
   global model
-  global alphabet
+  global r_alphabet
 
   if model is None:
     load_nn_model(path_to_model)
@@ -73,10 +89,10 @@ def get_alphabet(path_to_model: str):
   except: # Transformer
     nb_letters = model.distilbert.config.vocab_size - 2
 
-  alphabet = {str(i): i for i in range(nb_letters)}
+  r_alphabet = {str(i): i for i in range(nb_letters)}
 
-  assert(alphabet is not None)
-  return alphabet
+  assert(r_alphabet is not None)
+  return list(r_alphabet.keys())
 
 if __name__ == "__main__":
   raise Exception("This script is not meant as a standalone.")
