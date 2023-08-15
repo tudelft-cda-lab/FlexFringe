@@ -79,7 +79,6 @@ const list<refinement*> lstar_algorithm::construct_automaton_from_table(const ob
  * @param id The inputdata, already initialized with input file.
  */
 void lstar_algorithm::run(inputdata& id){
-  bool terminated = false;
   int n_runs = 0;
 
   observation_table obs_table(id.get_alphabet());
@@ -92,7 +91,7 @@ void lstar_algorithm::run(inputdata& id){
 
   list< refinement* > refs; // we keep track of refinements
   while(ENSEMBLE_RUNS > 0 && n_runs < ENSEMBLE_RUNS){
-    cout << "\nIteration: " << n_runs << endl;
+    if(n_runs % 100 == 0) cout << "\nIteration: " << n_runs << endl;
 
     const auto& rows_to_close = list<pref_suf_t>(obs_table.get_incomplete_rows()); // need a copy, since we're modifying structure in mark_row_complete(). 
     const auto& column_names = obs_table.get_column_names();
@@ -101,6 +100,7 @@ void lstar_algorithm::run(inputdata& id){
     for(const auto& current_row : rows_to_close){
       for(const auto& current_column: column_names){
         if(obs_table.has_record(current_row, current_column)) continue;
+        if(current_row.size() == 0 && current_column.size() == 0) continue; // not sure what to do about the empty word
 
         const int answer = teacher->ask_membership_query(current_row, current_column, id);
         obs_table.insert_record(current_row, current_column, answer);
@@ -117,25 +117,28 @@ void lstar_algorithm::run(inputdata& id){
         cout << "Model nr " << model_nr << endl;
       }
 
-      optional< pair< list<int>, int > > query_result = oracle->equivalence_query(merger.get(), teacher);
-      if(!query_result){
-        cout << "Found consistent automaton => Print." << endl;
-        print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
-        return;
-      }
-      else{
-        const list<int>& cex = query_result.value().first;
-        const int type = query_result.value().second;
-        auto cex_tr = vector_to_trace(cex, id, type);
-
-        reset_apta(merger.get(), refs);
-        obs_table.extent_columns(cex);
-
-        if(PRINT_ALL_MODELS){
-          static int model_nr = 0;
-          print_current_automaton(merger.get(),"model.", to_string(++model_nr) + ".after_undo"); // printing the final model each time
-          cout << "Model nr " << model_nr << endl;
+      while(true){
+        /* While loop to check the type. type is < 0 if sul cannot properly respond to query, e.g. when the string 
+        we ask cannot be parsed in automaton. We ignore those cases, as they lead to extra states in hypothesis. 
+        This puts a burden on the equivalence oracle to make sure no query is asked twice, else we end 
+        up in infinite loop.*/
+        optional< pair< list<int>, int > > query_result = oracle->equivalence_query(merger.get(), teacher);
+        if(!query_result){
+          cout << "Found consistent automaton => Print." << endl;
+          print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
+          return;
         }
+
+        const int type = query_result.value().second;
+        if(type < 0) continue;
+
+        const list<int>& cex = query_result.value().first;
+        auto cex_tr = vector_to_trace(cex, id, type);
+        cout << "Found counterexample: " << cex_tr->to_string() << "\n"; //endl;
+
+        reset_apta(merger.get(), refs); // note: does not reset the identified red states we had before
+        obs_table.extent_columns(cex);
+        break;
       }
     }
     else{
@@ -149,6 +152,7 @@ void lstar_algorithm::run(inputdata& id){
         top_ref->doref(merger.get());
       }
       print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
+      return;
     }
   }
 }
