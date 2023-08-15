@@ -87,14 +87,13 @@ void lsharp_algorithm::run(inputdata& id){
   complete_state(merger, the_apta->get_root(), id, alphabet);
   list< refinement* > refs;
   while(ENSEMBLE_RUNS > 0 && n_runs <= ENSEMBLE_RUNS){
-    if(n_runs % 100 == 0) cout << "Iteration " << n_runs + 1 << endl;
+    if( n_runs % 100 == 0 ) cout << "Iteration " << n_runs + 1 << endl;
     
     bool no_isolated_states = true; // avoid iterating over a changed data structure (apta)
     for(blue_state_iterator b_it = blue_state_iterator(the_apta->get_root()); *b_it != nullptr; ++b_it){
 
       const auto blue_node = *b_it;
       if(blue_node->get_size() == 0) continue;
-      assert(!blue_node->is_red()); // TODO: delete. Responsibility of the iterator
       
       // this is a difference with Vandraager (they only complete red nodes), but we need it for statistical methods
       complete_state(merger, blue_node, id, alphabet);
@@ -102,16 +101,13 @@ void lsharp_algorithm::run(inputdata& id){
       refinement_set possible_refs;
       for(red_state_iterator r_it = red_state_iterator(the_apta->get_root()); *r_it != nullptr; ++r_it){
         const auto red_node = *r_it;
-        assert(red_node->is_red()); // TODO: delete. Responsibility of the iterator
-
-        complete_state(merger, red_node, id, alphabet);
-
+        
         refinement* ref = merger->test_merge(red_node, blue_node);
         if(ref != nullptr) possible_refs.insert(ref);
       }
 
       if( possible_refs.size()>0 ){
-        refinement* best_merge = extract_best_merge(&possible_refs);
+        refinement* best_merge = extract_best_merge(&possible_refs); // implicit assumption: prefers merges over extends
         // identify states. These will be kept throughout the algorithm
         if(dynamic_cast<extend_refinement*>(best_merge) != 0){
           best_merge->doref(merger.get());
@@ -138,7 +134,7 @@ void lsharp_algorithm::run(inputdata& id){
       while(true){
         /* While loop to check the type. type is < 0 if sul cannot properly respond to query, e.g. when the string 
         we ask cannot be parsed in automaton. We ignore those cases, as they lead to extra states in hypothesis. 
-        This puts a burden on the equivalence oracle to make sure no quey is asked twice, else we end 
+        This puts a burden on the equivalence oracle to make sure no query is asked twice, else we end 
         up in infinite loop.*/
         optional< pair< list<int>, int > > query_result = oracle->equivalence_query(merger.get(), teacher);
         if(!query_result){
@@ -161,12 +157,13 @@ void lsharp_algorithm::run(inputdata& id){
     }
 
     ++n_runs;
-    if(ENSEMBLE_RUNS > 0 && n_runs > ENSEMBLE_RUNS){
+    if(ENSEMBLE_RUNS > 0 && n_runs == ENSEMBLE_RUNS){
       cout << "Maximum of runs reached. Printing automaton." << endl;
       for(auto top_ref: refs){
         top_ref->doref(merger.get());
       }
       print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
+      return;
     }
   }
 }
