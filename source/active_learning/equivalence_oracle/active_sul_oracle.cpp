@@ -15,12 +15,19 @@
 using namespace std;
 using namespace active_learning_namespace;
 
+/**
+ * @brief This function does what you think it does.
+ * 
+ * @param merger The merger.
+ * @param teacher The teacher.
+ * @return std::optional< pair< list<int>, int> > nullopt if no counterexample found, else the counterexample. 
+ */
 std::optional< pair< list<int>, int> > active_sul_oracle::equivalence_query(state_merger* merger, const unique_ptr<base_teacher>& teacher) {  
   inputdata& id = *(merger->get_dat());
   apta& hypothesis = *(merger->get_aut());
 
   std::optional< list<int> > query_string_opt = search_strategy->next(id);
-  while(query_string_opt != nullopt){
+  while(query_string_opt != nullopt){ // nullopt == search exhausted
     auto& query_string = query_string_opt.value();
     int true_val = teacher->ask_membership_query(query_string, id);
     
