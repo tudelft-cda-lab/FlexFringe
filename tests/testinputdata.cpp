@@ -304,3 +304,22 @@ TEST_CASE("Inputdata: abbadingo with empty trace", "[parsing]") {
     REQUIRE(input_data.get_num_sequences() == 1);
 }
 
+TEST_CASE("Inputdata: abbadingo, make sure it terminates once there are no more lines", "[parsing]") {
+    std::string input_whitespace = "1 8\n"
+                                   "0 4 a b c d";
+    std::istringstream input(input_whitespace);
+
+    auto input_data = inputdata();
+    inputdata_locator::provide(&input_data);
+
+    auto parser = abbadingoparser(input);
+
+    auto strategy = in_order();
+
+    auto tr_maybe = input_data.read_trace(parser, strategy);
+    REQUIRE(tr_maybe.has_value());
+    auto tr_maybe_2 = input_data.read_trace(parser, strategy);
+    REQUIRE(!tr_maybe_2.has_value());
+}
+
+

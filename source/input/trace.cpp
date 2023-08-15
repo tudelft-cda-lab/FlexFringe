@@ -26,7 +26,7 @@ trace::~trace(){
     delete head;
 }
 
-void trace::erase(){
+void __attribute__((optimize("O0"))) trace::erase(){
     --refs;
     if(refs == 0) mem_store::delete_trace(this);
 }
