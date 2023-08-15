@@ -26,3 +26,5 @@ file to the python script that you want to execute. The other parameters are as 
 
 - aptafile: This is the relative path from the executable to the network. It will be provided to the python script upon loading the network.
 - input-file: The last argument of flexfringe by convention. This is the relative path to the python-script.
+
+**Important**: We highly suggest you test and debug your python scripts first if you intend to write your own custom one's, because errors in the Python script will not be passed on to C++ and error messages originating from Python will not appear, and the program might continue running.
