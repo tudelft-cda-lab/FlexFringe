@@ -56,7 +56,7 @@ void tail::set_future(tail* ft){
  * copies values from existing tail but does not put into any list
  * initialize_after_adding_traces re-used a previously declared but erased tail */
 tail::tail(){
-    td = new tail_data();
+    td = std::make_shared<tail_data>();
     past_tail = nullptr;
     future_tail = nullptr;
     next_in_list = nullptr;
@@ -71,7 +71,7 @@ tail::tail(tail* ot){
         td = ot->td;
         tr = ot->tr;
     } else {
-        td = new tail_data();
+        td = std::make_shared<tail_data>();
         tr = nullptr;
     }
     past_tail = nullptr;
@@ -86,7 +86,7 @@ void tail::initialize(tail* ot){
         td = ot->td;
         tr = ot->tr;
     } else {
-        td = new tail_data();
+        td = std::make_shared<tail_data>();
         tr = nullptr;
     }
     past_tail = nullptr;
@@ -127,7 +127,8 @@ string tail::to_string(){
 
 tail::~tail(){
     if(split_from == nullptr){
-        delete td;
+        // Set shared taildata pointer to null
+        td = nullptr;
     }
     //if(future_tail != nullptr) delete future_tail;
 }
@@ -177,7 +178,7 @@ tail_data::tail_data() {
     auto inputdata = inputdata_locator::get();
     index = -1;
     symbol = -1;
-    attr = new double[inputdata->get_num_symbol_attributes()];
+    attr = std::make_unique<double[]>(inputdata->get_num_symbol_attributes());
     for(int i = 0; i < inputdata->get_num_symbol_attributes(); ++i){
         attr[i] = 0.0;
     }
@@ -195,7 +196,7 @@ void tail_data::initialize() {
     auto inputdata = inputdata_locator::get();
     index = -1;
     symbol = -1;
-    attr = new double[inputdata->get_num_symbol_attributes()];
+    attr = std::make_unique<double[]>(inputdata->get_num_symbol_attributes());
     for(int i = 0; i < inputdata->get_num_symbol_attributes(); ++i){
         attr[i] = 0.0;
     }

@@ -11,7 +11,7 @@ apta_node* single_step(apta_node* n, tail* t, apta* a);
 double compute_score(apta_node* next_node, tail* next_tail);
 double predict_trace(state_merger* m, trace* tr);
 void predict_csv(state_merger* m, istream& input, ofstream& output);
-void predict(state_merger* m, inputdata& idat, ofstream& output);
+void predict(state_merger* m, inputdata& idat, ofstream& output, parser* input_parser);
 
 
 #endif //FLEXFRINGE_PREDICT_H

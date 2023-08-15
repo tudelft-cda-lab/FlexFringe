@@ -2,6 +2,7 @@
 #define FLEXFRINGE_TAIL_H
 
 #include <string>
+#include <memory>
 #include "input/trace.h"
 #include "trace.h"
 
@@ -11,7 +12,7 @@ class tail_data{
 public:
     int index;
     int symbol;
-    double* attr;
+    std::unique_ptr<double[]> attr;
 
     std::string data;
 
@@ -29,7 +30,7 @@ public:
     ~tail();
     void initialize(tail* ot);
 
-    tail_data* td;
+    std::shared_ptr<tail_data> td;
     trace* tr;
 
     tail* future_tail;

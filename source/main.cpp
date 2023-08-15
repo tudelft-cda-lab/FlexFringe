@@ -125,7 +125,6 @@ void run() {
         }
     }
 
-
     apta* the_apta = new apta();
     auto* merger = new state_merger(&id, eval, the_apta);
     the_apta->set_context(merger);
@@ -161,16 +160,15 @@ void run() {
     } else if(OPERATION_MODE == "stream") {
         cout << "stream mode selected" << endl;
         LOG_S(INFO) << "Stream mode selected, starting run";
+        eval->initialize_before_adding_traces();
 
         stream_object stream_obj;
         if(read_csv) {
             auto input_parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
             stream_obj.stream_mode(merger, input_stream, &id, &input_parser);
-            //id.read(&input_parser);
         } else {
             auto input_parser = abbadingoparser(input_stream);
             stream_obj.stream_mode(merger, input_stream, &id, &input_parser);
-            //id.read(&input_parser);
         }
         print_current_automaton(merger, OUTPUT_FILE, ".final");
     } else if(OPERATION_MODE == "search") {
@@ -215,21 +213,24 @@ void run() {
             ifstream input_apta_stream(APTA_FILE);
             cerr << "reading apta file - " << APTA_FILE << endl;
             the_apta->read_json(input_apta_stream);
+            cout << "Finished reading apta file." << endl;
+
+            std::ostringstream res_stream;
+            res_stream << APTA_FILE << ".result";
+            ofstream output(res_stream.str().c_str());
 
             // TODO: @Sicco think about where to put these things to avoid duplicate code and havea nice flow
             if(read_csv) {
                 auto input_parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
                 id.read(&input_parser);
+                predict_csv(merger, input_stream, output);
             } else {
                 auto input_parser = abbadingoparser(input_stream);
-                id.read(&input_parser);
+                //id.read(&input_parser);
+                cout << "starting to predict" << endl;
+                predict(merger, id, output, &input_parser);
             }
 
-            std::ostringstream res_stream;
-            res_stream << APTA_FILE << ".result";
-            ofstream output(res_stream.str().c_str());
-            if(read_csv) predict_csv(merger, input_stream, output);
-            else predict(merger, id, output);
             output.close();
         } else {
             cerr << "require a json formatted apta file to make predictions" << endl;
