@@ -76,20 +76,9 @@ void stream_object::greedyrun_retry_merges(state_merger* merger, const int seq_n
     stack< refinement* > refinement_stack;
     queue<refinement*> failed_refs;
 
-    static ofstream tree_size_doc("tree_size_per_batch.txt");
     refinement* top_ref;
 
     this->states_to_append_to.clear();
-
-    // for tracking the refinements
-    static ofstream outf;
-    string recomputed_merge = "nr"; // nr for no_recompute, r for recompute
-    bool track_refinements = (n_runs == 47654 || n_runs == 47655 || n_runs == 46066 || n_runs == 46067 || n_runs == 51696 || n_runs == 51695);
-    if(track_refinements){
-      std::ostringstream oss; // for tracking refinements (debugging)
-      oss << "refinements_at_" << n_runs << "_full.txt";
-      outf.open(oss.str().c_str());
-    }
 
     if(currentrun->empty()){
       top_ref = merger->get_best_refinement();
@@ -165,10 +154,6 @@ void stream_object::greedyrun_retry_merges(state_merger* merger, const int seq_n
       if(top_ref->type() == refinement_type::merge_rf_type){
         states_to_append_to.insert(dynamic_cast<merge_refinement*>(top_ref)->blue->get_number());
       }
-    }
-
-    if(track_refinements){
-      outf.close();
     }
 
     delete currentrun;
