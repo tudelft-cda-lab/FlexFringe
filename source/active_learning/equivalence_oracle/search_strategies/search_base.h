@@ -20,6 +20,8 @@
 #include <memory>
 
 class search_base {
+  protected: 
+    const int MAX_SEARCH_DEPTH;
   public:
     search_base() = default;
 

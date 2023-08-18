@@ -250,6 +250,24 @@ bool count_driven::consistent(state_merger *merger, apta_node* left, apta_node* 
     return true;
 };
 
+/* bool count_driven::consistent(state_merger *merger, apta_node* left, apta_node* right){
+    if(inconsistency_found) return false;    if(!TYPE_CONSISTENT) return true;    auto* l = (count_data*)left->get_data();
+    auto* r = (count_data*)right->get_data();    for(auto & final_count : l->final_counts){
+        int type = final_count.first;
+        int count = final_count.second;
+        if(count != 0){
+            for(auto & final_count2 : r->final_counts){
+                int type2 = final_count2.first;
+                int count2 = final_count2.second;
+                if(count2 != 0 && type2 != type){
+                    inconsistency_found = true;
+                    return false;
+                }
+            }
+        }
+    }    return true;
+}; */
+
 void count_driven::update_score(state_merger *merger, apta_node* left, apta_node* right){
 	num_merges += 1;
 };

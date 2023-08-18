@@ -44,6 +44,8 @@ add_library(ActiveLearning STATIC
             equivalence_oracle/search_strategies/search_base.cpp
             equivalence_oracle/search_strategies/breadth_first_search.h
             equivalence_oracle/search_strategies/breadth_first_search.cpp
+            equivalence_oracle/search_strategies/w_method.h
+            equivalence_oracle/search_strategies/w_method.cpp
 
             memory/observation_table.h
             memory/observation_table.cpp
