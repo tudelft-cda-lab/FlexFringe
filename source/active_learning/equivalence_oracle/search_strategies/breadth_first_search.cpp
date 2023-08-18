@@ -29,7 +29,7 @@ using namespace std;
  * @return optional< const list<int> > A counterexample if found.
  */
 optional< list<int> > bfs_strategy::next(const inputdata& id) {
-  if(depth == BFS_MAX_DEPTH) return nullopt;
+  if(depth == MAX_SEARCH_DEPTH) return nullopt;
 
   static const list<int> alphabet = id.get_alphabet();
 
