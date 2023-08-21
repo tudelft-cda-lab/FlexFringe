@@ -31,7 +31,7 @@ using namespace std;
 optional< list<int> > bfs_strategy::next(const inputdata& id) {
   if(depth == MAX_SEARCH_DEPTH) return nullopt;
 
-  static const list<int> alphabet = id.get_alphabet();
+  static const list<int>& alphabet = id.get_alphabet();
 
   assert(alphabet.size() > 0);
   static list<int>::const_iterator alphabet_it = alphabet.begin();

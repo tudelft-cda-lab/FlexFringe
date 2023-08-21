@@ -237,6 +237,7 @@ int inputdata::get_alphabet_size() {
     return alphabet.size();
 }
 
+// TODO: inefficient. It makes more sense to use a vec here
 const list<int> inputdata::get_alphabet() const {
     std::list<int> res;
     for(const auto& mapping: r_alphabet){

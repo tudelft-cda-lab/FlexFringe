@@ -13,13 +13,36 @@
 #define _AL_W_METHOD_SEARCH_H_
 
 #include "search_base.h"
+#include "random_int_generator.h"
+
+#include <random>
+#include <vector>
 
 class w_method : public search_base {
+  private:
+    int samples_drawn;
+    int max_samples;
+    int last_lower_bound; // for optimization purposes
+
+    random_int_generator length_generator;
+    random_int_generator alphabet_sampler;
+
+    std::vector<int> alphabet_vec;
+
   public:
-    w_method(const int depth) : search_base(), MAX_SEARCH_DEPTH(depth) {};
+    w_method(const int max_depth) : search_base(max_depth) {
+      samples_drawn = 0;
+      last_lower_bound = 0;
+
+      length_generator.set_limits(0, MAX_SEARCH_DEPTH);
+    };
 
     virtual std::optional< std::list<int> > next(const inputdata& id) override;
     std::optional< std::list<int> > next(const inputdata& id, const int lower_bound);
+
+    void set_iterations(const int s) noexcept {
+      max_samples = s; // TODO: can we set this one better?
+    }
 };
 
 #endif

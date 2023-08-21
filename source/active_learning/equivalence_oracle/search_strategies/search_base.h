@@ -23,7 +23,7 @@ class search_base {
   protected: 
     const int MAX_SEARCH_DEPTH;
   public:
-    search_base() = default;
+    search_base(const int max_depth) : MAX_SEARCH_DEPTH(max_depth){};
 
     virtual std::optional< std::list<int> > next(const inputdata& id) = 0;
 };
