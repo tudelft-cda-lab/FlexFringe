@@ -35,14 +35,12 @@ class w_method : public search_base {
       last_lower_bound = 0;
 
       length_generator.set_limits(0, MAX_SEARCH_DEPTH);
+
+      max_samples = 1000;
     };
 
     virtual std::optional< std::list<int> > next(const inputdata& id) override;
     std::optional< std::list<int> > next(const inputdata& id, const int lower_bound);
-
-    void set_iterations(const int s) noexcept {
-      max_samples = s; // TODO: can we set this one better?
-    }
 };
 
 #endif

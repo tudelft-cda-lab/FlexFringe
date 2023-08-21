@@ -15,6 +15,8 @@
 #include <vector>
 #include <cassert>
 
+#include <iostream>
+
 using namespace std;
 
 optional< list<int> > w_method::next(const inputdata& id) {
@@ -23,7 +25,7 @@ optional< list<int> > w_method::next(const inputdata& id) {
 
 optional< list<int> > w_method::next(const inputdata& id, const int lower_bound) {
   if(samples_drawn == max_samples) return nullopt;
-  
+
   static bool initialized = false;
   if(!initialized){
     const list<int>& alphabet = id.get_alphabet();
