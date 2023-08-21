@@ -24,7 +24,7 @@ class bfs_strategy : public search_base {
     std::stack< std::list<int> > curr_search;
     std::stack< std::list<int> > old_search;
   public:
-    bfs_strategy(const int max_depth) : search_base(), MAX_SEARCH_DEPTH(max_depth) {
+    bfs_strategy(const int max_depth) : search_base(max_depth) {
       depth = 0;
     };
 

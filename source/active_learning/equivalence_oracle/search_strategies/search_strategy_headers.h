@@ -11,3 +11,4 @@
 
 #include "search_base.h"
 #include "breadth_first_search.h"
+#include "w_method.h"

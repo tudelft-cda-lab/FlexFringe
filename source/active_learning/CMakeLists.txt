@@ -22,6 +22,8 @@ add_library(ActiveLearning STATIC
             active_learning_util/common_functions.cpp
             active_learning_util/best_refinement_strategies.h
             active_learning_util/best_refinement_strategies.cpp
+            active_learning_util/random_int_generator.h
+            active_learning_util/random_int_generator.cpp
 
             algorithms/lstar.h
             algorithms/lstar.cpp
