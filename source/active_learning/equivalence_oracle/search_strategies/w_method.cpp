@@ -15,7 +15,6 @@
 #include <vector>
 #include <cassert>
 
-#include <iostream>
 
 using namespace std;
 
@@ -45,7 +44,7 @@ optional< list<int> > w_method::next(const inputdata& id, const int lower_bound)
   list<int> res;
   const int output_string_length = length_generator.get_random_int();
   for(int i = 0; i < output_string_length; ++i){
-    res.push_back(alphabet_vec[alphabet_sampler.get_random_int()]); // TODO: check if alphabet_sampler covers whole alphabet
+    res.push_back(alphabet_vec[alphabet_sampler.get_random_int()]);
   }
   ++samples_drawn;
   return res;

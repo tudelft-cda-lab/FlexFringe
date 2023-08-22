@@ -32,11 +32,11 @@ class w_method : public search_base {
   public:
     w_method(const int max_depth) : search_base(max_depth) {
       samples_drawn = 0;
-      last_lower_bound = 0;
+      last_lower_bound = 10;
 
-      length_generator.set_limits(0, MAX_SEARCH_DEPTH);
+      length_generator.set_limits(last_lower_bound, MAX_SEARCH_DEPTH);
 
-      max_samples = 1000;
+      max_samples = 5000;
     };
 
     virtual std::optional< std::list<int> > next(const inputdata& id) override;

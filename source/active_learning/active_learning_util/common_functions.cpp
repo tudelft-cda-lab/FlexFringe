@@ -261,7 +261,6 @@ trace* active_learning_namespace::vector_to_trace(const list<int>& vec, inputdat
  * @brief For debugging.
  */
 void active_learning_namespace::print_list(const list<int>& l){
-    cout << "List: ";
     for (const auto s: l)
         cout << s << " ";
     cout << endl;
