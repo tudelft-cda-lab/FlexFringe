@@ -63,39 +63,37 @@ void lsharp_algorithm::complete_state(unique_ptr<state_merger>& merger, apta_nod
  * @param aut The merged APTA.
  * @param counterex The counterexample.
  */
-void lsharp_algorithm::proc_counterex(const unique_ptr<base_teacher>& teacher, inputdata& id, apta* hypothesis, const std::list<int>& counterex) const {
+void lsharp_algorithm::proc_counterex(const unique_ptr<base_teacher>& teacher, inputdata& id, unique_ptr<apta>& hypothesis, 
+                                      const list<int>& counterex, unique_ptr<state_merger>& merger, const refinement_list refs) const {
   // TODO: do the binary search to minimize the automaton that we get out of it
-
   static const bool linear_search = true; // if true, analyze the counterexamples linearly from beginning
+
   if(linear_search){
     // for test purposes
-    // I need to parse the prefix tree and the hypothesis the same time now
+    reset_apta(merger.get(), refs);
     list<int> processed_counterexample;
     apta_node* n = hypothesis->get_root();
     for(auto s: counterex){
       processed_counterexample.push_back(s);
-      trace* test_tr = vector_to_trace(processed_counterexample, id, 0); // TODO: inefficient line
-      tail* t = test_tr->get_end();
-      cout << "Tail t: " << t->get_symbol() << ", vector: " << *(processed_counterexample.end()) << endl;
+      trace* test_tr = vector_to_trace(processed_counterexample, id, 0); // TODO: inefficient like this
+      tail* t = test_tr->get_end()->past_tail;
+
       n = active_learning_namespace::get_child_node(n, t);
       if(n == nullptr){
-        // we found our fringe
+        const auto queried_type = teacher->ask_membership_query(processed_counterexample, id);
+        test_tr->type = queried_type;
+        id.add_trace_to_apta(test_tr, hypothesis.get(), false);
+        return;
       }
 
-      const int true_val = teacher->ask_membership_query(processed_counterexample, id);
-      if(true_val < 0){
-        // TODO: what do we do now?
-      }
-      const int pred_val = n->get_data()->predict_type(t);
-      if(true_val != pred_val){
-        // process the apta here, too
-      }
+      mem_store::delete_trace(test_tr);
     }
 
     return;
   }
 
   // TODO: implement the binary search here
+  // I need to parse the prefix tree and the hypothesis the same time now
 }
 
 refinement* lsharp_algorithm::extract_best_merge(refinement_set* rs) const {
@@ -187,11 +185,9 @@ void lsharp_algorithm::run(inputdata& id){
         if(type < 0) continue;
 
         const list<int>& cex = query_result.value().first;
-        auto cex_tr = vector_to_trace(cex, id, type);
-        cout << "Found counterexample: " << cex_tr->to_string() << "\n"; //endl;
-
-        reset_apta(merger.get(), refs); // note: does not reset the identified red states we had before
-        id.add_trace_to_apta(cex_tr, merger->get_aut());
+        cout << "Counterexample of length " << cex.size() << " found: ";
+        print_list(cex);
+        proc_counterex(teacher, id, the_apta, cex, merger, refs);
         break;
       }
     }

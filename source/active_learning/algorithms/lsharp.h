@@ -30,7 +30,7 @@ class lsharp_algorithm : public algorithm_base {
     std::list< refinement* > construct_automaton_from_table(std::unique_ptr<state_merger>& merger, inputdata& id) const;
 
     void complete_state(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const std::list<int>& alphabet) const;
-    void proc_counterex(const std::unique_ptr<base_teacher>& teacher, inputdata& id, apta* hypothesis, const std::list<int>& counterex) const;
+    void proc_counterex(const std::unique_ptr<base_teacher>& teacher, inputdata& id, unique_ptr<apta>& hypothesis, const std::list<int>& counterex, std::unique_ptr<state_merger>& merger, const refinement_list refs) const;
     refinement* extract_best_merge(refinement_set* rs) const;
 
   public:
