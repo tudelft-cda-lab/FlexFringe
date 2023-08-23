@@ -43,7 +43,7 @@ label_outfile = open(label_outfile_name, "wt")
 outf = open(outfile_name, "wt")
 for i, line in enumerate(open(infile_name, "rt")):
     if i == 0:
-        continue
+        continue # skipping the header
     
     label_line = label_file.readline()
     labels = set(label_line)
