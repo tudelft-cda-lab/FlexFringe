@@ -29,6 +29,7 @@ class bfs_strategy : public search_base {
     };
 
     virtual std::optional< std::list<int> > next(const inputdata& id) override;
+    virtual void reset() noexcept override {/* can be implemented, we did not do it yet */};
 };
 
 #endif

@@ -26,6 +26,7 @@ class search_base {
     search_base(const int max_depth) : MAX_SEARCH_DEPTH(max_depth){};
 
     virtual std::optional< std::list<int> > next(const inputdata& id) = 0;
+    virtual void reset() = 0;
 };
 
 #endif

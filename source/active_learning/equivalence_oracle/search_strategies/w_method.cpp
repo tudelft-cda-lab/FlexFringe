@@ -23,11 +23,15 @@ optional< list<int> > w_method::next(const inputdata& id) {
 }
 
 optional< list<int> > w_method::next(const inputdata& id, const int lower_bound) {
-  if(samples_drawn % 10000 == 0) cout << "[" << samples_drawn << "/" << max_samples << "] samples suggested." << endl; 
+  if(samples_drawn % 1000 == 0) cout << "[" << samples_drawn << "/" << max_samples << "] samples suggested." << endl; 
   if(samples_drawn == max_samples){
     cout << "Exhausted the counterexample search. Wrapping up algorithm." << endl;
     return nullopt;
-  } 
+  }
+  else if(delay_counter == delay){
+    cout << "No counterexample found for " << delay << " rounds. Wrapping up algorithm." << endl;
+    return nullopt;
+  }
 
   static bool initialized = false;
   if(!initialized){
@@ -51,5 +55,6 @@ optional< list<int> > w_method::next(const inputdata& id, const int lower_bound)
     res.push_back(alphabet_vec[alphabet_sampler.get_random_int()]);
   }
   ++samples_drawn;
+  ++delay_counter;
   return res;
 }

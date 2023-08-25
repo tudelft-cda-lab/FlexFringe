@@ -79,21 +79,24 @@ void lsharp_algorithm::proc_counterex(const unique_ptr<base_teacher>& teacher, i
         trace* new_trace = vector_to_trace(substring, id, queried_type);
         id.add_trace_to_apta(new_trace, hypothesis.get(), false);
         id.add_trace(new_trace);
+        substring.push_back(s);
       }
       else{
         // find the fringe
+        substring.push_back(s);
         trace* parse_trace = vector_to_trace(substring, id, 0); // TODO: inefficient like this
-        tail* t = parse_trace->get_end()->past_tail;
+        tail* t = substring.size() == 0 ? parse_trace->get_end() : parse_trace->get_end()->past_tail;
         n = active_learning_namespace::get_child_node(n, t);
         mem_store::delete_trace(parse_trace);
       }
-      substring.push_back(s);
+      
     }
 
-    const auto type = teacher->ask_membership_query(counterex, id);
-    trace* tr = vector_to_trace(counterex, id, type);
-    id.add_trace_to_apta(tr, hypothesis.get());
-    return;
+    // for the last element, too
+    const auto queried_type = teacher->ask_membership_query(substring, id);
+    trace* new_trace = vector_to_trace(substring, id, queried_type);
+    id.add_trace_to_apta(new_trace, hypothesis.get(), false);
+    id.add_trace(new_trace);
   }
 
   static const bool linear_search = true; // if true, analyze the counterexamples linearly from beginning

@@ -6,12 +6,6 @@ This file is used for MLFlow models, and we used it to reverse-engineer the
 DFAs from the TAYSIR competition.
 """
 
-import os
-
-import numpy as np
-import pickle as pk
-
-import torch
 import mlflow
 
 model = None
