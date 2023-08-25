@@ -50,6 +50,7 @@ void lsharp_algorithm::complete_state(unique_ptr<state_merger>& merger, apta_nod
       
       trace* new_trace = vector_to_trace(seq, id, answer);
       id.add_trace_to_apta(new_trace, merger->get_aut(), false);
+      id.add_trace(new_trace);
     }
   }
 }
@@ -65,9 +66,37 @@ void lsharp_algorithm::complete_state(unique_ptr<state_merger>& merger, apta_nod
  */
 void lsharp_algorithm::proc_counterex(const unique_ptr<base_teacher>& teacher, inputdata& id, unique_ptr<apta>& hypothesis, 
                                       const list<int>& counterex, unique_ptr<state_merger>& merger, const refinement_list refs) const {
-  // TODO: do the binary search to minimize the automaton that we get out of it
-  static const bool linear_search = true; // if true, analyze the counterexamples linearly from beginning
+  static const bool simple_append = true;
+  // in this block we do a linear search for the fringe of the prefix tree. Once we found it, we ask membership queries for each substring
+  // of the counterexample (for each new state that we create), and this way add the whole counterexample to the prefix tree
+  if(simple_append){
+    reset_apta(merger.get(), refs);
+    list<int> substring;
+    apta_node* n = hypothesis->get_root();
+    for(auto s: counterex){
+      if(n == nullptr){
+        const auto queried_type = teacher->ask_membership_query(substring, id);
+        trace* new_trace = vector_to_trace(substring, id, queried_type);
+        id.add_trace_to_apta(new_trace, hypothesis.get(), false);
+        id.add_trace(new_trace);
+      }
+      else{
+        // find the fringe
+        trace* parse_trace = vector_to_trace(substring, id, 0); // TODO: inefficient like this
+        tail* t = parse_trace->get_end()->past_tail;
+        n = active_learning_namespace::get_child_node(n, t);
+        mem_store::delete_trace(parse_trace);
+      }
+      substring.push_back(s);
+    }
 
+    const auto type = teacher->ask_membership_query(counterex, id);
+    trace* tr = vector_to_trace(counterex, id, type);
+    id.add_trace_to_apta(tr, hypothesis.get());
+    return;
+  }
+
+  static const bool linear_search = true; // if true, analyze the counterexamples linearly from beginning
   if(linear_search){
     // for test purposes
     reset_apta(merger.get(), refs);

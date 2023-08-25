@@ -14,7 +14,7 @@
 #include <list>
 #include <vector>
 #include <cassert>
-
+#include <iostream>
 
 using namespace std;
 
@@ -23,7 +23,11 @@ optional< list<int> > w_method::next(const inputdata& id) {
 }
 
 optional< list<int> > w_method::next(const inputdata& id, const int lower_bound) {
-  if(samples_drawn == max_samples) return nullopt;
+  if(samples_drawn % 10000 == 0) cout << "[" << samples_drawn << "/" << max_samples << "] samples suggested." << endl; 
+  if(samples_drawn == max_samples){
+    cout << "Exhausted the counterexample search. Wrapping up algorithm." << endl;
+    return nullopt;
+  } 
 
   static bool initialized = false;
   if(!initialized){
@@ -31,7 +35,7 @@ optional< list<int> > w_method::next(const inputdata& id, const int lower_bound)
     assert(alphabet.size() > 0);
 
     for(auto s: alphabet) alphabet_vec.push_back(s);
-    alphabet_sampler.set_limits(0, alphabet.size());
+    alphabet_sampler.set_limits(0, alphabet.size()-1);
 
     initialized = true;
   }

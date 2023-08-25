@@ -36,7 +36,7 @@ class w_method : public search_base {
 
       length_generator.set_limits(last_lower_bound, MAX_SEARCH_DEPTH);
 
-      max_samples = 5000;
+      max_samples = 500000;
     };
 
     virtual std::optional< std::list<int> > next(const inputdata& id) override;
