@@ -39,12 +39,21 @@ std::optional< pair< list<int>, int> > active_sul_oracle::equivalence_query(stat
     tail* t = test_tr->get_head();
     for(int j = 0; j < t->get_length(); j++){
         n = active_learning_namespace::get_child_node(n, t);
-        if(n == nullptr) return make_optional< pair< list<int>, int > >(make_pair(query_string, true_val));
+        
+        if(n == nullptr){
+          cout << "Counterexample because tree not parsable" << endl;
+          search_strategy->reset();
+          return make_optional< pair< list<int>, int > >(make_pair(query_string, true_val));
+        } 
 
         t = t->future();
     }
     const int pred_val = n->get_data()->predict_type(t);
-    if(true_val != pred_val) return make_optional< pair< list<int>, int > >(make_pair(query_string, true_val));
+    if(true_val != pred_val){
+      cout << "Predictions of the following counterexample: The true value: " << true_val << ", predicted: " << pred_val << endl;
+      search_strategy->reset();
+      return make_optional< pair< list<int>, int > >(make_pair(query_string, true_val));
+    } 
 
     query_string_opt = search_strategy->next(id);
   }
