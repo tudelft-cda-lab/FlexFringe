@@ -58,7 +58,7 @@ def do_query(seq: list):
   
   seq_mapped = map_sequence(seq)
   
-  seq_one_hot = model.one_hot_encode(seq)
+  seq_one_hot = model.one_hot_encode(seq_mapped)
   y_pred = model.predict(seq_one_hot)
   
   return float(y_pred)

@@ -14,6 +14,7 @@
 
 #include <unordered_set>
 #include <string>
+#include <stdexcept>
 
 using namespace std;
 
@@ -33,8 +34,11 @@ bool nn_sigmoid_sul::is_member(const std::list<int>& query_trace) const {
  */
 const int nn_sigmoid_sul::query_trace(const std::list<int>& query_trace, inputdata& id) const {
   double nn_output = get_sigmoid_output(query_trace, id);
+  if(nn_output < 0){
+    throw runtime_error("Error in Python script, please check your code there.");
+  }
+  
   int res = nn_output < 0.5 ? 0 : 1;
-
   return res;// TODO: make sure that there is no mismatch between the types
 }
 
