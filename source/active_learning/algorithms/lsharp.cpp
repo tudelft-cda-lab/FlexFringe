@@ -34,7 +34,7 @@ using namespace active_learning_namespace;
  * 
  * TODO: shall we check if we already have this node? If yes, then we don't need to do anything.
  */
-void lsharp_algorithm::complete_state(unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const list<int>& alphabet) const {
+void lsharp_algorithm::complete_state(unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const vector<int>& alphabet) const {
   static unordered_set<apta_node*> completed_nodes;
   if(completed_nodes.contains(n)) return;
 
@@ -43,9 +43,11 @@ void lsharp_algorithm::complete_state(unique_ptr<state_merger>& merger, apta_nod
       auto access_trace = n->get_access_trace();
 
       pref_suf_t seq;
-      if(n->get_number() != -1) seq = access_trace->get_input_sequence(true);
-
-      seq.push_back(symbol);
+      if(n->get_number() != -1) seq = access_trace->get_input_sequence(true, true);
+      else seq.resize(1);
+      
+      seq[seq.size()-1] = symbol;
+      
       const int answer = teacher->ask_membership_query(seq, id);
       if(answer == -1) continue;
       
@@ -67,11 +69,11 @@ void lsharp_algorithm::complete_state(unique_ptr<state_merger>& merger, apta_nod
  * @param counterex The counterexample.
  */
 void lsharp_algorithm::proc_counterex(const unique_ptr<base_teacher>& teacher, inputdata& id, unique_ptr<apta>& hypothesis, 
-                                      const list<int>& counterex, unique_ptr<state_merger>& merger, const refinement_list refs) const {
+                                      const vector<int>& counterex, unique_ptr<state_merger>& merger, const refinement_list refs) const {
   // in this block we do a linear search for the fringe of the prefix tree. Once we found it, we ask membership queries for each substring
   // of the counterexample (for each new state that we create), and this way add the whole counterexample to the prefix tree
   reset_apta(merger.get(), refs);
-  list<int> substring;
+  vector<int> substring;
   apta_node* n = hypothesis->get_root();
   for(auto s: counterex){
     if(n == nullptr){
@@ -122,9 +124,9 @@ void lsharp_algorithm::run(inputdata& id){
   auto the_apta = unique_ptr<apta>(new apta());
   auto merger = unique_ptr<state_merger>(new state_merger(&id, eval.get(), the_apta.get()));
 
-  const list<int> alphabet = id.get_alphabet();
+  const vector<int> alphabet = id.get_alphabet();
   cout << "Alphabet: ";
-  active_learning_namespace::print_sequence< list<int>::const_iterator >(alphabet.cbegin(), alphabet.cend());
+  active_learning_namespace::print_sequence< vector<int>::const_iterator >(alphabet.cbegin(), alphabet.cend());
 
   // init the root node, s.t. we have blue states to iterate over
   complete_state(merger, the_apta->get_root(), id, alphabet);
@@ -179,7 +181,7 @@ void lsharp_algorithm::run(inputdata& id){
         we ask cannot be parsed in automaton. We ignore those cases, as they lead to extra states in hypothesis. 
         This puts a burden on the equivalence oracle to make sure no query is asked twice, else we end 
         up in infinite loop.*/
-        optional< pair< list<int>, int > > query_result = oracle->equivalence_query(merger.get(), teacher);
+        optional< pair< vector<int>, int > > query_result = oracle->equivalence_query(merger.get(), teacher);
         if(!query_result){
           cout << "Found consistent automaton => Print." << endl;
           print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
@@ -189,9 +191,9 @@ void lsharp_algorithm::run(inputdata& id){
         const int type = query_result.value().second;
         if(type < 0) continue;
 
-        const list<int>& cex = query_result.value().first;
+        const vector<int>& cex = query_result.value().first;
         cout << "Counterexample of length " << cex.size() << " found: ";
-        print_list(cex);
+        print_vector(cex);
         proc_counterex(teacher, id, the_apta, cex, merger, refs);
         break;
       }

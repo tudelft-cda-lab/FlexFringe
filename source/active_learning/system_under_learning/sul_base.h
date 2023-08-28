@@ -15,7 +15,7 @@
 #include "source/input/inputdata.h"
 
 #include <fstream>
-#include <list>
+#include <vector>
 #include <stdexcept>
 
 class sul_base {
@@ -27,8 +27,8 @@ class sul_base {
     virtual void step() = 0;
     virtual void reset() = 0;
 
-    virtual bool is_member(const std::list<int>& query_trace) const = 0;
-    virtual const int query_trace(const std::list<int>& query_trace, inputdata& id) const = 0;
+    virtual bool is_member(const std::vector<int>& query_trace) const = 0;
+    virtual const int query_trace(const std::vector<int>& query_trace, inputdata& id) const = 0;
 
     std::ifstream get_input_stream() const;
     

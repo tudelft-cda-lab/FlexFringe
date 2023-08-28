@@ -25,12 +25,12 @@ class nn_sigmoid_sul : public nn_sul_base {
     virtual void step(){};
     virtual void reset(){};
 
-    virtual bool is_member(const std::list<int>& query_trace) const;
+    virtual bool is_member(const std::vector<int>& query_trace) const;
     
-    inline virtual const int query_trace(const std::list<int>& query_trace, inputdata& id) const override; // TODO: does this inline here help?
+    inline virtual const int query_trace(const std::vector<int>& query_trace, inputdata& id) const override; // TODO: does this inline here help?
 
     __attribute__((always_inline)) 
-    inline const double get_sigmoid_output(const std::list<int>& query_trace, inputdata& id) const;
+    inline const double get_sigmoid_output(const std::vector<int>& query_trace, inputdata& id) const;
     
     virtual void init_types() const override;
   public:

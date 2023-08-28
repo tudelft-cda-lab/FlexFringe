@@ -65,7 +65,7 @@ void prefix_tree_database::initialize(){
  * 
  * @param query_trace The trace we query.
  */
-bool prefix_tree_database::is_member(const std::list<int>& query_trace) const {
+bool prefix_tree_database::is_member(const std::vector<int>& query_trace) const {
   trace* tr = active_learning_namespace::vector_to_trace(query_trace, *(inputdata_locator::get()));
   return active_learning_namespace::aut_accepts_trace(tr, the_tree.get());
 }
@@ -84,7 +84,7 @@ void prefix_tree_database::update_state_with_statistics(apta_node* n){
 
   n->reset_data();
   
-  list< pair<trace*, int> > trace_count_list = extract_tails_from_tree(n_db);
+  vector< pair<trace*, int> > trace_count_list = extract_tails_from_tree(n_db);
   for(auto& [tr, count]: trace_count_list){
     for(int i = 0; i < count; ++i){
       n->add_tail(tr->head);
@@ -104,8 +104,8 @@ void prefix_tree_database::update_state_with_statistics(apta_node* n){
  * @param start The node to update. We start here.
  * @return std::list< std::unique_ptr<tail> > List of appropriately set tails.
  */
-list< pair<trace*, int> > prefix_tree_database::extract_tails_from_tree(apta_node* start) {
-  list< pair<trace*, int> > res; // we use traces for their copy constructor
+vector< pair<trace*, int> > prefix_tree_database::extract_tails_from_tree(apta_node* start) {
+  vector< pair<trace*, int> > res; // we use traces for their copy constructor
   trace* access_trace_to_start = start->get_access_trace();
 
   apta_node* current_node = start;

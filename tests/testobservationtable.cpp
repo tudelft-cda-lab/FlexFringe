@@ -25,9 +25,9 @@ const int REJECTING = 0;
 
 TEST_CASE("Observation table: Construction and simple insertions", "[memory]") {
 
-    list<int> alp = {1, 2, 3};
+    vector<int> alp = {1, 2, 3};
     observation_table obs = observation_table(alp);
-    const auto nullvector = list<int>{};
+    const auto nullvector = vector<int>{};
 
     SECTION("Check initialization"){
         CHECK(obs.get_incomplete_rows().size() == alp.size()+1); // plus one for empty string
@@ -48,36 +48,36 @@ TEST_CASE("Observation table: Construction and simple insertions", "[memory]") {
         CHECK_FALSE(obs.is_closed());
         // at first we do insertions of level 1 strings
         for(const int i: alp){
-            obs.insert_record(list<int>{i}, list<int>(), ACCEPTING); // all strings are accepting
+            obs.insert_record(vector<int>{i}, vector<int>(), ACCEPTING); // all strings are accepting
         }
          for(const int i: alp){
-            CHECK(obs.has_record(list<int>{i}, list<int>()));
-            CHECK(obs.get_answer(list<int>{i}, list<int>()) == ACCEPTING);
+            CHECK(obs.has_record(vector<int>{i}, vector<int>()));
+            CHECK(obs.get_answer(vector<int>{i}, vector<int>()) == ACCEPTING);
         }
         //CHECK_THROWS(obs.is_closed()); // macro does not work as intended
 
         // check the null-string
-        CHECK_FALSE(obs.has_record(nullvector, list<int>()));
-        obs.insert_record(nullvector, list<int>(), REJECTING);
-        CHECK(obs.has_record(nullvector, list<int>()));
-        CHECK(obs.get_answer(nullvector, list<int>()) == REJECTING);
+        CHECK_FALSE(obs.has_record(nullvector, vector<int>()));
+        obs.insert_record(nullvector, vector<int>(), REJECTING);
+        CHECK(obs.has_record(nullvector, vector<int>()));
+        CHECK(obs.get_answer(nullvector, vector<int>()) == REJECTING);
 
         // strings of level 2
         obs.extend_lower_table();
         for(const int i: alp){
             for(const int j: alp){
-                obs.insert_record(list<int>{i, j}, list<int>(), REJECTING);
+                obs.insert_record(vector<int>{i, j}, vector<int>(), REJECTING);
             }
         }
 
         for(const int i: alp){
             for(const int j: alp){
-                CHECK(obs.has_record(list<int>{i, j}, list<int>()));
-                CHECK(obs.get_answer(list<int>{i, j}, list<int>()) == REJECTING);            
+                CHECK(obs.has_record(vector<int>{i, j}, vector<int>()));
+                CHECK(obs.get_answer(vector<int>{i, j}, vector<int>()) == REJECTING);            
             }
         }
 
-        const list<int> suffix{2, 2, 3};
+        const vector<int> suffix{2, 2, 3};
         obs.extent_columns(suffix);
         const list<pref_suf_t> irows = list<pref_suf_t>(obs.get_incomplete_rows());
         CHECK(irows.size() > 0);

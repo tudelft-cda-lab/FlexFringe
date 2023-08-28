@@ -20,7 +20,7 @@
 #include "apta.h"
 #include "state_merger.h"
 
-#include <list>
+#include <vector>
 #include <optional>
 #include <utility>
 #include <memory>
@@ -31,7 +31,7 @@ class eq_oracle_base{
     std::unique_ptr<search_base> search_strategy;
 
     virtual void reset_sul() = 0;
-    virtual bool apta_accepts_trace(state_merger* merger, const list<int>& tr, inputdata& id) const = 0;
+    virtual bool apta_accepts_trace(state_merger* merger, const std::vector<int>& tr, inputdata& id) const = 0;
   public:
     eq_oracle_base(std::shared_ptr<sul_base>& sul) : sul(sul){};
 
@@ -40,10 +40,10 @@ class eq_oracle_base{
      * 
      * @param merger The state-merger.
      * @param teacher The teacher.
-     * @return std::optional< std::pair< std::list<int>, int> > Counterexample if not equivalent, else nullopt. Counterexample is pair of trace and the answer to the 
-     * counterexample as returned by the SUL.
+     * @return std::optional< std::pair< std::vector<int>, int> > Counterexample if not equivalent, else nullopt. 
+     * Counterexample is pair of trace and the answer to the counterexample as returned by the SUL.
      */
-    virtual std::optional< std::pair< std::list<int>, int> > equivalence_query(state_merger* merger, [[maybe_unused]] const std::unique_ptr<base_teacher>& teacher) = 0;
+    virtual std::optional< std::pair< std::vector<int>, int> > equivalence_query(state_merger* merger, [[maybe_unused]] const std::unique_ptr<base_teacher>& teacher) = 0;
 };
 
 #endif

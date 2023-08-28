@@ -12,11 +12,11 @@
 #ifndef _ACTIVE_LEARNING_DEFINITIONS_H_
 #define _ACTIVE_LEARNING_DEFINITIONS_H_
 
-#include <list>
+#include <vector>
 #include <string>
 
 namespace active_learning_namespace{
-  typedef std::list<int> pref_suf_t;
+  typedef std::vector<int> pref_suf_t;
 }
 
 #endif

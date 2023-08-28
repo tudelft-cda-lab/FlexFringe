@@ -78,7 +78,7 @@ public:
     int get_reverse_symbol(std::string a);
     const std::string& get_type(int a);
     int get_reverse_type(std::string a);
-    void set_alphabet(const std::list<int>& mapped_alphabet);
+    void set_alphabet(const std::vector<int>& input_alphabet);
 
     /* gets an attribute, first symbol attributes, then trace attributes */
     attribute* get_trace_attribute(int attr);
@@ -111,7 +111,7 @@ public:
      * */
     int get_types_size();
     int get_alphabet_size();
-    const std::list<int> get_alphabet() const;
+    const std::vector<int> get_alphabet() const;
 
     int symbol_from_string(std::string symbol);
 

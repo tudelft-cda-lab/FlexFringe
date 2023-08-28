@@ -29,7 +29,7 @@ using namespace active_learning_namespace;
  * 
  * @param alphabet We need the alphabet beforehand to know how to extend, see e.g. "Learning regular sets from queries and counterexamples" by Dana Angluin.
  */
-observation_table::observation_table(const list<int>& alphabet) : alphabet(alphabet), checked_for_closedness(false) {
+observation_table::observation_table(const vector<int>& alphabet) : alphabet(alphabet), checked_for_closedness(false) {
 
   // initialize the lower table properly
   for(const auto i: alphabet){

@@ -16,7 +16,7 @@
 #include "sul_base.h"
 #include "definitions.h"
 
-#include <list>
+#include <vector>
 #include <memory>
 
 class base_teacher{

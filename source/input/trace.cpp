@@ -175,15 +175,19 @@ void trace::pop_front() {
  * else the while-loop would ignore the last element.
  * 
  * @param is_access_trace Boolean indicating whether it is an access trace or not. Default = false.
+ * @param prepare_empty_slot If true, the vector will have size of access trace plus one. Helps us avoiding additional 
+ * resizing in L# algorithm (minor optimization). Default = false.
  * @return const std::vector<int> The sequence of the trace.
  */
-const std::list<int> trace::get_input_sequence(const bool is_access_trace) const {
-    std::list<int> res;
+const std::vector<int> trace::get_input_sequence(const bool is_access_trace, const bool prepare_empty_slot) const {
     tail* t = head;
-    if(t->get_symbol() == -1) return std::list<int>(); // empty strings
+    if(t->get_symbol() == -1) return prepare_empty_slot ? std::vector<int>(1) : std::vector<int>(); // empty strings
 
+    std::vector<int> res = prepare_empty_slot ? std::vector<int>(this->length + 1) : std::vector<int>(this->length);
+    int idx = 0;
     while((!is_access_trace && t != end_tail) || (is_access_trace && t != nullptr)){
-        res.push_back(t->get_symbol());
+        res[idx] = t->get_symbol();
+        ++idx;
         t = t->future();
     }
     return res;

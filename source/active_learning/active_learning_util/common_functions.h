@@ -37,10 +37,10 @@ namespace active_learning_namespace{
   void reset_apta(state_merger* merger, const std::list<refinement*>& refs);
   const std::list<refinement*> minimize_apta(state_merger* merger);
 
-  std::list<int> concatenate_strings(const std::list<int>& pref1, const std::list<int>& pref2);
-  trace* vector_to_trace(const std::list<int>& vec, inputdata& id, const int trace_type = 0);
+  std::vector<int> concatenate_strings(const std::vector<int>& pref1, const std::vector<int>& pref2);
+  trace* vector_to_trace(const std::vector<int>& vec, inputdata& id, const int trace_type = 0);
 
-  void add_sequence_to_trace(/*out*/ trace* new_trace, const std::list<int> sequence);
+  void add_sequence_to_trace(/*out*/ trace* new_trace, const std::vector<int> sequence);
   void update_tail(/*out*/ tail* t, const int symbol);
 
 
@@ -72,6 +72,8 @@ namespace active_learning_namespace{
 
   [[maybe_unused]]
   void print_list(const std::list<int>& l);
+
+  void print_vector(const std::vector<int>& l);
 }
 
 #endif

@@ -34,7 +34,7 @@ class active_sul_oracle : public eq_oracle_base {
      * @return false 
      */
     [[deprecated]]
-    virtual bool apta_accepts_trace(state_merger* merger, const list<int>& tr, inputdata& id) const override {return true;}
+    virtual bool apta_accepts_trace(state_merger* merger, const vector<int>& tr, inputdata& id) const override {return true;}
   
   public:
     active_sul_oracle(std::shared_ptr<sul_base>& sul) : eq_oracle_base(sul) {
@@ -42,7 +42,7 @@ class active_sul_oracle : public eq_oracle_base {
       assert(dynamic_cast<input_file_sul*>(sul.get()) == nullptr);
     };
 
-    std::optional< std::pair< std::list<int>, int> > equivalence_query(state_merger* merger, [[maybe_unused]] const std::unique_ptr<base_teacher>& teacher);
+    std::optional< std::pair< std::vector<int>, int> > equivalence_query(state_merger* merger, [[maybe_unused]] const std::unique_ptr<base_teacher>& teacher);
 };
 
 #endif

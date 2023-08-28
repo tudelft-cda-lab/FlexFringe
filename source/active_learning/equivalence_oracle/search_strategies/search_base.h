@@ -15,7 +15,7 @@
 #include "sul_base.h"
 #include "source/input/inputdata.h"
 
-#include <list>
+#include <vector>
 #include <optional>
 #include <memory>
 
@@ -25,7 +25,7 @@ class search_base {
   public:
     search_base(const int max_depth) : MAX_SEARCH_DEPTH(max_depth){};
 
-    virtual std::optional< std::list<int> > next(const inputdata& id) = 0;
+    virtual std::optional< std::vector<int> > next(const inputdata& id) = 0;
     virtual void reset() = 0;
 };
 

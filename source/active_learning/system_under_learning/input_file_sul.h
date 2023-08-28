@@ -17,7 +17,7 @@
 #include "source/input/parsers/i_parser.h"
 #include "source/input/inputdata.h"
 
-#include <list>
+#include <vector>
 #include <map>
 
 // only those should be able to access the system
@@ -30,20 +30,20 @@ class input_file_sul : public sul_base {
   friend class eq_oracle_base;
 
   private:
-    std::map< std::list<int>, int > all_traces;
+    std::map< std::vector<int>, int > all_traces;
 
   protected:
     virtual void post();
     virtual void step();
     virtual void reset(){};
 
-    virtual bool is_member(const std::list<int>& query_trace) const override;
-    virtual const int query_trace(const std::list<int>& query_trace, inputdata& id) const override;
+    virtual bool is_member(const std::vector<int>& query_trace) const override;
+    virtual const int query_trace(const std::vector<int>& query_trace, inputdata& id) const override;
   public:
     input_file_sul() = default;
 
     virtual void pre(inputdata& id) override;
-    const std::map< std::list<int>, int >& get_all_traces() const {
+    const std::map< std::vector<int>, int >& get_all_traces() const {
       return all_traces;
     }
 };
