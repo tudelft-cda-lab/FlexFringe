@@ -14,21 +14,20 @@
 
 #include "search_base.h"
 
-#include <list>
 #include <stack>
 
 class bfs_strategy : public search_base {
   private:
     int depth;
 
-    std::stack< std::list<int> > curr_search;
-    std::stack< std::list<int> > old_search;
+    std::stack< std::vector<int> > curr_search;
+    std::stack< std::vector<int> > old_search;
   public:
     bfs_strategy(const int max_depth) : search_base(max_depth) {
       depth = 0;
     };
 
-    virtual std::optional< std::list<int> > next(const inputdata& id) override;
+    virtual std::optional< std::vector<int> > next(const inputdata& id) override;
     virtual void reset() noexcept override {/* can be implemented, we did not do it yet */};
 };
 

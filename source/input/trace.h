@@ -3,7 +3,7 @@
 
 //#import "inputdata.h"
 #include <string>
-#include <list>
+#include <vector>
 
 class inputdata;
 class tail;
@@ -54,7 +54,7 @@ public:
     void reverse();
     void pop_front();
 
-    const std::list<int> get_input_sequence(const bool is_access_trace=false) const;
+    const std::vector<int> get_input_sequence(const bool is_access_trace=false, const bool prepare_empty_slot=false) const;
 };
 
 

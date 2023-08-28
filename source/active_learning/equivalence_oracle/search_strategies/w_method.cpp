@@ -18,11 +18,11 @@
 
 using namespace std;
 
-optional< list<int> > w_method::next(const inputdata& id) {
+optional< vector<int> > w_method::next(const inputdata& id) {
   return next(id, 0);
 }
 
-optional< list<int> > w_method::next(const inputdata& id, const int lower_bound) {
+optional< vector<int> > w_method::next(const inputdata& id, const int lower_bound) {
   if(samples_drawn % 1000 == 0) cout << "[" << samples_drawn << "/" << max_samples << "] samples suggested." << endl; 
   if(samples_drawn == max_samples){
     cout << "Exhausted the counterexample search. Wrapping up algorithm." << endl;
@@ -35,11 +35,8 @@ optional< list<int> > w_method::next(const inputdata& id, const int lower_bound)
 
   static bool initialized = false;
   if(!initialized){
-    const list<int>& alphabet = id.get_alphabet();
-    assert(alphabet.size() > 0);
-
-    for(auto s: alphabet) alphabet_vec.push_back(s);
-    alphabet_sampler.set_limits(0, alphabet.size()-1);
+    alphabet_vec = id.get_alphabet();
+    alphabet_sampler.set_limits(0, alphabet_vec.size()-1);
 
     initialized = true;
   }
@@ -49,10 +46,10 @@ optional< list<int> > w_method::next(const inputdata& id, const int lower_bound)
     length_generator.set_limits(lower_bound, MAX_SEARCH_DEPTH);
   }
 
-  list<int> res;
   const int output_string_length = length_generator.get_random_int();
+  vector<int> res(output_string_length);
   for(int i = 0; i < output_string_length; ++i){
-    res.push_back(alphabet_vec[alphabet_sampler.get_random_int()]);
+    res[i] = alphabet_vec[alphabet_sampler.get_random_int()];
   }
   ++samples_drawn;
   ++delay_counter;

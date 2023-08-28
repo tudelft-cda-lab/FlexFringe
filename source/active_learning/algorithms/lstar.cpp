@@ -47,12 +47,12 @@ const list<refinement*> lstar_algorithm::construct_automaton_from_table(const ob
 
   // We iterate over all prefixes and suffixes. TODO: Can cause duplicates?
   for(auto row_it = upper_table.cbegin(); row_it != upper_table.cend(); ++row_it){
-    const list<int>& prefix = row_it->first;
+    const pref_suf_t& prefix = row_it->first;
     const auto entry = row_it->second;
 
     //for(auto col_it = column_names.cbegin(); col_it != column_names.cend(); ++col_it){
     for(auto col_it = entry.cbegin(); col_it != entry.cend(); ++col_it){
-      const list<int>& suffix = col_it->first;
+      const pref_suf_t& suffix = col_it->first;
 
       const int answer = obs_table.get_answer(prefix, suffix);
       if(answer == -1){
@@ -122,7 +122,7 @@ void lstar_algorithm::run(inputdata& id){
         we ask cannot be parsed in automaton. We ignore those cases, as they lead to extra states in hypothesis. 
         This puts a burden on the equivalence oracle to make sure no query is asked twice, else we end 
         up in infinite loop.*/
-        optional< pair< list<int>, int > > query_result = oracle->equivalence_query(merger.get(), teacher);
+        optional< pair< vector<int>, int > > query_result = oracle->equivalence_query(merger.get(), teacher);
         if(!query_result){
           cout << "Found consistent automaton => Print." << endl;
           print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
@@ -132,7 +132,7 @@ void lstar_algorithm::run(inputdata& id){
         const int type = query_result.value().second;
         if(type < 0) continue;
 
-        const list<int>& cex = query_result.value().first;
+        const pref_suf_t& cex = query_result.value().first;
         auto cex_tr = vector_to_trace(cex, id, type);
         cout << "Found counterexample: " << cex_tr->to_string() << "\n"; //endl;
 

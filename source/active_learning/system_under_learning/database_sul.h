@@ -31,8 +31,8 @@ class database_sul : public sul_base {
     virtual void step() override {};
     virtual void reset() override {};
 
-    virtual bool is_member(const std::list<int>& query_trace) const override;
-    virtual const int query_trace(const std::list<int>& query_trace, inputdata& id) const override;
+    virtual bool is_member(const std::vector<int>& query_trace) const override;
+    virtual const int query_trace(const std::vector<int>& query_trace, inputdata& id) const override;
     
   public:
     database_sul(){

@@ -16,7 +16,7 @@ using namespace std;
 void database_sul::pre(inputdata& id) {
 }
 
-bool database_sul::is_member(const std::list<int>& query_trace) const {
+bool database_sul::is_member(const std::vector<int>& query_trace) const {
   return database->is_member(query_trace);
 }
 
@@ -27,6 +27,6 @@ bool database_sul::is_member(const std::list<int>& query_trace) const {
  * @param id 
  * @return const int 
  */
-const int database_sul::query_trace(const std::list<int>& query_trace, inputdata& id) const {
+const int database_sul::query_trace(const std::vector<int>& query_trace, inputdata& id) const {
   return true; // return database->query_trace(query_trace, id);
 }

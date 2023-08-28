@@ -162,14 +162,14 @@ int inputdata::get_reverse_type(std::string a) {
  * The system under test will however tell flexfringe what inputs it will potentially 
  * expect, and this is where this function comes in.
  * 
- * @param input_alphabet A list with the possible strings the system under learning 
+ * @param input_alphabet A vector with the possible strings the system under learning 
  * will expect.
  */
-void inputdata::set_alphabet(const list<int>& input_alphabet){
+void inputdata::set_alphabet(const vector<int>& input_alphabet){
     this->r_alphabet.clear();
     this->alphabet.clear();
-    for(auto symbol : input_alphabet){
-        auto symbol_string = to_string(symbol);
+    for(int i=0; i<input_alphabet.size(); ++i){
+        auto symbol_string = to_string(input_alphabet[i]);
         this->r_alphabet[symbol_string] = this->alphabet.size();
         this->alphabet.push_back(symbol_string);
     }
@@ -236,11 +236,11 @@ int inputdata::get_alphabet_size() {
     return alphabet.size();
 }
 
-// TODO: inefficient. It makes more sense to use a vec here
-const list<int> inputdata::get_alphabet() const {
-    std::list<int> res;
+const vector<int> inputdata::get_alphabet() const {
+    vector<int> res(r_alphabet.size());
+    int idx = 0;
     for(const auto& mapping: r_alphabet){
-        res.push_back(mapping.second);
+        res[idx] = mapping.second;
     }
     return res;
 }

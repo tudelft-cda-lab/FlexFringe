@@ -21,16 +21,16 @@
 using namespace std;
 
 /**
- * @brief Inserts element into list, raises exception if it didn't work.
+ * @brief Inserts element into vector, raises exception if it didn't work.
  * 
- * @param pylist The list
+ * @param pylist The vector
  * @param item The item
  * @param idx The index
  */
 void nn_sul_base::set_list_item(PyObject* p_list, PyObject* p_item, const int idx) const {
   int r = PyList_SetItem(p_list, idx, p_item);
   if(r==-1){
-    cerr << "Error when setting items in python-list." << endl;  
+    cerr << "Error when setting items in python-vector." << endl;  
     throw bad_alloc();
   } 
 }
@@ -145,7 +145,7 @@ void nn_sul_base::pre(inputdata& id){
   }
 
   cout << "Setting internal flexfringe alphabet, inferred from the network's training alphabet" << endl;
-  list<int> input_alphabet;
+  vector<int> input_alphabet;
   const auto size = static_cast<int>(PyList_Size(p_alphabet));
   for(int i = 0; i < size; ++i){
     PyObject* p_item = PyList_GetItem(p_alphabet, static_cast<Py_ssize_t>(i));
@@ -153,7 +153,6 @@ void nn_sul_base::pre(inputdata& id){
     int item;
     try{
       item = PyLong_AsLong(p_item);
-      cout << "The item: " << item << endl; // TODO: delete
     }
     catch(...){
       Py_DECREF(p_name);
@@ -163,7 +162,7 @@ void nn_sul_base::pre(inputdata& id){
       Py_DECREF(load_model_func);
       Py_DECREF(p_model_path);
       Py_DECREF(p_item);
-      cerr << "Alphabet returned by Python script must be a list of integer-values." << endl;
+      cerr << "Alphabet returned by Python script must be a vector of integer-values." << endl;
       exit(1);
     }
 

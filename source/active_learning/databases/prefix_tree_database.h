@@ -20,7 +20,7 @@
 #include <unordered_map>
 #include <fstream>
 #include <memory>
-#include <list>
+#include <vector>
 #include <utility>
 
 class prefix_tree_database : public database_base {
@@ -29,13 +29,13 @@ class prefix_tree_database : public database_base {
     std::unique_ptr<apta> the_tree;
 
     virtual void initialize() override;
-    std::list< std::pair<trace*, int> > extract_tails_from_tree(apta_node* start);
+    std::vector< std::pair<trace*, int> > extract_tails_from_tree(apta_node* start);
   public:
     prefix_tree_database() {
       initialize();
     }
 
-    virtual bool is_member(const std::list<int>& query_trace) const override;
+    virtual bool is_member(const std::vector<int>& query_trace) const override;
     virtual void update_state_with_statistics(apta_node* n) override;
 };
 

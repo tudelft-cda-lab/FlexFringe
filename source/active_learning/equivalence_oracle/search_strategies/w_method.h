@@ -42,8 +42,8 @@ class w_method : public search_base {
       max_samples = 500000;
     };
 
-    virtual std::optional< std::list<int> > next(const inputdata& id) override;
-    std::optional< std::list<int> > next(const inputdata& id, const int lower_bound);
+    virtual std::optional< std::vector<int> > next(const inputdata& id) override;
+    std::optional< std::vector<int> > next(const inputdata& id, const int lower_bound);
 
     virtual void reset() noexcept override {
       delay_counter = 0;

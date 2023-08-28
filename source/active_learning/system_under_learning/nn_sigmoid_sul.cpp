@@ -18,7 +18,7 @@
 
 using namespace std;
 
-bool nn_sigmoid_sul::is_member(const std::list<int>& query_trace) const {
+bool nn_sigmoid_sul::is_member(const std::vector<int>& query_trace) const {
   return true;
 }
 
@@ -32,7 +32,7 @@ bool nn_sigmoid_sul::is_member(const std::list<int>& query_trace) const {
  * @param id 
  * @return const int 
  */
-const int nn_sigmoid_sul::query_trace(const std::list<int>& query_trace, inputdata& id) const {
+const int nn_sigmoid_sul::query_trace(const std::vector<int>& query_trace, inputdata& id) const {
   double nn_output = get_sigmoid_output(query_trace, id);
   if(nn_output < 0){
     throw runtime_error("Error in Python script, please check your code there.");
@@ -57,7 +57,7 @@ void nn_sigmoid_sul::init_types() const {
  * @param query_trace 
  * @return const double 
  */
-const double nn_sigmoid_sul::get_sigmoid_output(const std::list<int>& query_trace, inputdata& id) const {
+const double nn_sigmoid_sul::get_sigmoid_output(const std::vector<int>& query_trace, inputdata& id) const {
   PyObject* p_list = PyList_New(query_trace.size());
   int i = 0;
   for(const int flexfringe_symbol: query_trace){

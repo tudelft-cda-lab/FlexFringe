@@ -26,15 +26,14 @@ using namespace std;
  * 
  * @param sul The SUl.
  * @param id The inputdata.
- * @return optional< const list<int> > A counterexample if found.
+ * @return optional< const vector<int> > A counterexample if found.
  */
-optional< list<int> > bfs_strategy::next(const inputdata& id) {
+optional< vector<int> > bfs_strategy::next(const inputdata& id) {
   if(depth == MAX_SEARCH_DEPTH) return nullopt;
 
-  static const list<int>& alphabet = id.get_alphabet();
+  static const vector<int>& alphabet = id.get_alphabet();
 
-  assert(alphabet.size() > 0);
-  static list<int>::const_iterator alphabet_it = alphabet.begin();
+  static vector<int>::const_iterator alphabet_it = alphabet.begin();
 
   [[unlikely]]
   if(depth == 0){
@@ -47,7 +46,7 @@ optional< list<int> > bfs_strategy::next(const inputdata& id) {
       return old_search.top();
     }
 
-    old_search.push( list<int>{*alphabet_it} );
+    old_search.push( vector<int>{*alphabet_it} );
     ++alphabet_it;
     return old_search.top();
   }
@@ -61,7 +60,7 @@ optional< list<int> > bfs_strategy::next(const inputdata& id) {
 
       ++depth;
       old_search = std::move(curr_search);
-      curr_search = stack< list<int> >();
+      curr_search = stack< vector<int> >();
       return old_search.top();
     }
     
@@ -69,7 +68,7 @@ optional< list<int> > bfs_strategy::next(const inputdata& id) {
   } 
 
   const auto& prefix = old_search.top();
-  auto new_pref = list<int>(prefix);
+  auto new_pref = vector<int>(prefix);
   new_pref.push_back(*alphabet_it);
   curr_search.push( std::move(new_pref) );
 

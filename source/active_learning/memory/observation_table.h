@@ -33,7 +33,7 @@ namespace obs_table_namespace{
 class observation_table{
   protected:
     bool checked_for_closedness;
-    const std::list<int> alphabet;
+    const std::vector<int> alphabet;
     std::set<active_learning_namespace::pref_suf_t> all_columns;
     std::map< active_learning_namespace::pref_suf_t, obs_table_namespace::upper_lower_t> table_mapper; // decides if prefix in upper table or lower table
     std::list< active_learning_namespace::pref_suf_t > incomplete_rows;
@@ -59,7 +59,7 @@ class observation_table{
     
   public:
     observation_table() = delete;
-    observation_table(const std::list<int>& alphabet);
+    observation_table(const std::vector<int>& alphabet);
 
     const bool has_record(const active_learning_namespace::pref_suf_t& row, const active_learning_namespace::pref_suf_t& col) const;
     void insert_record(const active_learning_namespace::pref_suf_t& row, const active_learning_namespace::pref_suf_t& col, const int answer);

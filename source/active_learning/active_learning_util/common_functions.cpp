@@ -199,16 +199,15 @@ void active_learning_namespace::update_tail(tail* t, const int symbol){
  * @param new_trace The trace to add to.
  * @param sequence Sequence in list for.
  */
-void active_learning_namespace::add_sequence_to_trace(trace* new_trace, const list<int> sequence){
+void active_learning_namespace::add_sequence_to_trace(trace* new_trace, const vector<int> sequence){
     new_trace->length = sequence.size();
     
     tail* new_tail = mem_store::create_tail(nullptr);
     new_tail->tr = new_trace;
     new_trace->head = new_tail;
 
-    auto sequence_it = sequence.cbegin();
     for(int index = 0; index < sequence.size(); ++index){
-        const int symbol = *sequence_it;
+        const int symbol = sequence[index];
         active_learning_namespace::update_tail(new_tail, symbol);
         new_tail->td->index = index;
 
@@ -216,8 +215,6 @@ void active_learning_namespace::add_sequence_to_trace(trace* new_trace, const li
         new_tail = mem_store::create_tail(nullptr);
         new_tail->tr = new_trace;
         old_tail->set_future(new_tail);
-
-        ++sequence_it;
     }
 
     new_tail->td->index = sequence.size();
@@ -230,8 +227,8 @@ void active_learning_namespace::add_sequence_to_trace(trace* new_trace, const li
  * @brief What you think it does.
  * 
  */
-list<int> active_learning_namespace::concatenate_strings(const list<int>& pref1, const list<int>& pref2){
-  list<int> res(pref1);
+vector<int> active_learning_namespace::concatenate_strings(const vector<int>& pref1, const vector<int>& pref2){
+  vector<int> res(pref1);
   res.insert(res.end(), pref2.begin(), pref2.end());
   return res;
 }
@@ -244,7 +241,7 @@ list<int> active_learning_namespace::concatenate_strings(const list<int>& pref1,
  * @param trace_type Accepting or rejecting.
  * @return trace* The trace.
  */
-trace* active_learning_namespace::vector_to_trace(const list<int>& vec, inputdata& id, const int trace_type){
+trace* active_learning_namespace::vector_to_trace(const vector<int>& vec, inputdata& id, const int trace_type){
     static int trace_nr = 0;
 
     trace* new_trace = mem_store::create_trace(&id);
@@ -261,6 +258,12 @@ trace* active_learning_namespace::vector_to_trace(const list<int>& vec, inputdat
  * @brief For debugging.
  */
 void active_learning_namespace::print_list(const list<int>& l){
+    for (const auto s: l)
+        cout << s << " ";
+    cout << endl;
+}
+
+void active_learning_namespace::print_vector(const vector<int>& l){
     for (const auto s: l)
         cout << s << " ";
     cout << endl;
