@@ -62,7 +62,7 @@ void nn_sul_base::pre(inputdata& id){
   cmd << "\") )";
 
   PyRun_SimpleString(cmd.str().c_str());
-  //PyRun_SimpleString("print(sys.path)"); // useful for debugging
+  //PyRun_SimpleString("print(sys.path)"); // for debugging
 
   // load the module
   PyObject* p_name = PyUnicode_FromString(PYTHON_MODULE_NAME.c_str());
@@ -145,14 +145,15 @@ void nn_sul_base::pre(inputdata& id){
   }
 
   cout << "Setting internal flexfringe alphabet, inferred from the network's training alphabet" << endl;
-  list<string> mapped_alphabet;
+  list<int> input_alphabet;
   const auto size = static_cast<int>(PyList_Size(p_alphabet));
   for(int i = 0; i < size; ++i){
     PyObject* p_item = PyList_GetItem(p_alphabet, static_cast<Py_ssize_t>(i));
 
-    std::string item;
+    int item;
     try{
-      item = PyUnicode_AsUTF8(PyObject_Str(p_item));
+      item = PyLong_AsLong(p_item);
+      cout << "The item: " << item << endl; // TODO: delete
     }
     catch(...){
       Py_DECREF(p_name);
@@ -162,22 +163,26 @@ void nn_sul_base::pre(inputdata& id){
       Py_DECREF(load_model_func);
       Py_DECREF(p_model_path);
       Py_DECREF(p_item);
-      cerr << "Alphabet returned by Python script must be a list of strings." << endl;
+      cerr << "Alphabet returned by Python script must be a list of integer-values." << endl;
       exit(1);
     }
 
     Py_DECREF(p_item);
-    mapped_alphabet.push_back(std::move(item));
+    input_alphabet.push_back(std::move(item));
   }
 
-  id.set_alphabet(std::move(mapped_alphabet));
+  id.set_alphabet(input_alphabet);
+  int idx = 0;
+  for(auto symbol: input_alphabet){
+    input_mapper[idx] = symbol;
+    ++idx;
+  }
 
   Py_INCREF(p_name);
   Py_INCREF(p_module);
   Py_INCREF(query_func);
   Py_INCREF(alphabet_func);
 
-  init_types();
-
   cout << "Python module " << INPUT_FILE << " loaded and initialized successfully." << endl;
+  init_types();
 }

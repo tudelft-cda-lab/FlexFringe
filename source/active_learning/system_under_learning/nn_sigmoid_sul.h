@@ -27,12 +27,13 @@ class nn_sigmoid_sul : public nn_sul_base {
 
     virtual bool is_member(const std::list<int>& query_trace) const;
     
-    virtual const int query_trace(const std::list<int>& query_trace, inputdata& id) const override;
+    inline virtual const int query_trace(const std::list<int>& query_trace, inputdata& id) const override; // TODO: does this inline here help?
 
-    const double get_sigmoid_output(const std::list<int>& query_trace, inputdata& id) const;
+    __attribute__((always_inline)) 
+    inline const double get_sigmoid_output(const std::list<int>& query_trace, inputdata& id) const;
+    
     virtual void init_types() const override;
   public:
-    // TODO: these paths need to be set
     nn_sigmoid_sul() = default;
     ~nn_sigmoid_sul();
 };

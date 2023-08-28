@@ -60,9 +60,9 @@ void nn_sigmoid_sul::init_types() const {
 const double nn_sigmoid_sul::get_sigmoid_output(const std::list<int>& query_trace, inputdata& id) const {
   PyObject* p_list = PyList_New(query_trace.size());
   int i = 0;
-  for(const int symbol: query_trace){
-    std::string mapped_symbol = id.get_symbol(symbol);
-    PyObject* p_symbol = PyUnicode_FromString(mapped_symbol.c_str());
+  for(const int flexfringe_symbol: query_trace){
+    int mapped_symbol = input_mapper.at(flexfringe_symbol);
+    PyObject* p_symbol = PyLong_FromLong(mapped_symbol);
     set_list_item(p_list, p_symbol, i);
     ++i;
   }

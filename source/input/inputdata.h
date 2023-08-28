@@ -78,7 +78,7 @@ public:
     int get_reverse_symbol(std::string a);
     const std::string& get_type(int a);
     int get_reverse_type(std::string a);
-    void set_alphabet(std::list<std::string>&& mapped_alphabet);
+    void set_alphabet(const std::list<int>& mapped_alphabet);
 
     /* gets an attribute, first symbol attributes, then trace attributes */
     attribute* get_trace_attribute(int attr);

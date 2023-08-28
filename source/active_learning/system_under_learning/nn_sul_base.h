@@ -18,6 +18,7 @@
 #include "sul_base.h"
 
 #include <string>
+#include <unordered_map>
 
 #define PY_SSIZE_T_CLEAN // recommended, see https://docs.python.org/3/extending/extending.html#a-simple-example
 #include <Python.h>
@@ -33,6 +34,8 @@ class nn_sul_base : public sul_base {
     PyObject* query_func;
     PyObject* alphabet_func;
     PyObject* load_model_func;
+
+    std::unordered_map<int, int> input_mapper;
 
     virtual void post() = 0;
     virtual void step() = 0;
