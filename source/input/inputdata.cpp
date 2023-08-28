@@ -158,19 +158,18 @@ int inputdata::get_reverse_type(std::string a) {
  * connect the internal alphabet of flexfringe to the external alphabet of the 
  * system under test, so that flexfringe can ask "the right questions". Hence 
  * flexfringe will send a string to the system under test, and it is the 
- * responsibility of the system under test to make meaning of this. The system 
- * under test will however tell flexfringe what strings it will potentially expect,
- * and this is where this function comes in.
+ * responsibility of the system under test (the SUL object) to make meaning of this. 
+ * The system under test will however tell flexfringe what inputs it will potentially 
+ * expect, and this is where this function comes in.
  * 
- * TODO: we actually only need to know the strings, hence change the function signature 
- * to set<string>
- * 
- * @param r_alphabet Map with string-to-int mapping.
+ * @param input_alphabet A list with the possible strings the system under learning 
+ * will expect.
  */
-void inputdata::set_alphabet(list<string>&& mapped_alphabet){
+void inputdata::set_alphabet(const list<int>& input_alphabet){
     this->r_alphabet.clear();
     this->alphabet.clear();
-    for(auto& symbol_string : mapped_alphabet){
+    for(auto symbol : input_alphabet){
+        auto symbol_string = to_string(symbol);
         this->r_alphabet[symbol_string] = this->alphabet.size();
         this->alphabet.push_back(symbol_string);
     }

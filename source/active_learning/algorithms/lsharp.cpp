@@ -33,10 +33,11 @@ using namespace active_learning_namespace;
  * @brief Take a node and complete it wrt to the alphabet.
  * 
  * TODO: shall we check if we already have this node? If yes, then we don't need to do anything.
- * 
- * @param aut 
  */
 void lsharp_algorithm::complete_state(unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const list<int>& alphabet) const {
+  static unordered_set<apta_node*> completed_nodes;
+  if(completed_nodes.contains(n)) return;
+
   for(const int symbol: alphabet){
     if(n->get_child(symbol) == nullptr){
       auto access_trace = n->get_access_trace();
@@ -53,6 +54,7 @@ void lsharp_algorithm::complete_state(unique_ptr<state_merger>& merger, apta_nod
       id.add_trace(new_trace);
     }
   }
+  completed_nodes.insert(n);
 }
 
 /**
@@ -66,66 +68,37 @@ void lsharp_algorithm::complete_state(unique_ptr<state_merger>& merger, apta_nod
  */
 void lsharp_algorithm::proc_counterex(const unique_ptr<base_teacher>& teacher, inputdata& id, unique_ptr<apta>& hypothesis, 
                                       const list<int>& counterex, unique_ptr<state_merger>& merger, const refinement_list refs) const {
-  static const bool simple_append = true;
   // in this block we do a linear search for the fringe of the prefix tree. Once we found it, we ask membership queries for each substring
   // of the counterexample (for each new state that we create), and this way add the whole counterexample to the prefix tree
-  if(simple_append){
-    reset_apta(merger.get(), refs);
-    list<int> substring;
-    apta_node* n = hypothesis->get_root();
-    for(auto s: counterex){
-      if(n == nullptr){
-        const auto queried_type = teacher->ask_membership_query(substring, id);
-        trace* new_trace = vector_to_trace(substring, id, queried_type);
-        id.add_trace_to_apta(new_trace, hypothesis.get(), false);
-        id.add_trace(new_trace);
-        substring.push_back(s);
-      }
-      else{
-        // find the fringe
-        substring.push_back(s);
-        trace* parse_trace = vector_to_trace(substring, id, 0); // TODO: inefficient like this
-        tail* t = substring.size() == 0 ? parse_trace->get_end() : parse_trace->get_end()->past_tail;
-        n = active_learning_namespace::get_child_node(n, t);
-        mem_store::delete_trace(parse_trace);
-      }
-      
+  reset_apta(merger.get(), refs);
+  list<int> substring;
+  apta_node* n = hypothesis->get_root();
+  for(auto s: counterex){
+    if(n == nullptr){
+      const auto queried_type = teacher->ask_membership_query(substring, id);
+      trace* new_trace = vector_to_trace(substring, id, queried_type);
+      id.add_trace_to_apta(new_trace, hypothesis.get(), false);
+      id.add_trace(new_trace);
+      substring.push_back(s);
     }
-
-    // for the last element, too
-    const auto queried_type = teacher->ask_membership_query(substring, id);
-    trace* new_trace = vector_to_trace(substring, id, queried_type);
-    id.add_trace_to_apta(new_trace, hypothesis.get(), false);
-    id.add_trace(new_trace);
-  }
-
-  static const bool linear_search = true; // if true, analyze the counterexamples linearly from beginning
-  if(linear_search){
-    // for test purposes
-    reset_apta(merger.get(), refs);
-    list<int> processed_counterexample;
-    apta_node* n = hypothesis->get_root();
-    for(auto s: counterex){
-      processed_counterexample.push_back(s);
-      trace* test_tr = vector_to_trace(processed_counterexample, id, 0); // TODO: inefficient like this
-      tail* t = test_tr->get_end()->past_tail;
-
+    else{
+      // find the fringe
+      substring.push_back(s);
+      trace* parse_trace = vector_to_trace(substring, id, 0); // TODO: inefficient like this
+      tail* t = substring.size() == 0 ? parse_trace->get_end() : parse_trace->get_end()->past_tail;
       n = active_learning_namespace::get_child_node(n, t);
-      if(n == nullptr){
-        const auto queried_type = teacher->ask_membership_query(processed_counterexample, id);
-        test_tr->type = queried_type;
-        id.add_trace_to_apta(test_tr, hypothesis.get(), false);
-        return;
-      }
-
-      mem_store::delete_trace(test_tr);
+      mem_store::delete_trace(parse_trace);
     }
-
-    return;
+      
   }
 
-  // TODO: implement the binary search here
-  // I need to parse the prefix tree and the hypothesis the same time now
+  // for the last element, too
+  const auto queried_type = teacher->ask_membership_query(substring, id);
+  trace* new_trace = vector_to_trace(substring, id, queried_type);
+  id.add_trace_to_apta(new_trace, hypothesis.get(), false);
+  id.add_trace(new_trace);
+
+  // TODO: alternatively implement the binary search here
 }
 
 refinement* lsharp_algorithm::extract_best_merge(refinement_set* rs) const {
@@ -163,10 +136,10 @@ void lsharp_algorithm::run(inputdata& id){
     for(blue_state_iterator b_it = blue_state_iterator(the_apta->get_root()); *b_it != nullptr; ++b_it){
 
       const auto blue_node = *b_it;
-      if(blue_node->get_size() == 0) continue;
+      if(blue_node->get_size() == 0) continue; // This should never happen: TODO: Delete line
       
       // this is a difference with Vandraager (they only complete red nodes), but we need it for statistical methods
-      complete_state(merger, blue_node, id, alphabet);
+      complete_state(merger, blue_node, id, alphabet); // TODO: do we need this one here really? I can't see it at the moment why
 
       refinement_set possible_refs;
       for(red_state_iterator r_it = red_state_iterator(the_apta->get_root()); *r_it != nullptr; ++r_it){

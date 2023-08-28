@@ -86,12 +86,39 @@ void stream_object::remember_state(refinement* ref){
   }
 }
 
+void print_current_automaton_stream(state_merger* merger, const string& output_file, const string& append_string){
+    if (OUTPUT_TYPE == "dot" || OUTPUT_TYPE == "both") {
+        merger->print_dot(output_file + append_string + ".dot");
+    }
+    if (OUTPUT_TYPE == "json" || OUTPUT_TYPE == "both") {
+        merger->print_json(output_file + append_string + ".json");
+    }
+    if(OUTPUT_SINKS && !PRINT_WHITE){
+        bool red_undo = PRINT_RED;
+        PRINT_RED = false;
+        bool white_undo = PRINT_WHITE;
+        PRINT_WHITE= true;
+        bool blue_undo = PRINT_BLUE;
+        PRINT_BLUE = true;
+        if (OUTPUT_TYPE == "dot" || OUTPUT_TYPE == "both") {
+            merger->print_dot(output_file + append_string + "sinks.dot");
+        }
+        if (OUTPUT_TYPE == "json" || OUTPUT_TYPE == "both") {
+            merger->print_json(output_file + append_string + "sinks.json");
+        }
+        PRINT_RED = red_undo;
+        PRINT_WHITE = white_undo;
+        PRINT_BLUE = blue_undo;
+    }
+}
+
 void stream_object::greedyrun_retry_merges(state_merger* merger, const int seq_nr, const bool last_sequence, const int n_runs){
     static int count_printouts = 1;
     static int c = 0;
 
     stack< refinement* > refinement_stack;
     queue<refinement*> failed_refs;
+
     refinement* top_ref;
 
     this->states_to_append_to.clear();
@@ -151,7 +178,14 @@ void stream_object::greedyrun_retry_merges(state_merger* merger, const int seq_n
       top_ref = determine_next_refinement(merger);
     }
 
-    //print_current_automaton(merger, "Machine_", to_string(this->batch_number));
+    ++count_printouts;
+    if(count_printouts % 100 == 0  || last_sequence){
+      cout << "Processed " << count_printouts << " batches" << endl;
+    }
+
+    if(count_printouts % 1000 == 0){
+      print_current_automaton_stream(merger, "model_batch_nr_", to_string(count_printouts));
+    }
 
     // undo the merges
     while(!refinement_stack.empty()){
@@ -159,22 +193,8 @@ void stream_object::greedyrun_retry_merges(state_merger* merger, const int seq_n
       top_ref->undo(merger);
       refinement_stack.pop();
 
-      //cout << "States to append to before:";
-      //for(auto x: states_to_append_to) cout << " " << x;
-      //cout << endl; 
-
       remember_state(top_ref);
-
-      //cout << "Undoing: "; top_ref->print();
-      //cout << "States to append to after:";
-      //for(auto x: states_to_append_to) cout << " " << x;
-      //cout << endl;
     }
-
-/*     ++c;
-    if(c % 1 == 0){
-      cout << "\n\nbatch nr. " << c << endl;
-    } */
     
     delete currentrun;
     currentrun = nextrun;

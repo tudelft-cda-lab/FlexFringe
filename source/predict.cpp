@@ -4,9 +4,12 @@
 
 #include "predict.h"
 #include "dfa_properties.h"
-#include <queue>
 #include "input/inputdatalocator.h"
 #include "input/parsers/abbadingoparser.h"
+#include "input/parsers/reader_strategy.h"
+
+#include <optional>
+#include <queue>
 
 struct tail_state_compare{ bool operator()(const pair<double, pair<apta_node*, tail*>> &a, const pair<double, pair<apta_node*, tail*>> &b) const{ return a.first < b.first; } };
 
@@ -527,7 +530,7 @@ void predict_csv(state_merger* m, istream& input, ofstream& output){
 }
 
 
-void predict(state_merger* m, inputdata& idat, ofstream& output){
+void predict(state_merger* m, inputdata& idat, ofstream& output, parser* input_parser){
     output << "row nr; abbadingo trace; state sequence; score sequence";
     if(SLIDING_WINDOW) output << "; score per sw tail; score first sw tail; root cause sw tail score; row nrs first sw tail";
     if(PREDICT_ALIGN) output << "; alignment; num misaligned";
@@ -536,9 +539,15 @@ void predict(state_merger* m, inputdata& idat, ofstream& output){
     if(PREDICT_SYMBOL) output << "; next trace symbol; next symbol probability; predicted symbol; predicted symbol probability";
     output << endl;
 
-    for (auto trace: idat) {
-        predict_trace(m, output, trace);
-        add_visits(m, trace);
-        trace->erase();
+    unique_ptr<reader_strategy> parser_strategy = make_unique<in_order>();
+    std::optional<trace*> trace_opt = idat.read_trace(*input_parser, *parser_strategy);
+    while(trace_opt){
+        trace* tr = trace_opt.value();
+
+        predict_trace(m, output, tr);
+        add_visits(m, tr);
+        tr->erase();
+
+        trace_opt = idat.read_trace(*input_parser, *parser_strategy);
     }
 }
