@@ -241,6 +241,7 @@ const vector<int> inputdata::get_alphabet() const {
     int idx = 0;
     for(const auto& mapping: r_alphabet){
         res[idx] = mapping.second;
+        ++idx;
     }
     return res;
 }
