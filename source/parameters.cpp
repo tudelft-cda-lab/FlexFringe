@@ -139,3 +139,5 @@ int K = 0;
 string ACTIVE_LEARNING_ALGORITHM = "l_star";
 bool DO_ACTIVE_LEARNING = false;
 string REJECTING_LABEL = "0";
+int START_SYMBOL = -1;
+int END_SYMBOL = -1;

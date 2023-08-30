@@ -31,7 +31,6 @@ class eq_oracle_base{
     std::unique_ptr<search_base> search_strategy;
 
     virtual void reset_sul() = 0;
-    virtual bool apta_accepts_trace(state_merger* merger, const std::vector<int>& tr, inputdata& id) const = 0;
   public:
     eq_oracle_base(std::shared_ptr<sul_base>& sul) : sul(sul){};
 

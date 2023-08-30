@@ -23,18 +23,6 @@ class active_sul_oracle : public eq_oracle_base {
     std::unique_ptr<search_base> search_strategy;
 
     virtual void reset_sul() override {};
-
-    /**
-     * @brief TODO: delete this function from the eq-oracles
-     * 
-     * @param merger 
-     * @param tr 
-     * @param id 
-     * @return true 
-     * @return false 
-     */
-    [[deprecated]]
-    virtual bool apta_accepts_trace(state_merger* merger, const vector<int>& tr, inputdata& id) const override {return true;}
   
   public:
     active_sul_oracle(std::shared_ptr<sul_base>& sul) : eq_oracle_base(sul) {
