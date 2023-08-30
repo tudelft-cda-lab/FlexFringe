@@ -167,7 +167,7 @@ void nn_sul_base::pre(inputdata& id){
     }
 
     Py_DECREF(p_item);
-    input_alphabet.push_back(std::move(item));
+    if(item != start_symbol && item != end_symbol) input_alphabet.push_back(std::move(item));
   }
 
   id.set_alphabet(input_alphabet);
