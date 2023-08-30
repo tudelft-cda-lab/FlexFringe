@@ -16,9 +16,11 @@
 #define _NN_SUL_BASE_H_
 
 #include "sul_base.h"
+#include "parameters.h"
 
 #include <string>
 #include <unordered_map>
+#include <cassert>
 
 #define PY_SSIZE_T_CLEAN // recommended, see https://docs.python.org/3/extending/extending.html#a-simple-example
 #include <Python.h>
@@ -28,7 +30,13 @@ class nn_sul_base : public sul_base {
   friend class eq_oracle_base;
 
   protected:
-    nn_sul_base() = default;
+    nn_sul_base() : start_symbol(START_SYMBOL), end_symbol(END_SYMBOL) {
+      assert(( (void*) "If <SOS> or <EOS> is set (!=-1), then the other one must be set, too.", (start_symbol==-1 && end_symbol==-1) || (start_symbol!=-1 && end_symbol!=-1) ));
+      if(start_symbol!=-1){
+        p_start_symbol = PyLong_FromLong(start_symbol);
+        p_end_symbol = PyLong_FromLong(end_symbol);
+      }
+    };
 
     PyObject* p_module;
     PyObject* query_func;
@@ -36,6 +44,11 @@ class nn_sul_base : public sul_base {
     PyObject* load_model_func;
 
     std::unordered_map<int, int> input_mapper;
+    
+    const int start_symbol;
+    const int end_symbol;
+    PyObject* p_start_symbol; 
+    PyObject* p_end_symbol;
 
     virtual void post() = 0;
     virtual void step() = 0;

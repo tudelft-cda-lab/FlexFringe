@@ -34,7 +34,7 @@ class nn_sigmoid_sul : public nn_sul_base {
     
     virtual void init_types() const override;
   public:
-    nn_sigmoid_sul() = default;
+    nn_sigmoid_sul() : nn_sul_base(){};
     ~nn_sigmoid_sul();
 };
 

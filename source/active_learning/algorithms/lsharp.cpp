@@ -24,8 +24,6 @@
 
 #include <list>
 
-const bool PRINT_ALL_MODELS = false;
-
 using namespace std;
 using namespace active_learning_namespace;
 
@@ -161,21 +159,19 @@ void lsharp_algorithm::run(inputdata& id){
       }
     }
 
-    if(no_isolated_states){
-      // build hypothesis
-      if(PRINT_ALL_MODELS){
+    if(no_isolated_states){ // build hypothesis
+      /* {
         static int model_nr = 0;
         print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".before_ref");
-      }
+      } */
 
       refs = minimize_apta(merger.get());
 
-      if(PRINT_ALL_MODELS){
+      /* {
         static int model_nr = 0;
         print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_ref"); // printing the final model each time
-      }
+      } */
 
-      // TODO: is the loop below guaranteed to terminate?
       while(true){
         /* While loop to check the type. type is < 0 if sul cannot properly respond to query, e.g. when the string 
         we ask cannot be parsed in automaton. We ignore those cases, as they lead to extra states in hypothesis. 

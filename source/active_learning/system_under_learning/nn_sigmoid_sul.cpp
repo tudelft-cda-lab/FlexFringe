@@ -58,13 +58,18 @@ void nn_sigmoid_sul::init_types() const {
  * @return const double 
  */
 const double nn_sigmoid_sul::get_sigmoid_output(const std::vector<int>& query_trace, inputdata& id) const {
-  PyObject* p_list = PyList_New(query_trace.size());
-  int i = 0;
+  PyObject* p_list = start_symbol==-1 ? PyList_New(query_trace.size()) : PyList_New(query_trace.size()+2); // +2 for start and end symbol
+  int i = start_symbol==-1 ? 0 : 1;
   for(const int flexfringe_symbol: query_trace){
     int mapped_symbol = input_mapper.at(flexfringe_symbol);
     PyObject* p_symbol = PyLong_FromLong(mapped_symbol);
     set_list_item(p_list, p_symbol, i);
     ++i;
+  }
+
+  if(start_symbol != -1){
+    set_list_item(p_list, p_start_symbol, 0);
+    set_list_item(p_list, p_end_symbol, query_trace.size()+1);
   }
 
   PyObject* p_query_result = PyObject_CallOneArg(query_func, p_list);

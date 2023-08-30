@@ -158,4 +158,7 @@ extern string ACTIVE_LEARNING_ALGORITHM;
 extern bool DO_ACTIVE_LEARNING;
 extern string REJECTING_LABEL;
 
+extern int START_SYMBOL;
+extern int END_SYMBOL;
+
 #endif

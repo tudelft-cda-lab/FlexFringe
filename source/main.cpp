@@ -390,11 +390,14 @@ int main(int argc, char *argv[]){
     app.add_option("--pref_K", K, "Number of frequent items in sketches.");
     app.add_option("--bootstrap_R", R, "The number of bootstrapped examples.");
     
-    // here come the active learning parameters
+    // active learning parameters
     app.add_option("--active_learning_algorithm", ACTIVE_LEARNING_ALGORITHM, "The basic algorithm that runs through. Current options are (l_star). DEFAULT: l_star");
     app.add_option("--use_active_learning", DO_ACTIVE_LEARNING, "Perform active learning on top of the normal learner. 1 for true, 0 for false. Default: 0");
     // TODO: shall we delete the rejecting_label option?
     app.add_option("--rejecting_label", REJECTING_LABEL, "The label as a string that is used for rejecting (non-accepting) behavior. Only in active learning mode. DEFAULT: 0");
+    
+    app.add_option("--start_symbol", START_SYMBOL, "The <SOS> symbol (as per NLP convention) represented by an int value. A value of -1 means that it is unused. Only in active learning mode when querying networks. DEFAULT: -1");
+    app.add_option("--end_symbol", END_SYMBOL, "The <SOS> symbol (as per NLP convention) represented by an int value. A value of -1 means that it is unused. Only in active learning mode when querying networks. DEFAULT: -1");
     
     CLI11_PARSE(app, argc, argv)
 

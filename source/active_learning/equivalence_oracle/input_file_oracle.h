@@ -25,7 +25,6 @@ class input_file_oracle : public eq_oracle_base {
       // we won't need this guy here
     }; 
 
-    virtual bool apta_accepts_trace(state_merger* merger, const std::vector<int>& tr, inputdata& id) const override;
   public:
     input_file_oracle(std::shared_ptr<sul_base>& sul) : eq_oracle_base(sul) {
       assert(dynamic_cast<input_file_sul*>(sul.get()) != nullptr);

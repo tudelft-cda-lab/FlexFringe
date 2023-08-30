@@ -18,16 +18,6 @@
 using namespace std;
 using namespace active_learning_namespace;
 
-[[deprecated]]
-bool input_file_oracle::apta_accepts_trace(state_merger* merger, const vector<int>& tr, inputdata& id) const {
-  const static double THRESH = 1; // TODO: we need to set this guy somehow
-
-  trace* new_tr = vector_to_trace(tr, id, 1);
-  double score = predict_trace(merger, new_tr);
-  mem_store::delete_trace(new_tr);
-
-  return score < THRESH;
-}
 
 optional< pair< vector<int>, int > > input_file_oracle::equivalence_query(state_merger* merger, const std::unique_ptr<base_teacher>& teacher) {
   const count_driven* const eval_func = dynamic_cast<count_driven*>(merger->get_eval());
