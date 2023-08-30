@@ -147,6 +147,7 @@ void nn_sul_base::pre(inputdata& id){
   cout << "Setting internal flexfringe alphabet, inferred from the network's training alphabet" << endl;
   vector<int> input_alphabet;
   const auto size = static_cast<int>(PyList_Size(p_alphabet));
+  const int start_symbol = START_SYMBOL; const int end_symbol = END_SYMBOL;
   for(int i = 0; i < size; ++i){
     PyObject* p_item = PyList_GetItem(p_alphabet, static_cast<Py_ssize_t>(i));
 

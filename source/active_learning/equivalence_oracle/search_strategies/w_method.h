@@ -25,7 +25,7 @@ class w_method : public search_base {
     int last_lower_bound; // for optimization purposes
 
     int delay_counter = 0;
-    const int delay = 1000; // if within the last [delay] suggested counterexamples None of them was one, we terminate the algorithm
+    const int delay = 5000; // if within the last [delay] suggested counterexamples None of them was one, we terminate the algorithm
 
     random_int_generator length_generator;
     random_int_generator alphabet_sampler;
@@ -39,11 +39,13 @@ class w_method : public search_base {
 
       length_generator.set_limits(last_lower_bound, MAX_SEARCH_DEPTH);
 
-      max_samples = 100000;
+      max_samples = 500000;
     };
 
     virtual std::optional< std::vector<int> > next(const inputdata& id) override;
-    std::optional< std::vector<int> > next(const inputdata& id, const int lower_bound);
+    
+    __attribute__((always_inline))
+    inline std::optional< std::vector<int> > next(const inputdata& id, const int lower_bound);
 
     virtual void reset() noexcept override {
       delay_counter = 0;
