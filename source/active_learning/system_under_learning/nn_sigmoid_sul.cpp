@@ -26,8 +26,6 @@ bool nn_sigmoid_sul::is_member(const std::vector<int>& query_trace) const {
 /**
  * @brief Queries trace, returns result.
  * 
- * Side effect: Check if the inferred type is part of the types in inputdata. If no, set.
- * 
  * @param query_trace 
  * @param id 
  * @return const int 
@@ -39,7 +37,7 @@ const int nn_sigmoid_sul::query_trace(const std::vector<int>& query_trace, input
   }
   
   int res = nn_output < 0.5 ? 0 : 1;
-  return res;// TODO: make sure that there is no mismatch between the types
+  return res;
 }
 
 /**
