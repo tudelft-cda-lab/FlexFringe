@@ -26,18 +26,19 @@ private:
   std::unordered_set<int> states_to_append_to; // keeping track of states that we can append to with ease
   reader_strategy* parser_strategy;
 
-  void greedyrun_no_undo(state_merger* merger, const int seq_nr, const bool last_sequence, const int n_runs);
-  void greedyrun_retry_merges(state_merger* merger, const int seq_nr, const bool last_sequence, const int n_runs); // for experiments
+  __attribute__((always_inline))
+  inline void greedyrun_no_undo(state_merger* merger, const int seq_nr, const bool last_sequence, const int n_runs);
 
-  refinement* determine_next_refinement(state_merger* merger);
+  __attribute__((always_inline))
+  inline void greedyrun_retry_merges(state_merger* merger, const int seq_nr, const bool last_sequence, const int n_runs); // for experiments
 
-  void remember_state(refinement* ref);
+  __attribute__((always_inline))
+  inline refinement* determine_next_refinement(state_merger* merger);
+
+  __attribute__((always_inline))
+  inline void remember_state(refinement* ref);
 
 public:
-  /**
-   * @brief Construct a new stream object object
-   * 
-   */
   stream_object(){
     batch_number = 0;
 
@@ -54,6 +55,7 @@ public:
     delete parser_strategy;
   }
   
+  //__attribute__((flatten)) // inlines all subsequent functions into this one, (potentially) increases speed at cost of larger code and compile time
   int stream_mode(state_merger* merger, ifstream& input_stream, inputdata* id, parser* input_parser); 
 };
 

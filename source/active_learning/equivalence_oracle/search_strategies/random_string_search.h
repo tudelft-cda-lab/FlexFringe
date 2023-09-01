@@ -1,5 +1,5 @@
 /**
- * @file w_method.h
+ * @file random_string_search.h
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
  * @brief 
  * @version 0.1
@@ -18,7 +18,7 @@
 #include <random>
 #include <vector>
 
-class w_method : public search_base {
+class random_string_search : public search_base {
   private:
     int samples_drawn;
     int max_samples;
@@ -33,7 +33,7 @@ class w_method : public search_base {
     std::vector<int> alphabet_vec;
 
   public:
-    w_method(const int max_depth) : search_base(max_depth) {
+    random_string_search(const int max_depth) : search_base(max_depth) {
       samples_drawn = 0;
       last_lower_bound = 10;
 

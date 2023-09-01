@@ -1,5 +1,5 @@
 /**
- * @file w_method.cpp
+ * @file random_string_search.cpp
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
  * @brief 
  * @version 0.1
@@ -9,7 +9,7 @@
  * 
  */
 
-#include "w_method.h"
+#include "random_string_search.h"
 
 #include <list>
 #include <vector>
@@ -18,11 +18,11 @@
 
 using namespace std;
 
-optional< vector<int> > w_method::next(const inputdata& id) {
+optional< vector<int> > random_string_search::next(const inputdata& id) {
   return next(id, 0);
 }
 
-optional< vector<int> > w_method::next(const inputdata& id, const int lower_bound) {
+optional< vector<int> > random_string_search::next(const inputdata& id, const int lower_bound) {
   if(samples_drawn % 1000 == 0) cout << "[" << samples_drawn << "/" << max_samples << "] samples suggested." << endl; 
   if(samples_drawn == max_samples){
     cout << "Exhausted the counterexample search. Wrapping up algorithm." << endl;
