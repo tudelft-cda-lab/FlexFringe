@@ -279,7 +279,8 @@ void inputdata::add_traces_to_apta(apta *the_apta, const bool use_thresholds) {
     }
 }
 
-void inputdata::add_trace_to_apta(trace* tr, apta* the_apta, const bool use_thresholds, unordered_set<int>* states_to_append_to){
+void inputdata::add_trace_to_apta(trace* tr, apta* the_apta, const bool use_thresholds, unordered_set<int>* states_to_append_to,
+                                  const bool only_update_last_state){
     int depth = 0;
     apta_node* node = the_apta->root;
 
@@ -288,19 +289,15 @@ void inputdata::add_trace_to_apta(trace* tr, apta* the_apta, const bool use_thre
     }
 
     tail* t = tr->head;
-    
-    //cout << "States to append to: ";
-    //for(auto x: *states_to_append_to) cout << " " << x;
-    //cout << endl; 
-
-    //cout << "The trace: " << tr->to_string() << endl;
 
     while(t != nullptr){
         node->size = node->size + 1;
-        node->add_tail(t);
-        node->data->add_tail(t);
 
-        //cout << "Node: " << node->get_number() << endl;
+        // we need this if-statement for targeted updates
+        if( !only_update_last_state || t->future()->is_final() ){
+            node->add_tail(t);
+            node->data->add_tail(t);
+        }
 
         depth++;
         if(t->is_final()){
@@ -309,17 +306,14 @@ void inputdata::add_trace_to_apta(trace* tr, apta* the_apta, const bool use_thre
             int symbol = t->get_symbol();
             if(node->child(symbol) == nullptr){
                 if(use_thresholds && RED_BLUE_THRESHOLD==0 && node->size < PARENT_SIZE_THRESHOLD){
-                    //cout << "Not appended due to size" << endl;
                     break;
                 }
                 // case 1 of the red-blue-threshold: Old streaming strategy. We already have a merged apta.
                 else if(use_thresholds && RED_BLUE_THRESHOLD!=0 && states_to_append_to != nullptr && !states_to_append_to->empty() && !node->is_red() && !node->is_blue()){
-                    //cout << "Not appended due to neither red nor blue" << endl;
                     break;
                 }
                 // case 2: we get an apta that is unmerged, yet we want to keep track of the states we append to
                 else if(use_thresholds && RED_BLUE_THRESHOLD!=0 && states_to_append_to != nullptr && !states_to_append_to->empty() && states_to_append_to->contains(node->get_number()) ){
-                    //cout << "Not appended because not in states_to_append_to" << endl;
                     break;
                 } 
                 auto* next_node = mem_store::create_node(nullptr);
@@ -328,7 +322,6 @@ void inputdata::add_trace_to_apta(trace* tr, apta* the_apta, const bool use_thre
                 //next_node->access_trace = inputdata::access_trace(t);
                 next_node->depth  = depth;
                 next_node->number = ++(this->node_number);
-                //cout << "Appended. N1: " << node->get_number() << ", N2: " << next_node->get_number() << ", symbol: " << inputdata_locator::get()->get_symbol(symbol) << endl;
             }
             node = node->child(symbol)->find();
         }

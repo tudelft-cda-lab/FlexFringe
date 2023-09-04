@@ -72,7 +72,8 @@ public:
                                                  std::unordered_map<std::string, trace*> &trace_map);
 
     void add_traces_to_apta(apta *the_apta, const bool use_thresholds=true);
-    void add_trace_to_apta(trace *tr, apta *the_apta, const bool use_thresholds=true, std::unordered_set<int>* states_to_append_to=nullptr);
+    void add_trace_to_apta(trace *tr, apta *the_apta, const bool use_thresholds=true, 
+                           std::unordered_set<int>* states_to_append_to=nullptr, const bool only_update_last_state=false);
 
     std::string& get_symbol(int a);
     int get_reverse_symbol(std::string a);

@@ -29,6 +29,8 @@ add_library(ActiveLearning STATIC
             algorithms/lstar.cpp
             algorithms/lsharp.h
             algorithms/lsharp.cpp
+            algorithms/probabilistic_lsharp.h
+            algorithms/probabilistic_lsharp.cpp
 
             databases/database_base.h
             databases/database_headers.h
@@ -41,6 +43,8 @@ add_library(ActiveLearning STATIC
             equivalence_oracle/input_file_oracle.cpp
             equivalence_oracle/active_sul_oracle.h
             equivalence_oracle/active_sul_oracle.cpp
+            equivalence_oracle/probabilistic_sul_oracle.h
+            equivalence_oracle/probabilistic_sul_oracle.cpp
 
             equivalence_oracle/search_strategies/search_base.h
             equivalence_oracle/search_strategies/search_base.cpp

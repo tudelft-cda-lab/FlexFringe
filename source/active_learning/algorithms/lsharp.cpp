@@ -101,18 +101,6 @@ void lsharp_algorithm::proc_counterex(const unique_ptr<base_teacher>& teacher, i
   // TODO: alternatively implement the binary search here
 }
 
-refinement* lsharp_algorithm::extract_best_merge(refinement_set* rs) const {
-  refinement *r = nullptr;
-  if (!rs->empty()) {
-      r = *rs->begin();
-      for(auto it : *rs){
-          if(r != it) it->erase();
-      }
-  }
-
-  return r;
-}
-
 void lsharp_algorithm::run(inputdata& id){
   int n_runs = 1;
   
