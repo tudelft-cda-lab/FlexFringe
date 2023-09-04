@@ -9,8 +9,8 @@
  * 
  */
 
-#ifndef _L_SHARP_H_
-#define _L_SHARP_H_
+#ifndef _PROBABILISTIC_L_SHARP_H_
+#define _PROBABILISTIC_L_SHARP_H_
 
 #include "algorithm_base.h"
 #include "state_merger.h"
@@ -25,18 +25,23 @@
 #include <list> 
 #include <memory>
 
-class lsharp_algorithm : public algorithm_base {
+class probabilistic_lsharp_algorithm : public l_sharp {
   private:
+
+    __attribute__((always_inline))
+    inline const double probabilistic_lsharp_algorithm::get_probability(trace* tr, inputdata& id, const std::unique_ptr<base_teacher>& teacher);
+
     inline void proc_counterex(const std::unique_ptr<base_teacher>& teacher, inputdata& id, unique_ptr<apta>& hypothesis, 
                         const std::vector<int>& counterex, std::unique_ptr<state_merger>& merger, const refinement_list refs) const;
     
     __attribute__((always_inline))
     inline void complete_state(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const std::vector<int>& alphabet) const;
+    
+    const int sample_size = 1000;
 
   public:
-    lsharp_algorithm(std::shared_ptr<sul_base>& sul, std::unique_ptr<base_teacher>& teacher, std::unique_ptr<eq_oracle_base>& oracle) 
+    probabilistic_lsharp_algorithm(std::shared_ptr<sul_base>& sul, std::unique_ptr<base_teacher>& teacher, std::unique_ptr<eq_oracle_base>& oracle) 
       : algorithm_base(sul, teacher, oracle){};
-    void run(inputdata& id) override;
 };
 
 #endif

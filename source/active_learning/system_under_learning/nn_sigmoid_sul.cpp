@@ -26,18 +26,40 @@ bool nn_sigmoid_sul::is_member(const std::vector<int>& query_trace) const {
 /**
  * @brief Queries trace, returns result.
  * 
+ * Sidenote: We have duplicate code with query_trace here. The reason being is that is is a hot
+ * path, hence we avoid function call overhead with this as part of our optimization. -> duplicate code 
+ * is wanted. 
+ * 
+ * @param query_trace 
+ * @param id 
+ * @return const double The probability that this string belongs to the language learned by the model. 
+ */
+const double nn_sigmoid_sul::get_string_probability(const std::vector<int>& query_trace, inputdata& id) const {
+  const double nn_output = get_sigmoid_output(query_trace, id);
+  if(nn_output < 0){
+    throw runtime_error("Error in Python script, please check your code there.");
+  }
+  
+  return nn_output;
+}
+
+/**
+ * @brief Queries trace, returns result.
+ * 
+ * Sidenote: We have duplicate code with get_string_probability here. The reason being is that is is a hot
+ * path, hence we avoid function call overhead with this as part of our optimization. -> duplicate code 
+ * is wanted. 
+ * 
  * @param query_trace 
  * @param id 
  * @return const int 
  */
 const int nn_sigmoid_sul::query_trace(const std::vector<int>& query_trace, inputdata& id) const {
-  double nn_output = get_sigmoid_output(query_trace, id);
+  const double nn_output = get_sigmoid_output(query_trace, id);
   if(nn_output < 0){
     throw runtime_error("Error in Python script, please check your code there.");
   }
-  
-  int res = nn_output < 0.5 ? 0 : 1;
-  return res;
+  return nn_output < 0.5 ? 0 : 1;
 }
 
 /**

@@ -14,6 +14,7 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <stdexcept>
 
 using namespace std;
 
@@ -28,4 +29,9 @@ ifstream sul_base::get_input_stream() const {
       cout << "Using input file: " << INPUT_FILE << endl;
   }
   return input_stream;
+}
+
+const double sul_base::get_string_probability(const std::vector<int>& query_trace, inputdata& id) const {
+  throw logic_error("The SUL tries to infer string probability, but this SUL does not support this. \
+  Please change the program settings. Aborting program.");
 }

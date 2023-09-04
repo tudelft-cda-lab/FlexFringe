@@ -23,9 +23,11 @@ class base_teacher{
   protected:
     std::shared_ptr<sul_base> sul;
   public:
-    virtual const int ask_membership_query(const active_learning_namespace::pref_suf_t& query, inputdata& id);
-    virtual const int ask_membership_query(const active_learning_namespace::pref_suf_t& prefix, const active_learning_namespace::pref_suf_t& suffix, inputdata& id);
+    const int ask_membership_query(const active_learning_namespace::pref_suf_t& query, inputdata& id);
+    const int ask_membership_query(const active_learning_namespace::pref_suf_t& prefix, const active_learning_namespace::pref_suf_t& suffix, inputdata& id);
     
+    const double get_string_probability(const active_learning_namespace::pref_suf_t& query, inputdata& id);
+
     base_teacher(std::shared_ptr<sul_base>& sul) : sul(sul) {};
 };
 

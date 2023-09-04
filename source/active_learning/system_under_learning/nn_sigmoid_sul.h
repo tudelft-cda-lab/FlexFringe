@@ -27,7 +27,8 @@ class nn_sigmoid_sul : public nn_sul_base {
 
     virtual bool is_member(const std::vector<int>& query_trace) const;
     
-    inline virtual const int query_trace(const std::vector<int>& query_trace, inputdata& id) const override; // TODO: does this inline here help?
+    virtual const double get_string_probability(const std::vector<int>& query_trace, inputdata& id) const override;
+    virtual const int query_trace(const std::vector<int>& query_trace, inputdata& id) const override; // TODO: does this inline here help?
 
     __attribute__((always_inline)) 
     inline const double get_sigmoid_output(const std::vector<int>& query_trace, inputdata& id) const;

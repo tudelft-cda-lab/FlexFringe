@@ -40,3 +40,14 @@ const int base_teacher::ask_membership_query(const pref_suf_t& prefix, const pre
 const int base_teacher::ask_membership_query(const pref_suf_t& query, inputdata& id) {
   return sul->query_trace(query, id);
 }
+
+/**
+ * @brief Gets the probability of a certain string. Only supported with certain SULs.
+ * 
+ * @param query 
+ * @param id 
+ * @return const double 
+ */
+const double base_teacher::get_string_probability(const pref_suf_t& query, inputdata& id) {
+  return sul->get_string_probability(query, id);
+}
