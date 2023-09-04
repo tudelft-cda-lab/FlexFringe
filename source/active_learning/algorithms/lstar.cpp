@@ -68,7 +68,8 @@ const list<refinement*> lstar_algorithm::construct_automaton_from_table(const ob
   }
 
   cout << "Building a model => starting a greedy minimization routine" << endl;
-  const list<refinement*> refs = minimize_apta(merger.get());
+  list<refinement*> refs;
+  minimize_apta(refs, merger.get());
 
   return refs;
 }

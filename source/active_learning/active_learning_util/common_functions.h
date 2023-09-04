@@ -31,14 +31,16 @@ namespace active_learning_namespace{
   bool aut_accepts_trace(trace* tr, apta* aut); 
   bool aut_accepts_trace(trace* tr, apta* aut, const count_driven* const eval); 
 
-  const int predict_type_from_trace(trace* tr, apta* aut, inputdata& id); 
+  const int predict_type_from_trace(trace* tr, apta* aut, inputdata& id);
   trace* concatenate_traces(trace* tr1, trace* tr2);
 
-  void reset_apta(state_merger* merger, const std::list<refinement*>& refs);
-  const std::list<refinement*> minimize_apta(state_merger* merger);
+  /* inline */ void reset_apta(state_merger* merger, const std::list<refinement*>& refs);
+  /* inline */ void minimize_apta(list<refinement*>& refs, state_merger* merger);
 
   std::vector<int> concatenate_strings(const std::vector<int>& pref1, const std::vector<int>& pref2);
-  trace* vector_to_trace(const std::vector<int>& vec, inputdata& id, const int trace_type = 0);
+
+  /* __attribute__((always_inline)) */
+  /* inline */ trace* vector_to_trace(const std::vector<int>& vec, inputdata& id, const int trace_type = 0);
 
   void add_sequence_to_trace(/*out*/ trace* new_trace, const std::vector<int> sequence);
   void update_tail(/*out*/ tail* t, const int symbol);

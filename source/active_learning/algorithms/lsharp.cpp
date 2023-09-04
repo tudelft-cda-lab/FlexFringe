@@ -128,11 +128,12 @@ void lsharp_algorithm::run(inputdata& id){
 
   // init the root node, s.t. we have blue states to iterate over
   complete_state(merger, the_apta->get_root(), id, alphabet);
-  list< refinement* > refs;
   while(ENSEMBLE_RUNS > 0 && n_runs <= ENSEMBLE_RUNS){
     if( n_runs % 100 == 0 ) cout << "Iteration " << n_runs + 1 << endl;
     
     bool no_isolated_states = true; // avoid iterating over a changed data structure (apta)
+    list<refinement*> performed_refinements;
+    
     for(blue_state_iterator b_it = blue_state_iterator(the_apta->get_root()); *b_it != nullptr; ++b_it){
 
       const auto blue_node = *b_it;
@@ -146,16 +147,22 @@ void lsharp_algorithm::run(inputdata& id){
         const auto red_node = *r_it;
         
         refinement* ref = merger->test_merge(red_node, blue_node);
-        if(ref != nullptr) possible_refs.insert(ref);
+        if(ref != nullptr){
+          possible_refs.insert(ref);
+          break;
+        } 
       }
 
-      if( possible_refs.size()>0 ){
-        refinement* best_merge = extract_best_merge(&possible_refs); // implicit assumption: prefers merges over extends
-        // identify states. These will be kept throughout the algorithm
-        if(dynamic_cast<extend_refinement*>(best_merge) != 0){
-          best_merge->doref(merger.get());
-          no_isolated_states = false;
-        }
+      //if( possible_refs.size()>0 ){
+      //  refinement* best_merge = extract_best_merge(&possible_refs); // implicit assumption: prefers merges over extends
+      //  best_merge->doref(merger.get());
+      //  performed_refinements.push_back(best_merge);
+      //}
+      if(possible_refs.size()==0){
+        no_isolated_states = false;
+        refinement* ref = mem_store::create_extend_refinement(merger.get(), blue_node);
+        ref->doref(merger.get());
+        performed_refinements.push_back(ref);
       }
     }
 
@@ -165,7 +172,7 @@ void lsharp_algorithm::run(inputdata& id){
         print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".before_ref");
       } */
 
-      refs = minimize_apta(merger.get());
+      minimize_apta(performed_refinements, merger.get());
 
       /* {
         static int model_nr = 0;
@@ -190,7 +197,7 @@ void lsharp_algorithm::run(inputdata& id){
         const vector<int>& cex = query_result.value().first;
         cout << "Counterexample of length " << cex.size() << " found: ";
         print_vector(cex);
-        proc_counterex(teacher, id, the_apta, cex, merger, refs);
+        proc_counterex(teacher, id, the_apta, cex, merger, performed_refinements);
         break;
       }
     }
@@ -198,7 +205,7 @@ void lsharp_algorithm::run(inputdata& id){
     ++n_runs;
     if(ENSEMBLE_RUNS > 0 && n_runs == ENSEMBLE_RUNS){
       cout << "Maximum of runs reached. Printing automaton." << endl;
-      for(auto top_ref: refs){
+      for(auto top_ref: performed_refinements){
         top_ref->doref(merger.get());
       }
       print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
