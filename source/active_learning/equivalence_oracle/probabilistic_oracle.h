@@ -19,6 +19,8 @@
 
 class probabilistic_oracle : public eq_oracle_base {
   protected:
+    const double max_distance = 0.05; // we assume the networks are good at their predictions
+
     std::shared_ptr<sul_base> sul;
     std::unique_ptr<search_base> search_strategy;
 

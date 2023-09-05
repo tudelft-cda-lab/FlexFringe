@@ -67,7 +67,8 @@ void lsharp_algorithm::complete_state(unique_ptr<state_merger>& merger, apta_nod
  * @param counterex The counterexample.
  */
 void lsharp_algorithm::proc_counterex(const unique_ptr<base_teacher>& teacher, inputdata& id, unique_ptr<apta>& hypothesis, 
-                                      const vector<int>& counterex, unique_ptr<state_merger>& merger, const refinement_list refs) const {
+                                      const vector<int>& counterex, unique_ptr<state_merger>& merger, const refinement_list refs,
+                                      const vector<int>& alphabet) const {
   // in this block we do a linear search for the fringe of the prefix tree. Once we found it, we ask membership queries for each substring
   // of the counterexample (for each new state that we create), and this way add the whole counterexample to the prefix tree
   reset_apta(merger.get(), refs);
@@ -185,7 +186,7 @@ void lsharp_algorithm::run(inputdata& id){
         const vector<int>& cex = query_result.value().first;
         cout << "Counterexample of length " << cex.size() << " found: ";
         print_vector(cex);
-        proc_counterex(teacher, id, the_apta, cex, merger, performed_refinements);
+        proc_counterex(teacher, id, the_apta, cex, merger, performed_refinements, alphabet);
         break;
       }
     }

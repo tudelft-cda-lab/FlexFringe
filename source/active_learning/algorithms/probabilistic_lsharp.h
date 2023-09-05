@@ -24,18 +24,22 @@
 
 #include <list> 
 #include <memory>
+#include <unordered_map>
 
 class probabilistic_lsharp_algorithm : public l_sharp {
   private:
 
-    __attribute__((always_inline))
-    inline const double probabilistic_lsharp_algorithm::get_probability(trace* tr, inputdata& id, const std::unique_ptr<base_teacher>& teacher);
+    std::unordered_set<apta_node*> completed_nodes;
 
     inline void proc_counterex(const std::unique_ptr<base_teacher>& teacher, inputdata& id, unique_ptr<apta>& hypothesis, 
-                        const std::vector<int>& counterex, std::unique_ptr<state_merger>& merger, const refinement_list refs) const;
+                        const std::vector<int>& counterex, std::unique_ptr<state_merger>& merger, const refinement_list refs,
+                        const std::vector<int>& alphabet) const;
     
     __attribute__((always_inline))
     inline void complete_state(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const std::vector<int>& alphabet) const;
+    
+    __attribute__((always_inline))
+    inline void update_state(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const std::vector<int>& alphabet) const;
     
     const int sample_size = 1000;
 
