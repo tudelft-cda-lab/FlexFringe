@@ -34,6 +34,9 @@ class lsharp_algorithm : public algorithm_base {
     __attribute__((always_inline))
     inline void complete_state(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const std::vector<int>& alphabet) const;
 
+    __attribute__((always_inline))
+    inline void update_state(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const std::vector<int>& alphabet) const;
+    
   public:
     lsharp_algorithm(std::shared_ptr<sul_base>& sul, std::unique_ptr<base_teacher>& teacher, std::unique_ptr<eq_oracle_base>& oracle) 
       : algorithm_base(sul, teacher, oracle){};
