@@ -23,6 +23,7 @@ class probabilistic_oracle : public eq_oracle_base {
 
     std::shared_ptr<sul_base> sul;
     std::unique_ptr<search_base> search_strategy;
+    std::shared_ptr< unordered_map<apta_node*, unordered_map<int, double> > >  node_response_map;
 
     virtual void reset_sul() override {};
   

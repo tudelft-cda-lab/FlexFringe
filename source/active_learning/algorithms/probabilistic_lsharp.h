@@ -31,6 +31,8 @@ class probabilistic_lsharp_algorithm : public l_sharp {
 
     std::unordered_set<apta_node*> completed_nodes;
 
+    std::shared_ptr< std::unordered_map<apta_node*, std::unordered_map<int, double> > >  node_response_map; // memoization
+
     inline void proc_counterex(const std::unique_ptr<base_teacher>& teacher, inputdata& id, unique_ptr<apta>& hypothesis, 
                         const std::vector<int>& counterex, std::unique_ptr<state_merger>& merger, const refinement_list refs,
                         const std::vector<int>& alphabet) const;

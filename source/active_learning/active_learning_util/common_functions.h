@@ -25,6 +25,8 @@
 
 #include <list>
 #include <functional>
+#include <utility>
+#include <unordered_map>
 
 namespace active_learning_namespace{
 
@@ -46,7 +48,8 @@ namespace active_learning_namespace{
   void add_sequence_to_trace(/*out*/ trace* new_trace, const std::vector<int> sequence);
   void update_tail(/*out*/ tail* t, const int symbol);
 
-  const double get_probability(trace* tr, inputdata& id, const std::unique_ptr<base_teacher>& teacher, apta* aut);
+  const double get_probability(trace* tr, inputdata& id, const std::unique_ptr<base_teacher>& teacher, apta* aut,
+                                std::shared_ptr< std::unordered_map<apta_node*, std::unordered_map<int, double> > >&  node_response_map);
 
 
   /**
