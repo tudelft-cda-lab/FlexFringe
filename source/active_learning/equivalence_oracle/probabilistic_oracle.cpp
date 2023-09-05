@@ -12,12 +12,16 @@
 #include "probabilistic_oracle.h"
 #include "common_functions.h"
 
+#include <cmath>
+
 using namespace std;
 using namespace active_learning_namespace;
 
 /**
  * @brief This function does what you think it does. The type does not matter, because we perform this one 
  * on SULs that return us probabilities, hence it only returns a dummy value.
+ * 
+ * TODO: this function is also inefficient in terms of inferring probabilities. Optimize this one.
  * 
  * @param merger The merger.
  * @param teacher The teacher.
@@ -39,23 +43,32 @@ std::optional< pair< vector<int>, int> > probabilistic_oracle::equivalence_query
 
     apta_node* n = hypothesis.get_root();
     tail* t = test_tr->get_head();
-    for(int j = 0; j < t->get_length(); j++){
+
+    vector<int> current_substring;
+    for(int j = 0; j < test_tr->get_length(); j++){
         n = active_learning_namespace::get_child_node(n, t);
         
         if(n == nullptr){
           cout << "Counterexample because tree not parsable" << endl;
           search_strategy->reset();
-          return make_optional< pair< vector<int>, int > >(make_pair(query_string, true_val));
+          return make_optional< pair< vector<int>, int > >(make_pair(query_string, 0));
+        } 
+
+        current_substring.push_back(t->get_symbol());
+        const double true_p = teacher->get_string_probability(substring, id);
+
+        trace* substring_tr = vector_to_trace(current_substring);
+        const double inferred_p = get_probability(substring_tr, id, teacher);
+        mem_store::delete_trace(substring_tr);
+
+        if( abs(true_p - inferred_p) > max_distance){
+          cout << "Predictions of the following counterexample: The true probability: " << true_p << ", predicted probability: " << inferred_p << endl;
+          search_strategy->reset();
+          return make_optional< pair< vector<int>, int > >(make_pair(query_string, 0));
         } 
 
         t = t->future();
     }
-    const int pred_val = n->get_data()->predict_type(t);
-    if(true_val != pred_val){
-      cout << "Predictions of the following counterexample: The true value: " << true_val << ", predicted: " << pred_val << endl;
-      search_strategy->reset();
-      return make_optional< pair< vector<int>, int > >(make_pair(query_string, true_val));
-    } 
 
     query_string_opt = search_strategy->next(id);
   }

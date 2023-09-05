@@ -21,6 +21,7 @@
 #include "definitions.h"
 #include "count_types.h"
 #include "inputdata.h"
+#include "base_teacher.h"
 
 #include <list>
 #include <functional>
@@ -44,6 +45,8 @@ namespace active_learning_namespace{
 
   void add_sequence_to_trace(/*out*/ trace* new_trace, const std::vector<int> sequence);
   void update_tail(/*out*/ tail* t, const int symbol);
+
+  const double get_probability(trace* tr, inputdata& id, const std::unique_ptr<base_teacher>& teacher, apta* aut);
 
 
   /**

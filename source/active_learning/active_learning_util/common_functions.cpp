@@ -252,6 +252,57 @@ trace* active_learning_namespace::vector_to_trace(const vector<int>& vec, inputd
 }
 
 /**
+ * @brief Gets the probability of the current last symbol represented by the trace.
+ * 
+ * TODO: you can optimize this guy via splitting into two functions. One to get probability to the current state, and then you can ask the probability for each
+ * outgoing state. Will save quite a bit of computations.
+ * 
+ * @param tr The trace.
+ * @param id The inputdata.
+ * @return const double Probability.
+ */
+const double active_learning_namespace::get_probability(trace* tr, inputdata& id, const unique_ptr<base_teacher>& teacher, apta* aut){
+  static unordered_map<apta_node*, unordered_map<int, double> > node_response_map; // memoization for runtime efficiency. Maps node to outgoing probabilities
+
+  apta_node* n = aut->get_root();
+  tail* t = tr->head;
+  pref_suf_t current_string; // TODO: constructing a list is possibly inefficient. can we walk around this guy here?
+
+  double product_probability = 1;
+  while(n!=nullptr){
+    auto symbol = t->get_symbol();
+    current_string.push_back(symbol);
+
+    if(t->future()->is_final()){
+      // the magic happens here
+      if(!node_response_map.contains(n))
+        node_response_map[n] = unordered_map<int, double>();
+
+      double new_p = teacher->get_string_probability(current_string, id);
+      node_response_map[n][symbol] = new_p;
+      return new_p / product_probability;
+    }
+
+    if(!node_response_map.contains(n))
+      node_response_map[n] = unordered_map<int, double>();
+    
+    if(node_response_map[n].contains(symbol)){
+      product_probability *= node_response_map[n][symbol];
+    }
+    else{
+      double new_p = teacher->get_string_probability(current_string, id);
+      node_response_map[n][symbol] = new_p;
+      product_probability *= new_p;
+    }
+
+    n = active_learning_namespace::get_child_node(n, t);
+    t = t->future();
+  }
+
+  throw runtime_error("We should not reach here. What happened?");
+}
+
+/**
  * @brief For debugging.
  */
 void active_learning_namespace::print_list(const list<int>& l){
