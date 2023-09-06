@@ -13,6 +13,8 @@
 #define _PROBABILISTIC_L_SHARP_H_
 
 #include "algorithm_base.h"
+#include "lsharp.h"
+
 #include "state_merger.h"
 #include "inputdata.h"
 #include "definitions.h"
@@ -21,33 +23,35 @@
 #include "refinement.h"
 #include "base_teacher.h"
 #include "eq_oracle_base.h"
+#include "probabilistic_oracle.h"
 
 #include <list> 
 #include <memory>
 #include <unordered_map>
 
-class probabilistic_lsharp_algorithm : public l_sharp {
-  private:
+class probabilistic_lsharp_algorithm : public lsharp_algorithm {
+  protected:
 
-    std::unordered_set<apta_node*> completed_nodes;
+    std::shared_ptr< std::unordered_map<apta_node*, std::unordered_map<int, int> > >  node_type_counter; // memoization
 
-    std::shared_ptr< std::unordered_map<apta_node*, std::unordered_map<int, double> > >  node_response_map; // memoization
-
-    inline void proc_counterex(const std::unique_ptr<base_teacher>& teacher, inputdata& id, unique_ptr<apta>& hypothesis, 
+    virtual void proc_counterex(const std::unique_ptr<base_teacher>& teacher, inputdata& id, unique_ptr<apta>& hypothesis, 
                         const std::vector<int>& counterex, std::unique_ptr<state_merger>& merger, const refinement_list refs,
-                        const std::vector<int>& alphabet) const;
+                        const std::vector<int>& alphabet) const override;
     
-    __attribute__((always_inline))
-    inline void complete_state(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const std::vector<int>& alphabet) const;
+    virtual void complete_state(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const std::vector<int>& alphabet) const override;
     
-    __attribute__((always_inline))
-    inline void update_state(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const std::vector<int>& alphabet) const;
+    virtual void update_state(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const std::vector<int>& alphabet) const override;
     
     const int sample_size = 1000;
 
   public:
     probabilistic_lsharp_algorithm(std::shared_ptr<sul_base>& sul, std::unique_ptr<base_teacher>& teacher, std::unique_ptr<eq_oracle_base>& oracle) 
-      : algorithm_base(sul, teacher, oracle){};
+      : lsharp_algorithm(sul, teacher, oracle){
+        std::cout << "Probabilistic L# only works with probabilistic oracle. Automatically switched to that one.\
+        If this is undesired behavior check your input and/or source code." << std::endl;
+        node_type_counter = std::shared_ptr< std::unordered_map<apta_node*, std::unordered_map<int, int> > >(new std::unordered_map<apta_node*, std::unordered_map<int, int> >());
+        this->oracle.reset(new probabilistic_oracle(sul, node_type_counter));
+      };
 };
 
 #endif

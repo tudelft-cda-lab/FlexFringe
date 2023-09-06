@@ -43,8 +43,8 @@ add_library(ActiveLearning STATIC
             equivalence_oracle/input_file_oracle.cpp
             equivalence_oracle/active_sul_oracle.h
             equivalence_oracle/active_sul_oracle.cpp
-            equivalence_oracle/probabilistic_sul_oracle.h
-            equivalence_oracle/probabilistic_sul_oracle.cpp
+            equivalence_oracle/probabilistic_oracle.h
+            equivalence_oracle/probabilistic_oracle.cpp
 
             equivalence_oracle/search_strategies/search_base.h
             equivalence_oracle/search_strategies/search_base.cpp
