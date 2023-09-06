@@ -14,6 +14,7 @@
 #include "algorithm_base.h"
 #include "lstar.h"
 #include "lsharp.h"
+#include "probabilistic_lsharp.h"
 
 //#include "sul_headers.h"
 
@@ -130,6 +131,10 @@ void active_learning_main_func::run_active_learning(){
   else if(ACTIVE_LEARNING_ALGORITHM == "l_sharp"){
     STORE_ACCESS_STRINGS = true;
     algorithm = unique_ptr<algorithm_base>(new lsharp_algorithm(sul, teacher, oracle));
+  }
+  else if(ACTIVE_LEARNING_ALGORITHM == "p_l_sharp"){
+    STORE_ACCESS_STRINGS = true;
+    algorithm = unique_ptr<algorithm_base>(new probabilistic_lsharp_algorithm(sul, teacher, oracle));
   }
   else{
     throw logic_error("Fatal error: Unknown active_learning_algorithm flag used: " + ACTIVE_LEARNING_ALGORITHM);

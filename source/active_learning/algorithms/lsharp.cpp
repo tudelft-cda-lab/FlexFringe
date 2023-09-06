@@ -158,6 +158,7 @@ void lsharp_algorithm::run(inputdata& id){
         
         refinement* ref = merger->test_merge(red_node, blue_node);
         if(ref != nullptr){
+          //cout << "We can do a merge" << endl;
           possible_refs.insert(ref);
           break;
         } 
@@ -169,6 +170,8 @@ void lsharp_algorithm::run(inputdata& id){
       //  performed_refinements.push_back(best_merge);
       //}
       if(possible_refs.size()==0){
+        cout << "We do an extend" << endl;
+
         no_isolated_states = false;
         refinement* ref = mem_store::create_extend_refinement(merger.get(), blue_node);
         ref->doref(merger.get());
@@ -184,10 +187,10 @@ void lsharp_algorithm::run(inputdata& id){
 
       minimize_apta(performed_refinements, merger.get());
 
-      /* {
+      {
         static int model_nr = 0;
         print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_ref"); // printing the final model each time
-      } */
+      }
 
       while(true){
         /* While loop to check the type. type is < 0 if sul cannot properly respond to query, e.g. when the string 

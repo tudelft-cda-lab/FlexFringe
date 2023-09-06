@@ -25,7 +25,7 @@ using namespace active_learning_namespace;
  * 
  * @param merger The merger.
  * @param teacher The teacher.
- * @return std::optional< pair< vector<int>, int> > nullopt if no counterexample found, else the counterexample. The type int will 
+ * @return std::optional< pair< vector<int>, int> > nullopt if no counterexample found, else the counterexample. The type (integer) will 
  * always be zero.
  */
 std::optional< pair< vector<int>, int> > probabilistic_oracle::equivalence_query(state_merger* merger, const unique_ptr<base_teacher>& teacher) {  
@@ -45,6 +45,7 @@ std::optional< pair< vector<int>, int> > probabilistic_oracle::equivalence_query
     tail* t = test_tr->get_head();
 
     vector<int> current_substring;
+    double sampled_probability = 1;
     for(int j = 0; j < test_tr->get_length(); j++){
         n = active_learning_namespace::get_child_node(n, t);
         
@@ -54,22 +55,27 @@ std::optional< pair< vector<int>, int> > probabilistic_oracle::equivalence_query
           return make_optional< pair< vector<int>, int > >(make_pair(query_string, 0));
         } 
 
-        current_substring.push_back(t->get_symbol());
-        const double true_p = teacher->get_string_probability(substring, id);
+        const int symbol = t->get_symbol();
+        current_substring.push_back(symbol);
+        const double true_p = teacher->get_string_probability(current_substring, id);
 
-        trace* substring_tr = vector_to_trace(current_substring);
-        const double inferred_p = get_probability(substring_tr, id, teacher);
-        mem_store::delete_trace(substring_tr);
+        sampled_probability *= (static_cast<double>((*node_type_counter)[n][symbol]) / static_cast<double>(n->get_final()));
+/*         trace* substring_tr = vector_to_trace(current_substring);
+        const double inferred_p = get_probability_of_last_symbol(substring_tr, id, teacher);
+        mem_store::delete_trace(substring_tr); */
 
-        if( abs(true_p - inferred_p) > max_distance){
-          cout << "Predictions of the following counterexample: The true probability: " << true_p << ", predicted probability: " << inferred_p << endl;
+        //cout << "True p: " << true_p << ", predicted: " << sampled_probability << ", and the map says: " << (*node_type_counter)[n][symbol] << endl;
+        //cout << "In oracle. Node: " << n << ", symbol: " << symbol << ", count: " << (*node_type_counter)[n][symbol] << endl;
+
+        if( abs(true_p - sampled_probability) > max_distance){
+          cout << "Predictions of the following counterexample: The true probability: " << true_p << ", predicted probability: " << sampled_probability << endl;
           search_strategy->reset();
           return make_optional< pair< vector<int>, int > >(make_pair(query_string, 0));
         } 
 
         t = t->future();
     }
-
+    cout << "Getting the next string" << endl;
     query_string_opt = search_strategy->next(id);
   }
 

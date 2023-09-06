@@ -261,8 +261,8 @@ trace* active_learning_namespace::vector_to_trace(const vector<int>& vec, inputd
  * @param id The inputdata.
  * @return const double Probability.
  */
-const double active_learning_namespace::get_probability(trace* tr, inputdata& id, const unique_ptr<base_teacher>& teacher, apta* aut){
-  static unordered_map<apta_node*, unordered_map<int, double> > node_response_map; // memoization for runtime efficiency. Maps node to outgoing probabilities
+const double active_learning_namespace::get_probability_of_last_symbol(trace* tr, inputdata& id, const unique_ptr<base_teacher>& teacher, apta* aut){   
+  static unordered_map<apta_node*, unordered_map<int, double> > node_response_map;
 
   apta_node* n = aut->get_root();
   tail* t = tr->head;
@@ -279,7 +279,7 @@ const double active_learning_namespace::get_probability(trace* tr, inputdata& id
         node_response_map[n] = unordered_map<int, double>();
 
       double new_p = teacher->get_string_probability(current_string, id);
-      node_response_map[n][symbol] = new_p;
+      node_response_map[n][symbol] = new_p / product_probability;
       return new_p / product_probability;
     }
 
@@ -291,7 +291,7 @@ const double active_learning_namespace::get_probability(trace* tr, inputdata& id
     }
     else{
       double new_p = teacher->get_string_probability(current_string, id);
-      node_response_map[n][symbol] = new_p;
+      node_response_map[n][symbol] = new_p / product_probability;
       product_probability *= new_p;
     }
 
