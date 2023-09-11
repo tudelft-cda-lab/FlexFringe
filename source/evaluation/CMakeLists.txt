@@ -21,6 +21,8 @@ add_library(Evaluation STATIC
             l_star_evaluation.cpp
             likelihood.h
             likelihood.cpp
+            log_alergia.h
+            log_alergia.cpp
             mealy.h
             mealy.cpp
             mse_error.h
