@@ -32,30 +32,16 @@
 class probabilistic_lsharp_algorithm : public lsharp_algorithm {
   protected:
 
-    std::shared_ptr< std::unordered_map<apta_node*, std::unordered_map<int, int> > >  node_type_counter; // memoization
-
-    virtual void proc_counterex(const std::unique_ptr<base_teacher>& teacher, inputdata& id, unique_ptr<apta>& hypothesis, 
-                        const std::vector<int>& counterex, std::unique_ptr<state_merger>& merger, const refinement_list refs,
-                        const std::vector<int>& alphabet) const override;
     
     virtual void complete_state(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const std::vector<int>& alphabet) const override;
-    
     virtual void update_state(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const std::vector<int>& alphabet) const override;
-    
-    double mu = 1e-10;
-    int sample_size;
-    int get_sample_size();
 
   public:
     probabilistic_lsharp_algorithm(std::shared_ptr<sul_base>& sul, std::unique_ptr<base_teacher>& teacher, std::unique_ptr<eq_oracle_base>& oracle) 
       : lsharp_algorithm(sul, teacher, oracle){
         std::cout << "Probabilistic L# only works with probabilistic oracle. Automatically switched to that one.\
         If this is undesired behavior check your input and/or source code." << std::endl;
-        node_type_counter = std::shared_ptr< std::unordered_map<apta_node*, std::unordered_map<int, int> > >(new std::unordered_map<apta_node*, std::unordered_map<int, int> >());
-        this->oracle.reset(new probabilistic_oracle(sul, node_type_counter));
-
-        this->sample_size = get_sample_size();
-        std::cout << "Sample size: " << this->sample_size << std::endl;
+        this->oracle.reset(new probabilistic_oracle(sul));
       };
 };
 

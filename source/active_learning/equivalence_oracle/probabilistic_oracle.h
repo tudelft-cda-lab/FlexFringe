@@ -13,27 +13,27 @@
 #define _PROBABILISTIC_ORACLE_H_
 
 #include "eq_oracle_base.h"
+#include "state_merger.h"
 
 #include <optional>
 #include <utility>
 
 class probabilistic_oracle : public eq_oracle_base {
   protected:
-    const double max_distance = 1e-37; //0.05; // we assume the networks are good at their predictions
-
     std::shared_ptr<sul_base> sul;
     std::unique_ptr<search_base> search_strategy;
-    std::shared_ptr< std::unordered_map<apta_node*, std::unordered_map<int, int> > >  node_type_counter; // memoization
+    state_merger* merger;
 
     virtual void reset_sul() override {};
   
   public:
-    probabilistic_oracle(std::shared_ptr<sul_base>& sul, 
-                         std::shared_ptr< unordered_map<apta_node*, unordered_map<int, int> > >& node_type_counter) 
-                         : eq_oracle_base(sul), node_type_counter(node_type_counter) {
+    probabilistic_oracle(std::shared_ptr<sul_base>& sul) 
+                         : eq_oracle_base(sul) {
       search_strategy = std::unique_ptr<search_base>(new random_string_search(30));
       //std::unique_ptr<search_base>(new bfs_strategy(8)); // number here is maximum length of sequence. Find a better way to set this
       assert(dynamic_cast<input_file_sul*>(sul.get()) == nullptr);
+
+      merger = nullptr;
     };
 
     std::optional< std::pair< std::vector<int>, int> > equivalence_query(state_merger* merger, [[maybe_unused]] const std::unique_ptr<base_teacher>& teacher);
