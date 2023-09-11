@@ -279,8 +279,7 @@ void inputdata::add_traces_to_apta(apta *the_apta, const bool use_thresholds) {
     }
 }
 
-void inputdata::add_trace_to_apta(trace* tr, apta* the_apta, const bool use_thresholds, unordered_set<int>* states_to_append_to,
-                                  const bool only_update_last_state){
+void inputdata::add_trace_to_apta(trace* tr, apta* the_apta, const bool use_thresholds, unordered_set<int>* states_to_append_to){
     int depth = 0;
     apta_node* node = the_apta->root;
 
@@ -294,10 +293,7 @@ void inputdata::add_trace_to_apta(trace* tr, apta* the_apta, const bool use_thre
         node->size = node->size + 1;
 
         node->add_tail(t);
-        // we need this if-statement for targeted updates
-        if( !only_update_last_state || t->is_final() || ( !t->is_final() && t->future()->is_final() ) ){
-            node->data->add_tail(t);
-        }
+        node->data->add_tail(t);
 
         depth++;
         if(t->is_final()){

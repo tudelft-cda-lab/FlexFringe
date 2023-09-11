@@ -11,6 +11,7 @@
 
 #include "probabilistic_oracle.h"
 #include "common_functions.h"
+#include "log_alergia.h"
 
 #include <cmath>
 
@@ -32,6 +33,8 @@ std::optional< pair< vector<int>, int> > probabilistic_oracle::equivalence_query
   inputdata& id = *(merger->get_dat());
   apta& hypothesis = *(merger->get_aut());
 
+  static auto max_distance = static_cast<log_alergia*>(merger->get_eval())->get_log_mu();
+
   std::optional< vector<int> > query_string_opt = search_strategy->next(id);
   while(query_string_opt != nullopt){ // nullopt == search exhausted
     auto& query_string = query_string_opt.value();
@@ -45,7 +48,7 @@ std::optional< pair< vector<int>, int> > probabilistic_oracle::equivalence_query
     tail* t = test_tr->get_head();
 
     vector<int> current_substring;
-    double sampled_probability = 1;
+    double sampled_probability = 0;
     for(int j = 0; j < test_tr->get_length(); j++){
         n = active_learning_namespace::get_child_node(n, t);
         
@@ -57,15 +60,11 @@ std::optional< pair< vector<int>, int> > probabilistic_oracle::equivalence_query
 
         const int symbol = t->get_symbol();
         current_substring.push_back(symbol);
-        const double true_p = teacher->get_string_probability(current_substring, id);
+        const double true_p = log( teacher->get_string_probability(current_substring, id) ); // TODO: throw the log inside for runtime purposes
 
-        sampled_probability *= (static_cast<double>((*node_type_counter)[n][symbol]) / static_cast<double>(n->get_final()));
-/*         trace* substring_tr = vector_to_trace(current_substring);
-        const double inferred_p = get_probability_of_last_symbol(substring_tr, id, teacher);
-        mem_store::delete_trace(substring_tr); */
+        sampled_probability += log( static_cast<log_alergia_data*>(n->get_data())->get_probability(symbol) );
 
-        //cout << "True p: " << true_p << ", predicted: " << sampled_probability << ", and the map says: " << (*node_type_counter)[n][symbol] << endl;
-        //cout << "In oracle. Node: " << n << ", symbol: " << symbol << ", count: " << (*node_type_counter)[n][symbol] << endl;
+        cout << "Sampled probability: " << sampled_probability << ", true p: " << true_p << endl;
 
         if( abs(true_p - sampled_probability) > max_distance){
           cout << "Predictions of the following counterexample: The true probability: " << true_p << ", predicted probability: " << sampled_probability << endl;

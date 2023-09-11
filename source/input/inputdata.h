@@ -73,7 +73,7 @@ public:
 
     void add_traces_to_apta(apta *the_apta, const bool use_thresholds=true);
     void add_trace_to_apta(trace *tr, apta *the_apta, const bool use_thresholds=true, 
-                           std::unordered_set<int>* states_to_append_to=nullptr, const bool only_update_last_state=false);
+                           std::unordered_set<int>* states_to_append_to=nullptr);
 
     std::string& get_symbol(int a);
     int get_reverse_symbol(std::string a);
