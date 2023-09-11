@@ -42,7 +42,7 @@ void lsharp_algorithm::complete_state(unique_ptr<state_merger>& merger, apta_nod
 
       pref_suf_t seq;
       if(n->get_number() != -1) seq = access_trace->get_input_sequence(true, true);
-      else seq.resize(1);
+        seq.resize(1);
       
       seq[seq.size()-1] = symbol;
       
@@ -112,6 +112,7 @@ void lsharp_algorithm::proc_counterex(const unique_ptr<base_teacher>& teacher, i
 
   // now let's walk over the apta again, completing all the states we created
   n = hypothesis->get_root();
+  cout << "Root: " << n->get_number() << ", depth: " << n->get_depth() << endl;
   trace* parsing_trace = vector_to_trace(counterex, id);
   tail* t = parsing_trace->get_head();
   while(n != nullptr){

@@ -84,7 +84,7 @@ void probabilistic_lsharp_algorithm::update_state(std::unique_ptr<state_merger>&
       auto access_trace = n->get_access_trace();
 
       pref_suf_t seq;
-      if(n->get_number() != -1) seq = access_trace->get_input_sequence(true, true);
+      if(n->get_number() != 0 && n->get_number() != -1) seq = access_trace->get_input_sequence(true, true);
       else seq.resize(1);
       
       seq[seq.size()-1] = symbol;
@@ -107,6 +107,30 @@ void probabilistic_lsharp_algorithm::update_state(std::unique_ptr<state_merger>&
       (*node_type_counter)[n][symbol] += additional_sample_size;
       //cout << "In update. Node: " << n << ", symbol: " << symbol << ", count: " << (*node_type_counter)[n][symbol] << ", of which new: " << additional_sample_size << endl;
   }
+}
+
+/**
+ * @brief We assume alergia here, think about what to do if you use other heuristics.
+ * 
+ * @return int The sample size to meet the constraints.
+ */
+int probabilistic_lsharp_algorithm::get_sample_size() {
+  const double alpha = CHECK_PARAMETER;
+  auto denominator = 8 * mu * mu;
+  auto counter = log(2/alpha);
+  auto res = counter / denominator;
+  cout << "Denominator: " << denominator << ", counter: " << counter << ", res: " << res << "res cast: " <<  static_cast<unsigned int>(res) << endl;
+
+  if (!(res >= -9223372036854775808.0   // -2^63
+     && res <   9223372036854775808.0)  // 2^63
+  ) {
+      cout << "Oberflow" << endl;
+      res = 9223372036854775808.0;
+  }
+
+  cout << "log of mu: " << log(mu) << endl;
+
+  return res;
 }
 
 /**

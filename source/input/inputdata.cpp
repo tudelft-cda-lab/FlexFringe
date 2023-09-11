@@ -293,9 +293,9 @@ void inputdata::add_trace_to_apta(trace* tr, apta* the_apta, const bool use_thre
     while(t != nullptr){
         node->size = node->size + 1;
 
+        node->add_tail(t);
         // we need this if-statement for targeted updates
-        if( !only_update_last_state || t->future()->is_final() ){
-            node->add_tail(t);
+        if( !only_update_last_state || t->is_final() || ( !t->is_final() && t->future()->is_final() ) ){
             node->data->add_tail(t);
         }
 
