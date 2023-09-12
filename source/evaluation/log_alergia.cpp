@@ -59,13 +59,15 @@ void log_alergia_data::write_json(json& data){
 };
 
 void log_alergia_data::print_transition_label(iostream& output, int symbol){
-    output << symbol_probability_map[symbol] << ": ";
+    output << symbol << ": " << symbol_probability_map[symbol];
 };
 
-/* void log_alergia_data::print_state_label(iostream& output){
+void log_alergia_data::print_state_label(iostream& output){
     evaluation_data::print_state_label(output);
-    //output << "\n" << num_paths() << " " << num_final();
-}; */
+    for(auto [symbol, p]: symbol_probability_map){
+        output << symbol << " : " << p << "\n";
+    }
+};
 
 /** Merging update and undo_merge routines */
 
@@ -127,6 +129,17 @@ void log_alergia_data::insert_probability(const int symbol, const double p) {
     this->symbol_probability_map[symbol] = p;
 }
 
+double log_alergia::get_js_term(const double px, const double qx) {
+    double term1, term2;
+    if(px==0) term1 = 0;
+    else term1 = px*log(2*px / (px+qx));
+
+    if(qx==0) term2 = 0;
+    else term2 = qx*log(2*qx / (px+qx));
+
+    //cout << "px: " << px << ", qx: " << qx << ", term1: " << term1 << ", term2: " << term2 << ", res: " << term1 + term2 << endl;
+    return 0.5*(term1 + term2);
+}
 
 bool log_alergia::consistent(state_merger *merger, apta_node* left_node, apta_node* right_node){
     if(inconsistency_found) return false;
@@ -134,38 +147,122 @@ bool log_alergia::consistent(state_merger *merger, apta_node* left_node, apta_no
     auto* l = static_cast<log_alergia_data*>( left_node->get_data() );
     auto* r = static_cast<log_alergia_data*>( right_node->get_data() );
 
+    static auto mu = MU;
+
+    //cout << "Divergence in test: " << get_js_divergence(l->get_distribution(), r->get_distribution()) << endl;
+
+    double left_sum=0, right_sum=0;
+
     unordered_set<int> checked_symbols;
     for(auto& [symbol, left_p] : l->symbol_probability_map){
         double right_p = r->symbol_probability_map[symbol]; // automatically set to 0 if does not contain (zero initialization)
-        double left = log(left_p - right_p);
-        if(left > right){
+        //if(left_p == right_p) continue;
+
+        left_sum += left_p;
+        right_sum += right_p;
+        
+        js_divergence += get_js_term(left_p, right_p);
+        if(js_divergence > mu){
             inconsistency_found = true;
             return false;
         }
 
-        sum_diffs += left;
+        checked_symbols.insert(symbol);
     }
 
+    for(auto& [symbol, right_p] : r->symbol_probability_map){
+        if(checked_symbols.contains(symbol)) continue;
+
+        double left_p = l->symbol_probability_map[symbol]; // automatically set to 0 if does not contain (zero initialization)
+        //if(left_p == right_p) continue;
+        right_sum += right_p;
+        
+        js_divergence += get_js_term(left_p, right_p);
+        if(js_divergence > mu){
+            inconsistency_found = true;
+            return false;
+        }
+    }
+
+    cout << "Left sum: " << left_sum << ", right sum: " << right_sum << endl;
     return true;
 };
 
+double log_alergia::get_js_divergence(unordered_map<int, double>& left_distribution, unordered_map<int, double>& right_distribution){
+
+    double res = 0;
+    unordered_set<int> checked_symbols;
+    for(auto& [symbol, left_p] : left_distribution){
+        double right_p = right_distribution[symbol]; // automatically set to 0 if does not contain (zero initialization)
+        //if(left_p == right_p) continue;
+        auto js = get_js_term(left_p, right_p);
+        res += js;
+
+        //cout << "JS: " << js << ", res: " << res << endl;
+
+        checked_symbols.insert(symbol);
+    }
+
+    for(auto& [symbol, right_p] : right_distribution){
+        if(checked_symbols.contains(symbol)) continue;
+
+        double left_p = left_distribution[symbol]; // automatically set to 0 if does not contain (zero initialization)
+        //if(left_p == right_p) continue;
+        auto js = get_js_term(left_p, right_p);
+        res += js;
+
+        //cout << "JS: " << js << ", res: " << res << endl;
+    }
+    
+    return res;
+}
+
+
+
+/* bool log_alergia::consistent(state_merger *merger, apta_node* left_node, apta_node* right_node){
+    if(inconsistency_found) return false;
+    
+    auto* l = static_cast<log_alergia_data*>( left_node->get_data() );
+    auto* r = static_cast<log_alergia_data*>( right_node->get_data() );
+
+    static auto mu = MU;
+
+    unordered_set<int> checked_symbols;
+    for(auto& [symbol, left_p] : l->symbol_probability_map){
+        double right_p = r->symbol_probability_map[symbol]; // automatically set to 0 if does not contain (zero initialization)
+        if(left_p == right_p) continue;
+        
+        //double left = log(abs(left_p - right_p));
+        double left = abs(left_p - right_p);
+        //cout << "Left " << left << " right " << mu << endl;
+        if(left > mu){
+            inconsistency_found = true;
+            return false;
+        }
+
+        sum_diffs += abs(left);
+    }
+    return true;
+}; */
+
 double log_alergia::compute_score(state_merger *merger, apta_node* left, apta_node* right){
-    return sum_diffs;
+    return js_divergence;
 };
 
 void log_alergia::reset(state_merger *merger){
     inconsistency_found = false;
     sum_diffs = 0.0;
+    js_divergence = 0;
 };
 
 void log_alergia::initialize_before_adding_traces() {
     alpha = CHECK_PARAMETER;
     log_mu = log(MU);
-    log_sqr_n = 0.5 * (log(log(2 / alpha)) - log(2)) - log_mu - log(2);
 
     auto log_two = log(2);
     auto log_log_alpha = log(log(2 / alpha));
-    right = 0.5 * (log_log_alpha - log_two) - log_sqr_n - log_two;
+
+    right = (log_log_alpha - log_two) - 2*log_mu - 2*log_two;
 
     cout << "Evaluation function initialized. Alpha: " << alpha << ", log-mu" << log_mu << ", log(sqrt(n)) [also called Gamma]: " << log_sqr_n << endl;
 }

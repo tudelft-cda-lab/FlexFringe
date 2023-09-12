@@ -25,7 +25,7 @@ protected:
 
 public:
     virtual void print_transition_label(iostream& output, int symbol) override;
-    //virtual void print_state_label(iostream& output) override;
+    virtual void print_state_label(iostream& output) override;
 
     virtual void update(evaluation_data* right) override;
     virtual void undo(evaluation_data* right) override;
@@ -43,6 +43,9 @@ public:
 
     double get_probability(const int symbol);
     void insert_probability(const int symbol, const double p);
+    std::unordered_map<int, double>& get_distribution(){
+        return symbol_probability_map;
+    }
 };
 
 class log_alergia: public evaluation_function {
@@ -57,18 +60,19 @@ protected:
 
     double sum_diffs;
 
-    
+    double js_divergence;
+
 public:
 
-    virtual bool consistent(state_merger *merger, apta_node* left, apta_node* right) override;
+    virtual bool consistent(state_merger *merger, apta_node* left_node, apta_node* right_node) override;
 
-    virtual double compute_score(state_merger*, apta_node* left, apta_node* right) override;
+
+    virtual double compute_score(state_merger*, apta_node* left_node, apta_node* right_node) override;
     virtual void reset(state_merger *merger) override;
     virtual void initialize_before_adding_traces() override;
 
-    double get_log_mu(){
-        return log_mu;
-    }
+    static double get_js_term(const double px, const double qx);
+    static double get_js_divergence(unordered_map<int, double>& left_distribution, unordered_map<int, double>& right_distribution);
 };
 
 #endif

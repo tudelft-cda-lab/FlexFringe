@@ -33,7 +33,10 @@ std::optional< pair< vector<int>, int> > probabilistic_oracle::equivalence_query
   inputdata& id = *(merger->get_dat());
   apta& hypothesis = *(merger->get_aut());
 
-  static auto max_distance = static_cast<log_alergia*>(merger->get_eval())->get_log_mu();
+  static const auto& alphabet = id.get_alphabet(); 
+  static auto mu = MU;
+
+  //static auto max_distance = static_cast<log_alergia*>(merger->get_eval())->get_log_mu();
 
   std::optional< vector<int> > query_string_opt = search_strategy->next(id);
   while(query_string_opt != nullopt){ // nullopt == search exhausted
@@ -48,7 +51,8 @@ std::optional< pair< vector<int>, int> > probabilistic_oracle::equivalence_query
     tail* t = test_tr->get_head();
 
     vector<int> current_substring;
-    double sampled_probability = 0;
+    //double sampled_probability = 0;
+    //double sampled_probability = 1;
     for(int j = 0; j < test_tr->get_length(); j++){
         n = active_learning_namespace::get_child_node(n, t);
         
@@ -60,21 +64,34 @@ std::optional< pair< vector<int>, int> > probabilistic_oracle::equivalence_query
 
         const int symbol = t->get_symbol();
         current_substring.push_back(symbol);
-        const double true_p = log( teacher->get_string_probability(current_substring, id) ); // TODO: throw the log inside for runtime purposes
 
-        sampled_probability += log( static_cast<log_alergia_data*>(n->get_data())->get_probability(symbol) );
+        unordered_map<int, double> real_distribution;
+        for(auto symbol: alphabet){
+          auto tmp_string = vector<int>(current_substring);
+          tmp_string.push_back(symbol);
+          real_distribution[symbol] = teacher->get_string_probability(current_substring, id);
+        }
 
-        cout << "Sampled probability: " << sampled_probability << ", true p: " << true_p << endl;
+        const auto divergence = log_alergia::get_js_divergence(static_cast<log_alergia_data*>(n->get_data())->get_distribution(), real_distribution);
+        cout << "Divergence: " << divergence << ", mu: " << mu << endl;
 
-        if( abs(true_p - sampled_probability) > max_distance){
-          cout << "Predictions of the following counterexample: The true probability: " << true_p << ", predicted probability: " << sampled_probability << endl;
+        //const double true_p = log( teacher->get_string_probability(current_substring, id) ); // TODO: throw the log inside for runtime purposes
+        //const double true_p = teacher->get_string_probability(current_substring, id); // TODO: throw the log inside for runtime purposes
+
+        //sampled_probability += log( static_cast<log_alergia_data*>(n->get_data())->get_probability(symbol) );
+        //sampled_probability *= static_cast<log_alergia_data*>(n->get_data())->get_probability(symbol);
+
+        //cout << "Sampled probability log scale: " << sampled_probability << ", true probability log scale: " << true_p << endl;
+
+        if(divergence > mu){
+          //cout << "Predictions of the following counterexample: The true probability: " << true_p << ", predicted probability: " << sampled_probability << endl;
           search_strategy->reset();
           return make_optional< pair< vector<int>, int > >(make_pair(query_string, 0));
         } 
 
         t = t->future();
     }
-    cout << "Getting the next string" << endl;
+    //cout << "Getting the next string" << endl;
     query_string_opt = search_strategy->next(id);
   }
 

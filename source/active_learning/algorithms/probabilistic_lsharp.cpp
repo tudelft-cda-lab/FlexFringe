@@ -34,15 +34,13 @@ using namespace active_learning_namespace;
 /**
  * @brief Take a node and complete it wrt to the alphabet.
  * 
- * TODO: shall we check if we already have this node? If yes, then we don't need to do anything.
  */
 void probabilistic_lsharp_algorithm::complete_state(unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const vector<int>& alphabet) const {
   static unordered_set<apta_node*> completed_nodes;
   if(completed_nodes.contains(n)) return;
 
   for(const int symbol: alphabet){
-    apta_node* state_to_update = n->get_child(symbol);
-    if(state_to_update == nullptr){
+    if(n->get_child(symbol) == nullptr){
       auto access_trace = n->get_access_trace();
 
       pref_suf_t seq;
