@@ -22,6 +22,9 @@ protected:
 
     REGISTER_DEC_DATATYPE(log_alergia_data);
     std::unordered_map<int, double> symbol_probability_map;
+    
+    std::unordered_map<int, double> final_symbol_probability_map;
+    double final_prob;
 
 public:
     virtual void print_transition_label(iostream& output, int symbol) override;
@@ -29,11 +32,6 @@ public:
 
     virtual void update(evaluation_data* right) override;
     virtual void undo(evaluation_data* right) override;
-
-    //virtual void initialize() override;
-
-    //virtual void del_tail(tail *t) override;
-    //virtual void add_tail(tail *t) override;
 
     virtual void read_json(json& node) override;
     virtual void write_json(json& node) override;
@@ -43,8 +41,12 @@ public:
 
     double get_probability(const int symbol);
     void insert_probability(const int symbol, const double p);
-    std::unordered_map<int, double>& get_distribution(){
-        return symbol_probability_map;
+
+    double get_final_probability(const int symbol);
+    void insert_final_probability(const int symbol, const double p);
+
+    std::unordered_map<int, double>& get_final_distribution(){
+        return final_symbol_probability_map;
     }
 };
 
@@ -53,13 +55,7 @@ class log_alergia: public evaluation_function {
 protected:
     REGISTER_DEC_TYPE(log_alergia);
 
-    double log_mu; 
-    double log_sqr_n;
-    double alpha;
-    double right;
-
-    double sum_diffs;
-
+    double mu;
     double js_divergence;
 
 public:
@@ -71,8 +67,9 @@ public:
     virtual void reset(state_merger *merger) override;
     virtual void initialize_before_adding_traces() override;
 
+    static void normalize_final_probs(apta_node* node);
     static double get_js_term(const double px, const double qx);
-    static double get_js_divergence(unordered_map<int, double>& left_distribution, unordered_map<int, double>& right_distribution);
+    static double get_js_divergence(unordered_map<int, double>& left_distribution, std::unordered_map<int, double>& right_distribution);
 };
 
 #endif

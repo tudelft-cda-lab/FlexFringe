@@ -30,7 +30,6 @@ using namespace active_learning_namespace;
 /**
  * @brief Take a node and complete it wrt to the alphabet.
  * 
- * TODO: shall we check if we already have this node? If yes, then we don't need to do anything.
  */
 void lsharp_algorithm::complete_state(unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const vector<int>& alphabet) const {
   static unordered_set<apta_node*> completed_nodes;
@@ -112,7 +111,6 @@ void lsharp_algorithm::proc_counterex(const unique_ptr<base_teacher>& teacher, i
 
   // now let's walk over the apta again, completing all the states we created
   n = hypothesis->get_root();
-  cout << "Root: " << n->get_number() << ", depth: " << n->get_depth() << endl;
   trace* parsing_trace = vector_to_trace(counterex, id);
   tail* t = parsing_trace->get_head();
   while(n != nullptr){
@@ -120,8 +118,6 @@ void lsharp_algorithm::proc_counterex(const unique_ptr<base_teacher>& teacher, i
     n = active_learning_namespace::get_child_node(n, t);
     t = t->future();
   }
-
-  // TODO: alternatively implement the binary search here
 }
 
 void lsharp_algorithm::run(inputdata& id){
@@ -159,7 +155,6 @@ void lsharp_algorithm::run(inputdata& id){
         
         refinement* ref = merger->test_merge(red_node, blue_node);
         if(ref != nullptr){
-          //cout << "We can do a merge" << endl;
           possible_refs.insert(ref);
           break;
         } 
@@ -171,13 +166,18 @@ void lsharp_algorithm::run(inputdata& id){
       //  performed_refinements.push_back(best_merge);
       //}
       if(possible_refs.size()==0){
-        cout << "We do an extend" << endl;
 
         no_isolated_states = false;
         refinement* ref = mem_store::create_extend_refinement(merger.get(), blue_node);
         ref->doref(merger.get());
         performed_refinements.push_back(ref);
       }
+
+      /* {
+        static int model_nr = 0;
+        if(model_nr % 10 == 0) print_current_automaton(merger.get(), "model.", to_string(model_nr) + ".new_fringe"); // printing the final model each time
+        ++model_nr;
+      } */
     }
 
     if(no_isolated_states){ // build hypothesis
@@ -187,6 +187,7 @@ void lsharp_algorithm::run(inputdata& id){
       } */
 
       minimize_apta(performed_refinements, merger.get());
+      postprocess();
 
       {
         static int model_nr = 0;
