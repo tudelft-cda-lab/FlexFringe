@@ -54,9 +54,10 @@ void probabilistic_lsharp_algorithm::complete_state(unique_ptr<state_merger>& me
       id.add_trace_to_apta(new_trace, merger->get_aut(), false); // for-loop needed for probabilistic version
 
       const double new_prob = get_probability_of_last_symbol(new_trace, id, teacher, merger->get_aut());
-      static_cast<log_alergia_data*>(n->get_data())->insert_probability(symbol, new_prob);
+      static_cast<log_alergia_data*>(n->get_data())->insert_final_probability(symbol, new_prob);
     }
   }
+  log_alergia::normalize_final_probs(n);
   completed_nodes.insert(n);
 }
 
@@ -71,22 +72,8 @@ void probabilistic_lsharp_algorithm::complete_state(unique_ptr<state_merger>& me
  */
 void probabilistic_lsharp_algorithm::update_state(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const std::vector<int>& alphabet) const {
   complete_state(merger, n, id, alphabet);
-/*   const int current_size = n->get_final(); // number of terminating sequences in this state
-  for(const auto symbol: alphabet){
-      auto access_trace = n->get_access_trace();
+}
 
-      pref_suf_t seq;
-      if(n->get_number() != 0 && n->get_number() != -1) seq = access_trace->get_input_sequence(true, true);
-      else seq.resize(1);
-      
-      seq[seq.size()-1] = symbol;
-      
-      trace* new_trace = vector_to_trace(seq, id);
-      id.add_trace(new_trace);
-      id.add_trace_to_apta(new_trace, merger->get_aut(), false);
-
-      const double new_prob = get_probability_of_last_symbol(new_trace, id, teacher, merger->get_aut());
-
-      //cout << "In update. Node: " << n << ", symbol: " << symbol << ", count: " << (*node_type_counter)[n][symbol] << ", of which new: " << additional_sample_size << endl;
-  }*/
+void probabilistic_lsharp_algorithm::postprocess(){
+  // TODO: here we compute all the probabilities afterwards
 }

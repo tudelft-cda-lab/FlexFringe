@@ -72,7 +72,7 @@ std::optional< pair< vector<int>, int> > probabilistic_oracle::equivalence_query
           real_distribution[symbol] = teacher->get_string_probability(current_substring, id);
         }
 
-        const auto divergence = log_alergia::get_js_divergence(static_cast<log_alergia_data*>(n->get_data())->get_distribution(), real_distribution);
+        const auto divergence = 0; //log_alergia::get_js_divergence(static_cast<log_alergia_data*>(n->get_data())->get_distribution(), real_distribution);
         cout << "Divergence: " << divergence << ", mu: " << mu << endl;
 
         //const double true_p = log( teacher->get_string_probability(current_substring, id) ); // TODO: throw the log inside for runtime purposes
