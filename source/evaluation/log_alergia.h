@@ -45,6 +45,10 @@ public:
     double get_final_probability(const int symbol);
     void insert_final_probability(const int symbol, const double p);
 
+    void update_final_prob(const double p) noexcept {
+        this->final_prob += p;
+    }
+
     std::unordered_map<int, double>& get_final_distribution(){
         return final_symbol_probability_map;
     }
