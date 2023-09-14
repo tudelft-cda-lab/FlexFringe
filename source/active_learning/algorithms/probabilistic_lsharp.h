@@ -31,12 +31,17 @@
 
 class probabilistic_lsharp_algorithm : public lsharp_algorithm {
   protected:
+    void proc_counterex(const std::unique_ptr<base_teacher>& teacher, inputdata& id, unique_ptr<apta>& hypothesis, 
+                        const std::vector<int>& counterex, std::unique_ptr<state_merger>& merger, const refinement_list refs,
+                        const vector<int>& alphabet) const;
+    
+    void extend_fringe(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const vector< trace* >& traces) const;
+    void update_state(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const std::vector<int>& alphabet) const;
+    
+    std::optional< std::vector<trace*> > add_statistics(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const std::vector<int>& alphabet) const;
+    
+    void preprocess_apta(unique_ptr<apta>& the_apta);
 
-    
-    virtual void complete_state(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const std::vector<int>& alphabet) const override;
-    virtual void update_state(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const std::vector<int>& alphabet) const override;
-    
-    virtual void postprocess() override;
   public:
     probabilistic_lsharp_algorithm(std::shared_ptr<sul_base>& sul, std::unique_ptr<base_teacher>& teacher, std::unique_ptr<eq_oracle_base>& oracle) 
       : lsharp_algorithm(sul, teacher, oracle){
@@ -44,6 +49,8 @@ class probabilistic_lsharp_algorithm : public lsharp_algorithm {
         If this is undesired behavior check your input and/or source code." << std::endl;
         this->oracle.reset(new probabilistic_oracle(sul));
       };
+
+    virtual void run(inputdata& id) override;
 };
 
 #endif

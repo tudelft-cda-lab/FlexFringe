@@ -27,20 +27,19 @@
 
 class lsharp_algorithm : public algorithm_base {
   protected:
-    virtual void proc_counterex(const std::unique_ptr<base_teacher>& teacher, inputdata& id, unique_ptr<apta>& hypothesis, 
+    void proc_counterex(const std::unique_ptr<base_teacher>& teacher, inputdata& id, unique_ptr<apta>& hypothesis, 
                         const std::vector<int>& counterex, std::unique_ptr<state_merger>& merger, const refinement_list refs,
                         const vector<int>& alphabet) const;
     
-    virtual void complete_state(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const std::vector<int>& alphabet) const;
+    void complete_state(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const std::vector<int>& alphabet) const;
 
-    virtual void update_state(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const std::vector<int>& alphabet) const;
-
-    virtual void postprocess(){};
+    void update_state(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const std::vector<int>& alphabet) const;
     
   public:
     lsharp_algorithm(std::shared_ptr<sul_base>& sul, std::unique_ptr<base_teacher>& teacher, std::unique_ptr<eq_oracle_base>& oracle) 
       : algorithm_base(sul, teacher, oracle){};
-    void run(inputdata& id) override;
+    
+    virtual void run(inputdata& id) override;
 };
 
 #endif

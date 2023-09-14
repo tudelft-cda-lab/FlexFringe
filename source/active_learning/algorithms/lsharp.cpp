@@ -187,7 +187,6 @@ void lsharp_algorithm::run(inputdata& id){
       } */
 
       minimize_apta(performed_refinements, merger.get());
-      postprocess();
 
       {
         static int model_nr = 0;
