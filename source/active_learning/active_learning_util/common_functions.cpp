@@ -254,6 +254,8 @@ trace* active_learning_namespace::vector_to_trace(const vector<int>& vec, inputd
 /**
  * @brief Gets the probability of the current last symbol represented by the trace.
  * 
+ * Warning: This function will not work on the empty string, so as for the root node, you'll have to treat it separately.
+ * 
  * TODO: you can optimize this guy via splitting into two functions. One to get probability to the current state, and then you can ask the probability for each
  * outgoing state. Will save quite a bit of computations.
  * 

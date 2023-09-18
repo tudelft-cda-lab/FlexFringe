@@ -36,10 +36,13 @@ using namespace active_learning_namespace;
  * 
  */
 void probabilistic_lsharp_algorithm::extend_fringe(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const vector< trace* >& traces) const {
+  static unordered_set<apta_node*> extended_nodes;
+  if(extended_nodes.contains(n)) return;
+  
   for(trace* new_trace: traces){
     id.add_trace_to_apta(new_trace, merger->get_aut(), false); // for-loop needed for probabilistic version
   }
-  for(auto& [symbol, p]: static_cast<log_alergia_data*>(n->get_data())->get_final_distribution()){
+  for(const auto& [symbol, p]: static_cast<log_alergia_data*>(n->get_data())->get_outgoing_distribution()){
     apta_node* next_node = n->get_child(symbol);
     static_cast<log_alergia_data*>(next_node->get_data())->update_final_prob(p);
   }
@@ -58,7 +61,7 @@ optional< vector<trace*> > probabilistic_lsharp_algorithm::add_statistics(unique
   static unordered_set<apta_node*> completed_nodes;
   if(completed_nodes.contains(n)) return nullopt;
 
-  vector<trace*> res(alphabet.size());
+  vector<trace*> res;
   for(const int symbol: alphabet){
     if(n->get_child(symbol) == nullptr){
       auto access_trace = n->get_access_trace();
@@ -74,10 +77,10 @@ optional< vector<trace*> > probabilistic_lsharp_algorithm::add_statistics(unique
       res.push_back(new_trace);
 
       const double new_prob = get_probability_of_last_symbol(new_trace, id, teacher, merger->get_aut());
-      static_cast<log_alergia_data*>(n->get_data())->insert_final_probability(symbol, new_prob);
+      static_cast<log_alergia_data*>(n->get_data())->insert_probability(symbol, new_prob);
     }
   }
-  log_alergia::normalize_final_probs(n);
+  log_alergia::normalize_outgoing_probs(static_cast<log_alergia_data*>( n->get_data() ));
   completed_nodes.insert(n);
 
   return make_optional(res);
@@ -85,21 +88,111 @@ optional< vector<trace*> > probabilistic_lsharp_algorithm::add_statistics(unique
 
 
 /**
- * @brief Update the statistics of this node, doubling the size of it. This will give us better results in the next 
- * query.
+ * @brief Processing the counterexample recursively in the binary search strategy 
+ * as described by the paper.
  * 
- * @param merger 
- * @param n 
- * @param id 
- * @param alphabet 
+ * Operations done directly on the APTA.
+ * 
+ * @param aut The merged APTA.
+ * @param counterex The counterexample.
  */
-void probabilistic_lsharp_algorithm::update_state(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const std::vector<int>& alphabet) const {
-  complete_state(merger, n, id, alphabet);
+void probabilistic_lsharp_algorithm::proc_counterex(const unique_ptr<base_teacher>& teacher, inputdata& id, unique_ptr<apta>& hypothesis, 
+                                      const vector<int>& counterex, unique_ptr<state_merger>& merger, const refinement_list refs,
+                                      const vector<int>& alphabet) const {
+  // in this block we do a linear search for the fringe of the prefix tree. Once we found it, we ask membership queries for each substring
+  // of the counterexample (for each new state that we create), and this way add the whole counterexample to the prefix tree
+  reset_apta(merger.get(), refs);
+  vector<int> substring;
+  apta_node* n = hypothesis->get_root();
+  for(auto s: counterex){
+    if(n == nullptr){
+      const auto queried_type = teacher->ask_membership_query(substring, id);
+      trace* new_trace = vector_to_trace(substring, id, queried_type);
+      id.add_trace_to_apta(new_trace, hypothesis.get(), false);
+      id.add_trace(new_trace);
+      substring.push_back(s);
+    }
+    else{
+      // find the fringe
+      substring.push_back(s);
+      trace* parse_trace = vector_to_trace(substring, id, 0); // TODO: inefficient like this
+      tail* t = substring.size() == 0 ? parse_trace->get_end() : parse_trace->get_end()->past_tail;
+      n = active_learning_namespace::get_child_node(n, t);
+      mem_store::delete_trace(parse_trace);
+    }
+  }
+
+  // for the last element, too
+  const auto queried_type = teacher->ask_membership_query(substring, id);
+  trace* new_trace = vector_to_trace(substring, id, queried_type);
+  id.add_trace_to_apta(new_trace, hypothesis.get(), false);
+  id.add_trace(new_trace);
+
+  // now let's walk over the apta again, completing all the states we created
+  n = hypothesis->get_root();
+  trace* parsing_trace = vector_to_trace(counterex, id);
+  tail* t = parsing_trace->get_head();
+  while(n != nullptr){
+    update_state(merger, n, id, alphabet);
+    optional< vector<trace*> > queried_traces = add_statistics(merger, n, id, alphabet);
+    if(queried_traces) extend_fringe(merger, n, id, queried_traces.value());
+    n = active_learning_namespace::get_child_node(n, t);
+    t = t->future();
+  }
 }
 
-void probabilistic_lsharp_algorithm::preprocess_apta(unique_ptr<apta>& the_apta){
-  
+/**
+ * @brief DFS through the unmerged automaton, pulling up the distributions from behind.
+ * 
+ * @param the_apta The unmerged! apta.
+ */
+void probabilistic_lsharp_algorithm::preprocess_apta(unique_ptr<apta>& the_apta, const vector<int>& alphabet){
+  stack<apta_node*> node_stack;
+  unordered_set<apta_node*> seen_nodes;
+
+  apta_node* n = the_apta->get_root();
+  node_stack.push(n);
+  seen_nodes.insert(n);
+  while(!node_stack.empty()){
+    n = node_stack.top();
+
+    if(n->get_child(alphabet[0]) == nullptr){
+      //auto& final_probs = static_cast<log_alergia_data*>(n->get_data())->get_outgoing_distribution();
+      //log_alergia::add_outgoing_probs(n, final_probs);
+      node_stack.pop(); // this node is done
+    }
+    else if(seen_nodes.contains(n)){
+      unordered_map<int, double> current_map;
+      for(auto symbol: alphabet){
+        const auto& future_probs = static_cast<log_alergia_data*>(n->get_child(symbol)->get_data())->get_outgoing_distribution();
+        for(auto& [s, p]: future_probs) current_map[s] += p;
+      }
+      log_alergia::add_outgoing_probs(n, current_map);
+      node_stack.pop();
+    }
+    else{
+      for(auto symbol: alphabet){
+        apta_node* next_node = n->get_child(symbol);
+        node_stack.push(next_node);
+        seen_nodes.insert(next_node);
+      }
+    }
+  }
 }
+
+
+void probabilistic_lsharp_algorithm::postprocess_apta(std::unique_ptr<apta>& the_apta){
+  for(blue_state_iterator b_it = blue_state_iterator(the_apta->get_root()); *b_it != nullptr; ++b_it){
+    auto blue_node = *b_it;
+    log_alergia::normalize_outgoing_probs(static_cast<log_alergia_data*>( blue_node->get_data() ));
+  }
+
+  for(red_state_iterator r_it = red_state_iterator(the_apta->get_root()); *r_it != nullptr; ++r_it){
+    auto red_node = *r_it;
+    log_alergia::normalize_outgoing_probs(static_cast<log_alergia_data*>( red_node->get_data() ));
+  }
+}
+
 
 void probabilistic_lsharp_algorithm::run(inputdata& id){
   int n_runs = 1;
@@ -118,13 +211,13 @@ void probabilistic_lsharp_algorithm::run(inputdata& id){
   optional< vector<trace*> > queried_traces = add_statistics(merger, the_apta->get_root(), id, alphabet);
   extend_fringe(merger, the_apta->get_root(), id, queried_traces.value());
   
-  { // initialize the root node's final probability
+  { // initialize the root node's final probability with empty string search
     pref_suf_t seq;
     trace* new_trace = vector_to_trace(seq, id);
     id.add_trace(new_trace);
     id.add_trace_to_apta(new_trace, the_apta.get());
 
-    const double new_prob = get_probability_of_last_symbol(new_trace, id, teacher, merger->get_aut());
+    const double new_prob = teacher->get_string_probability(seq, id);
     static_cast<log_alergia_data*>(the_apta->get_root()->get_data())->update_final_prob(new_prob);
   }
   
@@ -141,41 +234,37 @@ void probabilistic_lsharp_algorithm::run(inputdata& id){
       if(blue_node->get_size() == 0) continue; // This should never happen: TODO: Delete line
       
       // this is a difference with Vandraager (they only complete red nodes), but we need it for statistical methods
-      complete_state(merger, blue_node, id, alphabet); // TODO: do we need this one here really? I can't see it at the moment why
+      //complete_state(merger, blue_node, id, alphabet); // TODO: do we need this one here really? I can't see it at the moment why
       queried_traces = add_statistics(merger, blue_node, id, alphabet);
 
-      refinement_set possible_refs;
+      refinement_set possible_merges;
       for(red_state_iterator r_it = red_state_iterator(the_apta->get_root()); *r_it != nullptr; ++r_it){
         const auto red_node = *r_it;
         
         refinement* ref = merger->test_merge(red_node, blue_node);
         if(ref != nullptr){
-          possible_refs.insert(ref);
+          cout << "Merge is possible" << endl;
+          possible_merges.insert(ref);
           break;
         } 
       }
 
-      //if( possible_refs.size()>0 ){
-      //  refinement* best_merge = extract_best_merge(&possible_refs); // implicit assumption: prefers merges over extends
-      //  best_merge->doref(merger.get());
-      //  performed_refinements.push_back(best_merge);
-      //}
-      if(possible_refs.size()==0){
+      if(possible_merges.size()==0){
         // giving the blue nodes child states before going red
-        extend_fringe(merger, blue_node, id, queried_traces.value());
+        cout << "Did an extend" << endl;
+        if(queried_traces) extend_fringe(merger, blue_node, id, queried_traces.value());
 
         no_isolated_states = false;
         refinement* ref = mem_store::create_extend_refinement(merger.get(), blue_node);
         ref->doref(merger.get());
         
-        //performed_refinements.push_back(ref);
+        //performed_refinements.push_back(ref); // red states stay
       }
+    }
 
-      /* {
-        static int model_nr = 0;
-        if(model_nr % 10 == 0) print_current_automaton(merger.get(), "model.", to_string(model_nr) + ".new_fringe"); // printing the final model each time
-        ++model_nr;
-      } */
+    {
+      static int model_nr = 0;
+      print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".new_fringe");
     }
 
     if(no_isolated_states){ // build hypothesis
@@ -183,8 +272,13 @@ void probabilistic_lsharp_algorithm::run(inputdata& id){
         static int model_nr = 0;
         print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".before_ref");
       } */
-      preprocess_apta();
+      cout << "Preprocessing apta" << endl;
+      preprocess_apta(the_apta, alphabet);
+      cout << "Minimizing apta" << endl;
       minimize_apta(performed_refinements, merger.get());
+      cout << "Postprocessing apta" << endl;
+      postprocess_apta(the_apta);
+      cout << "Testing hypothesis" << endl;
 
       {
         static int model_nr = 0;
