@@ -60,7 +60,7 @@ std::optional< pair< vector<int>, int> > probabilistic_oracle::equivalence_query
           cout << "Counterexample because tree not parsable" << endl;
           search_strategy->reset();
           return make_optional< pair< vector<int>, int > >(make_pair(query_string, 0));
-        } 
+        }
 
         const int symbol = t->get_symbol();
         current_substring.push_back(symbol);
@@ -72,7 +72,19 @@ std::optional< pair< vector<int>, int> > probabilistic_oracle::equivalence_query
           real_distribution[symbol] = teacher->get_string_probability(current_substring, id);
         }
 
-        const auto divergence = 0; //log_alergia::get_js_divergence(static_cast<log_alergia_data*>(n->get_data())->get_distribution(), real_distribution);
+        // we need to normalize the distribution
+        double final_p = static_cast<log_alergia_data*>(n->get_data())->get_final_prob();
+        double p_sum = 0;
+        for(auto& [symbol, p] : real_distribution){
+          p_sum += p;
+        }
+        auto factor = (1. - final_p) / p_sum;
+        for(auto& [symbol, p] : real_distribution){
+          real_distribution[symbol] = p * factor;
+        }
+
+        // TODO: how can I get the final probabilities ending in this state?
+        const auto divergence = log_alergia::get_js_divergence(static_cast<log_alergia_data*>(n->get_data())->get_outgoing_distribution(), real_distribution, final_p, final_p);
         cout << "Divergence: " << divergence << ", mu: " << mu << endl;
 
         //const double true_p = log( teacher->get_string_probability(current_substring, id) ); // TODO: throw the log inside for runtime purposes
