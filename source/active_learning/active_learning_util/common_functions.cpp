@@ -268,7 +268,7 @@ const double active_learning_namespace::get_probability_of_last_symbol(trace* tr
 
   apta_node* n = aut->get_root();
   tail* t = tr->head;
-  pref_suf_t current_string; // TODO: constructing a list is possibly inefficient. can we walk around this guy here?
+  pref_suf_t current_string; // TODO: constructing a fresh vector is possibly inefficient. can we walk around this guy here?
 
   double product_probability = 1;
   while(n!=nullptr){
@@ -279,8 +279,15 @@ const double active_learning_namespace::get_probability_of_last_symbol(trace* tr
       // the magic happens here
       if(!node_response_map.contains(n))
         node_response_map[n] = unordered_map<int, double>();
+      else if(node_response_map[n].contains(symbol))
+        return node_response_map[n][symbol];
 
       double new_p = teacher->get_string_probability(current_string, id);
+      if(new_p == 0){
+        node_response_map[n][symbol] = 0;
+        return 0;
+      } 
+      
       node_response_map[n][symbol] = new_p / product_probability;
       return new_p / product_probability;
     }
@@ -290,11 +297,13 @@ const double active_learning_namespace::get_probability_of_last_symbol(trace* tr
     
     if(node_response_map[n].contains(symbol)){
       product_probability *= node_response_map[n][symbol];
+      if(product_probability == 0) return 0;
     }
     else{
       double new_p = teacher->get_string_probability(current_string, id);
       node_response_map[n][symbol] = new_p / product_probability;
       product_probability *= new_p;
+      if(product_probability == 0) return 0;
     }
 
     n = active_learning_namespace::get_child_node(n, t);
