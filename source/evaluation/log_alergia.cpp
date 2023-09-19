@@ -67,7 +67,7 @@ void log_alergia_data::print_state_label(iostream& output){
     for(auto [symbol, p]: symbol_probability_map){
         output << symbol << " : " << p << "\n";
     }
-    output << "Final prob: " << final_prob << "\n";
+    output << "fP: " << final_prob << "\n";
 };
 
 /** Merging update and undo_merge routines */
@@ -121,11 +121,8 @@ double log_alergia_data::predict_symbol_score(int t){
     return 0.0;
 }
 
-double log_alergia_data::get_probability(const int symbol) {
-    return this->symbol_probability_map[symbol];
-}
-
 void log_alergia_data::insert_probability(const int symbol, const double p) {
+    this->unmerged_symbol_probability_map[symbol] = p;
     this->symbol_probability_map[symbol] = p;
 }
 

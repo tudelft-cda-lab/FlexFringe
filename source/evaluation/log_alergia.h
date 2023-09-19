@@ -24,7 +24,9 @@ protected:
     REGISTER_DEC_DATATYPE(log_alergia_data);
 
     double final_prob;
-    std::unordered_map<int, double> symbol_probability_map;    
+    std::unordered_map<int, double> symbol_probability_map;
+
+    std::unordered_map<int, double> unmerged_symbol_probability_map;
 
 public:
     virtual void print_transition_label(iostream& output, int symbol) override;
@@ -39,7 +41,7 @@ public:
     virtual int predict_symbol(tail*) override;
     virtual double predict_symbol_score(int t) override;
 
-    double get_probability(const int symbol);
+    //double get_probability(const int symbol);
     void insert_probability(const int symbol, const double p);
 
     void update_final_prob(const double p) noexcept {
@@ -52,6 +54,10 @@ public:
 
     std::unordered_map<int, double>& get_outgoing_distribution(){
         return symbol_probability_map;
+    }
+
+    void reset(){
+        this->symbol_probability_map = std::unordered_map<int, double>(unmerged_symbol_probability_map);
     }
 };
 

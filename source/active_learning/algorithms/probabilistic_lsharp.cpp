@@ -77,6 +77,7 @@ optional< vector<trace*> > probabilistic_lsharp_algorithm::add_statistics(unique
       res.push_back(new_trace);
 
       const double new_prob = get_probability_of_last_symbol(new_trace, id, teacher, merger->get_aut());
+      if(std::isnan(new_prob)) throw runtime_error("Error: NaN value has occurred.");
       static_cast<log_alergia_data*>(n->get_data())->insert_probability(symbol, new_prob);
     }
   }
@@ -142,11 +143,23 @@ void probabilistic_lsharp_algorithm::proc_counterex(const unique_ptr<base_teache
 }
 
 /**
- * @brief DFS through the unmerged automaton, pulling up the distributions from behind.
+ * @brief Complete all the statistics of all the nodes that we have.
+ * 
+ * Works in two steps: In step 1, we iterate through all blue nodes and complete the 
+ * statistics of those which are not complete, yet. 
+ * In step 2, we perform a DFS through the unmerged automaton, pulling up the distributions from behind.
+ * This way we get the best possible approximations of the outgoing probabilities per state.
  * 
  * @param the_apta The unmerged! apta.
  */
-void probabilistic_lsharp_algorithm::preprocess_apta(unique_ptr<apta>& the_apta, const vector<int>& alphabet){
+void probabilistic_lsharp_algorithm::preprocess_apta(unique_ptr<state_merger>& merger, unique_ptr<apta>& the_apta, inputdata& id, const vector<int>& alphabet){
+  // step 1: complete statistics of blue nodes
+  for(blue_state_iterator b_it = blue_state_iterator(the_apta->get_root()); *b_it != nullptr; ++b_it){
+    auto blue_node = *b_it;
+    optional< vector<trace*> > queried_traces = add_statistics(merger, blue_node, id, alphabet);
+  }
+
+  // step 2: DFS and infer the outgoing probabilities per state
   stack<apta_node*> node_stack;
   unordered_set<apta_node*> seen_nodes;
 
@@ -180,7 +193,11 @@ void probabilistic_lsharp_algorithm::preprocess_apta(unique_ptr<apta>& the_apta,
   }
 }
 
-
+/**
+ * @brief Normalize all the probabilities so that they sum to 1 per state for each outgoing transition, and including the final probabilities.
+ * 
+ * @param the_apta The apta.
+ */
 void probabilistic_lsharp_algorithm::postprocess_apta(std::unique_ptr<apta>& the_apta){
   for(blue_state_iterator b_it = blue_state_iterator(the_apta->get_root()); *b_it != nullptr; ++b_it){
     auto blue_node = *b_it;
@@ -190,6 +207,21 @@ void probabilistic_lsharp_algorithm::postprocess_apta(std::unique_ptr<apta>& the
   for(red_state_iterator r_it = red_state_iterator(the_apta->get_root()); *r_it != nullptr; ++r_it){
     auto red_node = *r_it;
     log_alergia::normalize_outgoing_probs(static_cast<log_alergia_data*>( red_node->get_data() ));
+  }
+}
+
+/**
+ * @brief Resets the outgoing probabilities of the nodes to the original state that we obtain after
+ * querying it in the add_statistics function.
+ * 
+ * Warnign: Needs to be called after resetting the apta.
+ * 
+ * @param hypothesis The merged apta.
+ */
+void probabilistic_lsharp_algorithm::reset_probabilities(unique_ptr<apta>& hypothesis) const {
+  for(APTA_iterator it = APTA_iterator(hypothesis->get_root()); *it != nullptr; ++it){
+    auto node = *it;
+    static_cast<log_alergia_data*>( node->get_data() )->reset();
   }
 }
 
@@ -233,7 +265,6 @@ void probabilistic_lsharp_algorithm::run(inputdata& id){
       const auto blue_node = *b_it;
       if(blue_node->get_size() == 0) continue; // This should never happen: TODO: Delete line
       
-      // this is a difference with Vandraager (they only complete red nodes), but we need it for statistical methods
       //complete_state(merger, blue_node, id, alphabet); // TODO: do we need this one here really? I can't see it at the moment why
       queried_traces = add_statistics(merger, blue_node, id, alphabet);
 
@@ -243,7 +274,6 @@ void probabilistic_lsharp_algorithm::run(inputdata& id){
         
         refinement* ref = merger->test_merge(red_node, blue_node);
         if(ref != nullptr){
-          cout << "Merge is possible" << endl;
           possible_merges.insert(ref);
           break;
         } 
@@ -251,7 +281,6 @@ void probabilistic_lsharp_algorithm::run(inputdata& id){
 
       if(possible_merges.size()==0){
         // giving the blue nodes child states before going red
-        cout << "Did an extend" << endl;
         if(queried_traces) extend_fringe(merger, blue_node, id, queried_traces.value());
 
         no_isolated_states = false;
@@ -262,18 +291,20 @@ void probabilistic_lsharp_algorithm::run(inputdata& id){
       }
     }
 
-    {
-      static int model_nr = 0;
-      print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".new_fringe");
-    }
-
     if(no_isolated_states){ // build hypothesis
-      /* {
+      {
+        static int model_nr = 0;
+        print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".before_pre");
+      }
+
+      cout << "Preprocessing apta" << endl;
+      preprocess_apta(merger, the_apta, id, alphabet);
+
+      {
         static int model_nr = 0;
         print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".before_ref");
-      } */
-      cout << "Preprocessing apta" << endl;
-      preprocess_apta(the_apta, alphabet);
+      }
+
       cout << "Minimizing apta" << endl;
       minimize_apta(performed_refinements, merger.get());
       cout << "Postprocessing apta" << endl;
@@ -304,6 +335,7 @@ void probabilistic_lsharp_algorithm::run(inputdata& id){
         cout << "Counterexample of length " << cex.size() << " found: ";
         print_vector(cex);
         proc_counterex(teacher, id, the_apta, cex, merger, performed_refinements, alphabet);
+        reset_probabilities(the_apta);
         break;
       }
     }
