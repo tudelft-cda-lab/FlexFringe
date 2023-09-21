@@ -49,5 +49,8 @@ const int base_teacher::ask_membership_query(const pref_suf_t& query, inputdata&
  * @return const double 
  */
 const double base_teacher::get_string_probability(const pref_suf_t& query, inputdata& id) {
-  return sul->get_string_probability(query, id);
+  double res = sul->get_string_probability(query, id);
+  int tmp = res * 100000.0; // 44.8 truncated to 44
+  double truncated = tmp / 100000.0; // 4.4
+  return truncated; //log(truncated);
 }
