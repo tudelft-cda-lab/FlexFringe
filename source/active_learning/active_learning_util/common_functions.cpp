@@ -264,7 +264,7 @@ trace* active_learning_namespace::vector_to_trace(const vector<int>& vec, inputd
  * @return const double Probability.
  */
 const double active_learning_namespace::get_probability_of_last_symbol(trace* tr, inputdata& id, const unique_ptr<base_teacher>& teacher, apta* aut){   
-  static unordered_map<apta_node*, unordered_map<int, double> > node_response_map;
+  static unordered_map<apta_node*, unordered_map<int, double> > node_response_map; // memoization
 
   apta_node* n = aut->get_root();
   tail* t = tr->head;
@@ -288,14 +288,14 @@ const double active_learning_namespace::get_probability_of_last_symbol(trace* tr
         return 0;
       } 
       
-      node_response_map[n][symbol] = new_p / product_probability;
-      return new_p / product_probability;
+      auto res = new_p / product_probability;
+      node_response_map[n][symbol] = res;
+      return res;
     }
 
     if(!node_response_map.contains(n))
       node_response_map[n] = unordered_map<int, double>();
-    
-    if(node_response_map[n].contains(symbol)){
+    else if(node_response_map[n].contains(symbol)){
       product_probability *= node_response_map[n][symbol];
       if(product_probability == 0) return 0;
     }

@@ -90,7 +90,7 @@ void log_alergia_data::undo(evaluation_data* right){
     evaluation_data::undo(right);
     auto* other = (log_alergia_data*)right;
 
-    this->final_prob -= other->final_prob; 
+    this->final_prob -= other->final_prob;
     log_alergia::normalize_outgoing_probs(this);
     //symbol_probability_map.clear();
 };
@@ -144,11 +144,11 @@ bool log_alergia::consistent(state_merger *merger, apta_node* left_node, apta_no
     auto* r = static_cast<log_alergia_data*>( right_node->get_data() );
     unordered_set<int> checked_symbols;
 
-    //cout << "JS divergence: " << get_js_divergence(l->symbol_probability_map, r->symbol_probability_map, l->final_prob, r->final_prob) << ", MU: "<< mu << endl;;
+    //cout << "JS divergence: " << get_js_divergence(l->final_symbol_probability_map, r->symbol_probability_map, l->final_prob, r->final_prob) << ", MU: "<< mu << endl;;
 
     js_divergence += get_js_term(l->final_prob, r->final_prob);
-    for(auto& [symbol, left_p] : l->symbol_probability_map){
-        double right_p = r->symbol_probability_map[symbol]; // automatically set to 0 if does not contain (zero initialization)
+    for(auto& [symbol, left_p] : l->final_symbol_probability_map){
+        double right_p = r->final_symbol_probability_map[symbol]; // automatically set to 0 if does not contain (zero initialization)
 
         js_divergence += get_js_term(left_p, right_p);
         if(js_divergence > mu){
@@ -159,9 +159,9 @@ bool log_alergia::consistent(state_merger *merger, apta_node* left_node, apta_no
         checked_symbols.insert(symbol);
     }
 
-    for(auto& [symbol, right_p] : r->symbol_probability_map){
+    for(auto& [symbol, right_p] : r->final_symbol_probability_map){
         if(checked_symbols.contains(symbol)) continue;
-        double left_p = l->symbol_probability_map[symbol]; // automatically set to 0 if does not contain (zero initialization)
+        double left_p = l->final_symbol_probability_map[symbol]; // automatically set to 0 if does not contain (zero initialization)
 
         js_divergence += get_js_term(left_p, right_p);
         if(js_divergence > mu){
@@ -219,9 +219,26 @@ void log_alergia::normalize_outgoing_probs(log_alergia_data* data) {
         p_sum += p;
     }
 
-    auto factor = (1. - data->final_prob) / p_sum;
+    auto factor = p_sum == 0 ? 0 : (1. - data->final_prob) / p_sum;
     for(auto& [symbol, p] : data->symbol_probability_map){
         data->symbol_probability_map[symbol] = p * factor;
+    }
+}
+
+/**
+ * @brief Needed for consistency checks.
+ * 
+ * @param data The data.
+ */
+void log_alergia::normalize_final_probs(log_alergia_data* data) {
+    double p_sum = 0;
+    for(const auto& [symbol, p] : data->unmerged_symbol_probability_map){
+        p_sum += p;
+    }
+
+    auto factor = p_sum == 0 ? 0 : (1. - data->final_prob) / p_sum; // p_sum can be very small and tend to zero
+    for(const auto& [symbol, p] : data->unmerged_symbol_probability_map){
+        data->final_symbol_probability_map[symbol] = p * factor;
     }
 }
 

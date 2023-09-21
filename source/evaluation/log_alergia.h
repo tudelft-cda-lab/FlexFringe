@@ -25,10 +25,13 @@ protected:
 
     double final_prob;
     std::unordered_map<int, double> symbol_probability_map;
-
-    std::unordered_map<int, double> unmerged_symbol_probability_map;
+    std::unordered_map<int, double> unmerged_symbol_probability_map; // memoization
+    std::unordered_map<int, double> final_symbol_probability_map; // the normalized unmerged_symbol_probability_map. Used only for consistency check
 
 public:
+    log_alergia_data() : evaluation_data::evaluation_data(){
+        final_prob = 0;
+    }
     virtual void print_transition_label(iostream& output, int symbol) override;
     virtual void print_state_label(iostream& output) override;
 
@@ -56,6 +59,10 @@ public:
         return symbol_probability_map;
     }
 
+    std::unordered_map<int, double>& get_unmerged_distribution(){
+        return unmerged_symbol_probability_map;
+    }
+
     void reset(){
         this->symbol_probability_map = std::unordered_map<int, double>(unmerged_symbol_probability_map);
     }
@@ -80,6 +87,7 @@ public:
 
     static void add_outgoing_probs(apta_node* node, std::unordered_map<int, double>& probabilities);
     static void normalize_outgoing_probs(log_alergia_data* data);
+    static void normalize_final_probs(log_alergia_data* data);
 
     static double get_js_term(const double px, const double qx);
     static double get_js_divergence(unordered_map<int, double>& left_distribution, std::unordered_map<int, double>& right_distribution, double left_final, double right_final);
