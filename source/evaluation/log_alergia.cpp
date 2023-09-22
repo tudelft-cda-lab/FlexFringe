@@ -64,7 +64,7 @@ void log_alergia_data::print_transition_label(iostream& output, int symbol){
 
 void log_alergia_data::print_state_label(iostream& output){
     evaluation_data::print_state_label(output);
-    for(auto [symbol, p]: symbol_probability_map){
+    for(auto [symbol, p]: normalized_symbol_probability_map){
         output << symbol << " : " << p << "\n";
     }
     output << "fP: " << final_prob << "\n";
@@ -76,14 +76,8 @@ void log_alergia_data::update(evaluation_data* right){
     evaluation_data::update(right);
     auto* other = (log_alergia_data*)right;
 
-/*     for(auto & symbol_p_mapping : other->symbol_probability_map){
-        auto& p1 = symbol_probability_map[symbol_p_mapping.first];
-        auto& p2 = symbol_p_mapping.second;
-        symbol_probability_map[symbol_p_mapping.first] = (p1 + p2) / static_cast<double>(2);
-    } */
-
     this->final_prob += other->final_prob;
-    log_alergia::normalize_outgoing_probs(this);
+    log_alergia::normalize_probabilities(this);
 };
 
 void log_alergia_data::undo(evaluation_data* right){
@@ -91,8 +85,7 @@ void log_alergia_data::undo(evaluation_data* right){
     auto* other = (log_alergia_data*)right;
 
     this->final_prob -= other->final_prob;
-    log_alergia::normalize_outgoing_probs(this);
-    //symbol_probability_map.clear();
+    log_alergia::normalize_probabilities(this);
 };
 
 /**
@@ -103,7 +96,7 @@ void log_alergia_data::undo(evaluation_data* right){
 int log_alergia_data::predict_symbol(tail*){
     double max_p = -1;
     int max_symbol = 0;
-    for(auto &[s, p] : symbol_probability_map){
+    for(auto &[s, p] : normalized_symbol_probability_map){
         if(max_p < 0 || max_p < p){
             max_p = p;
             max_symbol = s;
@@ -115,14 +108,17 @@ int log_alergia_data::predict_symbol(tail*){
 double log_alergia_data::predict_symbol_score(int t){
     if(t == -1)
         return 1.0;
-    else if(symbol_probability_map.contains(t))
-        return symbol_probability_map[t];
+    else if(normalized_symbol_probability_map.contains(t))
+        return normalized_symbol_probability_map[t];
     
     return 0.0;
 }
 
-void log_alergia_data::insert_probability(const int symbol, const double p) {
-    this->unmerged_symbol_probability_map[symbol] = p;
+void log_alergia_data::add_probability(const int symbol, const double p) {
+    this->symbol_probability_map[symbol] += p;
+}
+
+void log_alergia_data::update_probability(const int symbol, const double p) {
     this->symbol_probability_map[symbol] = p;
 }
 
@@ -147,9 +143,12 @@ bool log_alergia::consistent(state_merger *merger, apta_node* left_node, apta_no
     //cout << "JS divergence: " << get_js_divergence(l->final_symbol_probability_map, r->symbol_probability_map, l->final_prob, r->final_prob) << ", MU: "<< mu << endl;;
 
     js_divergence += get_js_term(l->final_prob, r->final_prob);
-    for(auto& [symbol, left_p] : l->final_symbol_probability_map){
-        double right_p = r->final_symbol_probability_map[symbol]; // automatically set to 0 if does not contain (zero initialization)
+    for(auto& [symbol, left_p] : l->normalized_symbol_probability_map){
 
+        if(!r->normalized_symbol_probability_map.contains(symbol))
+            r->normalized_symbol_probability_map[symbol] = 0;
+
+        double right_p = r->normalized_symbol_probability_map[symbol]; // automatically set to 0 if does not contain (zero initialization)
         js_divergence += get_js_term(left_p, right_p);
         if(js_divergence > mu){
             inconsistency_found = true;
@@ -159,10 +158,13 @@ bool log_alergia::consistent(state_merger *merger, apta_node* left_node, apta_no
         checked_symbols.insert(symbol);
     }
 
-    for(auto& [symbol, right_p] : r->final_symbol_probability_map){
+    for(auto& [symbol, right_p] : r->normalized_symbol_probability_map){
         if(checked_symbols.contains(symbol)) continue;
-        double left_p = l->final_symbol_probability_map[symbol]; // automatically set to 0 if does not contain (zero initialization)
 
+        if(!l->normalized_symbol_probability_map.contains(symbol))
+            l->normalized_symbol_probability_map[symbol] = 0;
+
+        double left_p = l->normalized_symbol_probability_map[symbol]; // automatically set to 0 if does not contain (zero initialization)
         js_divergence += get_js_term(left_p, right_p);
         if(js_divergence > mu){
             inconsistency_found = true;
@@ -197,48 +199,19 @@ double log_alergia::get_js_divergence(unordered_map<int, double>& left_distribut
 }
 
 /**
- * @brief Normalizes the outgoing probabilities.
+ * @brief Normalizes the symbol probability map, and stores it in 
  * 
  * @param node The node.
  */
-void log_alergia::add_outgoing_probs(apta_node* node, unordered_map<int, double>& probabilities){
-    auto* data = static_cast<log_alergia_data*>( node->get_data() );
-    for(auto [symbol, p]: probabilities){
-        data->symbol_probability_map[symbol] += p;
-    }
-}
-
-/**
- * @brief Normalizes the next-symbol-probability map.
- * 
- * @param node The node.
- */
-void log_alergia::normalize_outgoing_probs(log_alergia_data* data) {
+void log_alergia::normalize_probabilities(log_alergia_data* data) {
     double p_sum = 0;
     for(auto& [symbol, p] : data->symbol_probability_map){
         p_sum += p;
     }
 
-    auto factor = p_sum == 0 ? 0 : (1. - data->final_prob) / p_sum;
+    double factor = max(0.0, p_sum == 0 ? 0 : (1. - data->final_prob) / p_sum); // SUL may be noisy, hence final_prob can be larger than 1.
     for(auto& [symbol, p] : data->symbol_probability_map){
-        data->symbol_probability_map[symbol] = p * factor;
-    }
-}
-
-/**
- * @brief Needed for consistency checks.
- * 
- * @param data The data.
- */
-void log_alergia::normalize_final_probs(log_alergia_data* data) {
-    double p_sum = 0;
-    for(const auto& [symbol, p] : data->unmerged_symbol_probability_map){
-        p_sum += p;
-    }
-
-    auto factor = p_sum == 0 ? 0 : (1. - data->final_prob) / p_sum; // p_sum can be very small and tend to zero
-    for(const auto& [symbol, p] : data->unmerged_symbol_probability_map){
-        data->final_symbol_probability_map[symbol] = p * factor;
+        data->normalized_symbol_probability_map[symbol] = p * factor;
     }
 }
 
