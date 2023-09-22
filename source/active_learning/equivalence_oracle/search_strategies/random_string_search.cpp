@@ -23,7 +23,7 @@ optional< vector<int> > random_string_search::next(const inputdata& id) {
 }
 
 optional< vector<int> > random_string_search::next(const inputdata& id, const int lower_bound) {
-  if(samples_drawn % 1000 == 0) cout << "[" << samples_drawn << "/" << max_samples << "] samples suggested." << endl; 
+  if(samples_drawn % 500 == 0) cout << "[" << samples_drawn << "/" << max_samples << "] samples suggested." << endl; 
   if(samples_drawn == max_samples){
     cout << "Exhausted the counterexample search. Wrapping up algorithm." << endl;
     return nullopt;

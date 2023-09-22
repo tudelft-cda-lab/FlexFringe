@@ -34,9 +34,7 @@ std::optional< pair< vector<int>, int> > probabilistic_oracle::equivalence_query
   apta& hypothesis = *(merger->get_aut());
 
   static const auto& alphabet = id.get_alphabet(); 
-  static auto mu = MU;
-
-  //static auto max_distance = static_cast<log_alergia*>(merger->get_eval())->get_log_mu();
+  static auto mu = 0.01; // TODO: think about something to do here
 
   std::optional< vector<int> > query_string_opt = search_strategy->next(id);
   while(query_string_opt != nullopt){ // nullopt == search exhausted
@@ -51,59 +49,42 @@ std::optional< pair< vector<int>, int> > probabilistic_oracle::equivalence_query
     tail* t = test_tr->get_head();
 
     vector<int> current_substring;
-    //double sampled_probability = 0;
-    //double sampled_probability = 1;
-    for(int j = 0; j < test_tr->get_length(); j++){
-        n = active_learning_namespace::get_child_node(n, t);
-        
+    
+    double sampled_probability = 1;
+    while(t!=nullptr){        
         if(n == nullptr){
           cout << "Counterexample because tree not parsable" << endl;
           search_strategy->reset();
           return make_optional< pair< vector<int>, int > >(make_pair(query_string, 0));
         }
+ 
 
+        if(t->is_final()){
+          sampled_probability *= static_cast<log_alergia_data*>(n->get_data())->get_final_prob();
+          break;
+        }
         const int symbol = t->get_symbol();
-        current_substring.push_back(symbol);
+        sampled_probability *= static_cast<log_alergia_data*>(n->get_data())->get_next_probability(symbol);
 
-        unordered_map<int, double> real_distribution;
-        for(auto symbol: alphabet){
-          auto tmp_string = vector<int>(current_substring);
-          tmp_string.push_back(symbol);
-          real_distribution[symbol] = teacher->get_string_probability(current_substring, id);
-        }
-
-        // we need to normalize the distribution
-        double final_p = static_cast<log_alergia_data*>(n->get_data())->get_final_prob();
-        double p_sum = 0;
-        for(auto& [symbol, p] : real_distribution){
-          p_sum += p;
-        }
-        auto factor = (1. - final_p) / p_sum;
-        for(auto& [symbol, p] : real_distribution){
-          real_distribution[symbol] = p * factor;
-        }
-
-        // TODO: how can I get the final probabilities ending in this state?
-        const auto divergence = log_alergia::get_js_divergence(static_cast<log_alergia_data*>(n->get_data())->get_outgoing_distribution(), real_distribution, final_p, final_p);
-        cout << "Divergence: " << divergence << ", mu: " << mu << endl;
-
-        //const double true_p = log( teacher->get_string_probability(current_substring, id) ); // TODO: throw the log inside for runtime purposes
-        //const double true_p = teacher->get_string_probability(current_substring, id); // TODO: throw the log inside for runtime purposes
-
-        //sampled_probability += log( static_cast<log_alergia_data*>(n->get_data())->get_probability(symbol) );
-        //sampled_probability *= static_cast<log_alergia_data*>(n->get_data())->get_probability(symbol);
-
-        //cout << "Sampled probability log scale: " << sampled_probability << ", true probability log scale: " << true_p << endl;
-
-        if(divergence > mu){
-          //cout << "Predictions of the following counterexample: The true probability: " << true_p << ", predicted probability: " << sampled_probability << endl;
-          search_strategy->reset();
-          return make_optional< pair< vector<int>, int > >(make_pair(query_string, 0));
-        } 
-
+        n = active_learning_namespace::get_child_node(n, t);
         t = t->future();
+
+      //if(n != nullptr){
+        //current_substring.push_back(symbol);
+        //cout << "The string: ";
+        //print_vector(current_substring);
+        //const double true_p = teacher->get_string_probability(current_substring, id); // TODO: throw the log inside for runtime purposes
+        //cout << "true_p " << true_p << " res " << sampled_probability * static_cast<log_alergia_data*>(n->get_data())->get_final_prob() << endl;
+      //}
     }
-    //cout << "Getting the next string" << endl;
+
+    auto diff = abs(true_val - sampled_probability);
+    if(diff > mu){
+      //cout << "Predictions of the following counterexample: The true probability: " << true_p << ", predicted probability: " << sampled_probability << endl;
+      search_strategy->reset();
+      return make_optional< pair< vector<int>, int > >(make_pair(query_string, 0));
+    } 
+
     query_string_opt = search_strategy->next(id);
   }
 
