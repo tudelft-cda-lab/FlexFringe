@@ -34,18 +34,42 @@ using namespace active_learning_namespace;
 /**
  * @brief Take a node and complete it wrt to the alphabet.
  * 
+ * This is the only function that creates new nodes (apart from the root node).
+ * 
  */
-void probabilistic_lsharp_algorithm::extend_fringe(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const vector< trace* >& traces) const {
+void probabilistic_lsharp_algorithm::extend_fringe(std::unique_ptr<state_merger>& merger, apta_node* n, unique_ptr<apta>& the_apta, inputdata& id, const vector< trace* >& traces) const {
   static unordered_set<apta_node*> extended_nodes; // TODO: we might not need this, since it is inherently backed in add_statistics and the size of traces
   if(extended_nodes.contains(n)) return;
   
   for(trace* new_trace: traces){
     id.add_trace_to_apta(new_trace, merger->get_aut(), false); // for-loop needed for probabilistic version
   }
-  for(const auto& [symbol, p]: static_cast<log_alergia_data*>(n->get_data())->get_outgoing_distribution()){
+
+  for(const auto& [symbol, p]: static_cast<log_alergia_data*>(n->get_data())->get_outgoing_distribution()){ // we need the unnormalized probabilities here
     apta_node* next_node = n->get_child(symbol);
-    static_cast<log_alergia_data*>(next_node->get_data())->update_final_prob(p);
+    static_cast<log_alergia_data*>(next_node->get_data())->init_access_probability(p);
+    update_final_probability(next_node, the_apta);
   }
+}
+
+void probabilistic_lsharp_algorithm::update_final_probability(apta_node* n, std::unique_ptr<apta>& the_apta) const {
+  auto access_trace = n->get_access_trace();
+
+  apta_node* current_node = the_apta->get_root();
+  tail* t = access_trace->get_head();
+
+  double product = 1;
+  while(t != nullptr){
+    auto s = t->get_symbol();
+    auto* data = static_cast<log_alergia_data*>(current_node->get_data());
+    product *= data->get_normalized_probability(s);
+
+    current_node = current_node->get_child(s);
+    t = t->future();
+  }
+
+  assert(current_node == n);
+  static_cast<log_alergia_data*>(current_node->get_data())->update_final_prob(product);
 }
 
 /**
@@ -75,14 +99,15 @@ optional< vector<trace*> > probabilistic_lsharp_algorithm::add_statistics(unique
 
       const double new_prob = teacher->get_string_probability(seq, id); //get_probability_of_last_symbol(new_trace, id, teacher, merger->get_aut());      
       if(std::isnan(new_prob)) throw runtime_error("Error: NaN value has occurred."); // debugging
-      
+      //cout << "p: " << new_prob << "; ";
+
       static_cast<log_alergia_data*>(n->get_data())->update_probability(symbol, new_prob);
     }
   }
-  log_alergia::normalize_probabilities(static_cast<log_alergia_data*>( n->get_data() ));
-  completed_nodes.insert(n);
   update_tree_recursively(n, merger->get_aut(), alphabet);
+  log_alergia::normalize_probabilities(static_cast<log_alergia_data*>( n->get_data() ));
 
+  completed_nodes.insert(n);
   return make_optional(res);
 }
 
@@ -102,13 +127,12 @@ void probabilistic_lsharp_algorithm::update_tree_recursively(apta_node* n, apta*
   apta_node* current_node = the_apta->get_root();
 
   tail* t = access_trace->get_head();
-    
+  
   while(t != nullptr){ // walk all the way to n, getting the states up to there
     nodes_to_update.push(current_node);
     current_node = current_node->get_child(t->get_symbol());
     t = t->future();
   }
-
 
   // we update all the nodes behind n
   apta_node* future_node = current_node;
@@ -124,6 +148,20 @@ void probabilistic_lsharp_algorithm::update_tree_recursively(apta_node* n, apta*
     log_alergia::normalize_probabilities(static_cast<log_alergia_data*>( current_node->get_data() ));
     future_node = current_node;
     nodes_to_update.pop();
+  }
+
+  // now we have to update the final probabilities
+  current_node = the_apta->get_root();
+  t = access_trace->get_head();
+  double product = 1;
+  while(t != nullptr){
+    auto s = t->get_symbol();
+    auto* data = static_cast<log_alergia_data*>(current_node->get_data());
+    product *= data->get_normalized_probability(s);
+
+    current_node = current_node->get_child(s);
+    static_cast<log_alergia_data*>(current_node->get_data())->update_final_prob(product);
+    t = t->future();
   }
 }
 
@@ -173,11 +211,19 @@ void probabilistic_lsharp_algorithm::proc_counterex(const unique_ptr<base_teache
   n = hypothesis->get_root();
   trace* parsing_trace = vector_to_trace(counterex, id);
   tail* t = parsing_trace->get_head();
+  double product = 1;
   while(n != nullptr){
     optional< vector<trace*> > queried_traces = add_statistics(merger, n, id, alphabet);
-    if(queried_traces) extend_fringe(merger, n, id, queried_traces.value());
+    //if(queried_traces) extend_fringe(merger, n, hypothesis, id, queried_traces.value());
+
+    auto* data = static_cast<log_alergia_data*>(n->get_data());
+    product *= data->get_normalized_probability(t->get_symbol());
+
     n = active_learning_namespace::get_child_node(n, t);
     t = t->future();
+
+    cout << "The product is " << product << endl;
+    if(n != nullptr) static_cast<log_alergia_data*>(n->get_data())->update_final_prob(product);
   }
 }
 
@@ -209,7 +255,7 @@ void probabilistic_lsharp_algorithm::run(inputdata& id){
 
   // init the root node, s.t. we have blue states to iterate over
   optional< vector<trace*> > queried_traces = add_statistics(merger, the_apta->get_root(), id, alphabet);
-  extend_fringe(merger, the_apta->get_root(), id, queried_traces.value());
+  extend_fringe(merger, the_apta->get_root(), the_apta, id, queried_traces.value());
   
   { // initialize the root node's final probability with empty string search
     pref_suf_t seq;
@@ -218,7 +264,7 @@ void probabilistic_lsharp_algorithm::run(inputdata& id){
     id.add_trace_to_apta(new_trace, the_apta.get());
 
     const double new_prob = teacher->get_string_probability(seq, id);
-    static_cast<log_alergia_data*>(the_apta->get_root()->get_data())->update_final_prob(new_prob);
+    static_cast<log_alergia_data*>(the_apta->get_root()->get_data())->update_final_prob(new_prob, true);
   }
 
 /*   {
@@ -258,7 +304,7 @@ void probabilistic_lsharp_algorithm::run(inputdata& id){
 
       if(possible_merges.size()==0){
         // giving the blue nodes child states before going red
-        if(queried_traces) extend_fringe(merger, blue_node, id, queried_traces.value());
+        if(queried_traces) extend_fringe(merger, blue_node, the_apta, id, queried_traces.value());
 
         no_isolated_states = false;
         refinement* ref = mem_store::create_extend_refinement(merger.get(), blue_node);
@@ -284,10 +330,10 @@ void probabilistic_lsharp_algorithm::run(inputdata& id){
       minimize_apta(performed_refinements, merger.get());
       cout << "Testing hypothesis" << endl;
 
-      {
+/*       {
         static int model_nr = 0;
         print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_ref"); // printing the final model each time
-      }
+      } */
 
       while(true){
         /* While loop to check the type. type is < 0 if sul cannot properly respond to query, e.g. when the string 
@@ -308,6 +354,12 @@ void probabilistic_lsharp_algorithm::run(inputdata& id){
         cout << "Counterexample of length " << cex.size() << " found: ";
         print_vector(cex);
         proc_counterex(teacher, id, the_apta, cex, merger, performed_refinements, alphabet);
+
+        {
+          static int model_nr = 0;
+          print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_cex"); // printing the final model each time
+        }
+
         break;
       }
     }

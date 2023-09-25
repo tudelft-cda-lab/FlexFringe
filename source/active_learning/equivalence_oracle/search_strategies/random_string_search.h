@@ -25,7 +25,7 @@ class random_string_search : public search_base {
     int last_lower_bound; // for optimization purposes
 
     int delay_counter = 0;
-    const int delay = 5000; // if within the last [delay] suggested counterexamples None of them was one, we terminate the algorithm
+    const int delay = 10000; // if within the last [delay] suggested counterexamples None of them was one, we terminate the algorithm
 
     random_int_generator length_generator;
     random_int_generator alphabet_sampler;
@@ -35,7 +35,7 @@ class random_string_search : public search_base {
   public:
     random_string_search(const int max_depth) : search_base(max_depth) {
       samples_drawn = 0;
-      last_lower_bound = 10;
+      last_lower_bound = 1;
 
       length_generator.set_limits(last_lower_bound, MAX_SEARCH_DEPTH);
 

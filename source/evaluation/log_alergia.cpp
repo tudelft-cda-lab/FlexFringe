@@ -42,20 +42,24 @@ void log_alergia_data::read_json(json& data){
     for (auto& symbol : d.items()){
         string sym = symbol.key();
         string val = symbol.value();
-        symbol_probability_map[inputdata_locator::get()->symbol_from_string(sym)] = stod(val);
+        normalized_symbol_probability_map[inputdata_locator::get()->symbol_from_string(sym)] = stod(val);
     }
+
+    json& fp = data["final_prob"];
+    for(auto& fp : fp.items()) cout << typeid(fp).name() << endl; //final_prob = fp;
 };
 
 void log_alergia_data::write_json(json& data){
     evaluation_data::write_json(data);
 
-    data["symbol_probs"] = {};
 
     for(auto & symbol_count : symbol_probability_map) {
         int symbol = symbol_count.first;
         double value = symbol_count.second;
         data["trans_probs"][inputdata_locator::get()->string_from_symbol(symbol)] = to_string(value);
     }
+    
+    data["final_prob"] = to_string(final_prob);
 };
 
 void log_alergia_data::print_transition_label(iostream& output, int symbol){
@@ -74,18 +78,10 @@ void log_alergia_data::print_state_label(iostream& output){
 
 void log_alergia_data::update(evaluation_data* right){
     evaluation_data::update(right);
-    auto* other = (log_alergia_data*)right;
-
-    this->final_prob += other->final_prob;
-    log_alergia::normalize_probabilities(this);
 };
 
 void log_alergia_data::undo(evaluation_data* right){
     evaluation_data::undo(right);
-    auto* other = (log_alergia_data*)right;
-
-    this->final_prob -= other->final_prob;
-    log_alergia::normalize_probabilities(this);
 };
 
 /**
@@ -96,7 +92,7 @@ void log_alergia_data::undo(evaluation_data* right){
 int log_alergia_data::predict_symbol(tail*){
     double max_p = -1;
     int max_symbol = 0;
-    for(auto &[s, p] : normalized_symbol_probability_map){
+    for(const auto &[s, p] : normalized_symbol_probability_map){
         if(max_p < 0 || max_p < p){
             max_p = p;
             max_symbol = s;
@@ -194,7 +190,7 @@ double log_alergia::get_js_divergence(unordered_map<int, double>& left_distribut
         auto js = get_js_term(left_p, right_p);
         res += js;
     }
-    
+
     return res;
 }
 
