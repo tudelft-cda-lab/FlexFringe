@@ -57,14 +57,14 @@ std::optional< pair< vector<int>, int> > probabilistic_oracle::equivalence_query
           search_strategy->reset();
           return make_optional< pair< vector<int>, int > >(make_pair(query_string, 0));
         }
- 
+
 
         if(t->is_final()){
           sampled_probability *= static_cast<log_alergia_data*>(n->get_data())->get_final_prob();
           break;
         }
         const int symbol = t->get_symbol();
-        sampled_probability *= static_cast<log_alergia_data*>(n->get_data())->get_next_probability(symbol);
+        sampled_probability *= static_cast<log_alergia_data*>(n->get_data())->get_normalized_probability(symbol);
 
         n = active_learning_namespace::get_child_node(n, t);
         t = t->future();
@@ -79,6 +79,7 @@ std::optional< pair< vector<int>, int> > probabilistic_oracle::equivalence_query
     }
 
     auto diff = abs(true_val - sampled_probability);
+    cout << "true_val " << true_val << " sample_probability " << sampled_probability << endl;
     if(diff > mu){
       //cout << "Predictions of the following counterexample: The true probability: " << true_p << ", predicted probability: " << sampled_probability << endl;
       search_strategy->reset();
