@@ -24,6 +24,7 @@ protected:
     REGISTER_DEC_DATATYPE(log_alergia_data);
 
     double final_prob;
+    double access_trace_prob; // this is the total string probability to end in this state. We need it so that we can compute the final prob
     std::unordered_map<int, double> symbol_probability_map;
     std::unordered_map<int, double> normalized_symbol_probability_map; // for merge tests
 
@@ -47,15 +48,28 @@ public:
     void add_probability(const int symbol, const double p);
     void update_probability(const int symbol, const double p);
 
-    void update_final_prob(const double p) noexcept {
-        this->final_prob += p;
+    void init_access_probability(const double p) noexcept {
+        this->access_trace_prob = p;
+        this->final_prob = 1;
     }
 
     double get_final_prob() noexcept {
         return this->final_prob;
     }
 
-    double get_next_probability(const int symbol) {
+    void update_final_prob(const double product, const bool is_root=false){
+        if(is_root){
+            this->final_prob = product;
+            return;
+        } 
+
+        if(product == 0)
+            this->final_prob = this->access_trace_prob;
+        else
+            this->final_prob = min(0.9, this->access_trace_prob / product);
+    }
+
+    double get_normalized_probability(const int symbol) {
         return normalized_symbol_probability_map[symbol];
     }
 
