@@ -59,10 +59,13 @@ std::optional< pair< vector<int>, int> > probabilistic_oracle::equivalence_query
         }
 
 
-        if(t->is_final()){
+        if(t->is_final() && FINAL_PROBABILITIES){
           sampled_probability *= static_cast<log_alergia_data*>(n->get_data())->get_final_prob();
           break;
         }
+        else if(t->is_final())
+          break;
+
         const int symbol = t->get_symbol();
         sampled_probability *= static_cast<log_alergia_data*>(n->get_data())->get_normalized_probability(symbol);
 

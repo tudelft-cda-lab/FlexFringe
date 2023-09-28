@@ -57,16 +57,26 @@ public:
         return this->final_prob;
     }
 
+    /**
+     * @brief TODO: update this function
+     * 
+     * @param product 
+     * @param is_root 
+     */
     void update_final_prob(const double product, const bool is_root=false){
+        if(!FINAL_PROBABILITIES){
+            this->final_prob = 1;
+            return;
+        }
+        
         if(is_root){
             this->final_prob = product;
             return;
         } 
-
-        if(product == 0)
+        else if(product == 0)
             this->final_prob = this->access_trace_prob;
         else
-            this->final_prob = min(0.9, this->access_trace_prob / product);
+            this->final_prob = this->access_trace_prob / product; // TODO: does this make sense?
     }
 
     double get_normalized_probability(const int symbol) {
