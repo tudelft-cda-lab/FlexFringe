@@ -287,8 +287,7 @@ void probabilistic_lsharp_algorithm::run(inputdata& id){
     }
 
     bool no_isolated_states = true; // avoid iterating over a changed data structure (apta)
-    stack<apta_node*> nodes_to_extend;
-
+    stack<refinement*> refs_to_do;
     for(blue_state_iterator b_it = blue_state_iterator(the_apta->get_root()); *b_it != nullptr; ++b_it){
       const auto blue_node = *b_it;
 
@@ -299,27 +298,37 @@ void probabilistic_lsharp_algorithm::run(inputdata& id){
         refinement* ref = merger->test_merge(red_node, blue_node);
         if(ref != nullptr){
           possible_merges.insert(ref);
-          break;
         } 
       }
 
       if(possible_merges.size()==0){
         // giving the blue nodes child states before going red
         no_isolated_states = false;
-        nodes_to_extend.push(blue_node);
+        refinement* ref = mem_store::create_extend_refinement(merger.get(), blue_node);
+        refs_to_do.push(ref);
+      }
+      else{
+        // get the best refinement from the heap
+        refinement* best_merge = *(possible_merges.begin());
+        for(auto it : possible_merges){
+            if(it != best_merge) it->erase();
+        }
+        refs_to_do.push(best_merge);
       }
     }
 
+    for(auto& [node, traces]: node_traces_map){
+      extend_fringe(merger, node, the_apta, id, traces);
+    }
+
     list<refinement*> performed_refinements;
-    while(!nodes_to_extend.empty()){
-      auto blue_node = nodes_to_extend.top();
-      refinement* ref = mem_store::create_extend_refinement(merger.get(), blue_node);
+    while(!refs_to_do.empty()){
+      auto ref = refs_to_do.top();
+      
       ref->doref(merger.get());
       performed_refinements.push_back(ref);
 
-      if(node_traces_map.contains(blue_node)) extend_fringe(merger, blue_node, the_apta, id, node_traces_map[blue_node]);
-
-      nodes_to_extend.pop();
+      refs_to_do.pop();
     }
 
     {
