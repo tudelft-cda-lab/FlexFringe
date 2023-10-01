@@ -34,13 +34,11 @@ class probabilistic_lsharp_algorithm : public lsharp_algorithm {
     void proc_counterex(const std::unique_ptr<base_teacher>& teacher, inputdata& id, unique_ptr<apta>& hypothesis, 
                         const std::vector<int>& counterex, std::unique_ptr<state_merger>& merger, const refinement_list refs,
                         const vector<int>& alphabet) const;
-    
+
     void extend_fringe(std::unique_ptr<state_merger>& merger, apta_node* n, std::unique_ptr<apta>& the_apta, inputdata& id, const vector< trace* >& traces) const;
-    
     std::optional< std::vector<trace*> > add_statistics(std::unique_ptr<state_merger>& merger, apta_node* n,inputdata& id, const std::vector<int>& alphabet) const;
     __attribute__((always_inline)) inline void update_tree_recursively(apta_node* n, apta* the_apta, const vector<int>& alphabet) const;
 
-    void preprocess_apta(std::unique_ptr<state_merger>& merger, std::unique_ptr<apta>& the_apta, inputdata& id, const vector<int>& alphabet);
     void update_final_probability(apta_node* n, apta* the_apta) const;
     void init_final_prob(apta_node* n, apta* the_apta, inputdata& id) const;
 
