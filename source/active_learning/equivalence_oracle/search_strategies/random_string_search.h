@@ -35,9 +35,8 @@ class random_string_search : public search_base {
   public:
     random_string_search(const int max_depth) : search_base(max_depth) {
       samples_drawn = 0;
-      last_lower_bound = 1;
-
-      length_generator.set_limits(last_lower_bound, MAX_SEARCH_DEPTH);
+      last_lower_bound = 5;
+      length_generator.set_limits(1, 5);
 
       max_samples = 500000;
     };

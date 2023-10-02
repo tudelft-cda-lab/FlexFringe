@@ -42,22 +42,22 @@ void log_alergia_data::read_json(json& data){
     for (auto& symbol : d.items()){
         string sym = symbol.key();
         string val = symbol.value();
-        symbol_probability_map[inputdata_locator::get()->symbol_from_string(sym)] = stod(val);
+        normalized_symbol_probability_map[inputdata_locator::get()->symbol_from_string(sym)] = stod(val);
     }
 
     if(FINAL_PROBABILITIES){
-        json& fp = data["final_prob"];
-        for(auto& fp : fp.items()) cout << typeid(fp).name() << endl; //final_prob = fp;
+        string fp = data["final_prob"];
+        final_prob = stod(fp);
     }
 
-    log_alergia::normalize_probabilities(this);
+    //log_alergia::normalize_probabilities(this);
 };
 
 void log_alergia_data::write_json(json& data){
     evaluation_data::write_json(data);
 
 
-    for(auto & symbol_count : symbol_probability_map) {
+    for(auto & symbol_count : normalized_symbol_probability_map) {
         int symbol = symbol_count.first;
         double value = symbol_count.second;
         data["trans_probs"][inputdata_locator::get()->string_from_symbol(symbol)] = to_string(value);
@@ -113,7 +113,7 @@ int log_alergia_data::predict_symbol(tail*){
 
 double log_alergia_data::predict_symbol_score(int t){
     if(t == -1)
-        return 1.0;
+        return final_prob;
     else if(normalized_symbol_probability_map.contains(t))
         return normalized_symbol_probability_map[t];
     
@@ -265,7 +265,7 @@ double log_alergia::get_js_divergence(unordered_map<int, double>& left_distribut
 }
 
 /**
- * @brief Normalizes the symbol probability map, and stores it in 
+ * @brief Normalizes the symbol probability map, and stores it.
  * 
  * @param node The node.
  */
@@ -277,8 +277,9 @@ void log_alergia::normalize_probabilities(log_alergia_data* data) {
 
     assert(p_sum != 0);
 
-    //double factor = FINAL_PROBABILITIES ? (1. - data->final_prob) / p_sum : 1 / p_sum;
-    double factor = 1 / p_sum;
+    double factor = FINAL_PROBABILITIES ? (1. - data->final_prob) / p_sum : 1 / p_sum;
+    //double factor = 1 / p_sum;
+    assert(factor >= 0);
 
     for(auto& [symbol, p] : data->symbol_probability_map){
         data->normalized_symbol_probability_map[symbol] = p * factor;

@@ -34,7 +34,7 @@ std::optional< pair< vector<int>, int> > probabilistic_oracle::equivalence_query
   apta& hypothesis = *(merger->get_aut());
 
   static const auto& alphabet = id.get_alphabet(); 
-  static auto mu = 0.01; // TODO: think about something to do here
+  static auto mu = 0.02; // TODO: think about something to do here
 
   std::optional< vector<int> > query_string_opt = search_strategy->next(id);
   while(query_string_opt != nullopt){ // nullopt == search exhausted
@@ -82,9 +82,8 @@ std::optional< pair< vector<int>, int> > probabilistic_oracle::equivalence_query
     }
 
     auto diff = abs(true_val - sampled_probability);
-    cout << "true_val " << true_val << " sample_probability " << sampled_probability << endl;
     if(diff > mu){
-      //cout << "Predictions of the following counterexample: The true probability: " << true_p << ", predicted probability: " << sampled_probability << endl;
+      cout << "Predictions of the following counterexample: The true probability: " << true_val << ", predicted probability: " << sampled_probability << endl;
       search_strategy->reset();
       return make_optional< pair< vector<int>, int > >(make_pair(query_string, 0));
     } 
