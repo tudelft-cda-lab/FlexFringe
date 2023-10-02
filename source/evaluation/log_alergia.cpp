@@ -42,13 +42,15 @@ void log_alergia_data::read_json(json& data){
     for (auto& symbol : d.items()){
         string sym = symbol.key();
         string val = symbol.value();
-        normalized_symbol_probability_map[inputdata_locator::get()->symbol_from_string(sym)] = stod(val);
+        symbol_probability_map[inputdata_locator::get()->symbol_from_string(sym)] = stod(val);
     }
 
     if(FINAL_PROBABILITIES){
-            json& fp = data["final_prob"];
+        json& fp = data["final_prob"];
         for(auto& fp : fp.items()) cout << typeid(fp).name() << endl; //final_prob = fp;
     }
+
+    log_alergia::normalize_probabilities(this);
 };
 
 void log_alergia_data::write_json(json& data){
@@ -144,8 +146,7 @@ bool log_alergia::consistent(state_merger *merger, apta_node* left_node, apta_no
     auto* r = static_cast<log_alergia_data*>( right_node->get_data() );
     unordered_set<int> checked_symbols;
 
-    //cout << "JS divergence: " << get_js_divergence(l->normalized_symbol_probability_map, r->normalized_symbol_probability_map, l->final_prob, r->final_prob) << ", MU: "<< mu << endl;;
-    if(FINAL_PROBABILITIES) js_divergence += get_js_term(l->final_prob, r->final_prob);
+    //cout << "JS divergence: " << get_js_divergence(l->symbol_probability_map, r->symbol_probability_map, l->final_prob, r->final_prob) << ", MU: "<< mu << endl;;
 
     for(auto& [symbol, left_p] : l->normalized_symbol_probability_map){
         if(!r->normalized_symbol_probability_map.contains(symbol))
@@ -161,7 +162,7 @@ bool log_alergia::consistent(state_merger *merger, apta_node* left_node, apta_no
         checked_symbols.insert(symbol);
     }
 
-    for(auto& [symbol, right_p] : r->normalized_symbol_probability_map){
+    for(auto& [symbol, right_p] : r->symbol_probability_map){
         if(checked_symbols.contains(symbol)) continue;
 
         if(!l->normalized_symbol_probability_map.contains(symbol))
@@ -175,8 +176,71 @@ bool log_alergia::consistent(state_merger *merger, apta_node* left_node, apta_no
         }
     }
 
+    static auto FINAL_T = 0.3;
+    if(FINAL_PROBABILITIES && abs(l->final_prob - r->final_prob) > FINAL_T){
+        inconsistency_found = true;
+        return false;
+    } 
+
+
     return true;
 };
+
+/* bool log_alergia::consistent(state_merger *merger, apta_node* left_node, apta_node* right_node){
+    if(inconsistency_found) return false;
+    
+    auto* l = static_cast<log_alergia_data*>( left_node->get_data() );
+    auto* r = static_cast<log_alergia_data*>( right_node->get_data() );
+    unordered_set<int> checked_symbols;
+
+    double nominator=0, d1=0, d2=0;
+
+    for(auto& [symbol, left_p] : l->symbol_probability_map){
+        if(!r->symbol_probability_map.contains(symbol))
+            r->symbol_probability_map[symbol] = 0;
+
+        nominator += left_p * r->symbol_probability_map[symbol];
+        d1 += left_p * left_p;
+        d2 += r->symbol_probability_map[symbol] * r->symbol_probability_map[symbol];
+
+        checked_symbols.insert(symbol);
+    }
+
+    for(auto& [symbol, right_p] : r->symbol_probability_map){
+        if(checked_symbols.contains(symbol)) continue;
+
+        if(!l->symbol_probability_map.contains(symbol))
+            l->symbol_probability_map[symbol] = 0;
+
+        nominator += right_p * l->symbol_probability_map[symbol];
+        d1 += l->symbol_probability_map[symbol] * l->symbol_probability_map[symbol];
+        d2 += right_p * right_p;
+    }
+
+    js_divergence = nominator / (sqrt(d1) * sqrt(d2));
+
+    if(js_divergence < mu){
+        inconsistency_found = true;
+        return false;
+    }
+
+    // weights for probabilistic machines can be dominated by final_ps, leading to merging everything, hence we do the check double
+    if(FINAL_PROBABILITIES){
+        nominator += l->final_prob * r->final_prob;
+        d1 += l->final_prob * l->final_prob;
+        d2 += r->final_prob * r->final_prob;
+        js_divergence = nominator / (sqrt(d1) * sqrt(d2));
+
+        cout << "js2 " << js_divergence << endl;
+
+        if(js_divergence < mu){
+            inconsistency_found = true;
+            return false;
+        }
+    }
+
+    return true;
+}; */
 
 double log_alergia::get_js_divergence(unordered_map<int, double>& left_distribution, unordered_map<int, double>& right_distribution, double left_final, double right_final){
     double res = FINAL_PROBABILITIES ? 0 : get_js_term(left_final, right_final);
@@ -213,8 +277,8 @@ void log_alergia::normalize_probabilities(log_alergia_data* data) {
 
     assert(p_sum != 0);
 
-    double factor = FINAL_PROBABILITIES ? (1. - data->final_prob) / p_sum : 1 / p_sum;
-    assert(factor > 0);
+    //double factor = FINAL_PROBABILITIES ? (1. - data->final_prob) / p_sum : 1 / p_sum;
+    double factor = 1 / p_sum;
 
     for(auto& [symbol, p] : data->symbol_probability_map){
         data->normalized_symbol_probability_map[symbol] = p * factor;
