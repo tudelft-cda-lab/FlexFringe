@@ -19,6 +19,18 @@
 using namespace std;
 
 optional< vector<int> > random_string_search::next(const inputdata& id) {
+  static int lower_b = 5, upper_b = lower_b + 5;
+  static int c = 1;
+
+  if(c % 50000 == 0 && upper_b < MAX_SEARCH_DEPTH){
+    lower_b += 5;
+    upper_b = lower_b + 5;
+    length_generator.set_limits(last_lower_bound, MAX_SEARCH_DEPTH);
+
+    cout << "Cex search from " << lower_b << " to " << upper_b << endl;
+  }
+  ++c;
+  
   return next(id, 0);
 }
 
