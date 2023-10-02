@@ -150,7 +150,7 @@ void probabilistic_lsharp_algorithm::update_tree_recursively(apta_node* n, apta*
   }
 
   // update the nodes behind n
-  auto data_to_add = static_cast<log_alergia_data*>(n->get_data())->get_outgoing_distribution();
+  auto& data_to_add = static_cast<log_alergia_data*>(n->get_data())->get_outgoing_distribution();
   while(!nodes_to_update.empty()){
     current_node = nodes_to_update.top();
     if(current_node == n) continue;
@@ -234,7 +234,7 @@ void probabilistic_lsharp_algorithm::proc_counterex(const unique_ptr<base_teache
     if(queried_traces) extend_fringe(merger, n, hypothesis, id, queried_traces.value());
 
     //auto* data = static_cast<log_alergia_data*>(n->get_data());
-    //product *= data->get_normalized_probability(t->get_symbol());
+    //product *= data->get_weight(t->get_symbol());
 
     n = active_learning_namespace::get_child_node(n, t);
     t = t->future();
@@ -262,38 +262,87 @@ void probabilistic_lsharp_algorithm::run(inputdata& id){
   cout << "Alphabet: ";
   active_learning_namespace::print_sequence< vector<int>::const_iterator >(alphabet.cbegin(), alphabet.cend());
 
-  unordered_set<apta_node*> fringe_nodes;
+  //unordered_set<apta_node*> fringe_nodes;
 
   {
     // init the root node
     auto root_node = the_apta->get_root();
     optional< vector<trace*> > queried_traces = add_statistics(merger, root_node, id, alphabet);
     extend_fringe(merger, root_node, the_apta, id, queried_traces.value());
-    for(auto s: alphabet) fringe_nodes.insert(root_node->get_child(s));
+    //for(auto s: alphabet) fringe_nodes.insert(root_node->get_child(s));
   }
 
+  list<refinement*> performed_refinements;
   while(ENSEMBLE_RUNS > 0 && n_runs <= ENSEMBLE_RUNS){
     if( n_runs % 100 == 0 ) cout << "Iteration " << n_runs + 1 << endl;
 
-    unordered_map< apta_node*, vector<trace*> > node_extension_map;
+    unordered_map< apta_node*, vector<trace*> > node_extension_map; // TODO: can be a simple set or stack
 
-    for(apta_node* fringe_node: fringe_nodes){
-      optional< vector<trace*> > queried_traces = add_statistics(merger, fringe_node, id, alphabet);
+    for(blue_state_iterator b_it = blue_state_iterator(the_apta->get_root()); *b_it != nullptr; ++b_it){
+      const auto blue_node = *b_it;      
+      optional< vector<trace*> > queried_traces = add_statistics(merger, blue_node, id, alphabet);
       
       if(queried_traces){ // can fail through states that were added due to counterexample processing
-        node_extension_map[fringe_node] = std::move(queried_traces.value());
+        node_extension_map[blue_node] = std::move(queried_traces.value());
       }
     }
 
-    // now we minimize the automaton
-    {
-      static int model_nr = 0;
-      cout << "Model nr " << model_nr + 1 << endl;
-      print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".before_ref");
+    // go through each newly found fringe node, see if you can merge or extend
+    bool identified_red_node = false; // avoid iterating over a changed data structure (apta)
+    stack<refinement*> refs_to_do;
+    for(blue_state_iterator b_it = blue_state_iterator(the_apta->get_root()); *b_it != nullptr; ++b_it){
+      const auto blue_node = *b_it;
+
+      refinement_set possible_merges;
+      for(red_state_iterator r_it = red_state_iterator(the_apta->get_root()); *r_it != nullptr; ++r_it){
+        const auto red_node = *r_it;
+        
+        refinement* ref = merger->test_merge(red_node, blue_node);
+        if(ref != nullptr){
+          possible_merges.insert(ref);
+        } 
+      }
+
+      if(possible_merges.size()==0){
+        identified_red_node = true;
+        // giving the blue nodes child states before going red
+        refinement* ref = mem_store::create_extend_refinement(merger.get(), blue_node);
+        refs_to_do.push(ref);
+      }
+      else{
+        // get the best refinement from the heap
+        refinement* best_merge = *(possible_merges.begin());
+        for(auto it : possible_merges){
+            if(it != best_merge) it->erase();
+        }
+        refs_to_do.push(best_merge);
+      }
     }
 
-    list<refinement*> performed_refinements;
-    minimize_apta(performed_refinements, merger.get());
+    if(identified_red_node){
+      // extend the fringe and turn all nodes red
+      for(auto& [current_node, new_traces]: node_extension_map){
+        for(auto& tr: new_traces)
+          id.add_trace_to_apta(tr, the_apta.get(), false);
+      }
+
+      while(!refs_to_do.empty()){
+        auto ref = refs_to_do.top();
+        ref->doref(merger.get());
+        performed_refinements.push_back(ref);
+        refs_to_do.pop();
+      }
+
+      continue;
+    }
+
+    // only merges possible from here on, hence we can test our hypothesis
+    while(!refs_to_do.empty()){
+      auto ref = refs_to_do.top();
+      ref->doref(merger.get());
+      performed_refinements.push_back(ref);
+      refs_to_do.pop();
+    }
 
     {
       static int model_nr = 0;
@@ -335,11 +384,12 @@ void probabilistic_lsharp_algorithm::run(inputdata& id){
       return;
     }
 
-    fringe_nodes.clear();
-    for(auto& [node, v_of_traces]: node_extension_map){
-      extend_fringe(merger, node, the_apta, id, v_of_traces);
-      for(auto s: alphabet) fringe_nodes.insert(node->get_child(s));
+    for(auto& [current_node, new_traces]: node_extension_map){
+      for(auto& tr: new_traces)
+        id.add_trace_to_apta(tr, the_apta.get(), false);
     }
+    
+    performed_refinements.clear();
   }
 }
 
