@@ -12,6 +12,7 @@
 #include "probabilistic_oracle.h"
 #include "common_functions.h"
 #include "log_alergia.h"
+#include "parameters.h"
 
 #include <cmath>
 
@@ -34,7 +35,7 @@ std::optional< pair< vector<int>, int> > probabilistic_oracle::equivalence_query
   apta& hypothesis = *(merger->get_aut());
 
   static const auto& alphabet = id.get_alphabet(); 
-  static auto mu = 0.02; // TODO: think about something to do here
+  static const auto mu = static_cast<double>(CHECK_PARAMETER); //0.02 for taysir track 2 to obtain small machines
 
   std::optional< vector<int> > query_string_opt = search_strategy->next(id);
   while(query_string_opt != nullopt){ // nullopt == search exhausted
