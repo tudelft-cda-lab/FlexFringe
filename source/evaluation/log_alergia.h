@@ -97,8 +97,7 @@ class log_alergia: public evaluation_function {
 protected:
     REGISTER_DEC_TYPE(log_alergia);
 
-    double mu;
-    double js_divergence;
+    double score;
 
 public:
 
@@ -107,7 +106,6 @@ public:
 
     virtual double compute_score(state_merger*, apta_node* left_node, apta_node* right_node) override;
     virtual void reset(state_merger *merger) override;
-    virtual void initialize_before_adding_traces() override;
 
     static void add_outgoing_probs(apta_node* node, std::unordered_map<int, double>& probabilities);
     static void normalize_probabilities(log_alergia_data* data);
