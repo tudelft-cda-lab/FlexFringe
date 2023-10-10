@@ -33,8 +33,8 @@ void kl_data::undo(evaluation_data* right){
         original_finprob_count = fpc() - other->fpc();
 };
 
-bool kldistance::consistent(state_merger *merger, apta_node* left, apta_node* right){
-    return count_driven::consistent(merger, left, right);
+bool kldistance::consistent(state_merger *merger, apta_node* left, apta_node* right, int depth){
+    return count_driven::consistent(merger, left, right, depth);
 };
 
 void kldistance::update_perplexity(apta_node* left, float op_count_left, float op_count_right, float count_left, float count_right, float left_divider, float right_divider){

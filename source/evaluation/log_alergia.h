@@ -109,7 +109,7 @@ protected:
 
 public:
 
-    virtual bool consistent(state_merger *merger, apta_node* left_node, apta_node* right_node) override;
+    virtual bool consistent(state_merger *merger, apta_node* left_node, apta_node* right_node, int depth) override;
 
     virtual double compute_score(state_merger*, apta_node* left_node, apta_node* right_node) override;
     virtual void reset(state_merger *merger) override;
