@@ -38,6 +38,9 @@ REGISTER_DEF_TYPE(log_alergia);
 void log_alergia_data::read_json(json& data){
     evaluation_data::read_json(data);
 
+    static int alphabet_size = inputdata_locator::get()->get_alphabet().size();
+    normalized_symbol_probability_map.resize(alphabet_size);
+
     json& d = data["trans_probs"];
     for (auto& symbol : d.items()){
         string sym = symbol.key();
@@ -57,9 +60,9 @@ void log_alergia_data::write_json(json& data){
     evaluation_data::write_json(data);
 
 
-    for(auto & symbol_count : normalized_symbol_probability_map) {
-        int symbol = symbol_count.first;
-        double value = symbol_count.second;
+    //for(auto & symbol_count : normalized_symbol_probability_map) {
+    for(int symbol=0; symbol<normalized_symbol_probability_map.size(); ++symbol) {
+        double value = normalized_symbol_probability_map[symbol];
         data["trans_probs"][inputdata_locator::get()->string_from_symbol(symbol)] = to_string(value);
     }
     
@@ -72,8 +75,8 @@ void log_alergia_data::print_transition_label(iostream& output, int symbol){
 
 void log_alergia_data::print_state_label(iostream& output){
     evaluation_data::print_state_label(output);
-    for(auto [symbol, p]: normalized_symbol_probability_map){
-        output << symbol << " : " << p << "\n";
+    for(int symbol=0; symbol<normalized_symbol_probability_map.size(); ++symbol){
+        output << symbol << " : " << normalized_symbol_probability_map[symbol] << "\n";
     }
     if(FINAL_PROBABILITIES) output << "f: " << final_prob << "\n";
 };
@@ -96,7 +99,8 @@ void log_alergia_data::undo(evaluation_data* right){
 int log_alergia_data::predict_symbol(tail*){
     double max_p = -1;
     int max_symbol = 0;
-    for(const auto &[s, p] : normalized_symbol_probability_map){
+    for(int s=0; s<normalized_symbol_probability_map.size(); ++s){
+        auto p = normalized_symbol_probability_map[s];
         if(max_p < 0 || max_p < p){
             max_p = p;
             max_symbol = s;
@@ -108,10 +112,10 @@ int log_alergia_data::predict_symbol(tail*){
 double log_alergia_data::predict_symbol_score(int t){
     if(t == -1)
         return final_prob;
-    else if(normalized_symbol_probability_map.contains(t))
-        return normalized_symbol_probability_map[t];
+    //else if(normalized_symbol_probability_map.contains(t))
+    return normalized_symbol_probability_map[t];
     
-    return 0.0;
+    //return 0.0;
 }
 
 void log_alergia_data::add_probability(const int symbol, const double p) {
@@ -122,49 +126,18 @@ void log_alergia_data::update_probability(const int symbol, const double p) {
     this->symbol_probability_map[symbol] = p;
 }
 
-double log_alergia::get_js_term(const double px, const double qx) {
-    double term1, term2;
-    if(px==0) term1 = 0;
-    else term1 = px*log(2*px / (px+qx));
-
-    if(qx==0) term2 = 0;
-    else term2 = qx*log(2*qx / (px+qx));
-
-    return 0.5*(term1 + term2);
-}
-
 bool log_alergia::consistent(state_merger *merger, apta_node* left_node, apta_node* right_node){
     if(inconsistency_found) return false;
     
-    static const auto mu = static_cast<double>(MU);
-
     auto* l = static_cast<log_alergia_data*>( left_node->get_data() );
     auto* r = static_cast<log_alergia_data*>( right_node->get_data() );
     unordered_set<int> checked_symbols;
 
+    static auto mu = static_cast<double>(MU);
     double sum = 0;
-    for(auto& [symbol, left_p] : l->normalized_symbol_probability_map){
-        if(!r->normalized_symbol_probability_map.contains(symbol))
-            r->normalized_symbol_probability_map[symbol] = 0;
-
-        double right_p = r->normalized_symbol_probability_map[symbol]; // automatically set to 0 if does not contain (zero initialization)
-        auto diff = abs(left_p - right_p);
-        if(diff > mu){
-            inconsistency_found = true;
-            return false;
-        }
-        sum += diff;
-
-        checked_symbols.insert(symbol);
-    }
-
-    for(auto& [symbol, right_p] : r->symbol_probability_map){
-        if(checked_symbols.contains(symbol)) continue;
-
-        if(!l->normalized_symbol_probability_map.contains(symbol))
-            l->normalized_symbol_probability_map[symbol] = 0;
-
-        double left_p = l->normalized_symbol_probability_map[symbol]; // automatically set to 0 if does not contain (zero initialization)
+    for(int i=0; i<l->normalized_symbol_probability_map.size(); ++i){
+        double left_p = l->normalized_symbol_probability_map[i];
+        double right_p = r->normalized_symbol_probability_map[i]; // automatically set to 0 if does not contain (zero initialization)
         auto diff = abs(left_p - right_p);
         if(diff > mu){
             inconsistency_found = true;
@@ -186,28 +159,6 @@ bool log_alergia::consistent(state_merger *merger, apta_node* left_node, apta_no
     return true;
 };
 
-double log_alergia::get_js_divergence(unordered_map<int, double>& left_distribution, unordered_map<int, double>& right_distribution, double left_final, double right_final){
-    double res = FINAL_PROBABILITIES ? 0 : get_js_term(left_final, right_final);
-    unordered_set<int> checked_symbols;
-    for(auto& [symbol, left_p] : left_distribution){
-        double right_p = right_distribution[symbol]; // automatically set to 0 if does not contain (zero initialization)
-        auto js = get_js_term(left_p, right_p);
-        res += js;
-        
-        checked_symbols.insert(symbol);
-    }
-
-    for(auto& [symbol, right_p] : right_distribution){
-        if(checked_symbols.contains(symbol)) continue;
-        
-        double left_p = left_distribution[symbol]; // automatically set to 0 if does not contain (zero initialization)
-        auto js = get_js_term(left_p, right_p);
-        res += js;
-    }
-
-    return res;
-}
-
 /**
  * @brief Normalizes the symbol probability map, and stores it.
  * 
@@ -215,20 +166,37 @@ double log_alergia::get_js_divergence(unordered_map<int, double>& left_distribut
  */
 void log_alergia::normalize_probabilities(log_alergia_data* data) {
     double p_sum = 0;
-    for(auto& [symbol, p] : data->symbol_probability_map){
+    for(auto& p: data->symbol_probability_map){
         p_sum += p;
     }
 
     assert(p_sum != 0);
 
     double factor = FINAL_PROBABILITIES ? (1. - data->final_prob) / p_sum : 1 / p_sum;
-    //double factor = 1 / p_sum;
     assert(factor >= 0);
 
-    for(auto& [symbol, p] : data->symbol_probability_map){
-        data->normalized_symbol_probability_map[symbol] = p * factor;
+    for(int i=0; i<data->symbol_probability_map.size(); ++i){
+        auto p = data->symbol_probability_map[i];
+        data->normalized_symbol_probability_map[i] = p * factor;
     }
 }
+
+/* void log_alergia::update_mu(apta_node* node){
+    auto* the_data = static_cast<log_alergia_data*>(node->get_data());
+    auto* next_merged_node = node->get_merged_head();
+    assert(next_merged_node != nullptr);
+    while(next_merged_node != nullptr){
+        auto* other_data = static_cast<log_alergia_data*>(next_merged_node->get_data());
+            
+        double max_diff = 0;
+        for(int i=0; i<the_data->normalized_symbol_probability_map.size(); ++i){
+            max_diff = max(max_diff, abs(the_data->normalized_symbol_probability_map[i] - other_data->normalized_symbol_probability_map[i]));
+        }
+        next_merged_node = next_merged_node->get_next_merged();
+        other_data->mu_1 = min(other_data->mu_1, max_diff);
+        the_data->mu_1 = min(the_data->mu_1, max_diff);
+    }
+} */
 
 double log_alergia::compute_score(state_merger *merger, apta_node* left, apta_node* right){
     return score;

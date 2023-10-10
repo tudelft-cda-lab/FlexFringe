@@ -35,7 +35,7 @@ std::optional< pair< vector<int>, int> > probabilistic_oracle::equivalence_query
   apta& hypothesis = *(merger->get_aut());
 
   static const auto& alphabet = id.get_alphabet(); 
-  static const auto mu = static_cast<double>(CHECK_PARAMETER); //0.02 for taysir track 2 to obtain small machines
+  static const auto mu_2 = static_cast<double>(CHECK_PARAMETER);
 
   std::optional< vector<int> > query_string_opt = search_strategy->next(id);
   while(query_string_opt != nullopt){ // nullopt == search exhausted
@@ -83,7 +83,7 @@ std::optional< pair< vector<int>, int> > probabilistic_oracle::equivalence_query
     }
 
     auto diff = abs(true_val - sampled_probability);
-    if(diff > mu){
+    if(diff > mu_2){
       cout << "Predictions of the following counterexample: The true probability: " << true_val << ", predicted probability: " << sampled_probability << endl;
       search_strategy->reset();
       return make_optional< pair< vector<int>, int > >(make_pair(query_string, 0));
