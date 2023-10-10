@@ -33,7 +33,7 @@ protected:
 
 public:
 
-    virtual bool consistent(state_merger *merger, apta_node* left, apta_node* right){return true;}; // TODO
+    virtual bool consistent(state_merger *merger, apta_node* left, apta_node* right, int depth){return true;}; // TODO
     virtual double compute_score(state_merger*, apta_node* left, apta_node* right){return 0;}; // TODO
     virtual void reset(state_merger *merger){}; // TODO
 };

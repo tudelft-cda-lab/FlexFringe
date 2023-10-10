@@ -123,7 +123,7 @@ public:
   virtual void update_score(state_merger *merger, apta_node* left, apta_node* right);
   virtual double  compute_score(state_merger*, apta_node* left, apta_node* right);
   virtual void reset(state_merger *merger);
-  virtual bool consistent(state_merger *merger, apta_node* left, apta_node* right);
+  virtual bool consistent(state_merger *merger, apta_node* left, apta_node* right, int depth);
 };
 
 #endif

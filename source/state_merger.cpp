@@ -210,7 +210,7 @@ bool state_merger::merge(apta_node* left, apta_node* right, int depth, bool eval
         bool early_stop = false;
 
         if(early_stop_merge(left, right, depth, early_stop)) return early_stop;
-        if(evaluate && !eval->consistent(this, left, right)) return false;
+        if(evaluate && !eval->consistent(this, left, right, depth)) return false;
     }
     
     if(perform){
