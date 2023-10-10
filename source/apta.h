@@ -279,7 +279,7 @@ public:
 
     void add_tail(tail* t);
 
-    /** this gets merged with node, replacing head of list */
+    /** this gets merged into node, replacing head of list. *(node) will be the remaining visible node, not *(this) */
     inline void merge_with(apta_node* node){
         assert(this->representative == nullptr);
         this->representative = node;

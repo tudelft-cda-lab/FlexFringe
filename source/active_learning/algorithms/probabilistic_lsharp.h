@@ -1,9 +1,9 @@
 /**
- * @file lsharp.h
+ * @file probabilistic_lsharp.h
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
- * @brief The (strategic) L#-algorithm, as described by Vandraager et al. (2022): "A New Approach for Active Automata Learning Based on Apartness"
+ * @brief 
  * @version 0.1
- * @date 2023-02-20
+ * @date 2023-10-10
  * 
  * @copyright Copyright (c) 2023
  * 
@@ -37,7 +37,9 @@ class probabilistic_lsharp_algorithm : public lsharp_algorithm {
 
     void extend_fringe(std::unique_ptr<state_merger>& merger, apta_node* n, std::unique_ptr<apta>& the_apta, inputdata& id, const vector< trace* >& traces) const;
     std::optional< std::vector<trace*> > add_statistics(std::unique_ptr<state_merger>& merger, apta_node* n,inputdata& id, const std::vector<int>& alphabet) const;
+    
     __attribute__((always_inline)) inline void update_tree_recursively(apta_node* n, apta* the_apta, const vector<int>& alphabet) const;
+    __attribute__((always_inline)) inline void update_tree_dfs(apta* the_apta, const vector<int>& alphabet) const;
 
     void update_final_probability(apta_node* n, apta* the_apta) const;
     void init_final_prob(apta_node* n, apta* the_apta, inputdata& id) const;

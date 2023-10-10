@@ -25,11 +25,12 @@ protected:
 
     double final_prob;
     double access_trace_prob; // this is the total string probability to end in this state. We need it so that we can compute the final prob
-    std::unordered_map<int, double> symbol_probability_map;
-    std::unordered_map<int, double> normalized_symbol_probability_map; // for merges and actual predictions
+    
+    std::vector<double> symbol_probability_map;
+    std::vector<double> normalized_symbol_probability_map; // for merges and actual predictions
 
 public:
-    log_alergia_data() : evaluation_data::evaluation_data(){
+    log_alergia_data() : evaluation_data::evaluation_data(){        
         final_prob = 0;
     }
     virtual void print_transition_label(iostream& output, int symbol) override;
@@ -48,6 +49,15 @@ public:
     void add_probability(const int symbol, const double p);
     void update_probability(const int symbol, const double p);
 
+    void initialize_distributions(const vector<int>& alphabet){
+        symbol_probability_map.resize(alphabet.size());
+        normalized_symbol_probability_map.resize(alphabet.size());
+        for(int i=0; i < alphabet.size(); ++i){
+            symbol_probability_map[i] = 0;
+            normalized_symbol_probability_map[i] = 0;
+        }
+    }
+
     void init_access_probability(const double p) noexcept {
         this->access_trace_prob = p;
         this->final_prob = p;
@@ -64,7 +74,7 @@ public:
      * @param is_root 
      */
     void update_final_prob(const double product, const bool is_root=false){
-        if(!FINAL_PROBABILITIES){
+        if(!FINAL_PROBABILITIES){ // TODO: remove finalprob option. On by default
             this->final_prob = 1;
             return;
         }
@@ -73,21 +83,19 @@ public:
             this->final_prob = product;
             return;
         } 
-        else if(product == 0)
-            this->final_prob = this->access_trace_prob;
         else
-            this->final_prob = this->access_trace_prob / product;
+            this->final_prob = this->access_trace_prob / product; // TODO: min value here?
     }
 
     double get_normalized_probability(const int symbol) {
         return normalized_symbol_probability_map[symbol];
     }
 
-    std::unordered_map<int, double>& get_outgoing_distribution(){
+    std::vector<double>& get_outgoing_distribution(){
         return symbol_probability_map;
     }
 
-    std::unordered_map<int, double>& get_normalized_distribution(){
+    std::vector<double>& get_normalized_distribution(){
         return normalized_symbol_probability_map;
     }
 };
@@ -103,15 +111,13 @@ public:
 
     virtual bool consistent(state_merger *merger, apta_node* left_node, apta_node* right_node) override;
 
-
     virtual double compute_score(state_merger*, apta_node* left_node, apta_node* right_node) override;
     virtual void reset(state_merger *merger) override;
 
     static void add_outgoing_probs(apta_node* node, std::unordered_map<int, double>& probabilities);
     static void normalize_probabilities(log_alergia_data* data);
 
-    static double get_js_term(const double px, const double qx);
-    static double get_js_divergence(unordered_map<int, double>& left_distribution, std::unordered_map<int, double>& right_distribution, double left_final, double right_final);
+    //static void update_mu(apta_node* node); // TODO: implement
 };
 
 #endif
