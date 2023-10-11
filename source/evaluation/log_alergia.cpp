@@ -131,12 +131,12 @@ bool log_alergia::consistent(state_merger *merger, apta_node* left_node, apta_no
     if(inconsistency_found) return false;
     
     static auto mu_1 = static_cast<double>(MU);
-    static auto mu_2 = static_cast<double>(CHECK_PARAMETER);
+    /* static auto mu_2 = static_cast<double>(CHECK_PARAMETER);
 
     if( pow((1+mu_1), depth) - 1 > mu_2){
         inconsistency_found = true;
         return false;
-    }
+    } */
 
     auto* l = static_cast<log_alergia_data*>( left_node->get_data() );
     auto* r = static_cast<log_alergia_data*>( right_node->get_data() );
