@@ -35,15 +35,15 @@ class probabilistic_lsharp_algorithm : public lsharp_algorithm {
                         const std::vector<int>& counterex, std::unique_ptr<state_merger>& merger, const refinement_list refs,
                         const vector<int>& alphabet) const;
 
-    __attribute__((always_inline)) inline bool extend_fringe(std::unique_ptr<state_merger>& merger, apta_node* n, std::unique_ptr<apta>& the_apta, 
+    __attribute__((always_inline)) inline std::unordered_set<apta_node*> extend_fringe(std::unique_ptr<state_merger>& merger, apta_node* n, std::unique_ptr<apta>& the_apta, 
                                                              inputdata& id, const vector<int>& alphabet) const;
     inline void add_statistics(std::unique_ptr<state_merger>& merger, apta_node* n,inputdata& id, 
                                                         const std::vector<int>& alphabet, std::optional< active_learning_namespace::pref_suf_t > seq_opt) const;
     
     __attribute__((always_inline)) inline void update_tree_recursively(apta_node* n, apta* the_apta, const std::vector<int>& alphabet) const;
     __attribute__((always_inline)) inline void update_tree_dfs(apta* the_apta, const std::vector<int>& alphabet) const;
+    void test_dfs(apta* the_apta, const vector<int>& alphabet, unique_ptr<base_teacher>& teacher, inputdata& id) const;
 
-    inline void update_final_probability(apta_node* n, apta* the_apta) const;
     inline void init_final_prob(apta_node* n, apta* the_apta, inputdata& id) const;
 
   public:
