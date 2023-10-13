@@ -189,11 +189,11 @@ void probabilistic_lsharp_algorithm::update_tree_dfs(apta* the_apta, const vecto
     node_stack.pop();
     p_stack.pop();
 
-    cout << "trace:\n";
+    /* cout << "trace:\n";
     auto access_trace = n->get_access_trace();
     auto test_seq = access_trace->get_input_sequence(true);
     print_vector(test_seq);
-    cout << "number: " << n->get_number() << endl;
+    cout << "number: " << n->get_number() << endl; */
 
     auto data = static_cast<log_alergia_data*>(n->get_data());
     data->update_final_prob(p);
@@ -321,6 +321,115 @@ void probabilistic_lsharp_algorithm::proc_counterex(const unique_ptr<base_teache
   }
 }
 
+/**
+ * @brief Does what you think it does.
+ * 
+ * @param merger 
+ * @param the_apta 
+ * @return list<refinement*> 
+ */
+list<refinement*> probabilistic_lsharp_algorithm::find_complete_base(unique_ptr<state_merger>& merger, unique_ptr<apta>& the_apta,
+                                                                     inputdata& id, const vector<int>& alphabet) const {
+  static int depth = 1; // because we initialize root node with depth 1
+  static const int MAX_DEPTH = 8;
+  
+  list<refinement*> performed_refs;
+
+  int merge_depth = 0;
+  while(true){ // cancel when either not red node identified or max depth
+
+    {
+      static int model_nr = 0;
+      cout << "Model nr " << model_nr + 1 << endl;
+      print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".before_ref");
+    }
+
+    unordered_set<apta_node*> blue_nodes; 
+    for(blue_state_iterator b_it = blue_state_iterator(the_apta->get_root()); *b_it != nullptr; ++b_it){
+      auto blue_node = *b_it;
+      blue_nodes.insert(blue_node);
+    }
+
+    // go through each newly found fringe node, see if you can merge or extend
+    unordered_set<apta_node*> fringe_nodes;
+    bool identified_red_node = false;
+    for(auto blue_node: blue_nodes){
+      fringe_nodes.insert(blue_node);
+
+      refinement_set possible_merges;
+      for(red_state_iterator r_it = red_state_iterator(the_apta->get_root()); *r_it != nullptr; ++r_it){
+        const auto red_node = *r_it;
+        
+        refinement* ref = merger->test_merge(red_node, blue_node);
+        if(ref != nullptr){
+          possible_merges.insert(ref);
+        }
+      }
+
+      if(possible_merges.size()==0){
+        identified_red_node = true;
+        refinement* ref = mem_store::create_extend_refinement(merger.get(), blue_node);
+        ref->doref(merger.get());
+        performed_refs.push_back(ref);
+      }
+      else{
+        // get the best refinement from the heap
+        refinement* best_merge =  *(possible_merges.begin());
+        for(auto it : possible_merges){
+            if(it != best_merge) it->erase();
+        }
+        best_merge->doref(merger.get());
+        performed_refs.push_back(best_merge);
+      }
+    }
+
+    {
+      static int model_nr = 0;
+      cout << "Model nr " << model_nr + 1 << endl;
+      print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_ref");
+    }
+
+    if(depth == MAX_DEPTH){
+      cout << "Maximum observation tree depth found. Outputting an early hypothesis" << endl;
+      //minimize_apta(new_refs, merger.get());
+      print_current_automaton(merger.get(), "model.", "early_hypothesis");
+      exit(1);
+    }
+
+    ++merge_depth;
+    bool reached_fringe = merge_depth == depth;
+
+    if(identified_red_node && !reached_fringe){
+      cout << "Merging deeper" << endl;
+      fringe_nodes.clear();
+      continue;
+    }
+    else if(identified_red_node && reached_fringe){
+      cout << "Adding a new fringe" << endl;
+      reset_apta(merger.get(), performed_refs);
+      merge_depth = 0;
+      
+      performed_refs.clear();
+
+      for(auto blue_node : fringe_nodes){
+        auto created_nodes = extend_fringe(merger, blue_node, the_apta, id, alphabet);
+        //for(auto created_node: created_nodes)
+        //  new_fringe.insert(created_node);
+      }
+      //assert(new_fringe.size() > 0); 
+      
+      update_tree_dfs(the_apta.get(), alphabet);
+      //new_nodes = new_fringe;
+
+      ++depth;
+      continue;
+    }
+    else{
+      return performed_refs;
+    }
+  }
+}
+
 
 /**
  * @brief Main routine of this algorithm.
@@ -340,101 +449,32 @@ void probabilistic_lsharp_algorithm::run(inputdata& id){
   cout << "Alphabet: ";
   active_learning_namespace::print_sequence< vector<int>::const_iterator >(alphabet.cbegin(), alphabet.cend());
 
-  unordered_set<apta_node*> new_nodes;
-  list<refinement*> overall_refinements;
-
   {
     // init the root node
     auto root_node = the_apta->get_root();
     pref_suf_t seq;
     add_statistics(merger, root_node, id, alphabet, seq);
-    new_nodes = extend_fringe(merger, root_node, the_apta, id, alphabet);
+    extend_fringe(merger, root_node, the_apta, id, alphabet);
     update_tree_dfs(the_apta.get(), alphabet);
     //test_dfs(the_apta.get(), alphabet, teacher, id);
+  }
+
+  {
+    static int model_nr = 0;
+    cout << "Model nr " << model_nr + 1 << endl;
+    print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".root");
   }
 
   while(ENSEMBLE_RUNS > 0 && n_runs <= ENSEMBLE_RUNS){
     if( n_runs % 100 == 0 ) cout << "Iteration " << n_runs + 1 << endl;
 
-    stack<refinement*> new_refinements;    
-    // go through each newly found fringe node, see if you can merge or extend
-    bool identified_red_node = false;
-    for(blue_state_iterator b_it = blue_state_iterator(the_apta->get_root()); *b_it != nullptr; ++b_it){
-      const auto blue_node = *b_it;
+    auto refs = find_complete_base(merger, the_apta, id, alphabet);
 
-      refinement_set possible_merges;
-      for(red_state_iterator r_it = red_state_iterator(the_apta->get_root()); *r_it != nullptr; ++r_it){
-        const auto red_node = *r_it;
-        
-        refinement* ref = merger->test_merge(red_node, blue_node);
-        if(ref != nullptr){
-          possible_merges.insert(ref);
-        }
-      }
-
-      if(possible_merges.size()==0){
-        identified_red_node = true;
-        refinement* ref = mem_store::create_extend_refinement(merger.get(), blue_node);
-        new_refinements.push(ref);
-      }
-      else{
-        // get the best refinement from the heap
-        refinement* best_merge = *(possible_merges.begin());
-        for(auto it : possible_merges){
-            if(it != best_merge) it->erase();
-        }
-        new_refinements.push(best_merge);
-      }
-    }
-
-    /* {
+    {
       static int model_nr = 0;
       cout << "Model nr " << model_nr + 1 << endl;
-      print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".new_fringe");
-    } */
-
-    cout << "identified red node" << endl;
-    if(identified_red_node){
-      reset_apta(merger.get(), overall_refinements);
-
-      unordered_set<apta_node*> new_fringe;
-      for(auto blue_node : new_nodes){
-        auto created_nodes = extend_fringe(merger, blue_node, the_apta, id, alphabet);
-        for(auto created_node: created_nodes)
-          new_fringe.insert(created_node);
-      }
-
-      if(new_fringe.size() > 0) update_tree_dfs(the_apta.get(), alphabet);
-      new_nodes = new_fringe;
-
-      //cout << "\n\n\n" << endl;
-      //test_dfs(the_apta.get(), alphabet, teacher, id);
-
-      while(!new_refinements.empty()){
-        overall_refinements.push_back(new_refinements.top());
-        new_refinements.pop();
-      }
-
-      for(auto ref: overall_refinements){
-        ref->doref(merger.get());
-      }
-
-      continue;
+      print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".complete_base");
     }
-
-    while(!new_refinements.empty()){
-      auto ref = new_refinements.top();
-      ref->doref(merger.get());
-
-      overall_refinements.push_back(ref);
-      new_refinements.pop();
-    }
-
-    /* {
-      static int model_nr = 0;
-      cout << "Model nr " << model_nr + 1 << endl;
-      print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".hypothesis");
-    } */
 
     // only merges performed, hence we can test our hypothesis
     while(true){
@@ -455,34 +495,29 @@ void probabilistic_lsharp_algorithm::run(inputdata& id){
       const vector<int>& cex = query_result.value().first;
       cout << "Counterexample of length " << cex.size() << " found: ";
       print_vector(cex);
-      proc_counterex(teacher, id, the_apta, cex, merger, overall_refinements, alphabet);
+      proc_counterex(teacher, id, the_apta, cex, merger, refs, alphabet);
       update_tree_dfs(the_apta.get(), alphabet); // TODO: this can be a more efficient update
-      
-      //test_dfs(the_apta.get(), alphabet, teacher, id);
-
-      list<refinement*> new_refs;
-      minimize_apta(new_refs, merger.get());
-      overall_refinements = new_refs;
-      reset_apta(merger.get(), overall_refinements);
+            
+      //reset_apta(merger.get(), refs);
 
       /* {
         static int model_nr = 0;
         print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_cex_raw");
       } */
 
-      unordered_set<apta_node*> new_fringe;
+      /* unordered_set<apta_node*> new_fringe;
       for(auto blue_node : new_nodes){
         auto created_nodes = extend_fringe(merger, blue_node, the_apta, id, alphabet);
         for(auto created_node: created_nodes)
           new_fringe.insert(created_node);
-      }
+      } */
 
       /* {
         static int model_nr = 0;
         print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_cex_new_fringe");
       } */
 
-      if(new_fringe.size() > 0) update_tree_dfs(the_apta.get(), alphabet);
+      /* if(new_fringe.size() > 0) update_tree_dfs(the_apta.get(), alphabet);
       new_nodes = new_fringe;
 
       for(auto ref: overall_refinements)
@@ -491,7 +526,7 @@ void probabilistic_lsharp_algorithm::run(inputdata& id){
       {
         static int model_nr = 0;
         print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_cex");
-      }
+      } */
 
       break;
     }
