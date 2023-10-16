@@ -334,15 +334,16 @@ list<refinement*> probabilistic_lsharp_algorithm::find_complete_base(unique_ptr<
   static const int MAX_DEPTH = 8;
   
   list<refinement*> performed_refs;
+  unordered_set<apta_node*> fringe_nodes;
 
   int merge_depth = 0;
-  while(true){ // cancel when either not red node identified or max depth
 
-    {
-      static int model_nr = 0;
-      cout << "Model nr " << model_nr + 1 << endl;
-      print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".before_ref");
-    }
+  /* {
+    static int model_nr = 0;
+    print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".before_base_search");
+  } */
+
+  while(true){ // cancel when either not red node identified or max depth
 
     unordered_set<apta_node*> blue_nodes; 
     for(blue_state_iterator b_it = blue_state_iterator(the_apta->get_root()); *b_it != nullptr; ++b_it){
@@ -350,11 +351,55 @@ list<refinement*> probabilistic_lsharp_algorithm::find_complete_base(unique_ptr<
       blue_nodes.insert(blue_node);
     }
 
+    bool reached_fringe = blue_nodes.empty();
+
+    if(reached_fringe){
+
+      cout << "Reached fringe. Extend and recompute merges" << endl;
+
+      {
+        static int model_nr = 0;
+        print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_ref");
+      }
+
+      reset_apta(merger.get(), performed_refs);
+      merge_depth = 0;
+      
+      performed_refs.clear();
+
+      for(auto blue_node : fringe_nodes){
+        auto created_nodes = extend_fringe(merger, blue_node, the_apta, id, alphabet);
+        //for(auto created_node: created_nodes)
+        //  new_fringe.insert(created_node);
+      }
+
+      {
+        static int model_nr = 0;
+        print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".new_fringe");
+      } 
+      //assert(new_fringe.size() > 0); 
+
+      fringe_nodes.clear();
+      
+      update_tree_dfs(the_apta.get(), alphabet);
+      //new_nodes = new_fringe;
+
+      /* {
+        static int model_nr = 0;
+        print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".before_ref");
+      } */
+
+      ++depth;
+      continue;
+    }
+
     // go through each newly found fringe node, see if you can merge or extend
-    unordered_set<apta_node*> fringe_nodes;
+    ++merge_depth;
+    if(merge_depth <= depth) fringe_nodes.clear();
+
     bool identified_red_node = false;
     for(auto blue_node: blue_nodes){
-      fringe_nodes.insert(blue_node);
+      if(merge_depth <= depth) fringe_nodes.insert(blue_node);
 
       refinement_set possible_merges;
       for(red_state_iterator r_it = red_state_iterator(the_apta->get_root()); *r_it != nullptr; ++r_it){
@@ -385,9 +430,8 @@ list<refinement*> probabilistic_lsharp_algorithm::find_complete_base(unique_ptr<
 
     {
       static int model_nr = 0;
-      cout << "Model nr " << model_nr + 1 << endl;
       print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_ref");
-    }
+    } 
 
     if(depth == MAX_DEPTH){
       cout << "Maximum observation tree depth found. Outputting an early hypothesis" << endl;
@@ -396,36 +440,14 @@ list<refinement*> probabilistic_lsharp_algorithm::find_complete_base(unique_ptr<
       exit(1);
     }
 
-    ++merge_depth;
-    bool reached_fringe = merge_depth == depth;
-
-    if(identified_red_node && !reached_fringe){
-      cout << "Merging deeper" << endl;
-      fringe_nodes.clear();
-      continue;
-    }
-    else if(identified_red_node && reached_fringe){
-      cout << "Adding a new fringe" << endl;
-      reset_apta(merger.get(), performed_refs);
-      merge_depth = 0;
-      
-      performed_refs.clear();
-
-      for(auto blue_node : fringe_nodes){
-        auto created_nodes = extend_fringe(merger, blue_node, the_apta, id, alphabet);
-        //for(auto created_node: created_nodes)
-        //  new_fringe.insert(created_node);
-      }
-      //assert(new_fringe.size() > 0); 
-      
-      update_tree_dfs(the_apta.get(), alphabet);
-      //new_nodes = new_fringe;
-
-      ++depth;
-      continue;
-    }
-    else{
+    if(!identified_red_node){
+      cout << "Complete basis found. Forwarding hypothesis" << endl;
       return performed_refs;
+    }
+    else if(!reached_fringe){
+      cout << "Merging layer " << merge_depth << endl;
+      //fringe_nodes.clear();
+      continue;
     }
   }
 }
@@ -461,8 +483,7 @@ void probabilistic_lsharp_algorithm::run(inputdata& id){
 
   {
     static int model_nr = 0;
-    cout << "Model nr " << model_nr + 1 << endl;
-    print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".root");
+    print_current_automaton(merger.get(), "model.", "root");
   }
 
   while(ENSEMBLE_RUNS > 0 && n_runs <= ENSEMBLE_RUNS){
@@ -472,7 +493,6 @@ void probabilistic_lsharp_algorithm::run(inputdata& id){
 
     {
       static int model_nr = 0;
-      cout << "Model nr " << model_nr + 1 << endl;
       print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".complete_base");
     }
 
@@ -500,10 +520,10 @@ void probabilistic_lsharp_algorithm::run(inputdata& id){
             
       //reset_apta(merger.get(), refs);
 
-      /* {
+      {
         static int model_nr = 0;
         print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_cex_raw");
-      } */
+      }
 
       /* unordered_set<apta_node*> new_fringe;
       for(auto blue_node : new_nodes){
