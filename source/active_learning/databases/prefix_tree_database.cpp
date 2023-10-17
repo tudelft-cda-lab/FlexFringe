@@ -1,12 +1,12 @@
 /**
  * @file prefix_tree_database.cpp
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2023-06-23
- * 
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  */
 
 #include "prefix_tree_database.h"
@@ -34,7 +34,7 @@ void prefix_tree_database::initialize(){
     throw std::runtime_error("Error: Input and aptafile must be formatted the same to map to the same alphabet. Terminating.");
   }
 
-  ifstream input_stream(APTA_FILE);  
+  ifstream input_stream(APTA_FILE);
   cout << "Apta-file: " << APTA_FILE << endl;
   if(!input_stream) {
       cerr << "Apta-file not found, aborting" << endl;
@@ -60,9 +60,9 @@ void prefix_tree_database::initialize(){
 }
 
 /**
- * @brief Checks if trace is in database. Type does not matter, as 
+ * @brief Checks if trace is in database. Type does not matter, as
  * it is simply a "is in a 'set' of seen traces" query.
- * 
+ *
  * @param query_trace The trace we query.
  */
 bool prefix_tree_database::is_member(const std::vector<int>& query_trace) const {
@@ -71,9 +71,9 @@ bool prefix_tree_database::is_member(const std::vector<int>& query_trace) const 
 }
 
 /**
- * @brief Takes in a node, and updates its statistics accordingly. 
+ * @brief Takes in a node, and updates its statistics accordingly.
  * Statistics are feature of the currently used merge-check.
- * 
+ *
  * @param n The node to be updated.
  */
 void prefix_tree_database::update_state_with_statistics(apta_node* n){
@@ -83,7 +83,7 @@ void prefix_tree_database::update_state_with_statistics(apta_node* n){
   if(n_db == nullptr) return; // state does not exist
 
   n->reset_data();
-  
+
   vector< pair<trace*, int> > trace_count_list = extract_tails_from_tree(n_db);
   for(auto& [tr, count]: trace_count_list){
     for(int i = 0; i < count; ++i){
@@ -94,13 +94,13 @@ void prefix_tree_database::update_state_with_statistics(apta_node* n){
 }
 
 /**
- * @brief Performs a DFS search through the apta starting from node start and 
- * returns a list of the tails including the fitting statistics to update the 
+ * @brief Performs a DFS search through the apta starting from node start and
+ * returns a list of the tails including the fitting statistics to update the
  * nodes and tail_data of the nodes of the starting node.
- * 
+ *
  * Sidenote: I did implement this in an iterative manner, because the trees can
  * potentially become very large.
- * 
+ *
  * @param start The node to update. We start here.
  * @return std::list< std::unique_ptr<tail> > List of appropriately set tails.
  */
@@ -124,13 +124,13 @@ vector< pair<trace*, int> > prefix_tree_database::extract_tails_from_tree(apta_n
       trace* concatenated_tr = active_learning_namespace::concatenate_traces(access_trace_to_start, current_trace);
       current_trace->type = active_learning_namespace::predict_type_from_trace( concatenated_tr, the_tree.get(), *(inputdata_locator::get()) );
       mem_store::delete_trace(concatenated_tr);
-      
+
       res.push_back( make_pair(current_trace, current_node->get_size()) );
-    } 
+    }
     if(visited_nodes.contains(current_node->get_number()) ){
       // a step backwards through the DFS
       int next_counts = 0;
-      for(auto symbol: symbols){ 
+      for(auto symbol: symbols){
         next_counts += current_node->get_child(symbol)->get_size();
       }
       current_trace->finalize();
@@ -142,10 +142,9 @@ vector< pair<trace*, int> > prefix_tree_database::extract_tails_from_tree(apta_n
       res.push_back( make_pair( current_trace, current_node->get_size() - next_counts));
     }
     else{
-      for(auto symbol: symbols){ 
+      for(auto symbol: symbols){
         trace* new_trace = mem_store::create_trace(inputdata_locator::get(), current_trace);
-        if(current_trace == nullptr){
-          [[unlikely]]
+        if(current_trace == nullptr)[[unlikely]]{
           tail* new_tail = mem_store::create_tail(nullptr);
           active_learning_namespace::update_tail(new_tail, symbol);
 
@@ -159,7 +158,7 @@ vector< pair<trace*, int> > prefix_tree_database::extract_tails_from_tree(apta_n
           tail* new_tail = mem_store::create_tail(nullptr);
           active_learning_namespace::update_tail(new_tail, symbol);
           old_tail->future_tail = new_tail;
-          new_tail->past_tail = old_tail; 
+          new_tail->past_tail = old_tail;
 
           new_trace->length = current_trace->get_length()+1;
           new_tail->tr = new_trace;
@@ -175,6 +174,6 @@ vector< pair<trace*, int> > prefix_tree_database::extract_tails_from_tree(apta_n
 
     nodes_to_traverse.pop();
   } while(!nodes_to_traverse.empty());
-  
+
   return res;
 }
