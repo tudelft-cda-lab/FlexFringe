@@ -184,7 +184,7 @@ void space_saving_data::print_state_label(iostream& output){
  * @return true The merge is consistent. 
  * @return false Merge is insonsistent.
  */
-bool space_saving::consistent(state_merger *merger, apta_node *left, apta_node *right) {
+bool space_saving::consistent(state_merger *merger, apta_node *left, apta_node *right, int depth) {
     if (inconsistency_found) return false;
     if(left->get_size() <= STATE_COUNT || right->get_size() <= STATE_COUNT) return true;
 
