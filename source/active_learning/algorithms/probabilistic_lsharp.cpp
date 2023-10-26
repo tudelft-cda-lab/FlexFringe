@@ -331,7 +331,7 @@ void probabilistic_lsharp_algorithm::proc_counterex(const unique_ptr<base_teache
 list<refinement*> probabilistic_lsharp_algorithm::find_complete_base(unique_ptr<state_merger>& merger, unique_ptr<apta>& the_apta,
                                                                      inputdata& id, const vector<int>& alphabet) const {
   static int depth = 1; // because we initialize root node with depth 1
-  static const int MAX_DEPTH = 8;
+  static const int MAX_DEPTH = 5; // 6 for most problems
   
   list<refinement*> performed_refs;
   unordered_set<apta_node*> fringe_nodes;
@@ -352,45 +352,26 @@ list<refinement*> probabilistic_lsharp_algorithm::find_complete_base(unique_ptr<
     }
 
     bool reached_fringe = blue_nodes.empty();
-
     if(reached_fringe){
-
       cout << "Reached fringe. Extend and recompute merges" << endl;
-
-      {
-        static int model_nr = 0;
-        print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_ref");
-      }
-
       reset_apta(merger.get(), performed_refs);
-      merge_depth = 0;
-      
       performed_refs.clear();
 
       for(auto blue_node : fringe_nodes){
         auto created_nodes = extend_fringe(merger, blue_node, the_apta, id, alphabet);
-        //for(auto created_node: created_nodes)
-        //  new_fringe.insert(created_node);
       }
-
-      {
-        static int model_nr = 0;
-        print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".new_fringe");
-      } 
-      //assert(new_fringe.size() > 0); 
-
-      fringe_nodes.clear();
-      
       update_tree_dfs(the_apta.get(), alphabet);
-      //new_nodes = new_fringe;
-
-      /* {
-        static int model_nr = 0;
-        print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".before_ref");
-      } */
-
+      
+      fringe_nodes.clear();
+      merge_depth = 0;
       ++depth;
       continue;
+    }
+    else if(depth == MAX_DEPTH){
+      cout << "Maximum observation tree depth found. Outputting an early hypothesis. Depth:" << depth << endl;
+      minimize_apta(performed_refs, merger.get());
+      print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
+      exit(1);
     }
 
     // go through each newly found fringe node, see if you can merge or extend
@@ -426,18 +407,12 @@ list<refinement*> probabilistic_lsharp_algorithm::find_complete_base(unique_ptr<
         best_merge->doref(merger.get());
         performed_refs.push_back(best_merge);
       }
-    }
 
-    {
-      static int model_nr = 0;
-      print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_ref");
-    } 
+      /* {    We might be able to neglect paths with low probabilities and still be good in our estimate​
+        static int model_nr = 0;
+        print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_ref");
+      } */
 
-    if(depth == MAX_DEPTH){
-      cout << "Maximum observation tree depth found. Outputting an early hypothesis" << endl;
-      //minimize_apta(new_refs, merger.get());
-      print_current_automaton(merger.get(), "model.", "early_hypothesis");
-      exit(1);
     }
 
     if(!identified_red_node){
@@ -481,20 +456,20 @@ void probabilistic_lsharp_algorithm::run(inputdata& id){
     //test_dfs(the_apta.get(), alphabet, teacher, id);
   }
 
-  {
+  /* {
     static int model_nr = 0;
     print_current_automaton(merger.get(), "model.", "root");
-  }
+  } */
 
   while(ENSEMBLE_RUNS > 0 && n_runs <= ENSEMBLE_RUNS){
     if( n_runs % 100 == 0 ) cout << "Iteration " << n_runs + 1 << endl;
 
     auto refs = find_complete_base(merger, the_apta, id, alphabet);
 
-    {
+    /* {
       static int model_nr = 0;
       print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".complete_base");
-    }
+    } */
 
     // only merges performed, hence we can test our hypothesis
     while(true){
@@ -520,10 +495,10 @@ void probabilistic_lsharp_algorithm::run(inputdata& id){
             
       //reset_apta(merger.get(), refs);
 
-      {
+      /* {
         static int model_nr = 0;
         print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_cex_raw");
-      }
+      } */
 
       /* unordered_set<apta_node*> new_fringe;
       for(auto blue_node : new_nodes){
