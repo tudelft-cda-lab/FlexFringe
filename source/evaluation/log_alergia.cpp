@@ -131,6 +131,10 @@ bool log_alergia::consistent(state_merger *merger, apta_node* left_node, apta_no
     if(inconsistency_found) return false;
     
     static auto mu_1 = static_cast<double>(MU);
+    static auto mu_2 = static_cast<double>(CHECK_PARAMETER);
+
+    double mu_local = mu_1 + 0.03 * right_node->get_depth();
+    //cout << "mu_local " << mu_local << endl;
     /* static auto mu_2 = static_cast<double>(CHECK_PARAMETER);
 
     if( pow((1+mu_1), depth) - 1 > mu_2){
@@ -140,14 +144,23 @@ bool log_alergia::consistent(state_merger *merger, apta_node* left_node, apta_no
 
     auto* l = static_cast<log_alergia_data*>( left_node->get_data() );
     auto* r = static_cast<log_alergia_data*>( right_node->get_data() );
-    unordered_set<int> checked_symbols;
+
+    /* static const double frac_term = 1 / static_cast<double>(l->normalized_symbol_probability_map.size());
+    double mu_local = std::pow(mu_2 + std::pow(frac_term, right_node->get_depth()), 1.0/static_cast<double>(right_node->get_depth())) - frac_term;
+    assert(mu_local >= 0);
+
+    static unordered_set<int> depths;
+    if(!depths.contains(right_node->get_depth())){
+        cout << "mu_local " << mu_local << ", depth: " << right_node->get_depth() << endl;
+        depths.insert(right_node->get_depth());
+    } */
 
     double sum = 0;
     for(int i=0; i<l->normalized_symbol_probability_map.size(); ++i){
         double left_p = l->normalized_symbol_probability_map[i];
         double right_p = r->normalized_symbol_probability_map[i]; // automatically set to 0 if does not contain (zero initialization)
         auto diff = abs(left_p - right_p);
-        if(diff > mu_1){
+        if(diff > mu_local){
             inconsistency_found = true;
             return false;
         }
@@ -156,7 +169,7 @@ bool log_alergia::consistent(state_merger *merger, apta_node* left_node, apta_no
 
     if(FINAL_PROBABILITIES){ 
         auto diff = abs(l->final_prob - r->final_prob);
-        if(diff > mu_1){
+        if(diff > mu_local){
             inconsistency_found = true;
             return false;
         }
