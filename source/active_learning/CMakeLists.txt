@@ -31,6 +31,8 @@ add_library(ActiveLearning STATIC
             algorithms/lsharp.cpp
             algorithms/probabilistic_lsharp.h
             algorithms/probabilistic_lsharp.cpp
+            algorithms/pls_baseline.h
+            algorithms/pls_baseline.cpp
 
             databases/database_base.h
             databases/database_headers.h

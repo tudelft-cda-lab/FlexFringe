@@ -130,53 +130,35 @@ void log_alergia_data::update_probability(const int symbol, const double p) {
 bool log_alergia::consistent(state_merger *merger, apta_node* left_node, apta_node* right_node, int depth){
     if(inconsistency_found) return false;
     
-    static auto mu_1 = static_cast<double>(MU);
-    static auto mu_2 = static_cast<double>(CHECK_PARAMETER);
-
-    double mu_local = mu_1 + 0.03 * right_node->get_depth();
-    //cout << "mu_local " << mu_local << endl;
-    /* static auto mu_2 = static_cast<double>(CHECK_PARAMETER);
-
-    if( pow((1+mu_1), depth) - 1 > mu_2){
-        inconsistency_found = true;
-        return false;
-    } */
+    static const auto mu = static_cast<double>(MU);
 
     auto* l = static_cast<log_alergia_data*>( left_node->get_data() );
     auto* r = static_cast<log_alergia_data*>( right_node->get_data() );
 
-    /* static const double frac_term = 1 / static_cast<double>(l->normalized_symbol_probability_map.size());
-    double mu_local = std::pow(mu_2 + std::pow(frac_term, right_node->get_depth()), 1.0/static_cast<double>(right_node->get_depth())) - frac_term;
-    assert(mu_local >= 0);
-
-    static unordered_set<int> depths;
-    if(!depths.contains(right_node->get_depth())){
-        cout << "mu_local " << mu_local << ", depth: " << right_node->get_depth() << endl;
-        depths.insert(right_node->get_depth());
-    } */
-
-    double sum = 0;
-    for(int i=0; i<l->normalized_symbol_probability_map.size(); ++i){
-        double left_p = l->normalized_symbol_probability_map[i];
-        double right_p = r->normalized_symbol_probability_map[i]; // automatically set to 0 if does not contain (zero initialization)
-        auto diff = abs(left_p - right_p);
-        if(diff > mu_local){
-            inconsistency_found = true;
-            return false;
-        }
-        sum += diff;
+    if(abs(l->access_trace_prob - r->access_trace_prob) > mu){
+      inconsistency_found = true;
+      return false;
     }
 
-    if(FINAL_PROBABILITIES){ 
-        auto diff = abs(l->final_prob - r->final_prob);
-        if(diff > mu_local){
-            inconsistency_found = true;
-            return false;
-        }
-        sum += diff;
+    auto right_sequence = right_node->get_access_trace()->get_input_sequence(true, false);
+    auto n = merger->get_aut()->get_root();
+    auto n_data = static_cast<log_alergia_data*>( n->get_data() );
+
+    double at_prob = 1;
+    for(auto symbol: right_sequence){
+        at_prob *= n_data->get_normalized_probability(symbol);
+        n = n->get_child(symbol);
+        n_data = static_cast<log_alergia_data*>( n->get_data() );
+    }
+    at_prob *= l->get_final_prob();
+
+    double diff = abs(at_prob - r->access_trace_prob);
+    if(diff > mu){
+        inconsistency_found = true;
+        return false;
     }
 
-    score = 2-sum;
+    score = -diff;
     return true;
 };
 
@@ -201,23 +183,6 @@ void log_alergia::normalize_probabilities(log_alergia_data* data) {
         data->normalized_symbol_probability_map[i] = p * factor;
     }
 }
-
-/* void log_alergia::update_mu(apta_node* node){
-    auto* the_data = static_cast<log_alergia_data*>(node->get_data());
-    auto* next_merged_node = node->get_merged_head();
-    assert(next_merged_node != nullptr);
-    while(next_merged_node != nullptr){
-        auto* other_data = static_cast<log_alergia_data*>(next_merged_node->get_data());
-            
-        double max_diff = 0;
-        for(int i=0; i<the_data->normalized_symbol_probability_map.size(); ++i){
-            max_diff = max(max_diff, abs(the_data->normalized_symbol_probability_map[i] - other_data->normalized_symbol_probability_map[i]));
-        }
-        next_merged_node = next_merged_node->get_next_merged();
-        other_data->mu_1 = min(other_data->mu_1, max_diff);
-        the_data->mu_1 = min(the_data->mu_1, max_diff);
-    }
-} */
 
 double log_alergia::compute_score(state_merger *merger, apta_node* left, apta_node* right){
     return score;
