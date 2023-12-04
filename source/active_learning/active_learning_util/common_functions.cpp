@@ -15,6 +15,8 @@
 #include "inputdata.h"
 #include "inputdatalocator.h"
 
+#include "string_probability_estimator.h"
+
 #include <iostream>
 #include <stdexcept>
 #include <algorithm>
@@ -154,10 +156,80 @@ bool active_learning_namespace::aut_accepts_trace(trace* tr, apta* aut, const co
  */
 void active_learning_namespace::minimize_apta(list<refinement*>& refs, state_merger* merger){
     refinement* top_ref = merger->get_best_refinement();
+    cout << "Found a refinement. Do and find another one" << endl;
     while(top_ref != 0){
         refs.push_back(top_ref);        
         top_ref->doref(merger);
         top_ref = merger->get_best_refinement();
+        cout << "Found a refinement. Do and find another one" << endl;
+    }
+}
+
+/**
+ * @brief Using the red-blue framework, build an automaton layer by layer and force the last layer to merge in if 
+ * there are inconsistencies between merges. This will help us to find early hypothesis for some of the algorithms, 
+ * e.g. pL#.
+ * 
+ * Note: Currently only works with string_probability_estimator. In case other heuristics need to be employed we need to
+ * do that in the heuristics (evaluation function) section.
+ * 
+ * @param refs (Out): List with refinements that will be updated. Refinements performed in this function will be appended
+ * to the list. 
+ * @param aut The unmerged apta/observation tree.
+ */
+void active_learning_namespace::find_closed_automaton(list<refinement*>& performed_refs, unique_ptr<apta>& aut, 
+                                            unique_ptr<state_merger>& merger, double (*distance_func)(apta*, apta_node*, apta_node*)){
+    while(true){
+
+        unordered_set<apta_node*> blue_nodes; 
+        for(blue_state_iterator b_it = blue_state_iterator(aut->get_root()); *b_it != nullptr; ++b_it){
+            auto blue_node = *b_it;
+            blue_nodes.insert(blue_node);
+        }
+        if(blue_nodes.size()==0) return;
+
+        for(auto blue_node: blue_nodes){
+            if(blue_node->has_child_nodes()){
+                refinement_set possible_merges;
+                for(red_state_iterator r_it = red_state_iterator(aut->get_root()); *r_it != nullptr; ++r_it){
+                const auto red_node = *r_it;
+
+                    refinement* ref = merger->test_merge(red_node, blue_node);
+                    if(ref != nullptr){
+                        possible_merges.insert(ref);
+                    }
+                }
+                if(possible_merges.size()==0){
+                    refinement* ref = mem_store::create_extend_refinement(merger.get(), blue_node);
+                    ref->doref(merger.get());
+                    performed_refs.push_back(ref);
+                }
+                else{
+                    // get the best refinement from the heap
+                    refinement* best_merge =  *(possible_merges.begin());
+                    for(auto it : possible_merges){
+                        if(it != best_merge) it->erase();
+                    }
+                    best_merge->doref(merger.get());
+                    performed_refs.push_back(best_merge);
+                }
+            }
+            else{
+                // force a merge with the red node that introduces minimal error
+                pair<apta_node*, double> best_node = make_pair(nullptr, 1.1);
+                for(red_state_iterator r_it = red_state_iterator(aut->get_root()); *r_it != nullptr; ++r_it){
+                    const auto red_node = *r_it;
+                    double err = distance_func(aut.get(), red_node, blue_node);
+                    if(err < best_node.second){
+                        best_node = make_pair(red_node, err);
+                    }
+                }
+
+                refinement* ref = mem_store::create_merge_refinement(merger.get(), best_node.second, best_node.first, blue_node);
+                ref->doref(merger.get());
+                performed_refs.push_back(ref);
+            }
+        }
     }
 }
 

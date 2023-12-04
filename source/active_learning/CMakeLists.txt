@@ -31,8 +31,8 @@ add_library(ActiveLearning STATIC
             algorithms/lsharp.cpp
             algorithms/probabilistic_lsharp.h
             algorithms/probabilistic_lsharp.cpp
-            algorithms/pls_baseline.h
-            algorithms/pls_baseline.cpp
+            algorithms/weighted_lsharp.h
+            algorithms/weighted_lsharp.cpp
 
             databases/database_base.h
             databases/database_headers.h
@@ -71,8 +71,8 @@ add_library(ActiveLearning STATIC
             
             system_under_learning/nn_sul_base.h
             system_under_learning/nn_sul_base.cpp
-            system_under_learning/nn_sigmoid_sul.h
-            system_under_learning/nn_sigmoid_sul.cpp
+            system_under_learning/nn_weighted_output_sul.h
+            system_under_learning/nn_weighted_output_sul.cpp
             
             system_under_learning/benchmark_parsers/benchmarkparser_base.h
             system_under_learning/benchmark_parsers/benchmarkparser_base.cpp

@@ -52,8 +52,6 @@ class nn_sul_base : public sul_base {
     /* PyObject* p_start_symbol; 
     PyObject* p_end_symbol; */
 
-    virtual void post() = 0;
-    virtual void step() = 0;
     virtual void reset() = 0;
 
     virtual bool is_member(const std::vector<int>& query_trace) const = 0;

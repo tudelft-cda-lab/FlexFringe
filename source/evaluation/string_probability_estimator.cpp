@@ -1,5 +1,5 @@
 /**
- * @file log_alergia.cpp
+ * @file string_probability_estimator.cpp
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
  * @brief 
  * @version 0.1
@@ -12,7 +12,7 @@
 
 #include "state_merger.h"
 #include "evaluate.h"
-#include "log_alergia.h"
+#include "string_probability_estimator.h"
 #include "parameters.h"
 #include "input/inputdatalocator.h"
 
@@ -20,23 +20,23 @@
 #include <unordered_set>
 #include <cmath>
 
-REGISTER_DEF_DATATYPE(log_alergia_data);
-REGISTER_DEF_TYPE(log_alergia);
+REGISTER_DEF_DATATYPE(string_probability_estimator_data);
+REGISTER_DEF_TYPE(string_probability_estimator);
 
 
-/* void log_alergia_data::initialize() {
+/* void string_probability_estimator_data::initialize() {
     evaluation_data::initialize();
     //symbol_pro.clear();
 } */
 
-/* void log_alergia_data::add_tail(tail* t){
+/* void string_probability_estimator_data::add_tail(tail* t){
 } */
 
-/* void log_alergia_data::del_tail(tail* t){
+/* void string_probability_estimator_data::del_tail(tail* t){
     evaluation_data::del_tail(t);
 } */
 
-void log_alergia_data::read_json(json& data){
+void string_probability_estimator_data::read_json(json& data){
     evaluation_data::read_json(data);
 
     static int alphabet_size = inputdata_locator::get()->get_alphabet().size();
@@ -54,10 +54,10 @@ void log_alergia_data::read_json(json& data){
         final_prob = stod(fp);
     }
 
-    //log_alergia::normalize_probabilities(this);
+    //string_probability_estimator::normalize_probabilities(this);
 };
 
-void log_alergia_data::write_json(json& data){
+void string_probability_estimator_data::write_json(json& data){
     evaluation_data::write_json(data);
 
 
@@ -70,11 +70,11 @@ void log_alergia_data::write_json(json& data){
     if(FINAL_PROBABILITIES) data["final_prob"] = to_string(final_prob);
 };
 
-void log_alergia_data::print_transition_label(iostream& output, int symbol){
+void string_probability_estimator_data::print_transition_label(iostream& output, int symbol){
     output << symbol << ": " << symbol_probability_map[symbol];
 };
 
-void log_alergia_data::print_state_label(iostream& output){
+void string_probability_estimator_data::print_state_label(iostream& output){
     evaluation_data::print_state_label(output);
     for(int symbol=0; symbol<normalized_symbol_probability_map.size(); ++symbol){
         output << symbol << " : " << normalized_symbol_probability_map[symbol] << "\n";
@@ -84,11 +84,11 @@ void log_alergia_data::print_state_label(iostream& output){
 
 /** Merging update and undo_merge routines */
 
-void log_alergia_data::update(evaluation_data* right){
+void string_probability_estimator_data::update(evaluation_data* right){
     evaluation_data::update(right);
 };
 
-void log_alergia_data::undo(evaluation_data* right){
+void string_probability_estimator_data::undo(evaluation_data* right){
     evaluation_data::undo(right);
 };
 
@@ -97,7 +97,7 @@ void log_alergia_data::undo(evaluation_data* right){
  * 
  * @return int The symbol with the maximum probability.
  */
-int log_alergia_data::predict_symbol(tail*){
+int string_probability_estimator_data::predict_symbol(tail*){
     double max_p = -1;
     int max_symbol = 0;
     for(int s=0; s<normalized_symbol_probability_map.size(); ++s){
@@ -110,45 +110,42 @@ int log_alergia_data::predict_symbol(tail*){
     return max_symbol;
 };
 
-double log_alergia_data::predict_symbol_score(int t){
+double string_probability_estimator_data::predict_symbol_score(int t){
     if(t == -1)
         return final_prob;
-    //else if(normalized_symbol_probability_map.contains(t))
     return normalized_symbol_probability_map[t];
-    
-    //return 0.0;
 }
 
-void log_alergia_data::add_probability(const int symbol, const double p) {
+void string_probability_estimator_data::add_probability(const int symbol, const double p) {
     this->symbol_probability_map[symbol] += p;
 }
 
-void log_alergia_data::update_probability(const int symbol, const double p) {
+void string_probability_estimator_data::update_probability(const int symbol, const double p) {
     this->symbol_probability_map[symbol] = p;
 }
 
-bool log_alergia::consistent(state_merger *merger, apta_node* left_node, apta_node* right_node, int depth){
+bool string_probability_estimator::consistent(state_merger *merger, apta_node* left_node, apta_node* right_node, int depth){
     if(inconsistency_found) return false;
     
     static const auto mu = static_cast<double>(MU);
 
-    auto* l = static_cast<log_alergia_data*>( left_node->get_data() );
-    auto* r = static_cast<log_alergia_data*>( right_node->get_data() );
+    auto* l = static_cast<string_probability_estimator_data*>( left_node->get_data() );
+    auto* r = static_cast<string_probability_estimator_data*>( right_node->get_data() );
 
-    if(abs(l->access_trace_prob - r->access_trace_prob) > mu){
+    /* if(abs(l->access_trace_prob - r->access_trace_prob) > mu){
       inconsistency_found = true;
       return false;
-    }
+    } */
 
     auto right_sequence = right_node->get_access_trace()->get_input_sequence(true, false);
     auto n = merger->get_aut()->get_root();
-    auto n_data = static_cast<log_alergia_data*>( n->get_data() );
+    auto n_data = static_cast<string_probability_estimator_data*>( n->get_data() );
 
     double at_prob = 1;
     for(auto symbol: right_sequence){
         at_prob *= n_data->get_normalized_probability(symbol);
         n = n->get_child(symbol);
-        n_data = static_cast<log_alergia_data*>( n->get_data() );
+        n_data = static_cast<string_probability_estimator_data*>( n->get_data() );
     }
     at_prob *= l->get_final_prob();
 
@@ -167,7 +164,7 @@ bool log_alergia::consistent(state_merger *merger, apta_node* left_node, apta_no
  * 
  * @param node The node.
  */
-void log_alergia::normalize_probabilities(log_alergia_data* data) {
+void string_probability_estimator::normalize_probabilities(string_probability_estimator_data* data) {
     double p_sum = 0;
     for(auto& p: data->symbol_probability_map){
         p_sum += p;
@@ -184,11 +181,32 @@ void log_alergia::normalize_probabilities(log_alergia_data* data) {
     }
 }
 
-double log_alergia::compute_score(state_merger *merger, apta_node* left, apta_node* right){
+double string_probability_estimator::compute_score(state_merger *merger, apta_node* left, apta_node* right){
     return score;
 };
 
-void log_alergia::reset(state_merger *merger){
+void string_probability_estimator::reset(state_merger *merger){
     inconsistency_found = false;
     score = 0;
+};
+
+double string_probability_estimator::get_distance(apta* aut, apta_node* left_node, apta_node* right_node){
+    auto* l = static_cast<string_probability_estimator_data*>( left_node->get_data() );
+    auto* r = static_cast<string_probability_estimator_data*>( right_node->get_data() );
+
+    auto right_sequence = right_node->get_access_trace()->get_input_sequence(true, false);
+    auto n = aut->get_root();
+    auto n_data = static_cast<string_probability_estimator_data*>( n->get_data() );
+
+    double at_prob = 1;
+    for(auto symbol: right_sequence){
+        at_prob *= n_data->get_normalized_probability(symbol);
+        n = n->get_child(symbol);
+        n_data = static_cast<string_probability_estimator_data*>( n->get_data() );
+    }
+    at_prob *= l->get_final_prob();
+
+    double diff = abs(at_prob - r->access_trace_prob);
+
+    return diff;
 };

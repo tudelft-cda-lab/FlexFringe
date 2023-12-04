@@ -39,6 +39,8 @@ namespace active_learning_namespace{
 
   /* inline */ void reset_apta(state_merger* merger, const std::list<refinement*>& refs);
   /* inline */ void minimize_apta(list<refinement*>& refs, state_merger* merger);
+  /* inline */ void find_closed_automaton(list<refinement*>& performed_refs, std::unique_ptr<apta>& aut, std::unique_ptr<state_merger>& merger,
+                                          double (*distance_func)(apta*, apta_node*, apta_node*));
 
   std::vector<int> concatenate_strings(const std::vector<int>& pref1, const std::vector<int>& pref2);
 

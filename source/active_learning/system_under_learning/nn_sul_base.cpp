@@ -49,7 +49,7 @@ void nn_sul_base::pre(inputdata& id){
   // set the path accordingly
   std::string PYTHON_SCRIPT_PATH; std::string PYTHON_MODULE_NAME; int pos;
   #if defined(_WIN32)
-    pos = static_cast<int>(APAFILE.find_last_of("\\"));
+    pos = static_cast<int>(INPUT_FILE.find_last_of("\\"));
   #else 
     pos = static_cast<int>(INPUT_FILE.find_last_of("/"));
   #endif
@@ -62,7 +62,10 @@ void nn_sul_base::pre(inputdata& id){
   cmd << "\") )";
 
   PyRun_SimpleString(cmd.str().c_str());
+  //PyRun_SimpleString("print('Script uses the following interpreter: ', sys.executable)\n");
   //PyRun_SimpleString("print(sys.path)"); // for debugging
+
+  //PyRun_SimpleString("import mlflow");
 
   // load the module
   PyObject* p_name = PyUnicode_FromString(PYTHON_MODULE_NAME.c_str());
@@ -76,7 +79,10 @@ void nn_sul_base::pre(inputdata& id){
   p_module = PyImport_Import(p_name);
   if(p_module == NULL){
     Py_DECREF(p_name);
-    cerr << "Error in loading python module " << INPUT_FILE << ". Terminating program." << endl;
+    cerr << "Error in loading python module " << INPUT_FILE << ". Terminating program.\n \
+Possible hints for debugging: Does your interpreter have access to the imported libraries? \
+Is your sys.path environment correct? Perhaps try to import the libraries as a standalone and \
+see what happens." << endl;
     exit(1);
   }
 
@@ -138,7 +144,7 @@ void nn_sul_base::pre(inputdata& id){
     Py_DECREF(alphabet_func);
     Py_DECREF(load_model_func);
     Py_DECREF(p_model_path);
-    cerr << "get_alphabet() function in python script did not return a dictionary-type. Is \
+    cerr << "get_alphabet() function in python script did not return a list-type. Is \
     the path to the aptafile correct and contains the alphabet? Alphabet has correct name \
     as in python script?" << endl;
     exit(1);

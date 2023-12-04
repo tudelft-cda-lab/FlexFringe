@@ -50,7 +50,16 @@ const int base_teacher::ask_membership_query(const pref_suf_t& query, inputdata&
  */
 const double base_teacher::get_string_probability(const pref_suf_t& query, inputdata& id) {
   double res = sul->get_string_probability(query, id);
-  //int tmp = res * 100000.0; // 44.8 truncated to 44
-  //double truncated = tmp / 100000.0; // 4.4
-  return res; //log(truncated);
+  return res;
+}
+
+/**
+ * @brief Gets the weights from the state reached by access_seq.
+ * 
+ * @param access_seq 
+ * @param id 
+ * @return const std::vector<float> 
+ */
+const std::vector<float> base_teacher::get_weigth_distribution(const active_learning_namespace::pref_suf_t& access_seq, inputdata& id) {
+  return sul->get_weight_distribution(access_seq, id);
 }

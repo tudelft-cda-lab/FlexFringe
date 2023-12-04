@@ -367,6 +367,10 @@ public:
         return res;
     }
 
+    bool has_child_nodes() const {
+        return guards.size() > 0;
+    }
+
     /** red, blue, white, and sinks */
 
     inline bool is_red(){

@@ -20,14 +20,6 @@
 
 using namespace std;
 
-void input_file_sul::post(){
-    // this one does not need preprocessing and post yet, since we test it on abbadingo
-}
-
-void input_file_sul::step(){
-    // this one does not need step() yet, since we test it on abbadingo
-}
-
 bool input_file_sul::is_member(const vector<int>& query_trace) const {
     return all_traces.contains(query_trace);
 }

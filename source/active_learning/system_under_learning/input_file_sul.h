@@ -33,8 +33,6 @@ class input_file_sul : public sul_base {
     std::map< std::vector<int>, int > all_traces;
 
   protected:
-    virtual void post();
-    virtual void step();
     virtual void reset(){};
 
     virtual bool is_member(const std::vector<int>& query_trace) const override;

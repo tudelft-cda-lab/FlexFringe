@@ -16,4 +16,4 @@
 
 // NN queries
 #include "nn_sul_base.h"
-#include "nn_sigmoid_sul.h"
+#include "nn_weighted_output_sul.h"

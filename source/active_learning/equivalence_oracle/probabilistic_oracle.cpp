@@ -11,7 +11,7 @@
 
 #include "probabilistic_oracle.h"
 #include "common_functions.h"
-#include "log_alergia.h"
+#include "string_probability_estimator.h"
 #include "parameters.h"
 
 #include <cmath>
@@ -61,14 +61,14 @@ std::optional< pair< vector<int>, int> > probabilistic_oracle::equivalence_query
 
 
         if(t->is_final() && FINAL_PROBABILITIES){
-          sampled_probability *= static_cast<log_alergia_data*>(n->get_data())->get_final_prob();
+          sampled_probability *= static_cast<string_probability_estimator_data*>(n->get_data())->get_final_prob();
           break;
         }
         else if(t->is_final())
           break;
 
         const int symbol = t->get_symbol();
-        sampled_probability *= static_cast<log_alergia_data*>(n->get_data())->get_normalized_probability(symbol);
+        sampled_probability *= static_cast<string_probability_estimator_data*>(n->get_data())->get_normalized_probability(symbol);
 
         n = active_learning_namespace::get_child_node(n, t);
         t = t->future();
@@ -78,7 +78,7 @@ std::optional< pair< vector<int>, int> > probabilistic_oracle::equivalence_query
         //cout << "The string: ";
         //print_vector(current_substring);
         //const double true_p = teacher->get_string_probability(current_substring, id); // TODO: throw the log inside for runtime purposes
-        //cout << "true_p " << true_p << " res " << sampled_probability * static_cast<log_alergia_data*>(n->get_data())->get_final_prob() << endl;
+        //cout << "true_p " << true_p << " res " << sampled_probability * static_cast<string_probability_estimator_data*>(n->get_data())->get_final_prob() << endl;
       //}
     }
 
