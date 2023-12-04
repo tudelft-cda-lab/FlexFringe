@@ -22,7 +22,7 @@
 #include "greedy.h"
 #include "main_helpers.h"
 
-#include "log_alergia.h"
+#include "string_probability_estimator.h"
 
 #include <list>
 #include <stdexcept>
@@ -75,7 +75,7 @@ void pls_baseline::init_final_prob(apta_node* n, apta* the_apta, inputdata& id) 
 
   trace* new_trace = vector_to_trace(seq, id);
   const double new_prob = teacher->get_string_probability(seq, id);
-  static_cast<log_alergia_data*>(n->get_data())->init_access_probability(new_prob);
+  static_cast<string_probability_estimator_data*>(n->get_data())->init_access_probability(new_prob);
 }
 
 /**
@@ -88,7 +88,7 @@ void pls_baseline::add_statistics(unique_ptr<state_merger>& merger, apta_node* n
   static unordered_set<apta_node*> completed_nodes;
   if(completed_nodes.contains(n)) return;
 
-  auto* data = static_cast<log_alergia_data*>(n->get_data());
+  auto* data = static_cast<string_probability_estimator_data*>(n->get_data());
   data->initialize_distributions(alphabet);
 
   pref_suf_t seq;
@@ -149,12 +149,12 @@ void pls_baseline::update_tree_recursively(apta_node* n, apta* the_apta, const v
   }
 
   // update the nodes behind n
-  const auto& data_to_add = static_cast<log_alergia_data*>(n->get_data())->get_outgoing_distribution();
+  const auto& data_to_add = static_cast<string_probability_estimator_data*>(n->get_data())->get_outgoing_distribution();
   while(!nodes_to_update.empty()){
     current_node = nodes_to_update.top();
     if(current_node == n) continue;
 
-    auto current_node_data = static_cast<log_alergia_data*>(current_node->get_data());
+    auto current_node_data = static_cast<string_probability_estimator_data*>(current_node->get_data());
 
     for(int s=0; s<data_to_add.size(); ++s){
       current_node_data->add_probability(s, data_to_add[s]);
@@ -167,7 +167,7 @@ void pls_baseline::update_tree_recursively(apta_node* n, apta* the_apta, const v
 
 void pls_baseline::update_tree_dfs(apta* the_apta, const vector<int>& alphabet) const {
   apta_node* n = the_apta->get_root();
-  log_alergia::normalize_probabilities(static_cast<log_alergia_data*>(n->get_data()));
+  string_probability_estimator::normalize_probabilities(static_cast<string_probability_estimator_data*>(n->get_data()));
 
   unordered_set<apta_node*> node_set;
   stack<apta_node*> node_stack;
@@ -180,7 +180,7 @@ void pls_baseline::update_tree_dfs(apta* the_apta, const vector<int>& alphabet) 
       continue;
 
     node_stack.push(child_node);
-    p_stack.push(static_cast<log_alergia_data*>(n->get_data())->get_normalized_probability(s));
+    p_stack.push(static_cast<string_probability_estimator_data*>(n->get_data())->get_normalized_probability(s));
   }
 
   while(!node_stack.empty()){
@@ -195,9 +195,9 @@ void pls_baseline::update_tree_dfs(apta* the_apta, const vector<int>& alphabet) 
     print_vector(test_seq);
     cout << "number: " << n->get_number() << endl; */
 
-    auto data = static_cast<log_alergia_data*>(n->get_data());
+    auto data = static_cast<string_probability_estimator_data*>(n->get_data());
     data->update_final_prob(p);
-    log_alergia::normalize_probabilities(data);
+    string_probability_estimator::normalize_probabilities(data);
 
     for(auto s: alphabet){
       auto child_node = n->get_child(s);
@@ -205,7 +205,7 @@ void pls_baseline::update_tree_dfs(apta* the_apta, const vector<int>& alphabet) 
         continue;
 
       node_stack.push(child_node);
-      double new_p = p * static_cast<log_alergia_data*>(n->get_data())->get_normalized_probability(s);
+      double new_p = p * static_cast<string_probability_estimator_data*>(n->get_data())->get_normalized_probability(s);
       p_stack.push(new_p);
     }
 
@@ -215,7 +215,7 @@ void pls_baseline::update_tree_dfs(apta* the_apta, const vector<int>& alphabet) 
 
 void pls_baseline::test_dfs(apta* the_apta, const vector<int>& alphabet, unique_ptr<base_teacher>& teacher, inputdata& id) const {
   apta_node* n = the_apta->get_root();
-  log_alergia::normalize_probabilities(static_cast<log_alergia_data*>(n->get_data()));
+  string_probability_estimator::normalize_probabilities(static_cast<string_probability_estimator_data*>(n->get_data()));
 
   unordered_set<apta_node*> node_set;
   queue<apta_node*> node_queue;
@@ -228,7 +228,7 @@ void pls_baseline::test_dfs(apta* the_apta, const vector<int>& alphabet, unique_
       continue;
 
     node_queue.push(child_node);
-    p_queue.push(static_cast<log_alergia_data*>(n->get_data())->get_normalized_probability(s));
+    p_queue.push(static_cast<string_probability_estimator_data*>(n->get_data())->get_normalized_probability(s));
   }
 
   while(!node_queue.empty()){
@@ -237,7 +237,7 @@ void pls_baseline::test_dfs(apta* the_apta, const vector<int>& alphabet, unique_
     node_queue.pop();
     p_queue.pop();
 
-    auto data = static_cast<log_alergia_data*>(n->get_data());
+    auto data = static_cast<string_probability_estimator_data*>(n->get_data());
     auto access_trace = n->get_access_trace();
     auto seq = access_trace->get_input_sequence(true);
     auto real_p = teacher->get_string_probability(seq, id);
@@ -249,7 +249,7 @@ void pls_baseline::test_dfs(apta* the_apta, const vector<int>& alphabet, unique_
         continue;
 
       node_queue.push(child_node);
-      double new_p = p * static_cast<log_alergia_data*>(n->get_data())->get_normalized_probability(s);
+      double new_p = p * static_cast<string_probability_estimator_data*>(n->get_data())->get_normalized_probability(s);
       p_queue.push(new_p);
     }
 
@@ -311,13 +311,13 @@ void pls_baseline::proc_counterex(const unique_ptr<base_teacher>& teacher, input
     add_statistics(merger, n, id, alphabet, nullopt);
     //if(queried_traces) extend_fringe(merger, n, hypothesis, id, queried_traces.value());      
 
-    //auto* data = static_cast<log_alergia_data*>(n->get_data());
+    //auto* data = static_cast<string_probability_estimator_data*>(n->get_data());
     //product *= data->get_weight(t->get_symbol());
 
     n = active_learning_namespace::get_child_node(n, t);
     t = t->future();
 
-    //if(n != nullptr) static_cast<log_alergia_data*>(n->get_data())->update_final_prob(product);
+    //if(n != nullptr) static_cast<string_probability_estimator_data*>(n->get_data())->update_final_prob(product);
   }
 }
 

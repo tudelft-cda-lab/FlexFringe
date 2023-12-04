@@ -13,7 +13,6 @@
 
 struct tail_state_compare{ bool operator()(const pair<double, pair<apta_node*, tail*>> &a, const pair<double, pair<apta_node*, tail*>> &b) const{ return a.first < b.first; } };
 
-int rownr = 1;
 map<int,double> sw_score_per_symbol;
 map<tail*,double> sw_individual_tail_score;
 
@@ -350,6 +349,8 @@ void write_list(list<T>& list_to_write, ofstream& output){
 void predict_trace(state_merger* m, ofstream& output, trace* tr){
     if(REVERSE_TRACES) tr->reverse();
 
+    static int rownr = 1;
+
     state_sequence.clear();
     score_sequence.clear();
     align_sequence.clear();
@@ -496,6 +497,8 @@ void predict_csv(state_merger* m, istream& input, ofstream& output){
     throw std::runtime_error("Not implemented yet");
 
     inputdata* id = m->get_dat();
+    static int rownr = 1;
+
     rownr = -1;
 
     output << "row nr; abbadingo trace; state sequence; score sequence";

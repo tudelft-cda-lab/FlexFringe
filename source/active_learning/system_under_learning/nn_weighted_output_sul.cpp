@@ -1,5 +1,5 @@
 /**
- * @file nn_sigmoid_sul.cpp
+ * @file nn_weighted_output_sul.cpp
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
  * @brief 
  * @version 0.1
@@ -9,7 +9,7 @@
  * 
  */
 
-#include "nn_sigmoid_sul.h"
+#include "nn_weighted_output_sul.h"
 #include "inputdatalocator.h"
 
 #include <unordered_set>
@@ -18,7 +18,7 @@
 
 using namespace std;
 
-bool nn_sigmoid_sul::is_member(const std::vector<int>& query_trace) const {
+bool nn_weighted_output_sul::is_member(const std::vector<int>& query_trace) const {
   return true;
 }
 
@@ -34,7 +34,7 @@ bool nn_sigmoid_sul::is_member(const std::vector<int>& query_trace) const {
  * @param id 
  * @return const double The probability that this string belongs to the language learned by the model. 
  */
-const double nn_sigmoid_sul::get_string_probability(const std::vector<int>& query_trace, inputdata& id) const {
+const double nn_weighted_output_sul::get_string_probability(const std::vector<int>& query_trace, inputdata& id) const {
   const double nn_output = get_sigmoid_output(query_trace, id);
   if(nn_output < 0){
     throw runtime_error("Error in Python script, please check your code there.");
@@ -54,7 +54,7 @@ const double nn_sigmoid_sul::get_string_probability(const std::vector<int>& quer
  * @param id 
  * @return const int 
  */
-const int nn_sigmoid_sul::query_trace(const std::vector<int>& query_trace, inputdata& id) const {
+const int nn_weighted_output_sul::query_trace(const std::vector<int>& query_trace, inputdata& id) const {
   const double nn_output = get_sigmoid_output(query_trace, id);
   if(nn_output < 0){
     throw runtime_error("Error in Python script, please check your code there.");
@@ -66,7 +66,7 @@ const int nn_sigmoid_sul::query_trace(const std::vector<int>& query_trace, input
  * @brief Initialize the types to 0 and 1. Which is which depends on how the network was trained.
  * 
  */
-void nn_sigmoid_sul::init_types() const {
+void nn_weighted_output_sul::init_types() const {
   inputdata_locator::get()->add_type(std::string("Type 0"));
   inputdata_locator::get()->add_type(std::string("Type 1"));
 }
@@ -77,7 +77,7 @@ void nn_sigmoid_sul::init_types() const {
  * @param query_trace 
  * @return const double 
  */
-const double nn_sigmoid_sul::get_sigmoid_output(const std::vector<int>& query_trace, inputdata& id) const {
+const double nn_weighted_output_sul::get_sigmoid_output(const std::vector<int>& query_trace, inputdata& id) const {
 
   static PyObject* p_start_symbol = START_SYMBOL == -1 ? nullptr : PyLong_FromLong(START_SYMBOL); 
   static PyObject* p_end_symbol = START_SYMBOL == -1 ? nullptr : PyLong_FromLong(END_SYMBOL); ;
@@ -101,9 +101,51 @@ const double nn_sigmoid_sul::get_sigmoid_output(const std::vector<int>& query_tr
 }
 
 /**
+ * @brief Get the weight distribution, i.e. all the next symbol probabilities/weights for a given sequence.
+ * 
+ * @param query_trace The query trace from which we want to pick up the weights.
+ * @param id Inputdata
+ * @return const std::vector<double> A vector with the weights. Vector size is that of alphabet + 2 if trained with 
+ * <SOS> and <EOS> token. These have to be dealt with by the algorithm.
+ */
+const std::vector<float> nn_weighted_output_sul::get_weight_distribution(const std::vector<int>& query_trace, inputdata& id) const {
+  static PyObject* p_start_symbol = START_SYMBOL == -1 ? nullptr : PyLong_FromLong(START_SYMBOL); 
+  static PyObject* p_end_symbol = END_SYMBOL == -1 ? nullptr : PyLong_FromLong(END_SYMBOL); ;
+
+  PyObject* p_list = p_start_symbol==nullptr ? PyList_New(query_trace.size()) : PyList_New(query_trace.size()+1);
+  int i = p_start_symbol==nullptr ? 0 : 1;
+  for(const int flexfringe_symbol: query_trace){
+    int mapped_symbol = input_mapper.at(flexfringe_symbol);
+    PyObject* p_symbol = PyLong_FromLong(mapped_symbol);
+    set_list_item(p_list, p_symbol, i);
+    ++i;
+    //Py_DECREF(p_symbol);
+  }
+
+  if(p_start_symbol!=nullptr){
+    set_list_item(p_list, p_start_symbol, 0);
+  }
+
+  PyObject* p_weights = PyObject_CallOneArg(query_func, p_list);
+  Py_DECREF(p_list);
+  if(!PyList_CheckExact(p_weights))
+    throw std::runtime_error("Something went wrong, the Network did not return a list. What happened?");
+  
+  static const int RESPONSE_SIZE = static_cast<int>(PyList_Size(p_weights));
+  vector<float> res(RESPONSE_SIZE);
+  for(int i=0; i<RESPONSE_SIZE; ++i){
+    PyObject* resp = PyList_GetItem(p_weights, static_cast<Py_ssize_t>(i));
+    res[i] = static_cast<float>(PyFloat_AsDouble(resp));
+    Py_DECREF(resp);
+  }
+  Py_DECREF(p_weights);
+  return res;
+}
+
+/**
  * @brief Destroy the nn sigmoid sul::nn sigmoid sul object
  * 
  */
-nn_sigmoid_sul::~nn_sigmoid_sul(){
+nn_weighted_output_sul::~nn_weighted_output_sul(){
   Py_Finalize();
 }

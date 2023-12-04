@@ -35,3 +35,8 @@ const double sul_base::get_string_probability(const std::vector<int>& query_trac
   throw logic_error("The SUL tries to infer string probability, but this SUL does not support this. \
   Please change the program settings. Aborting program.");
 }
+
+const vector<float> sul_base::get_weight_distribution(const std::vector<int>& query_trace, inputdata& id) const {
+  throw logic_error("This SUL does not support inference of the weight distribution. Please change the program settings. \
+  Aborting program.");
+};

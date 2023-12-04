@@ -27,8 +27,6 @@ class database_sul : public sul_base {
     std::unique_ptr<database_base> database;
 
   protected:
-    virtual void post() override {};
-    virtual void step() override {};
     virtual void reset() override {};
 
     virtual bool is_member(const std::vector<int>& query_trace) const override;

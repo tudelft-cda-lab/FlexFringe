@@ -23,16 +23,16 @@ class sul_base {
   friend class eq_oracle_base;
 
   protected:
-    virtual void post() = 0;
-    virtual void step() = 0;
     virtual void reset() = 0;
 
+    std::ifstream get_input_stream() const;
+
     virtual bool is_member(const std::vector<int>& query_trace) const = 0;
-    virtual const double get_string_probability(const std::vector<int>& query_trace, inputdata& id) const;
     virtual const int query_trace(const std::vector<int>& query_trace, inputdata& id) const = 0;
 
-    std::ifstream get_input_stream() const;
-    
+    virtual const double get_string_probability(const std::vector<int>& query_trace, inputdata& id) const;
+    virtual const std::vector<float> get_weight_distribution(const std::vector<int>& query_trace, inputdata& id) const;
+
   public:
     sul_base() = default; // abstract anyway
 

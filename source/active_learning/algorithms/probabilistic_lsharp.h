@@ -30,29 +30,32 @@
 #include <unordered_map>
 
 class probabilistic_lsharp_algorithm : public lsharp_algorithm {
+  private:
+    bool MAX_DEPTH_REACHED = false;
+    //bool underestimated_dist = false; // helper flag. If we see final prob larger than 1 in one node, we continue extending the fringe.
+    
+    __attribute__((always_inline)) inline /* bool */ void update_tree_dfs(apta* the_apta, const std::vector<int>& alphabet) const;
+    __attribute__((always_inline)) inline void update_access_path(apta_node* n, apta* the_apta, const std::vector<int>& alphabet) const;
+    
+    inline void add_statistics(std::unique_ptr<state_merger>& merger, apta_node* n,inputdata& id, 
+                                                        const std::vector<int>& alphabet, std::optional< active_learning_namespace::pref_suf_t > seq_opt) const;
+    
+    __attribute__((always_inline)) inline std::unordered_set<apta_node*> extend_fringe(std::unique_ptr<state_merger>& merger, apta_node* n, std::unique_ptr<apta>& the_apta, 
+                                                             inputdata& id, const vector<int>& alphabet) const;
+
+    inline void init_final_prob(apta_node* n, apta* the_apta, inputdata& id) const;
+    list<refinement*> find_complete_base(unique_ptr<state_merger>& merger, unique_ptr<apta>& the_apta, inputdata& id, const std::vector<int>& alphabet);
+
   protected:
     inline void proc_counterex(const std::unique_ptr<base_teacher>& teacher, inputdata& id, unique_ptr<apta>& hypothesis, 
                         const std::vector<int>& counterex, std::unique_ptr<state_merger>& merger, const refinement_list refs,
                         const vector<int>& alphabet) const;
 
-    __attribute__((always_inline)) inline std::unordered_set<apta_node*> extend_fringe(std::unique_ptr<state_merger>& merger, apta_node* n, std::unique_ptr<apta>& the_apta, 
-                                                             inputdata& id, const vector<int>& alphabet) const;
-    inline void add_statistics(std::unique_ptr<state_merger>& merger, apta_node* n,inputdata& id, 
-                                                        const std::vector<int>& alphabet, std::optional< active_learning_namespace::pref_suf_t > seq_opt) const;
-    
-    __attribute__((always_inline)) inline void update_tree_recursively(apta_node* n, apta* the_apta, const std::vector<int>& alphabet) const;
-    __attribute__((always_inline)) inline void update_tree_dfs(apta* the_apta, const std::vector<int>& alphabet) const;
-    void test_dfs(apta* the_apta, const vector<int>& alphabet, unique_ptr<base_teacher>& teacher, inputdata& id) const;
-
-    inline void init_final_prob(apta_node* n, apta* the_apta, inputdata& id) const;
-
-    list<refinement*> find_complete_base(unique_ptr<state_merger>& merger, unique_ptr<apta>& the_apta, inputdata& id, const std::vector<int>& alphabet) const;
-
   public:
     probabilistic_lsharp_algorithm(std::shared_ptr<sul_base>& sul, std::unique_ptr<base_teacher>& teacher, std::unique_ptr<eq_oracle_base>& oracle) 
       : lsharp_algorithm(sul, teacher, oracle){
         std::cout << "Probabilistic L# only works with probabilistic oracle. Automatically switched to that one.\
-        If this is undesired behavior check your input and/or source code." << std::endl;
+If this is undesired behavior check your input and/or source code." << std::endl;
         this->oracle.reset(new probabilistic_oracle(sul));
       };
 

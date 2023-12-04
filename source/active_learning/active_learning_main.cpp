@@ -15,16 +15,14 @@
 #include "lstar.h"
 #include "lsharp.h"
 #include "probabilistic_lsharp.h"
-#include "pls_baseline.h"
-
-//#include "sul_headers.h"
+#include "weighted_lsharp.h"
 
 #include "input_file_sul.h"
 #include "input_file_oracle.h"
 #include "dfa_sul.h"
 #include "active_sul_oracle.h"
 #include "nn_sul_base.h"
-#include "nn_sigmoid_sul.h"
+#include "nn_weighted_output_sul.h"
 
 #include "parameters.h"
 #include "inputdata.h"
@@ -80,7 +78,7 @@ shared_ptr<sul_base> active_learning_main_func::select_sul_class(const bool ACTI
   if(ACTIVE_SUL){
     // TODO: select the SUL better than you do here
     if( INPUT_FILE.compare(INPUT_FILE.length() - 3, INPUT_FILE.length(), ".py") == 0 ) {
-      return shared_ptr<sul_base>(new nn_sigmoid_sul());
+      return shared_ptr<sul_base>(new nn_weighted_output_sul());
     }
 
     return shared_ptr<sul_base>(new dfa_sul());
@@ -137,6 +135,10 @@ void active_learning_main_func::run_active_learning(){
     STORE_ACCESS_STRINGS = true;
     //algorithm = unique_ptr<algorithm_base>(new pls_baseline(sul, teacher, oracle));
     algorithm = unique_ptr<algorithm_base>(new probabilistic_lsharp_algorithm(sul, teacher, oracle));
+  }
+  else if(ACTIVE_LEARNING_ALGORITHM == "weighted_l_sharp"){
+    STORE_ACCESS_STRINGS = true;
+    algorithm = unique_ptr<algorithm_base>(new weighted_lsharp_algorithm(sul, teacher, oracle));
   }
   else{
     throw logic_error("Fatal error: Unknown active_learning_algorithm flag used: " + ACTIVE_LEARNING_ALGORITHM);

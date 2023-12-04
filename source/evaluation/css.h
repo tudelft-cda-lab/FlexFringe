@@ -39,8 +39,8 @@ protected:
                     return permutation.at(symbol);
                 }
             }
-
-            throw new runtime_error("Unknown symbol found in shingle. This should not have happened. Is the estimated alphabet too small?");
+            std::cerr << "Unknown symbol found in shingle. This should not have happened. Is the estimated alphabet too small?" << endl;
+            throw new runtime_error("ERR");
         }
     };
 
