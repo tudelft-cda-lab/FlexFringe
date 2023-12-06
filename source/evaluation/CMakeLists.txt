@@ -21,8 +21,6 @@ add_library(Evaluation STATIC
             l_star_evaluation.cpp
             likelihood.h
             likelihood.cpp
-            log_alergia.h
-            log_alergia.cpp
             mealy.h
             mealy.cpp
             mse_error.h
@@ -34,4 +32,8 @@ add_library(Evaluation STATIC
             rti+.h
             rti+.cpp
             space-saving.h
-            space-saving.cpp)
+            space-saving.cpp
+            string_probability_estimator.h
+            string_probability_estimator.cpp
+            weight_comparator.h
+            weight_comparator.cpp)

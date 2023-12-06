@@ -13,7 +13,7 @@
 #define _WEIGHTED_L_SHARP_H_
 
 #include "algorithm_base.h"
-#include "probabilistic_lsharp.h"
+#include "lsharp.h"
 
 #include "state_merger.h"
 #include "inputdata.h"
@@ -23,13 +23,13 @@
 #include "refinement.h"
 #include "base_teacher.h"
 #include "eq_oracle_base.h"
-#include "probabilistic_oracle.h"
+#include "weight_comparing_oracle.h"
 
 #include <list> 
 #include <memory>
 #include <unordered_map>
 
-class weighted_lsharp_algorithm : public probabilistic_lsharp_algorithm {
+class weighted_lsharp_algorithm : public lsharp_algorithm {
   private:
     bool MAX_DEPTH_REACHED = false;
 
@@ -47,10 +47,10 @@ class weighted_lsharp_algorithm : public probabilistic_lsharp_algorithm {
     
   public:
     weighted_lsharp_algorithm(std::shared_ptr<sul_base>& sul, std::unique_ptr<base_teacher>& teacher, std::unique_ptr<eq_oracle_base>& oracle) 
-      : probabilistic_lsharp_algorithm(sul, teacher, oracle){
+      : lsharp_algorithm(sul, teacher, oracle){
         std::cout << "Probabilistic L# only works with probabilistic oracle. Automatically switched to that one.\
 If this is undesired behavior check your input and/or source code." << std::endl;
-        this->oracle.reset(new probabilistic_oracle(sul));
+        this->oracle.reset(new weight_comparing_oracle(sul));
       };
 
     virtual void run(inputdata& id) override;

@@ -1,5 +1,5 @@
 /**
- * @file probabilistic_oracle.h
+ * @file weight_comparing_oracle.h
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
  * @brief This class is for SULs that are queriable. It utilizes a search strategy.
  * @version 0.1
@@ -9,8 +9,8 @@
  * 
  */
 
-#ifndef _PROBABILISTIC_ORACLE_H_
-#define _PROBABILISTIC_ORACLE_H_
+#ifndef _WEIGHT_COMPARING_ORACLE_H_
+#define _WEIGHT_COMPARING_ORACLE_H_
 
 #include "eq_oracle_base.h"
 #include "state_merger.h"
@@ -18,7 +18,7 @@
 #include <optional>
 #include <utility>
 
-class probabilistic_oracle : public eq_oracle_base {
+class weight_comparing_oracle : public eq_oracle_base {
   protected:
     std::shared_ptr<sul_base> sul;
     std::unique_ptr<search_base> search_strategy;
@@ -27,7 +27,7 @@ class probabilistic_oracle : public eq_oracle_base {
     virtual void reset_sul() override {};
   
   public:
-    probabilistic_oracle(std::shared_ptr<sul_base>& sul) 
+    weight_comparing_oracle(std::shared_ptr<sul_base>& sul) 
                          : eq_oracle_base(sul) {
       search_strategy = std::unique_ptr<search_base>(new random_string_search(30));
       //search_strategy = std::unique_ptr<search_base>(new bfs_strategy(8)); // number here is maximum length of sequence. Find a better way to set this

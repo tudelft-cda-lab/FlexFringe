@@ -79,25 +79,23 @@ void weighted_lsharp_algorithm::query_weights(unique_ptr<state_merger>& merger, 
 
   pref_suf_t seq;
   if(seq_opt){
-    cout << "Seq opt" << endl;
     seq = pref_suf_t(seq_opt.value());
   }
   else{
-    cout << "Not seq opt" << endl;
     auto access_trace = n->get_access_trace();
     seq = access_trace->get_input_sequence(true, false);
   }
 
-  const vector<float> weights = teacher->get_weigth_distribution(seq, id); //get_probability_of_last_symbol(new_trace, id, teacher, merger->get_aut());      
+  const vector<float> weights = teacher->get_weigth_distribution(seq, id);    
   for(int i = 0; i < weights.size(); ++i){
     if(SOS > -1 && i==SOS) continue;
-    int symbol = id.type_from_string(to_string(i));
-    if(symbol==EOS){
+    else if(i==EOS){
       data->set_final_weight(weights[i]);
+      continue;
     }
-    else{
-      data->set_weight(symbol, weights[i]);
-    }
+    int symbol = id.symbol_from_string(to_string(i));
+    //cout << "Symbol: " << symbol << ", weights-size: " << weights.size() << endl;
+    data->set_weight(symbol, weights[i]);
   }
   completed_nodes.insert(n);
 }
@@ -118,6 +116,8 @@ void weighted_lsharp_algorithm::proc_counterex(const unique_ptr<base_teacher>& t
   // linear search to find fringe, then append new states
   cout << "proc counterex" << endl;
   reset_apta(merger.get(), refs);
+
+  return;
 
   vector<int> substring;
   apta_node* n = hypothesis->get_root();
@@ -224,14 +224,17 @@ list<refinement*> weighted_lsharp_algorithm::find_complete_base(unique_ptr<state
       }
     }
 
-    {
+    /* {
       static int model_nr = 0;
       print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_refs");
-    }
+    } */
 
     if(!identified_red_node){
       cout << "Complete basis found. Forwarding hypothesis" << endl;
       return performed_refs;
+    }
+    else{
+      cout << "Red node identified in iteration. Continue search in depth " << ++depth << endl;
     }
   }
 }
