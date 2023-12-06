@@ -24,6 +24,7 @@ tests/tests
 *.log
 *.result
 *.png
+*.pdf
 
 # Generated files
 source/gitversion.cpp

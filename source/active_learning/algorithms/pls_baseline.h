@@ -23,7 +23,7 @@
 #include "refinement.h"
 #include "base_teacher.h"
 #include "eq_oracle_base.h"
-#include "probabilistic_oracle.h"
+#include "string_probability_oracle.h"
 
 #include <list> 
 #include <memory>
@@ -53,7 +53,7 @@ class pls_baseline : public lsharp_algorithm {
       : lsharp_algorithm(sul, teacher, oracle){
         std::cout << "Probabilistic L# only works with probabilistic oracle. Automatically switched to that one.\
         If this is undesired behavior check your input and/or source code." << std::endl;
-        this->oracle.reset(new probabilistic_oracle(sul));
+        this->oracle.reset(new string_probability_oracle(sul));
       };
 
     virtual void run(inputdata& id) override;

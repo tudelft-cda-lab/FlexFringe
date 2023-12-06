@@ -115,19 +115,17 @@ const std::vector<float> nn_weighted_output_sul::get_weight_distribution(const s
   PyObject* p_list = p_start_symbol==nullptr ? PyList_New(query_trace.size()) : PyList_New(query_trace.size()+1);
   int i = p_start_symbol==nullptr ? 0 : 1;
   for(const int flexfringe_symbol: query_trace){
-    int mapped_symbol = input_mapper.at(flexfringe_symbol);
+    int mapped_symbol = stoi(id.get_symbol(flexfringe_symbol)); //input_mapper.at(flexfringe_symbol);
     PyObject* p_symbol = PyLong_FromLong(mapped_symbol);
-    set_list_item(p_list, p_symbol, i);
+    PyList_SetItem(p_list, static_cast<Py_ssize_t>(i), p_symbol);
     ++i;
-    //Py_DECREF(p_symbol);
   }
 
   if(p_start_symbol!=nullptr){
-    set_list_item(p_list, p_start_symbol, 0);
+    PyList_SetItem(p_list, static_cast<Py_ssize_t>(0), p_start_symbol);
   }
 
   PyObject* p_weights = PyObject_CallOneArg(query_func, p_list);
-  Py_DECREF(p_list);
   if(!PyList_CheckExact(p_weights))
     throw std::runtime_error("Something went wrong, the Network did not return a list. What happened?");
   
@@ -136,9 +134,7 @@ const std::vector<float> nn_weighted_output_sul::get_weight_distribution(const s
   for(int i=0; i<RESPONSE_SIZE; ++i){
     PyObject* resp = PyList_GetItem(p_weights, static_cast<Py_ssize_t>(i));
     res[i] = static_cast<float>(PyFloat_AsDouble(resp));
-    Py_DECREF(resp);
   }
-  Py_DECREF(p_weights);
   return res;
 }
 
