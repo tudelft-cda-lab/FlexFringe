@@ -69,10 +69,11 @@ unordered_set<apta_node*> weighted_lsharp_algorithm::extend_fringe(unique_ptr<st
  * @return optional< vector<trace*> > A vector with all the new traces we added to the apta, or nullopt if we already processed this node. Saves runtime.
  */
 void weighted_lsharp_algorithm::query_weights(unique_ptr<state_merger>& merger, apta_node* n, inputdata& id, const vector<int>& alphabet, optional<pref_suf_t> seq_opt) const {  
+  
   static unordered_set<apta_node*> completed_nodes;
   if(completed_nodes.contains(n)) return;
-  static const int SOS = START_SYMBOL == -1 ? -1 : START_SYMBOL;
-  static const int EOS = END_SYMBOL == -1 ? -1 : END_SYMBOL;
+  static const int SOS = START_SYMBOL;
+  static const int EOS = END_SYMBOL;
 
   auto* data = static_cast<weight_comparator_data*>(n->get_data());
   data->initialize_weights(alphabet);
@@ -94,9 +95,26 @@ void weighted_lsharp_algorithm::query_weights(unique_ptr<state_merger>& merger, 
       continue;
     }
     int symbol = id.symbol_from_string(to_string(i));
-    //cout << "Symbol: " << symbol << ", weights-size: " << weights.size() << endl;
     data->set_weight(symbol, weights[i]);
   }
+
+  if(n == merger->get_aut()->get_root()){
+    data->initialize_access_weight(weights[EOS]);
+  }
+  else{
+    auto node_it = merger->get_aut()->get_root();
+    double w_product = 1;
+    for(auto s: seq){
+      data = static_cast<weight_comparator_data*>(node_it->get_data());
+      w_product *= data->get_weight(s);
+      node_it = node_it->get_child(s);
+    }
+    assert(node_it == n);
+    data = static_cast<weight_comparator_data*>(n->get_data());
+    w_product *= weights[EOS];
+    data->initialize_access_weight(w_product);
+  }
+
   completed_nodes.insert(n);
 }
 
@@ -117,14 +135,12 @@ void weighted_lsharp_algorithm::proc_counterex(const unique_ptr<base_teacher>& t
   cout << "proc counterex" << endl;
   reset_apta(merger.get(), refs);
 
-  return;
-
   vector<int> substring;
   apta_node* n = hypothesis->get_root();
   for(auto s: counterex){
     if(n == nullptr){
-      const auto queried_type = teacher->ask_membership_query(substring, id);
-      trace* new_trace = vector_to_trace(substring, id, queried_type);
+      //const auto queried_type = teacher->ask_membership_query(substring, id);
+      trace* new_trace = vector_to_trace(substring, id, 0); // Type here does not matter
       id.add_trace_to_apta(new_trace, hypothesis.get(), false);
       id.add_trace(new_trace);
       substring.push_back(s);
@@ -140,8 +156,8 @@ void weighted_lsharp_algorithm::proc_counterex(const unique_ptr<base_teacher>& t
   }
 
   // for the last element, too
-  const auto queried_type = teacher->ask_membership_query(substring, id);
-  trace* new_trace = vector_to_trace(substring, id, queried_type);
+  //const auto queried_type = teacher->ask_membership_query(substring, id);
+  trace* new_trace = vector_to_trace(substring, id, 0);
   id.add_trace_to_apta(new_trace, hypothesis.get(), false);
   id.add_trace(new_trace);
 
@@ -153,6 +169,7 @@ void weighted_lsharp_algorithm::proc_counterex(const unique_ptr<base_teacher>& t
 
   while(n!=nullptr){
     query_weights(merger, n, id, alphabet, nullopt);
+    extend_fringe(merger, n, hypothesis, id, alphabet);
     n = active_learning_namespace::get_child_node(n, t);
     t = t->future();
   }
@@ -246,6 +263,9 @@ list<refinement*> weighted_lsharp_algorithm::find_complete_base(unique_ptr<state
  * @param id Inputdata.
  */
 void weighted_lsharp_algorithm::run(inputdata& id){
+  MERGE_WHEN_TESTING = true;
+  cout << "testmerge option set to true, because algorithm relies on it" << endl;
+
   int n_runs = 1;
   
   auto eval = unique_ptr<evaluation_function>(get_evaluation());
@@ -266,12 +286,23 @@ void weighted_lsharp_algorithm::run(inputdata& id){
     extend_fringe(merger, root_node, the_apta, id, alphabet);
   }
 
+  {
+    print_current_automaton(merger.get(), "model.", "root");
+  }
+
   while(ENSEMBLE_RUNS > 0 && n_runs <= ENSEMBLE_RUNS){
     if( n_runs % 100 == 0 ) cout << "Iteration " << n_runs + 1 << endl;
 
     auto refs = find_complete_base(merger, the_apta, id, alphabet);
 
     cout << "Searching for counterexamples" << endl;
+
+    {
+      static int model_nr = 0;
+      print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".before_cex");
+    }
+
+    //exit(0);
 
     // only merges performed, hence we can test our hypothesis
     while(true){
@@ -286,6 +317,8 @@ void weighted_lsharp_algorithm::run(inputdata& id){
         return;
       }
 
+      //exit(0);
+
       const int type = query_result.value().second;
       if(type < 0) continue;
 
@@ -293,6 +326,11 @@ void weighted_lsharp_algorithm::run(inputdata& id){
       cout << "Counterexample of length " << cex.size() << " found: ";
       print_vector(cex);
       proc_counterex(teacher, id, the_apta, cex, merger, refs, alphabet);
+
+      {
+        static int model_nr = 0;
+        print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_cex");
+      }
 
       break;
     }

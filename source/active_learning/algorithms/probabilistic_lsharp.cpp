@@ -241,7 +241,7 @@ void probabilistic_lsharp_algorithm::proc_counterex(const unique_ptr<base_teache
   apta_node* n = hypothesis->get_root();
   for(auto s: counterex){
     if(n == nullptr){
-      const auto queried_type = teacher->ask_membership_query(substring, id);
+      const auto queried_type = teacher->ask_membership_query(substring, id); // TODO: necessary here?
       trace* new_trace = vector_to_trace(substring, id, queried_type);
       id.add_trace_to_apta(new_trace, hypothesis.get(), false);
       id.add_trace(new_trace);
@@ -258,7 +258,7 @@ void probabilistic_lsharp_algorithm::proc_counterex(const unique_ptr<base_teache
   }
 
   // for the last element, too
-  const auto queried_type = teacher->ask_membership_query(substring, id);
+  const auto queried_type = teacher->ask_membership_query(substring, id); // TODO: necessary here?
   trace* new_trace = vector_to_trace(substring, id, queried_type);
   id.add_trace_to_apta(new_trace, hypothesis.get(), false);
   id.add_trace(new_trace);
@@ -404,6 +404,9 @@ list<refinement*> probabilistic_lsharp_algorithm::find_complete_base(unique_ptr<
  * @param id Inputdata.
  */
 void probabilistic_lsharp_algorithm::run(inputdata& id){
+  MERGE_WHEN_TESTING = true;
+  cout << "testmerge option set to true, because algorithm relies on it" << endl;
+
   int n_runs = 1;
   
   auto eval = unique_ptr<evaluation_function>(get_evaluation());

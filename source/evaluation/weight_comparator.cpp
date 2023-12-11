@@ -114,15 +114,16 @@ bool weight_comparator::consistent(state_merger *merger, apta_node* left_node, a
     auto n = merger->get_aut()->get_root();
     auto n_data = static_cast<weight_comparator_data*>( n->get_data() );
 
-    float at_weight = 1;
+    double at_weight = 1;
     for(auto symbol: right_sequence){
         at_weight *= n_data->get_weight(symbol);
         n = n->get_child(symbol);
         n_data = static_cast<weight_comparator_data*>( n->get_data() );
     }
-    
 
-    float diff = abs(at_weight * l->get_final_weight() - at_weight * r->get_final_weight());
+    at_weight *= l->get_final_weight();
+
+    double diff = abs(at_weight - r->access_weight);
     if(diff > mu){
         inconsistency_found = true;
         return false;
