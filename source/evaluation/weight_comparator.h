@@ -26,9 +26,12 @@ protected:
     float final_weight;
     std::vector<float> symbol_weight_map;
 
+    double access_weight;
+
 public:
     weight_comparator_data() : evaluation_data::evaluation_data(){        
         final_weight = 0;
+        access_weight = 0;
     }
     virtual void print_transition_label(iostream& output, int symbol) override;
     virtual void print_state_label(iostream& output) override;
@@ -49,6 +52,10 @@ public:
         for(int i=0; i < alphabet.size(); ++i){
             symbol_weight_map[i] = 0;
         }
+    }
+
+    void initialize_access_weight(const double w){
+        this->access_weight = w;
     }
 
     float get_final_weight() noexcept {

@@ -69,8 +69,9 @@ std::optional< pair< vector<int>, int> > weight_comparing_oracle::equivalence_qu
 
         const int symbol = t->get_symbol();
         sampled_value *= static_cast<weight_comparator_data*>(n->get_data())->get_weight(symbol);
-        true_value *= weights[symbol];
-        
+        const int mapped_symbol = stoi(id.get_symbol(symbol));
+        true_value *= weights[mapped_symbol];
+
         current_substring.push_back(symbol);
         n = active_learning_namespace::get_child_node(n, t);
         t = t->future();
