@@ -99,7 +99,7 @@ void mealy::reset(state_merger* merger){
 
 
 void mealy_data::print_transition_label(iostream& output, int symbol){
-   output << int_output[outputs[symbol]];
+   output << "/" << int_output[outputs[symbol]];
 };
 
 string mealy_data::predict_data(tail* t){
