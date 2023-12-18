@@ -41,7 +41,7 @@ void lsharp_algorithm::complete_state(unique_ptr<state_merger>& merger, apta_nod
 
       pref_suf_t seq;
       if(n->get_number() != -1) seq = access_trace->get_input_sequence(true, true);
-        seq.resize(1);
+      else seq.resize(1);
       
       seq[seq.size()-1] = symbol;
       
