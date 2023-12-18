@@ -185,10 +185,13 @@ void weighted_lsharp_algorithm::proc_counterex(const unique_ptr<base_teacher>& t
 list<refinement*> weighted_lsharp_algorithm::find_complete_base(unique_ptr<state_merger>& merger, unique_ptr<apta>& the_apta,
                                                                      inputdata& id, const vector<int>& alphabet) {
   static int depth = 1; // because we initialize root node with depth 1
-  static const int MAX_DEPTH = 10;
-  
+  static const int MAX_DEPTH = 6;
+
   list<refinement*> performed_refs;
   unordered_set<apta_node*> fringe_nodes;
+
+  int merge_depth = 0;
+
 
   while(true){ // cancel when either not red node identified or max depth
 
@@ -198,8 +201,22 @@ list<refinement*> weighted_lsharp_algorithm::find_complete_base(unique_ptr<state
       blue_nodes.insert(blue_node);
     }
 
-    if(blue_nodes.empty()){
-      return performed_refs;
+    bool reached_fringe = blue_nodes.empty();
+    if(reached_fringe/*  || underestimated_dist */){
+      cout << "Reached fringe. Extend and recompute merges" << endl;
+      reset_apta(merger.get(), performed_refs);
+      performed_refs.clear();
+
+      /* std::unordered_set<apta_node*> created_nodes; */
+      for(auto blue_node : fringe_nodes){
+        auto cn = extend_fringe(merger, blue_node, the_apta, id, alphabet);
+        /* for(auto new_node: cn) created_nodes.insert(new_node); */
+      }
+      fringe_nodes.clear();
+      
+      merge_depth = 0;
+      ++depth;
+      continue;
     }
     else if(depth == MAX_DEPTH){
       cout << "Max-depth reached. Printing the automaton. Depth:" << depth << endl;
@@ -209,8 +226,13 @@ list<refinement*> weighted_lsharp_algorithm::find_complete_base(unique_ptr<state
       exit(1);
     }
 
+    // go through each newly found fringe node, see if you can merge or extend
+    ++merge_depth;
+    if(merge_depth <= depth) fringe_nodes.clear();
+
     bool identified_red_node = false;
     for(auto blue_node: blue_nodes){
+      if(merge_depth <= depth) fringe_nodes.insert(blue_node);
 
       refinement_set possible_merges;
       for(red_state_iterator r_it = red_state_iterator(the_apta->get_root()); *r_it != nullptr; ++r_it){
@@ -228,7 +250,7 @@ list<refinement*> weighted_lsharp_algorithm::find_complete_base(unique_ptr<state
         ref->doref(merger.get());
         performed_refs.push_back(ref);
 
-        extend_fringe(merger, blue_node, the_apta, id, alphabet);
+        //extend_fringe(merger, blue_node, the_apta, id, alphabet);
       }
       else{
         // get the best refinement from the heap
@@ -241,17 +263,18 @@ list<refinement*> weighted_lsharp_algorithm::find_complete_base(unique_ptr<state
       }
     }
 
-    /* {
+    {
       static int model_nr = 0;
       print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_refs");
-    } */
+    }
 
     if(!identified_red_node){
       cout << "Complete basis found. Forwarding hypothesis" << endl;
       return performed_refs;
     }
-    else{
-      cout << "Red node identified in iteration. Continue search in depth " << ++depth << endl;
+    else if(!reached_fringe){
+      cout << "Processed layer " << merge_depth << endl;
+      continue;
     }
   }
 }
@@ -287,22 +310,15 @@ void weighted_lsharp_algorithm::run(inputdata& id){
   }
 
   {
-    print_current_automaton(merger.get(), "model.", "root");
+      static int model_nr = 0;
+      print_current_automaton(merger.get(), "model.", "root");
   }
 
   while(ENSEMBLE_RUNS > 0 && n_runs <= ENSEMBLE_RUNS){
     if( n_runs % 100 == 0 ) cout << "Iteration " << n_runs + 1 << endl;
 
     auto refs = find_complete_base(merger, the_apta, id, alphabet);
-
     cout << "Searching for counterexamples" << endl;
-
-    {
-      static int model_nr = 0;
-      print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".before_cex");
-    }
-
-    //exit(0);
 
     // only merges performed, hence we can test our hypothesis
     while(true){
@@ -310,14 +326,13 @@ void weighted_lsharp_algorithm::run(inputdata& id){
       we ask cannot be parsed in automaton. We ignore those cases, as they lead to extra states in hypothesis. 
       This puts a burden on the equivalence oracle to make sure no query is asked twice, else we end 
       up in infinite loop.*/
+
       optional< pair< vector<int>, int > > query_result = oracle->equivalence_query(merger.get(), teacher);
       if(!query_result){
         cout << "Found consistent automaton => Print." << endl;
         print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
         return;
       }
-
-      //exit(0);
 
       const int type = query_result.value().second;
       if(type < 0) continue;
@@ -326,11 +341,6 @@ void weighted_lsharp_algorithm::run(inputdata& id){
       cout << "Counterexample of length " << cex.size() << " found: ";
       print_vector(cex);
       proc_counterex(teacher, id, the_apta, cex, merger, refs, alphabet);
-
-      {
-        static int model_nr = 0;
-        print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_cex");
-      }
 
       break;
     }

@@ -178,11 +178,6 @@ see what happens." << endl;
   }
 
   id.set_alphabet(input_alphabet);
-  int idx = 0;
-  for(auto symbol: input_alphabet){
-    input_mapper[idx] = symbol;
-    ++idx;
-  }
 
   Py_INCREF(p_name);
   Py_INCREF(p_module);
