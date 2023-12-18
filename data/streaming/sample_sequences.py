@@ -10,7 +10,7 @@ outfile_name = "sequences_sampled.dat"
 label_outfile_name = "labels_sampled.txt"
 
 label_counter = dict()
-samples_per_label = 100000
+samples_per_label = 50000
 
 n_sequences = 0
 alphabet_size = 0
@@ -41,13 +41,17 @@ label_file = open(label_filename, "rt")
 label_outfile = open(label_outfile_name, "wt")
 # TODO: write header here
 outf = open(outfile_name, "wt")
+
+label_set = set()
 for i, line in enumerate(open(infile_name, "rt")):
     if i == 0:
         continue # skipping the header
     
     label_line = label_file.readline()
-    labels = set(label_line)
+    labels = set(label_line.split())
     label = get_label(labels)
+
+    label_set.add(label)
     
     p = random.random()
     if p < probabilities[label]:
@@ -56,3 +60,5 @@ for i, line in enumerate(open(infile_name, "rt")):
 label_file.close()
 label_outfile.close()
 outf.close()
+
+print("labels: ", label_set)

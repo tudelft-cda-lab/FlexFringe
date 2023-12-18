@@ -85,7 +85,7 @@ const double nn_weighted_output_sul::get_sigmoid_output(const std::vector<int>& 
   PyObject* p_list = p_start_symbol==nullptr ? PyList_New(query_trace.size()) : PyList_New(query_trace.size()+2); // +2 for start and end symbol
   int i = p_start_symbol==nullptr ? 0 : 1;
   for(const int flexfringe_symbol: query_trace){
-    int mapped_symbol = input_mapper.at(flexfringe_symbol);
+    int mapped_symbol = stoi(id.get_symbol(flexfringe_symbol));
     PyObject* p_symbol = PyLong_FromLong(mapped_symbol);
     set_list_item(p_list, p_symbol, i);
     ++i;
@@ -115,7 +115,7 @@ const std::vector<float> nn_weighted_output_sul::get_weight_distribution(const s
   PyObject* p_list = p_start_symbol==nullptr ? PyList_New(query_trace.size()) : PyList_New(query_trace.size()+1);
   int i = p_start_symbol==nullptr ? 0 : 1;
   for(const int flexfringe_symbol: query_trace){
-    int mapped_symbol = stoi(id.get_symbol(flexfringe_symbol)); //input_mapper.at(flexfringe_symbol);
+    int mapped_symbol = stoi(id.get_symbol(flexfringe_symbol));
     PyObject* p_symbol = PyLong_FromLong(mapped_symbol);
     PyList_SetItem(p_list, static_cast<Py_ssize_t>(i), p_symbol);
     ++i;

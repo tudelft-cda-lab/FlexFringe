@@ -46,8 +46,6 @@ class nn_sul_base : public sul_base {
     PyObject* query_func;
     PyObject* alphabet_func;
     PyObject* load_model_func;
-
-    std::unordered_map<int, int> input_mapper;
     
     /* PyObject* p_start_symbol; 
     PyObject* p_end_symbol; */

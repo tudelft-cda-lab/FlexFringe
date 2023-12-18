@@ -53,6 +53,8 @@ std::optional< pair< vector<int>, int> > weight_comparing_oracle::equivalence_qu
     double true_value = 1;
     while(t!=nullptr){        
         if(n == nullptr){
+          //break;
+          
           cout << "Counterexample because tree not parsable" << endl;
           search_strategy->reset();
           return make_optional< pair< vector<int>, int > >(make_pair(query_string, 0));
