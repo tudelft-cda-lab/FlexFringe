@@ -14,9 +14,9 @@
 
 #include "base_teacher.h"
 #include "eq_oracle_base.h"
+#include "misc/sqldb.h"
 #include "source/input/inputdata.h"
 #include "sul_base.h"
-#include "misc/sqldb.h"
 
 #include <memory>
 class active_learning_main_func {
