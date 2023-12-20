@@ -395,6 +395,17 @@ int main(int argc, char *argv[]){
     app.add_option("--use_active_learning", DO_ACTIVE_LEARNING, "Perform active learning on top of the normal learner. 1 for true, 0 for false. Default: 0");
     // TODO: shall we delete the rejecting_label option?
     app.add_option("--rejecting_label", REJECTING_LABEL, "The label as a string that is used for rejecting (non-accepting) behavior. Only in active learning mode. DEFAULT: 0");
+
+
+    app.add_option("--postgresql-connstring", POSTGRESQL_CONNSTRING,
+                   "The string that connects to a postgresql database. This is either a key value pairing or a URI. "
+                   "https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING-KEYWORD-VALUE You can omit this "
+                   "and use environment variables instead. https://www.postgresql.org/docs/current/libpq-envars.html Set the "
+                   "first positional argument to an empty string to learn from the SQL or provide a trace file to load the data.");
+    app.add_option("--postgresql-tblname", POSTGRESQL_TBLNAME,
+                   "The string that hold the name to the table with the traces. You must provide this to signal "
+                   "learning from an SQL database. The database PostgreSQL connects to must contain this table and the "
+                   "{POSTGRESQL_TBLNAME}_meta table.");
     
     app.add_option("--start_symbol", START_SYMBOL, "The <SOS> symbol (as per NLP convention) represented by an int value. A value of -1 means that it is unused. Only in active learning mode when querying networks. DEFAULT: -1");
     app.add_option("--end_symbol", END_SYMBOL, "The <SOS> symbol (as per NLP convention) represented by an int value. A value of -1 means that it is unused. Only in active learning mode when querying networks. DEFAULT: -1");

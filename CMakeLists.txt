@@ -17,6 +17,11 @@ option(COMPILE_DOCS "This is settable from the command line" OFF)
 add_subdirectory(source/utility/lexy)
 add_subdirectory(source/utility/fmt-9.1.0)
 
+# libpqxx requires pre-building its library
+# you cannot rely on including header files globally
+# you must link with target_link_libraries in EVERY module that requires it.
+add_subdirectory(source/utility/libpqxx build-pqxx)
+
 if (MSVC)
     add_compile_options("/W4" "$<$<CONFIG:RELEASE>:/O2>")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -75,7 +80,9 @@ target_link_libraries(flexfringe
         Source
         Util
         foonathan::lexy
-        fmt::fmt)
+        fmt::fmt
+        pqxx
+        )
 
 
 find_package(Threads)
@@ -138,6 +145,7 @@ if(NOT SKIP_TESTS)
             Util
             foonathan::lexy
             fmt::fmt
+            pqxx
             ${CMAKE_THREAD_LIBS_INIT})
 
     if(NOT WIN32)
