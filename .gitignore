@@ -10,6 +10,9 @@ test-reports/
 data/*
 !data/active_learning/test_dfas/*
 *ipynb*
+*.tu-*
+*.tu*
+tags
 
 # Binaries
 runtests

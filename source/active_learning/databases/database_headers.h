@@ -4,9 +4,9 @@
  * @brief Just for convenience.
  * @version 0.1
  * @date 2023-06-23
- * 
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  */
 
 #include "database_base.h"
