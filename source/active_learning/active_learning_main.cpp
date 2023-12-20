@@ -23,6 +23,7 @@
 #include "input_file_sul.h"
 #include "nn_sul_base.h"
 #include "nn_weighted_output_sul.h"
+#include "sqldb_sul.h"
 
 #include "abbadingoparser.h"
 #include "csvparser.h"
@@ -30,6 +31,8 @@
 #include "inputdatalocator.h"
 #include "main_helpers.h"
 #include "parameters.h"
+
+#include "loguru.hpp"
 
 #include <cassert>
 #include <fstream>
@@ -79,6 +82,9 @@ shared_ptr<sul_base> active_learning_main_func::select_sul_class(const bool ACTI
         if (INPUT_FILE.compare(INPUT_FILE.length() - 3, INPUT_FILE.length(), ".py") == 0) {
             return shared_ptr<sul_base>(new nn_weighted_output_sul());
         }
+        if (SQLDB) {
+            return shared_ptr<sul_base>(new sqldb_sul(*my_sqldb));
+        }
 
         return shared_ptr<sul_base>(new dfa_sul());
     }
@@ -114,11 +120,22 @@ unique_ptr<eq_oracle_base> active_learning_main_func::select_oracle_class(shared
  */
 void active_learning_main_func::run_active_learning() {
     assertm(ENSEMBLE_RUNS > 0, "nruns parameter must be larger than 0 for active learning.");
+    SQLDB = POSTGRESQL_TBLNAME != "";
+  if (SQLDB) {
+    my_sqldb = make_unique<sqldb>(POSTGRESQL_TBLNAME, POSTGRESQL_CONNSTRING);
+    if (INPUT_FILE != "") {
+      LOG_S(INFO) << "Loading from trace file " + INPUT_FILE;
+      inputdata id = get_inputdata();
+      my_sqldb->load_traces(id);
+      LOG_S(INFO) << "Traces loaded.";
+      return;
+    }
+  }
 
     const bool ACTIVE_SUL = (INPUT_FILE.compare(INPUT_FILE.length() - 5, INPUT_FILE.length(), ".json") == 0) ||
                             (INPUT_FILE.compare(INPUT_FILE.length() - 4, INPUT_FILE.length(), ".dot") == 0) ||
                             (INPUT_FILE.compare(INPUT_FILE.length() - 3, INPUT_FILE.length(), ".py") == 0) ||
-                            !APTA_FILE.empty();
+                            !APTA_FILE.empty() || SQLDB;
 
     auto sul = select_sul_class(ACTIVE_SUL);
     auto teacher = select_teacher_class(sul, ACTIVE_SUL);
