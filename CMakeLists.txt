@@ -19,6 +19,10 @@ add_subdirectory(source/utility/fmt-9.1.0)
 
 if (MSVC)
     add_compile_options("/W4" "$<$<CONFIG:RELEASE>:/O2>")
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    add_compile_options(
+                        "$<$<CONFIG:RELEASE>:-O3>"
+                        "$<$<CONFIG:DEBUG>:-g>")
 else()
     add_compile_options(
                         "$<$<CONFIG:RELEASE>:-O3>"

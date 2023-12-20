@@ -4,9 +4,9 @@
  * @brief Base class for the system under learning.
  * @version 0.1
  * @date 2023-02-15
- * 
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  */
 
 #ifndef _SUL_BASE_H_
@@ -15,12 +15,12 @@
 #include "source/input/inputdata.h"
 
 #include <fstream>
-#include <vector>
 #include <stdexcept>
+#include <vector>
 
 class sul_base {
-  friend class base_teacher;
-  friend class eq_oracle_base;
+    friend class base_teacher;
+    friend class eq_oracle_base;
 
   protected:
     virtual void reset() = 0;
