@@ -40,16 +40,8 @@ def do_query(seq: list):
   global model
 
   array = np.array(seq)
-  #print("Before prediction: {}".format(seq))
-  #res = model(array.reshape(1, -1), training=False)
   res = model.predict(array.reshape(1, -1), verbose=0)
-  #res = model(np.array(seq).reshape(1, -1), train=False)
-
-  #print("After prediction")
-  #res = res.numpy().reshape(-1).tolist()
   res = res.reshape(-1).tolist()
-  #print("Predicted")
-
   return res
 
 
@@ -80,7 +72,4 @@ def get_alphabet(path_to_model_file: str):
 
 
 if __name__ == "__main__":
-  #raise Exception("This script is not meant as a standalone.")
-  load_nn_model("model.keras")
-  for i in range(200):
-    do_query([79, 1, 2])
+  raise Exception("This script is not meant as a standalone.")
