@@ -406,6 +406,8 @@ int main(int argc, char *argv[]){
                    "The string that hold the name to the table with the traces. You must provide this to signal "
                    "learning from an SQL database. The database PostgreSQL connects to must contain this table and the "
                    "{POSTGRESQL_TBLNAME}_meta table.");
+    app.add_option("--postgresql-droptbls", POSTGRESQL_DROPTBLS,
+                   "With this option you can tell the program to drop the existing tables. Default=true");
     
     app.add_option("--start_symbol", START_SYMBOL, "The <SOS> symbol (as per NLP convention) represented by an int value. A value of -1 means that it is unused. Only in active learning mode when querying networks. DEFAULT: -1");
     app.add_option("--end_symbol", END_SYMBOL, "The <SOS> symbol (as per NLP convention) represented by an int value. A value of -1 means that it is unused. Only in active learning mode when querying networks. DEFAULT: -1");

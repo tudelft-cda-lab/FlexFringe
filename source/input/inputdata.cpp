@@ -146,6 +146,18 @@ const std::map<std::string, int>& inputdata::get_r_types() const {
     return this->r_types;
 }
 
+const vector<int> inputdata::get_types() const {
+    vector<int> res(r_types.size());
+    int idx = 0;
+    for(const auto& mapping: r_types){
+        res[idx] = mapping.second;
+        ++idx;
+    }
+    return res;
+}
+
+
+
 int inputdata::get_reverse_type(std::string a) {
     return r_types[a];
 }
@@ -173,6 +185,16 @@ void inputdata::set_alphabet(const vector<int>& input_alphabet){
         this->r_alphabet[symbol_string] = this->alphabet.size();
         this->alphabet.push_back(symbol_string);
     }
+}
+void inputdata::set_alphabet(const std::map<std::string, int>& input_r_alphabet) {
+    r_alphabet = input_r_alphabet; // copy-assignment
+    alphabet.clear();
+    for (auto const& imap : input_r_alphabet) alphabet.push_back(imap.first);
+}
+void inputdata::set_types(const std::map<std::string, int>& input_r_types) {
+    r_types = input_r_types; // copy-assignment
+    types.clear();
+    for (auto const& imap : input_r_types) types.push_back(imap.first);
 }
 
 attribute *inputdata::get_trace_attribute(int attr) {
@@ -234,6 +256,10 @@ int inputdata::get_types_size() {
 
 int inputdata::get_alphabet_size() {
     return alphabet.size();
+}
+
+const std::map<std::string, int> inputdata::get_r_alphabet() const {
+    return this->r_alphabet;
 }
 
 const vector<int> inputdata::get_alphabet() const {
