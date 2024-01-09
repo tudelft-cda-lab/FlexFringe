@@ -40,3 +40,10 @@ const vector<float> sul_base::get_weight_distribution(const std::vector<int>& qu
         "This SUL does not support inference of the weight distribution. Please change the program settings. \
   Aborting program.");
 };
+
+const int sul_base::query_trace_maybe(const std::vector<int>& query_trace, inputdata& id) const {
+    throw logic_error("This SUL does not support query_trace_maybe. There is no need to rely on an algorithm that "
+                      "works around incomplete information when using this SUL.");
+}
+
+sqldb& sul_base::get_sqldb() { throw logic_error("This SUL is not connected to a sqldb."); }

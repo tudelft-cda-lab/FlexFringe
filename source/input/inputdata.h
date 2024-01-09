@@ -80,6 +80,8 @@ public:
     const std::string& get_type(int a);
     int get_reverse_type(std::string a);
     void set_alphabet(const std::vector<int>& input_alphabet);
+    void set_alphabet(const std::map<std::string, int>& input_r_alphabet);
+    void set_types(const std::map<std::string, int>& input_r_types);
 
     /* gets an attribute, first symbol attributes, then trace attributes */
     attribute* get_trace_attribute(int attr);
@@ -94,6 +96,7 @@ public:
 
     void add_type(const std::string& t);
     const std::map<std::string, int>& get_r_types() const;
+    const std::vector<int> get_types() const;
 
     /* attribute properties:
      * splittable: will be used to infer guards
@@ -113,6 +116,7 @@ public:
     int get_types_size();
     int get_alphabet_size();
     const std::vector<int> get_alphabet() const;
+    const std::map<std::string, int> get_r_alphabet() const;
 
     int symbol_from_string(std::string symbol);
 

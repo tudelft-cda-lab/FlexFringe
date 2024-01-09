@@ -144,3 +144,4 @@ int END_SYMBOL = -1;
 
 string POSTGRESQL_CONNSTRING = "";
 string POSTGRESQL_TBLNAME = "";
+bool POSTGRESQL_DROPTBLS = true;

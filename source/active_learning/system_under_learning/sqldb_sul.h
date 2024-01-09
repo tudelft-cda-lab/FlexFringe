@@ -29,6 +29,8 @@ class sqldb_sul : public sul_base {
   public:
     explicit sqldb_sul(sqldb& db);
     virtual void pre(inputdata& id) override;
+    const int query_trace_maybe(const std::vector<int>& query_trace, inputdata& id) const override;
+    sqldb& get_sqldb() override { return my_sqldb; };
 };
 
 #endif
