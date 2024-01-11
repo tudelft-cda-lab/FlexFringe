@@ -30,12 +30,11 @@ function(CloneRepository repositoryURL branchName projectName sourceDir)
   FetchContent_MakeAvailable(${projectName})
 endfunction(CloneRepository)
 
-CloneRepository("https://github.com/jtv/libpqxx" "master" "libpqxx" "source/utility/libpqxx")
-
-# libpqxx requires pre-building its library
+# Please note that libpqxx requires pre-building its library
 # you cannot rely on including header files globally
-# you must link with target_link_libraries in EVERY module that requires it.
-add_subdirectory(source/utility/libpqxx build-pqxx)
+# you must link with target_link_libraries(.. pqxx) in EVERY module that requires it.
+CloneRepository("https://github.com/jtv/libpqxx" "master" "libpqxx" "build-pqxx")
+
 
 add_subdirectory(source/utility/lexy)
 add_subdirectory(source/utility/fmt-9.1.0)
