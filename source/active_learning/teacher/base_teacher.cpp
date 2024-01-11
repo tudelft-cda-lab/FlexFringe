@@ -64,3 +64,15 @@ const std::vector<float> base_teacher::get_weigth_distribution(const active_lear
                                                                inputdata& id) {
     return sul->get_weight_distribution(access_seq, id);
 }
+
+/**
+ * @brief Get the weigth state pair object
+ * 
+ * @param access_seq 
+ * @param id 
+ * @return const std::pair< std::vector<float>, std::vector<float> > 
+ */
+const std::pair< std::vector<float>, std::vector<float> > base_teacher::get_weigth_state_pair(const active_learning_namespace::pref_suf_t& access_seq,
+                                                     inputdata& id) {
+    return sul->get_weights_and_state(access_seq, id);
+}

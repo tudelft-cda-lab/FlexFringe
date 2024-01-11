@@ -23,6 +23,9 @@ using namespace std;
  * @brief Normal BFS through the alphabet, testing for size. I implemented this using two stacks. This requires us
  * lots of copying. An alternative method would be to instead implement recursively, which comes at the cost of the
  * heap, but that does not matter much if we assume the max depth to be not too extreme.
+ * 
+ * TODO: We can rewrite this function memory efficient by only storing indices of the current strings, rather than 
+ * storing the prefixes.
  *
  * @param sul The SUl.
  * @param id The inputdata.

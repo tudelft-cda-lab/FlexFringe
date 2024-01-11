@@ -39,10 +39,10 @@ class weighted_lsharp_algorithm : public lsharp_algorithm {
                                std::unique_ptr<state_merger>& merger, const refinement_list refs,
                                const vector<int>& alphabet) const;
 
-    __attribute__((always_inline)) inline std::unordered_set<apta_node*>
+    inline std::unordered_set<apta_node*>
     extend_fringe(std::unique_ptr<state_merger>& merger, apta_node* n, std::unique_ptr<apta>& the_apta, inputdata& id,
                   const vector<int>& alphabet) const;
-    inline void query_weights(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id,
+    virtual void query_weights(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id,
                               const std::vector<int>& alphabet,
                               std::optional<active_learning_namespace::pref_suf_t> seq_opt) const;
 

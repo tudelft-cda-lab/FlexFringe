@@ -16,6 +16,8 @@
 #include <string>
 #include <unordered_set>
 
+#include <iostream>
+
 using namespace std;
 
 bool nn_weighted_output_sul::is_member(const std::vector<int>& query_trace) const { return true; }
@@ -111,7 +113,6 @@ const std::vector<float> nn_weighted_output_sul::get_weight_distribution(const s
                                                                          inputdata& id) const {
     static PyObject* p_start_symbol = START_SYMBOL == -1 ? nullptr : PyLong_FromLong(START_SYMBOL);
     static PyObject* p_end_symbol = END_SYMBOL == -1 ? nullptr : PyLong_FromLong(END_SYMBOL);
-    ;
 
     PyObject* p_list = p_start_symbol == nullptr ? PyList_New(query_trace.size()) : PyList_New(query_trace.size() + 1);
     int i = p_start_symbol == nullptr ? 0 : 1;
@@ -133,10 +134,67 @@ const std::vector<float> nn_weighted_output_sul::get_weight_distribution(const s
     static const int RESPONSE_SIZE = static_cast<int>(PyList_Size(p_weights));
     vector<float> res(RESPONSE_SIZE);
     for (int i = 0; i < RESPONSE_SIZE; ++i) {
-        PyObject* resp = PyList_GetItem(p_weights, static_cast<Py_ssize_t>(i));
+        PyObject* resp = PyList_GET_ITEM(p_weights, static_cast<Py_ssize_t>(i));
         res[i] = static_cast<float>(PyFloat_AsDouble(resp));
     }
+
     return res;
+}
+
+const std::pair< std::vector<float>, std::vector<float> > 
+nn_weighted_output_sul::get_weights_and_state(const std::vector<int>& query_trace, inputdata& id) const {
+    static PyObject* p_start_symbol = START_SYMBOL == -1 ? nullptr : PyLong_FromLong(START_SYMBOL);
+    static PyObject* p_end_symbol = END_SYMBOL == -1 ? nullptr : PyLong_FromLong(END_SYMBOL);
+
+    PyObject* p_list = p_start_symbol == nullptr ? PyList_New(query_trace.size()) : PyList_New(query_trace.size() + 1);
+    int i = p_start_symbol == nullptr ? 0 : 1;
+    for (const int flexfringe_symbol : query_trace) {
+        int mapped_symbol = stoi(id.get_symbol(flexfringe_symbol));
+        PyObject* p_symbol = PyLong_FromLong(mapped_symbol);
+        PyList_SetItem(p_list, static_cast<Py_ssize_t>(i), p_symbol);
+        ++i;
+    }
+
+    if (p_start_symbol != nullptr) {
+        PyList_SetItem(p_list, static_cast<Py_ssize_t>(0), p_start_symbol);
+    }
+
+    cout << "calling now" << endl;
+    PyObject* p_result = PyObject_CallOneArg(query_func, p_list);
+    if (!PyTuple_Check(p_result))
+        throw std::runtime_error("Something went wrong, the Network did not return a tuple. What happened?");
+    assert(static_cast<int>(PyTuple_Size(p_result)) == 2);
+
+    PyObject* p_weights = PyTuple_GET_ITEM(p_result, static_cast<Py_ssize_t>(0));
+    PyObject* p_state = PyTuple_GET_ITEM(p_result, static_cast<Py_ssize_t>(1));
+
+    static const int STATE_SIZE = static_cast<int>(PyList_Size(p_state));    
+    vector<float> state(STATE_SIZE);
+    for (int i = 0; i < STATE_SIZE; ++i) {
+        PyObject* s = PyList_GET_ITEM(p_state, static_cast<Py_ssize_t>(i));
+        state[i] = static_cast<float>(PyFloat_AsDouble(s));
+    }
+
+    if(PyList_Check(p_weights)){
+        // in this branch we get a weight distribution back
+        static const int RESPONSE_SIZE = static_cast<int>(PyList_Size(p_weights));
+        vector<float> res(RESPONSE_SIZE);
+        for (int i = 0; i < RESPONSE_SIZE; ++i) {
+            PyObject* resp = PyList_GET_ITEM(p_weights, static_cast<Py_ssize_t>(i));
+            res[i] = static_cast<float>(PyFloat_AsDouble(resp));
+        }
+        return make_pair(res, state);
+    }
+    else if(PyFloat_Check(p_weights)){
+        // binary acceptor model
+        vector<float> res(1);
+        res[0] = static_cast<float>(PyFloat_AsDouble(p_weights));
+        return make_pair(res, state);
+    }
+    else{
+        throw std::runtime_error("Something went wrong, the Network neither returned a float (binary acceptor model\
+        , nor did it return a list (language model)). What happened?");
+    }
 }
 
 /**

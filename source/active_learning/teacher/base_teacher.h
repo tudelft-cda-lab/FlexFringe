@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <vector>
+#include <utility>
 
 class base_teacher {
   protected:
@@ -34,6 +35,8 @@ class base_teacher {
     // const float get_symbol_probability(const active_learning_namespace::pref_suf_t& access_seq, const int symbol,
     // inputdata& id);
     const std::vector<float> get_weigth_distribution(const active_learning_namespace::pref_suf_t& access_seq,
+                                                     inputdata& id);
+    const std::pair< std::vector<float>, std::vector<float> > get_weigth_state_pair(const active_learning_namespace::pref_suf_t& access_seq,
                                                      inputdata& id);
 
     base_teacher(std::shared_ptr<sul_base>& sul) : sul(sul){};

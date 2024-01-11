@@ -62,13 +62,12 @@ void nn_sul_base::pre(inputdata& id) {
     stringstream cmd;
     cmd << "sys.path.append( os.path.join(os.getcwd(), \"";
     cmd << PYTHON_SCRIPT_PATH;
-    cmd << "\") )";
-
+    cmd << "\") )\n";
+    cmd << "sys.path.append( os.path.join(os.getcwd(), \"source/active_learning/system_under_learning/python/util\") )";
     PyRun_SimpleString(cmd.str().c_str());
+    // for debugging
     // PyRun_SimpleString("print('Script uses the following interpreter: ', sys.executable)\n");
-    // PyRun_SimpleString("print(sys.path)"); // for debugging
-
-    // PyRun_SimpleString("import mlflow");
+    //PyRun_SimpleString("print(sys.path)"); 
 
     // load the module
     PyObject* p_name = PyUnicode_FromString(PYTHON_MODULE_NAME.c_str());
