@@ -15,14 +15,14 @@ option(COMPILE_DOCS "This is settable from the command line" OFF)
 #set(CMAKE_MESSAGE_LOG_LEVEL WARNING)
 
 include(FetchContent)
-function(CloneRepository repositoryURL branchName projectName sourceDir)
+function(CloneRepository repositoryURL gitTag projectName sourceDir)
   #Commands are left empty so that we only checkout the source and no not perform any kind of build
   message("Starting to clone ${projectName} into ${sourceDir}")
   FetchContent_Declare(
     "${projectName}"
     GIT_REPOSITORY "${repositoryURL}"
     SOURCE_DIR "${sourceDir}"
-    GIT_TAG "origin/${branchName}"
+    GIT_TAG "${gitTag}"
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
@@ -33,7 +33,8 @@ endfunction(CloneRepository)
 # Please note that libpqxx requires pre-building its library
 # you cannot rely on including header files globally
 # you must link with target_link_libraries(.. pqxx) in EVERY module that requires it.
-CloneRepository("https://github.com/jtv/libpqxx" "master" "libpqxx" "build-pqxx")
+# git tag from jan 1 2024.
+CloneRepository("https://github.com/jtv/libpqxx" "d8b6b9977a0c016fc168186b5fcf695d1af28a52" "libpqxx" "build-pqxx")
 
 
 add_subdirectory(source/utility/lexy)
