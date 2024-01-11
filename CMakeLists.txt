@@ -14,13 +14,31 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 option(COMPILE_DOCS "This is settable from the command line" OFF)
 #set(CMAKE_MESSAGE_LOG_LEVEL WARNING)
 
-add_subdirectory(source/utility/lexy)
-add_subdirectory(source/utility/fmt-9.1.0)
+include(FetchContent)
+function(CloneRepository repositoryURL branchName projectName sourceDir)
+  #Commands are left empty so that we only checkout the source and no not perform any kind of build
+  message("Starting to clone ${projectName} into ${sourceDir}")
+  FetchContent_Declare(
+    "${projectName}"
+    GIT_REPOSITORY "${repositoryURL}"
+    SOURCE_DIR "${sourceDir}"
+    GIT_TAG "origin/${branchName}"
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+  )
+  FetchContent_MakeAvailable(${projectName})
+endfunction(CloneRepository)
+
+CloneRepository("https://github.com/jtv/libpqxx" "master" "libpqxx" "source/utility/libpqxx")
 
 # libpqxx requires pre-building its library
 # you cannot rely on including header files globally
 # you must link with target_link_libraries in EVERY module that requires it.
 add_subdirectory(source/utility/libpqxx build-pqxx)
+
+add_subdirectory(source/utility/lexy)
+add_subdirectory(source/utility/fmt-9.1.0)
 
 if (MSVC)
     add_compile_options("/W4" "$<$<CONFIG:RELEASE>:/O2>")
