@@ -38,15 +38,7 @@ class Encoder(nn.Module):
         super().__init__()
         
         self.mha = nn.MultiheadAttention(embed_dim=embedding_dim, num_heads=n_heads)
-        self.ln1 = nn.LayerNorm(embedding_dim)#, eps=1e-12, elementwise_affine=True)
-        self.ln2 = nn.LayerNorm(embedding_dim)#, eps=1e-12, elementwise_affine=True)
-
-        # Feed-forward neural network
-        self.feed_forward = nn.Sequential(
-            nn.Linear(embedding_dim, embedding_dim),
-            nn.ReLU(),
-            nn.Linear(embedding_dim, embedding_dim)
-        )
+        self.ln = nn.LayerNorm(embedding_dim, eps=1e-12, elementwise_affine=True)
         
     def forward(self, x: torch.Tensor, is_causal: bool=False):
         sequence_len = list(x.size())[0]
@@ -58,10 +50,7 @@ class Encoder(nn.Module):
             attn_output, attn_output_weights = self.mha(query=x, key=x, value=x)
 
         x = x + attn_output # skip-connection
-        x = self.ln1(x)
-        
-        x = self.feed_forward(x) + x
-        x = self.ln2(x)
+        x = self.ln(x)
                 
         return x, attn_output, attn_output_weights
 
@@ -71,18 +60,9 @@ class Decoder(nn.Module):
         super().__init__()
         
         self.masked_mha = nn.MultiheadAttention(embed_dim=embedding_dim, num_heads=n_heads)
-        self.ln1 = nn.LayerNorm(embedding_dim)#, eps=1e-12, elementwise_affine=True)
-        self.ln2 = nn.LayerNorm(embedding_dim)#, eps=1e-12, elementwise_affine=True)
-        self.ln3 = nn.LayerNorm(embedding_dim)#, eps=1e-12, elementwise_affine=True)
+        self.ln = nn.LayerNorm(embedding_dim, eps=1e-12, elementwise_affine=True)
 
         self.mha = nn.MultiheadAttention(embed_dim=embedding_dim, num_heads=n_heads)
-
-        # Feed-forward neural network
-        self.feed_forward = nn.Sequential(
-            nn.Linear(embedding_dim, embedding_dim),
-            nn.ReLU(),
-            nn.Linear(embedding_dim, embedding_dim)
-        )
         
         
     def forward(self, x: torch.Tensor, query: torch.Tensor=None, key: torch.Tensor=None):
@@ -92,15 +72,15 @@ class Decoder(nn.Module):
                                                 attn_mask=nn.Transformer.generate_square_subsequent_mask(sequence_len))#, is_causal=True)
 
         x = x + attn_output # skip-connection
-        x = self.ln1(x)
+        x = self.ln(x)
         
         if query is None or key is None: # only for debugging
             attn_output, attn_output_weights = self.mha(query=x, key=x, value=x)
         else:
             attn_output, attn_output_weights = self.mha(query=query, key=key, value=x)
         
-        x = self.ln2(x + attn_output) # skip-connection
-        x = self.ln3(self.feed_forward(x) + x)
+        x = x + attn_output # skip-connection
+        x = self.ln(x)
         
         return x, attn_output, attn_output_weights
 

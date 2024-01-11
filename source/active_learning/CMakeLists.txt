@@ -33,6 +33,8 @@ add_library(ActiveLearning STATIC
             algorithms/probabilistic_lsharp.cpp
             algorithms/weighted_lsharp.h
             algorithms/weighted_lsharp.cpp
+            algorithms/transformer_lsharp.h
+            algorithms/transformer_lsharp.cpp
 
             databases/database_base.h
             databases/database_headers.h

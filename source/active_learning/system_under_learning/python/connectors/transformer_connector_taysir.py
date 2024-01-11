@@ -12,7 +12,6 @@ import torch
 
 model = None
 
-
 def load_nn_model(path_to_model: str):
   """Loads a model and writes it into the global model-variable
 

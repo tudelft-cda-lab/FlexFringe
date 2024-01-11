@@ -40,3 +40,9 @@ const vector<float> sul_base::get_weight_distribution(const std::vector<int>& qu
         "This SUL does not support inference of the weight distribution. Please change the program settings. \
   Aborting program.");
 };
+
+const std::pair< std::vector<float>, std::vector<float> > sul_base::get_weights_and_state(const std::vector<int>& query_trace, inputdata& id) const{
+    throw logic_error(
+        "This SUL does not support inference of the weight distribution. Please change the program settings. \
+  Aborting program.");  
+}

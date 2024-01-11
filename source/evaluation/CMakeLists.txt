@@ -36,4 +36,6 @@ add_library(Evaluation STATIC
             string_probability_estimator.h
             string_probability_estimator.cpp
             weight_comparator.h
-            weight_comparator.cpp)
+            weight_comparator.cpp
+            weight_state_comparator.h
+            weight_state_comparator.cpp)
