@@ -40,7 +40,7 @@ void sqldb::create_table(bool drop) {
     pqxx::work tx{conn};
     if (drop)
         tx.exec0(fmt::format("DROP TABLE IF EXISTS {0};", table_name));
-    tx.exec0(fmt::format("CREATE TABLE IF NOT EXISTS {0} ({1} text NOT NULL, {2} integer NOT NULL);"
+    tx.exec0(fmt::format("CREATE TABLE IF NOT EXISTS {0} ({1} text UNIQUE NOT NULL, {2} integer NOT NULL);"
                          "CREATE INDEX IF NOT EXISTS {0}_{1}_spgist ON {0} USING spgist ({1} text_ops);",
                          table_name, TRACE_NAME, RES_NAME));
     tx.commit();
@@ -148,9 +148,14 @@ void sqldb::load_traces(inputdata& id) {
     pqxx::work tx = pqxx::work(conn);
     pqxx::stream_to stream = pqxx::stream_to::raw_table(tx, table_name, TRACE_NAME + ", " + RES_NAME);
 
+    std::set<std::string> inserted;
+
     for (auto* tr : id) {
         auto trace = vec2str(tr->get_input_sequence());
         auto res = tr->get_type();
+        if (inserted.contains(trace))
+            continue;
+        inserted.insert(trace);
         stream << std::tuple(trace, res);
     }
 
@@ -202,12 +207,17 @@ int sqldb::query_trace(const std::string& trace) {
 }
 
 int sqldb::query_trace_maybe(const std::string& trace) {
-    auto query =
-        fmt::format("SELECT COALESCE({0}, -1) FROM {1} WHERE {2} = '{3}'", RES_NAME, table_name, TRACE_NAME, trace);
-    pqxx::work tx{conn};
-    auto val = tx.query_value<int>(query);
-    tx.commit();
-    return val;
+    auto query = fmt::format("SELECT COALESCE( (SELECT {0} FROM {1} WHERE {2} = '{3}'), -1)", RES_NAME, table_name,
+                             TRACE_NAME, trace);
+    try {
+        pqxx::work tx{conn};
+        auto val = tx.query_value<int>(query);
+        tx.commit();
+        return val;
+    } catch (const pqxx::unexpected_rows& e) {
+        std::string exc{e.what()};
+        throw std::runtime_error(exc + " Query: " + query);
+    }
 }
 
 bool sqldb::is_member(const std::string& trace) {
