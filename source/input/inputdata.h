@@ -96,7 +96,6 @@ public:
 
     void add_type(const std::string& t);
     const std::map<std::string, int>& get_r_types() const;
-    const std::vector<int> get_types() const;
 
     /* attribute properties:
      * splittable: will be used to infer guards

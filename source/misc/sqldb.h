@@ -21,8 +21,8 @@ class sqldb {
     const std::string connection_string;
     pqxx::connection conn;
 
-    std::vector<std::string> get_vec_from_map(std::map<std::string, int> mapping);
-    std::string get_sqlarr_from_vec(std::vector<std::string> vec);
+    std::vector<std::string> get_vec_from_map(const std::map<std::string, int>& mapping);
+    std::string get_sqlarr_from_vec(const std::vector<std::string>& vec);
     const std::string table_name;
 
   public:
@@ -36,8 +36,8 @@ class sqldb {
 
     char num2str(int num);
     int str2num(char str);
-    std::vector<int> str2vec(std::string str);
-    std::string vec2str(std::vector<int> vec);
+    std::vector<int> str2vec(const std::string& str);
+    std::string vec2str(const std::vector<int>& vec);
 
     const std::string get_table_name() { return table_name; };
     std::vector<std::string> get_alphabet();
