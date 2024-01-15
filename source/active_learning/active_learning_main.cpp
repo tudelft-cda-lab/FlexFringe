@@ -15,6 +15,7 @@
 #include "lsharp.h"
 #include "lstar.h"
 #include "probabilistic_lsharp.h"
+#include "probabilistic_lsharp_v2.h"
 #include "weighted_lsharp.h"
 #include "transformer_lsharp.h"
 
@@ -134,7 +135,7 @@ void active_learning_main_func::run_active_learning() {
     } else if (ACTIVE_LEARNING_ALGORITHM == "p_l_sharp") {
         STORE_ACCESS_STRINGS = true;
         // algorithm = unique_ptr<algorithm_base>(new pls_baseline(sul, teacher, oracle));
-        algorithm = unique_ptr<algorithm_base>(new probabilistic_lsharp_algorithm(sul, teacher, oracle));
+        algorithm = unique_ptr<algorithm_base>(new probabilistic_lsharp_v2_algorithm(sul, teacher, oracle));
     } else if (ACTIVE_LEARNING_ALGORITHM == "weighted_l_sharp") {
         STORE_ACCESS_STRINGS = true;
         algorithm = unique_ptr<algorithm_base>(new weighted_lsharp_algorithm(sul, teacher, oracle));
