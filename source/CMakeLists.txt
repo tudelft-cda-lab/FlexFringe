@@ -94,9 +94,6 @@ add_library(Source STATIC
         main_helpers.h # TODO: do we need these two?
         main_helpers.cpp
 
-
-        misc/csvrow.h
-        misc/csvrow.cpp
         misc/printutil.h
         misc/utils.h
         misc/sqldb.h
