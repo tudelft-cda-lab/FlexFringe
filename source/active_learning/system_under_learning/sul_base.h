@@ -41,13 +41,6 @@ class sul_base {
      * @brief Initialize the sul class.
      */
     virtual void pre(inputdata& id) = 0;
-
-    /**
-     * @brief Return the type of the query with maybe unknown (-1).
-     */
-    virtual const int query_trace_maybe(const std::vector<int>& query_trace, inputdata& id) const;
-
-    virtual sqldb& get_sqldb();
 };
 
 #endif
