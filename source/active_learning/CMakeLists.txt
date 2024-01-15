@@ -31,6 +31,8 @@ add_library(ActiveLearning STATIC
             algorithms/lsharp.cpp
             algorithms/probabilistic_lsharp.h
             algorithms/probabilistic_lsharp.cpp
+            algorithms/probabilistic_lsharp_v2.h
+            algorithms/probabilistic_lsharp_v2.cpp
             algorithms/weighted_lsharp.h
             algorithms/weighted_lsharp.cpp
             algorithms/transformer_lsharp.h
