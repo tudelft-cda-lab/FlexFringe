@@ -53,7 +53,7 @@ class sqldb {
      */
     void load_traces(inputdata& id);
     void add_row(const std::string& trace, int res);
-    void copy_data(const std::string& file_name, const std::string& delimiter = "\t");
+    void copy_data(const std::string& file_name, char delimiter = '\t');
     void tester(const std::string& val, const std::function<void(std::string)>& func);
 
     /**

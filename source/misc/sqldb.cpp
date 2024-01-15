@@ -1,5 +1,5 @@
 #include "sqldb.h"
-#include "csvrow.h"
+#include "csv.hpp"
 #include "input/inputdata.h"
 #include "loguru.hpp"
 #include "parameters.h"
@@ -164,12 +164,17 @@ void sqldb::load_traces(inputdata& id) {
     LOG_S(INFO) << "Loaded traces";
 }
 
-void sqldb::copy_data(const std::string& file_name, const std::string& delimiter) {
-    std::ifstream file(file_name);
-    csvrow row(delimiter);
+void sqldb::copy_data(const std::string& file_name, char delimiter) {
+    csv::CSVFormat format;
+    format.delimiter(delimiter);
+    csv::CSVReader reader(file_name, format);
     pqxx::work tx = pqxx::work(conn);
     pqxx::stream_to stream = pqxx::stream_to::raw_table(tx, table_name, TRACE_NAME + ", " + RES_NAME);
-    while (file >> row) { stream << std::tuple(row[0], row[1]); }
+    for (csv::CSVRow& row : reader) {
+        std::vector<std::string> data;
+        for (csv::CSVField field : row) { data.push_back(field.get<>()); }
+        stream << std::tuple(data[0], data[1]);
+    }
     stream.complete();
     tx.commit();
 }
