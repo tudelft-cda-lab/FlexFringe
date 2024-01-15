@@ -54,13 +54,13 @@ void sqldb::create_meta_table(bool drop) {
     tx.commit();
 }
 
-std::vector<std::string> sqldb::get_vec_from_map(std::map<std::string, int> mapping) {
+std::vector<std::string> sqldb::get_vec_from_map(const std::map<std::string, int>& mapping) {
     std::vector<std::string> res(mapping.size());
     for (auto const map : mapping) { res[map.second] = map.first; }
     return res;
 }
 
-std::string sqldb::get_sqlarr_from_vec(std::vector<std::string> vec) {
+std::string sqldb::get_sqlarr_from_vec(const std::vector<std::string>& vec) {
     std::stringstream ss;
     ss << "ARRAY['";
     for (size_t i = 0; i < vec.size(); i++) {
@@ -93,12 +93,12 @@ int sqldb::str2num(char str) {
     return x - 65;
 }
 
-std::string sqldb::vec2str(std::vector<int> vec) {
+std::string sqldb::vec2str(const std::vector<int>& vec) {
     std::stringstream ss;
     for (auto x : vec) { ss << num2str(x); }
     return ss.str();
 }
-std::vector<int> sqldb::str2vec(std::string str) {
+std::vector<int> sqldb::str2vec(const std::string& str) {
     std::vector<int> vec;
     for (char c : str) { vec.push_back(str2num(c)); }
     return vec;

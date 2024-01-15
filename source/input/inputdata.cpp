@@ -146,18 +146,6 @@ const std::map<std::string, int>& inputdata::get_r_types() const {
     return this->r_types;
 }
 
-const vector<int> inputdata::get_types() const {
-    vector<int> res(r_types.size());
-    int idx = 0;
-    for(const auto& mapping: r_types){
-        res[idx] = mapping.second;
-        ++idx;
-    }
-    return res;
-}
-
-
-
 int inputdata::get_reverse_type(std::string a) {
     return r_types[a];
 }
