@@ -12,6 +12,7 @@
 #ifndef _SUL_BASE_H_
 #define _SUL_BASE_H_
 
+#include "misc/sqldb.h"
 #include "source/input/inputdata.h"
 
 #include <fstream>
@@ -39,6 +40,9 @@ class sul_base {
   public:
     sul_base() = default; // abstract anyway
 
+    /**
+     * @brief Initialize the sul class.
+     */
     virtual void pre(inputdata& id) = 0;
 };
 
