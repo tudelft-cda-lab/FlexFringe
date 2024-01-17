@@ -141,3 +141,7 @@ bool DO_ACTIVE_LEARNING = false;
 string REJECTING_LABEL = "0";
 int START_SYMBOL = -1;
 int END_SYMBOL = -1;
+
+string POSTGRESQL_CONNSTRING = "";
+string POSTGRESQL_TBLNAME = "";
+bool POSTGRESQL_DROPTBLS = true;

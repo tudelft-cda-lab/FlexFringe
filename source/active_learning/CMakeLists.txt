@@ -33,6 +33,8 @@ add_library(ActiveLearning STATIC
             algorithms/probabilistic_lsharp.cpp
             algorithms/weighted_lsharp.h
             algorithms/weighted_lsharp.cpp
+            algorithms/ldot.h
+            algorithms/ldot.cpp
             algorithms/transformer_lsharp.h
             algorithms/transformer_lsharp.cpp
 
@@ -62,7 +64,7 @@ add_library(ActiveLearning STATIC
             memory/observation_table.h
             memory/observation_table.cpp
             memory/adaptive_distinguishing_sequences.h
-            memory/adaptive_distinguishing_sequences.cpp 
+            memory/adaptive_distinguishing_sequences.cpp
 
             system_under_learning/sul_base.h
             system_under_learning/sul_base.cpp
@@ -72,12 +74,15 @@ add_library(ActiveLearning STATIC
             system_under_learning/dfa_sul.cpp
             system_under_learning/database_sul.h
             system_under_learning/database_sul.cpp
-            
+            system_under_learning/sqldb_sul.h
+            system_under_learning/sqldb_sul.cpp
+
+
             system_under_learning/nn_sul_base.h
             system_under_learning/nn_sul_base.cpp
             system_under_learning/nn_weighted_output_sul.h
             system_under_learning/nn_weighted_output_sul.cpp
-            
+
             system_under_learning/benchmark_parsers/benchmarkparser_base.h
             system_under_learning/benchmark_parsers/benchmarkparser_base.cpp
             system_under_learning/benchmark_parsers/benchmark_dfaparser.h
@@ -87,4 +92,4 @@ add_library(ActiveLearning STATIC
             teacher/base_teacher.cpp
 )
 
-target_link_libraries(ActiveLearning ${PYTHON_LIBRARIES})
+target_link_libraries(ActiveLearning ${PYTHON_LIBRARIES} pqxx)

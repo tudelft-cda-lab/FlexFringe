@@ -90,9 +90,14 @@ add_library(Source STATIC
         input/streaming.h
         input/parsers/reader_strategy.cpp
         input/parsers/reader_strategy.h
-        
+
         main_helpers.h # TODO: do we need these two?
         main_helpers.cpp
+
+        misc/printutil.h
+        misc/utils.h
+        misc/sqldb.h
+        misc/sqldb.cpp
         )
 
 ## create CMakeLists.txt in evaluation directory
@@ -110,3 +115,7 @@ file(APPEND "${cmakelists_eval}" ")")
 add_subdirectory(evaluation)
 add_subdirectory(utility)
 add_subdirectory(active_learning)
+
+# Please note that pqxx should be linked to every module that depends on it.
+# include_directories does not work.
+target_link_libraries(Source pqxx)
