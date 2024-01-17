@@ -34,6 +34,8 @@ class nn_weighted_output_sul : public nn_sul_base {
     virtual const double get_string_probability(const std::vector<int>& query_trace, inputdata& id) const override;
     virtual const std::vector<float> get_weight_distribution(const std::vector<int>& query_trace,
                                                              inputdata& id) const override;
+    virtual const std::pair< std::vector<float>, std::vector<float> > get_weights_and_state(const std::vector<int>& query_trace, 
+                                                                                            inputdata& id) const override;
 
   public:
     nn_weighted_output_sul() : nn_sul_base(){};

@@ -18,6 +18,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <vector>
+#include <utility>
 
 class sul_base {
     friend class base_teacher;
@@ -31,9 +32,11 @@ class sul_base {
     virtual bool is_member(const std::vector<int>& query_trace) const = 0;
     virtual const int query_trace(const std::vector<int>& query_trace, inputdata& id) const = 0;
 
+    // TODO: can we simplify all of those with some sort of template?
     virtual const double get_string_probability(const std::vector<int>& query_trace, inputdata& id) const;
     virtual const std::vector<float> get_weight_distribution(const std::vector<int>& query_trace, inputdata& id) const;
-
+    virtual const std::pair< std::vector<float>, std::vector<float> > get_weights_and_state(const std::vector<int>& query_trace, inputdata& id) const;
+  
   public:
     sul_base() = default; // abstract anyway
 
