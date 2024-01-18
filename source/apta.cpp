@@ -98,10 +98,10 @@ void apta::print_dot(iostream& output){
             output << inputdata::get_symbol(it->first) << " ";
             n->data->print_transition_label(output, it->first);
             for(auto & min_attribute_value : g->min_attribute_values){
-                output << "\n" << inputdata::get_attribute(min_attribute_value.first) << " >= " << min_attribute_value.second;
+                output << "\\n" << inputdata::get_attribute(min_attribute_value.first) << " >= " << min_attribute_value.second;
             }
             for(auto & max_attribute_value : g->max_attribute_values){
-                output << "\n" << inputdata::get_attribute(max_attribute_value.first) << " < " << max_attribute_value.second;
+                output << "\\n" << inputdata::get_attribute(max_attribute_value.first) << " < " << max_attribute_value.second;
             }
             output << "\" ";
             output << ", penwidth=" << log(1 + n->size);
