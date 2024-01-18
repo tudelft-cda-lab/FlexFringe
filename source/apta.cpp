@@ -38,11 +38,6 @@ apta::apta(){
 }
 
 void apta::print_dot(iostream& output){
-    int ncounter = 0;
-    /*for(APTA_iterator Ait = APTA_iterator(root); *Ait != 0; ++Ait){
-        (*Ait)->number = ncounter++;
-    }*/
-
     output << "digraph DFA {\n";
     output << "\t" << root->find()->number << " [label=\"root\" shape=box];\n";
     output << "\t\tI -> " << root->find()->number << ";\n";
@@ -67,13 +62,14 @@ void apta::print_dot(iostream& output){
 
         output << "\t" << n->number << " [ label=\"";
         if(DEBUGGING){
-            output << n << ":#" << "\n";
-            output << "rep#" << n->representative << "\n";
+            output << n << ":#" << "\\n";
+            output << "rep#" << n->representative << "\\n";
         }
-        output << n->number << " #" << n->size << "\" ";
+        output << n->number << " #" << n->size << " ";
         n->data->print_state_label(output);
-        //output << "\" ";
         n->data->print_state_style(output);
+        output << "\" ";
+
         if (n->is_red()) output << ", style=filled, fillcolor=\"firebrick1\"";
         else if (n->is_blue()) output << ", style=filled, fillcolor=\"dodgerblue1\"";
         else if (n->is_white()) output << ", style=filled, fillcolor=\"ghostwhite\"";
@@ -99,18 +95,14 @@ void apta::print_dot(iostream& output){
             }
 
             output << "\t\t" << n->number << " -> " << child->number << " [label=\"";
-
-            output << inputdata::get_symbol(it->first);
-
+            output << inputdata::get_symbol(it->first) << " ";
             n->data->print_transition_label(output, it->first);
-            
             for(auto & min_attribute_value : g->min_attribute_values){
                 output << "\n" << inputdata::get_attribute(min_attribute_value.first) << " >= " << min_attribute_value.second;
             }
             for(auto & max_attribute_value : g->max_attribute_values){
                 output << "\n" << inputdata::get_attribute(max_attribute_value.first) << " < " << max_attribute_value.second;
             }
-
             output << "\" ";
             output << ", penwidth=" << log(1 + n->size);
             output << " ];\n";
@@ -169,10 +161,6 @@ void apta::print_json(iostream& output){
     set_json_depths();
     int count = 0;
     root->depth = 0;
-    for(merged_APTA_iterator Ait = merged_APTA_iterator(root); *Ait != nullptr; ++Ait){
-        apta_node* n = *Ait;
-        n->number = count++;
-    }
 
     output << "{\n";
     output << "\t\"types\" : [\n";
@@ -434,7 +422,8 @@ void apta_node::initialize(apta_node* n){
     representative_of = nullptr;
     tails_head = nullptr;
     access_trace = nullptr;
-    number = -1;
+    // keep the old node number
+    // number = -1;
     size = 0;
     final = 0;
     depth = 0;
