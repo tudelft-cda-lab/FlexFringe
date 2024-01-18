@@ -1055,6 +1055,12 @@ void state_merger::print_dot(const string& file_name)
     output1.close();
 }
 
+void state_merger::print_dot(ostream& output)
+{
+    todot();
+    output << dot_output;
+}
+
 void state_merger::print_json(const string& file_name)
 {
     tojson();
