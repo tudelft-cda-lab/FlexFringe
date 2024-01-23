@@ -121,6 +121,7 @@ public:
     bool split_init(apta_node *red, tail *t, int attr, int depth, bool evaluate, bool perform, bool test);
 
     void print_dot(const string& file_name);
+    void print_dot(ostream& output);
 
     void print_json(const string& file_name);
 

@@ -9,6 +9,8 @@
 #include "input/inputdatalocator.h"
 #include "input/parsers/abbadingoparser.h"
 
+using Catch::Matchers::Equals;
+
 //TODO: refactor: These should probably be taken out of main.cpp
 evaluation_function* get_evaluation();
 void print_current_automaton(state_merger*, const string&, const string&);
@@ -101,4 +103,71 @@ TEST_CASE( "Smoke test: abbadingo input data with empty traces", "[smoke]" ) {
     id.read(&parser);
 
     REQUIRE(id.get_num_sequences() == 20000);
+}
+
+// This tests verifies that the dot file output works as expected
+// It will need updating whenever the dot output changes
+// TODO: Figure out a way to check if the dot output is valid without running graphviz
+TEST_CASE( "Smoke test: dot output", "[smoke]" ) {
+    HEURISTIC_NAME = "evidence_driven";
+    DATA_NAME = "edsm_data";
+
+    evaluation_function *eval = get_evaluation();
+    REQUIRE(eval != nullptr);
+
+    std::string input = "12 4\n"
+                        "1 3 a b c\n"
+                        "1 3 a b d\n"
+                        "0 2 a b\n"
+                        "0 2 a a\n"
+                        "0 2 b b\n"
+                        "0 1 c\n"
+                        "0 2 c c\n"
+                        "0 1 d\n"
+                        "0 2 d d\n"
+                        "0 1 a\n"
+                        "0 2 b c\n"
+                        "0 2 b d\n";
+    std::istringstream input_stream(input);
+
+    auto* id = new inputdata();
+    id->read_abbadingo_header(input_stream);
+
+    apta* the_apta = new apta();
+    auto* merger = new state_merger(id, eval, the_apta);
+    the_apta->set_context(merger);
+    eval->set_context(merger);
+
+    id->read_abbadingo_file(input_stream);
+    eval->initialize_before_adding_traces();
+    id->add_traces_to_apta(the_apta);
+    eval->initialize_after_adding_traces(merger);
+
+    greedy_run(merger);
+
+    std::stringstream dot_stream;
+    merger->print_dot(dot_stream);
+    std::string actual_output = dot_stream.str();
+
+    std::string expected_output = "// produced with flexfringe // \n"
+                                  "digraph DFA {\n"
+                                  "\t-1 [label=\"root\" shape=box];\n"
+                                  "\t\tI -> -1;\n"
+                                  "\t-1 [ label=\"-1 #25 fin: 0:8 , \n"
+                                  " path: 1:2 , 0:15 , \" , style=filled, fillcolor=\"firebrick1\", width=1.44882, height=1.44882, penwidth=3.2581];\n"
+                                  "\t\t-1 -> 1 [label=\"a \" , penwidth=3.2581 ];\n"
+                                  "\t\t-1 -> -1 [label=\"b \" , penwidth=3.2581 ];\n"
+                                  "\t\t-1 -> -1 [label=\"c \" , penwidth=3.2581 ];\n"
+                                  "\t\t-1 -> -1 [label=\"d \" , penwidth=3.2581 ];\n"
+                                  "\t1 [ label=\"1 #8 fin: 0:2 , \n"
+                                  " path: 1:4 , 0:2 , \" , style=filled, fillcolor=\"firebrick1\", width=1.16228, height=1.16228, penwidth=2.19722];\n"
+                                  "\t\t1 -> -1 [label=\"a \" , penwidth=2.19722 ];\n"
+                                  "\t\t1 -> 1 [label=\"b \" , penwidth=2.19722 ];\n"
+                                  "\t\t1 -> 3 [label=\"c \" , penwidth=2.19722 ];\n"
+                                  "\t\t1 -> 3 [label=\"d \" , penwidth=2.19722 ];\n"
+                                  "\t3 [ label=\"3 #2 fin: 1:2 , \n"
+                                  " path: \" , style=filled, fillcolor=\"firebrick1\", width=0.741276, height=0.741276, penwidth=1.09861];\n"
+                                  "}\n";
+
+    REQUIRE_THAT(actual_output, Equals(expected_output));
 }
