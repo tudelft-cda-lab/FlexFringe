@@ -130,17 +130,18 @@ TEST_CASE( "Smoke test: dot output", "[smoke]" ) {
                         "0 2 b d\n";
     std::istringstream input_stream(input);
 
-    auto* id = new inputdata();
-    id->read_abbadingo_header(input_stream);
+    inputdata id;
+    inputdata_locator::provide(&id);
+    auto parser = abbadingoparser(input_stream);
+    id.read(&parser);
 
     apta* the_apta = new apta();
-    auto* merger = new state_merger(id, eval, the_apta);
+    auto* merger = new state_merger(&id, eval, the_apta);
     the_apta->set_context(merger);
     eval->set_context(merger);
 
-    id->read_abbadingo_file(input_stream);
     eval->initialize_before_adding_traces();
-    id->add_traces_to_apta(the_apta);
+    id.add_traces_to_apta(the_apta);
     eval->initialize_after_adding_traces(merger);
 
     greedy_run(merger);
