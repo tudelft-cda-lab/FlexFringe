@@ -13,6 +13,7 @@
 #include "utility/loguru.hpp"
 #include "input/abbadingoreader.h"
 #include "input/inputdatalocator.h"
+#include "input/parsers/abbadingoparser.h"
 
 using namespace std;
 
@@ -312,8 +313,13 @@ void apta::read_json(istream& input_stream){
         string trace = n["trace"];
         istringstream trace_stream(trace);
         node->access_trace = mem_store::create_trace();
-        // TODO: verify this with Sicco (robert)
-        // idat.read_abbadingo_sequence(trace_stream,node->access_trace);
+
+        auto parser = abbadingoparser::single_trace(trace_stream);
+        auto strategy = read_all();
+        auto trace_maybe = inputdata_locator::get()->read_trace(parser, strategy);
+        if (trace_maybe.has_value()) {
+            node->access_trace = trace_maybe.value();
+        }
     }
     for (int i = 1; i < read_apta["nodes"].size(); ++i) {
         json n = read_apta["nodes"][i];
