@@ -13,6 +13,7 @@
 #include <lexy/action/match.hpp>
 #include "input/parsers/grammar/abbadingoheader.h"
 #include "input/parsers/grammar/abbadingosymbol.h"
+#include "input/inputdatalocator.h"
 
 TEST_CASE("abbadingo header parser: number", "[parsing]") {
     auto input = lexy::zstring_input("123");
@@ -362,4 +363,19 @@ TEST_CASE("abbadingo_parser: smoke test with symbol attributes", "[parsing]") {
     REQUIRE(!fourth_sattr_info.at(0).is_distributionable());
     REQUIRE(!fourth_sattr_info.at(0).is_target());
 
+}
+
+TEST_CASE("abbadingo_parser: add single trace", "[parsing]") {
+    std::string input = "0 3 a b c";
+    std::istringstream inputstream(input);
+
+    auto parser = abbadingoparser::single_trace(inputstream);
+    auto input_data = inputdata();
+    inputdata_locator::provide(&input_data);
+    input_data.read(&parser);
+
+    std::vector<trace*> traces(input_data.begin(), input_data.end());
+
+    REQUIRE(traces.size() == 1);
+    REQUIRE(traces.at(0)->to_string() == "0 3 a b c");
 }
