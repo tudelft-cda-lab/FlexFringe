@@ -18,7 +18,7 @@
 #include <sstream>
 #include <chrono>
 
-void abbadingoparser::parse_header() {
+void abbadingoparser::parse_header(std::istream &inputstream) {
     std::string line;
     std::getline(inputstream, line);
 
@@ -165,4 +165,22 @@ std::optional<symbol_info> abbadingoparser::next() {
     symbol_info cur_symbol = symbols.front();
     symbols.pop_front();
     return cur_symbol;
+}
+
+/**
+ * Helper method to read a single abbadingo formatted trace
+ * Currently does not support trace or symbol attributes
+ *
+ * @param trace an input stream containing an abbadingo formatted trace.
+ * @return a parser for the trace.
+ */
+abbadingoparser abbadingoparser::single_trace(std::istream &trace) {
+
+    abbadingoparser parser(trace, false);
+
+    std::stringstream header;
+    header << "1 0\n";
+    parser.parse_header(header);
+
+    return parser;
 }
