@@ -72,18 +72,23 @@ void apta::print_dot(iostream& output){
             output << n << ":#" << "\\n";
             output << "rep#" << n->representative << "\\n";
         }
+
         output << n->number << " #" << n->size << " ";
         n->data->print_state_label(output);
         n->data->print_state_style(output);
         output << "\" ";
 
-        if (n->is_red()) output << ", style=filled, fillcolor=\"firebrick1\"";
-        else if (n->is_blue()) output << ", style=filled, fillcolor=\"dodgerblue1\"";
-        else if (n->is_white()) output << ", style=filled, fillcolor=\"ghostwhite\"";
-        output << ", width=" << log(1 + log(1 + n->size));
-        output << ", height=" << log(1 + log(1 + n->size));
-        output << ", penwidth=" << log(1 + n->size);
-        output << "];\n";
+        // As a more readable alternative for the block below.
+        // Maybe put behind a DOT_STYLE flag?
+        if (!n->red) output << " style=dotted";
+
+        // if (n->is_red()) output << ", style=filled, fillcolor=\"firebrick1\"";
+        // else if (n->is_blue()) output << ", style=filled, fillcolor=\"dodgerblue1\"";
+        // else if (n->is_white()) output << ", style=filled, fillcolor=\"ghostwhite\"";
+        // output << ", width=" << log(1 + log(1 + n->size));
+        // output << ", height=" << log(1 + log(1 + n->size));
+        // output << ", penwidth=" << log(1 + n->size);
+        // output << "];\n";
 
         for(auto it = n->guards.begin(); it != n->guards.end(); ++it){
             if(it->second->target == nullptr) continue;
