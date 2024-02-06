@@ -98,6 +98,7 @@ add_library(Source STATIC
         misc/printutil.h
         misc/utils.h
         misc/trim.h
+        misc/zip.h
         misc/sqldb.h
         misc/sqldb.cpp
         )
