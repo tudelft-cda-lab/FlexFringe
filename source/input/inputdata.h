@@ -7,6 +7,7 @@
 #include <set>
 #include <unordered_set>
 #include <istream>
+#include <iostream>
 #include <memory>
 #include <unordered_map>
 #include <optional>
@@ -22,6 +23,7 @@ class csv_parser;
 class parser;
 class symbol_info;
 class reader_strategy;
+class TraceIterator;
 
 class inputdata {
 protected:
@@ -95,6 +97,7 @@ public:
     int get_max_sequences();
 
     void add_type(const std::string& t);
+    const std::vector<int> get_types() const;
     const std::map<std::string, int>& get_r_types() const;
 
     /* attribute properties:
@@ -132,6 +135,46 @@ public:
     Iterator end() {return traces.end();}
 
     void clear_traces() noexcept{this->traces.clear();}
+
+    /**
+     * @brief Loop over traces using read_trace in sequential fashion.
+     */
+    TraceIterator trace_iterator(parser& input_parser, reader_strategy& strategy);
+};
+
+class TraceIterator {
+    inputdata& idat;
+    parser& input_parser;
+    reader_strategy& strategy;
+
+    class iterator {
+        inputdata* idat;
+        parser* input_parser;
+        reader_strategy* strategy;
+        trace* current;
+
+        public:
+        iterator(inputdata* idat, parser* input_parser, reader_strategy* strategy) : idat(idat), input_parser(input_parser), strategy(strategy){
+            increment();
+        }
+        explicit iterator(trace* t = nullptr) : current(t) {}
+        iterator& operator++() {
+            increment();
+            return *this;
+        }
+        trace* operator*() {return current;}
+        void increment() {
+            std::optional<trace*> trace_opt = idat->read_trace(*input_parser, *strategy);
+            if (!trace_opt) { current = nullptr; }
+            else { current = trace_opt.value(); }
+        }
+        bool operator==(iterator other) const {return this->current == other.current;}
+        bool operator!=(iterator other) const {return !(*this == other);}
+    };
+    public:
+    TraceIterator(inputdata& idat, parser& input_parser, reader_strategy& strategy) : idat(idat), input_parser(input_parser), strategy(strategy) {}
+    iterator begin() {return iterator{&idat, &input_parser, &strategy};}
+    iterator end() {return iterator();}
 };
 
 #endif //FLEXFRINGE_IREADER_H
