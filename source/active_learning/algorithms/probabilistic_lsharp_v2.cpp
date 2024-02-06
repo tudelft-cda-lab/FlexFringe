@@ -373,7 +373,7 @@ list<refinement*> probabilistic_lsharp_v2_algorithm::find_complete_base(unique_p
             // return performed_refs;
             print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
             cout << "Printed. Terminating" << endl;
-            exit(1);
+            exit(0);
         }
 
         // go through each newly found fringe node, see if you can merge or extend

@@ -49,6 +49,9 @@ double weight_state_comparator::compute_state_distance(apta_node* left_node, apt
     return denominator / ( sqrt(left_square_sum) * sqrt(right_square_sum) );
 }
 
+/**
+ * @brief What you think it does. Additionally to the weight comparator we also store a state and compare with that one.
+ */
 bool weight_state_comparator::consistent(state_merger *merger, apta_node* left_node, apta_node* right_node, int depth){
     if(inconsistency_found) return false;
     

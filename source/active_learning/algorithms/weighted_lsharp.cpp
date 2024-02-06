@@ -191,7 +191,8 @@ list<refinement*> weighted_lsharp_algorithm::find_complete_base(unique_ptr<state
                                                                 unique_ptr<apta>& the_apta, inputdata& id,
                                                                 const vector<int>& alphabet) {
     static int depth = 1; // because we initialize root node with depth 1
-    static const int MAX_DEPTH = 6;
+    static const int MAX_DEPTH = 8;
+    static const bool COUNTEREXAMPLE_STRATEGY = false;
 
     list<refinement*> performed_refs;
     unordered_set<apta_node*> fringe_nodes;
@@ -200,6 +201,7 @@ list<refinement*> weighted_lsharp_algorithm::find_complete_base(unique_ptr<state
 
     while (true) { // cancel when either not red node identified or max depth
 
+        cout << "collecting blue nodes. Depth:" << depth << endl;
         unordered_set<apta_node*> blue_nodes;
         for (blue_state_iterator b_it = blue_state_iterator(the_apta->get_root()); *b_it != nullptr; ++b_it) {
             auto blue_node = *b_it;
@@ -213,8 +215,8 @@ list<refinement*> weighted_lsharp_algorithm::find_complete_base(unique_ptr<state
             performed_refs.clear();
 
             /* std::unordered_set<apta_node*> created_nodes; */
-            for (auto blue_node : fringe_nodes) {
-                auto cn = extend_fringe(merger, blue_node, the_apta, id, alphabet);
+            for (auto fringe_node : fringe_nodes) {
+                auto cn = extend_fringe(merger, fringe_node, the_apta, id, alphabet);
                 /* for(auto new_node: cn) created_nodes.insert(new_node); */
             }
             fringe_nodes.clear();
@@ -222,20 +224,32 @@ list<refinement*> weighted_lsharp_algorithm::find_complete_base(unique_ptr<state
             merge_depth = 0;
             ++depth;
             continue;
+        } else if (depth == MAX_DEPTH && COUNTEREXAMPLE_STRATEGY){
+            static const int MAX_ITER = 20;
+            static int c_iter = 0;
+            cout << "Continuing search using the counterexample strategy. Iteration " << c_iter << " out of " << MAX_ITER << endl;
+            find_closed_automaton(performed_refs, the_apta, merger, weight_comparator::get_distance);
+            c_iter++;
+            if(c_iter==MAX_ITER){
+                cout << "Max number of iterations reached. Printing automaton." << endl;
+                print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
+                exit(0);
+            }
+            return performed_refs;
         } else if (depth == MAX_DEPTH) {
-            cout << "Max-depth reached. Printing the automaton. Depth:" << depth << endl;
+            cout << "Max-depth reached and counterexample strategy disabled. Printing the automaton. Depth:" << depth << endl;
             find_closed_automaton(performed_refs, the_apta, merger, weight_comparator::get_distance);
             print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
             cout << "Printed. Terminating" << endl;
-            exit(1);
+            exit(0);
         }
 
         // go through each newly found fringe node, see if you can merge or extend
         ++merge_depth;
         if (merge_depth <= depth)
             fringe_nodes.clear();
-
         bool identified_red_node = false;
+        cout << "Looking for refinements" << endl;
         for (auto blue_node : blue_nodes) {
             if (merge_depth <= depth)
                 fringe_nodes.insert(blue_node);
@@ -271,6 +285,7 @@ list<refinement*> weighted_lsharp_algorithm::find_complete_base(unique_ptr<state
 
         {
             static int model_nr = 0;
+            cout << "printing model " << model_nr << " at depth " << depth << endl;
             print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_refs");
         }
 
