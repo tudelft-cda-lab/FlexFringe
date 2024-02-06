@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <algorithm>
+#include "misc/printutil.h"
+#include <sstream>
 
 //#include "inputdatalocator.h"
 
@@ -28,6 +30,9 @@ void inputdata::read(parser *input_parser) {
     traces.sort([](auto &left, auto &right) {
         return left->sequence < right->sequence;
     });
+    std::stringstream ss;
+    ss << "Conversions: r_alphabet: " << get_r_alphabet() << " r_types: " << get_r_types();
+    LOG_S(INFO) << ss.str();
 }
 
 /**
@@ -144,6 +149,16 @@ void inputdata::add_type(const std::string& t) {
  */
 const std::map<std::string, int>& inputdata::get_r_types() const {
     return this->r_types;
+}
+
+const vector<int> inputdata::get_types() const {
+    vector<int> res(r_types.size());
+    int idx = 0;
+    for(const auto& mapping: r_types){
+        res[idx] = mapping.second;
+        ++idx;
+    }
+    return res;
 }
 
 int inputdata::get_reverse_type(std::string a) {
@@ -497,9 +512,6 @@ std::optional<trace *> inputdata::read_trace(parser &input_parser, reader_strate
     return tr_maybe;
 }
 
-
-
-
-
-
-
+TraceIterator inputdata::trace_iterator(parser &input_parser, reader_strategy &strategy) {
+    return {*this, input_parser, strategy};
+}

@@ -22,18 +22,24 @@ private:
     std::vector<attribute_info> trace_attr_prototypes;
     std::vector<attribute_info> symbol_attr_prototypes;
 
+
+
 public:
-    abbadingoparser(std::istream &input)
+    explicit abbadingoparser(std::istream &input, bool header = true)
     : inputstream(input)
     {
-        parse_header();
+        if (header) {
+            parse_header(inputstream);
+        }
     }
 
-    void parse_header();
+    void parse_header(std::istream &inputstream);
 
     bool read_abbadingo_trace();
 
     std::optional<symbol_info> next();
+
+    static abbadingoparser single_trace(std::istream &input);
 };
 
 
