@@ -60,6 +60,7 @@ add_library(Source STATIC
         ensemble.cpp ensemble.h
         dfa_properties.cpp dfa_properties.h
         refinement_selection_strategies.h refinement_selection_strategies.cpp
+        regex_builder.h regex_builder.cpp
 
         input/trace.cpp
         input/trace.h
