@@ -432,7 +432,7 @@ list<refinement*> pls_baseline::find_complete_base(unique_ptr<state_merger>& mer
         cout << "Merge depth: " << merge_depth << endl;
         if (merge_depth == MAX_DEPTH) {
             print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
-            exit(1);
+            exit(0);
         }
 
         if (!identified_red_node) {

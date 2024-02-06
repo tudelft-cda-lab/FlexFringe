@@ -30,9 +30,6 @@
 #include <unordered_map>
 
 class weighted_lsharp_algorithm : public lsharp_algorithm {
-  private:
-    bool MAX_DEPTH_REACHED = false;
-
   protected:
     void proc_counterex(const std::unique_ptr<base_teacher>& teacher, inputdata& id,
                                unique_ptr<apta>& hypothesis, const std::vector<int>& counterex,

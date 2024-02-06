@@ -25,18 +25,22 @@ add_library(ActiveLearning STATIC
             active_learning_util/random_int_generator.h
             active_learning_util/random_int_generator.cpp
 
+            # DFAs
             algorithms/lstar.h
             algorithms/lstar.cpp
             algorithms/lsharp.h
             algorithms/lsharp.cpp
+            algorithms/transformer_lsharp.h
+            algorithms/transformer_lsharp.cpp
+            # PDFAs and WFAs
             algorithms/probabilistic_lsharp.h
             algorithms/probabilistic_lsharp.cpp
             algorithms/probabilistic_lsharp_v2.h
             algorithms/probabilistic_lsharp_v2.cpp
             algorithms/weighted_lsharp.h
             algorithms/weighted_lsharp.cpp
-            algorithms/transformer_lsharp.h
-            algorithms/transformer_lsharp.cpp
+            algorithms/transformer_weighted_lsharp.h
+            algorithms/transformer_weighted_lsharp.cpp
 
             databases/database_base.h
             databases/database_headers.h
