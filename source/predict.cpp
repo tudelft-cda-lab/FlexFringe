@@ -10,6 +10,14 @@
 
 #include <optional>
 #include <queue>
+#include <sstream>
+#include <map>
+#include "misc/trim.h"
+#include "loguru.hpp"
+#include "misc/zip.h"
+#include "misc/printutil.h"
+
+using namespace std;
 
 struct tail_state_compare{ bool operator()(const pair<double, pair<apta_node*, tail*>> &a, const pair<double, pair<apta_node*, tail*>> &b) const{ return a.first < b.first; } };
 
@@ -329,7 +337,7 @@ void predict_trace_update_sequences(state_merger* m, tail* t){
 }
 
 template <typename T>
-void write_list(list<T>& list_to_write, ofstream& output){
+void write_list(list<T>& list_to_write, ostream& output){
     if(list_to_write.empty()){
         output << "[]";
         return;
@@ -346,7 +354,7 @@ void write_list(list<T>& list_to_write, ofstream& output){
 }
 
 
-void predict_trace(state_merger* m, ofstream& output, trace* tr){
+void predict_trace(state_merger* m, ostream& output, trace* tr){
     if(REVERSE_TRACES) tr->reverse();
 
     static int rownr = 1;
@@ -493,7 +501,7 @@ void predict_trace(state_merger* m, ofstream& output, trace* tr){
     output << endl;
 }
 
-void predict_csv(state_merger* m, istream& input, ofstream& output){
+void predict_csv(state_merger* m, istream& input, ostream& output){
     throw std::runtime_error("Not implemented yet");
 
     inputdata* id = m->get_dat();
@@ -532,8 +540,7 @@ void predict_csv(state_merger* m, istream& input, ofstream& output){
 //    }
 }
 
-
-void predict(state_merger* m, inputdata& idat, ofstream& output, parser* input_parser){
+void predict_header(ostream& output) {
     output << "row nr; abbadingo trace; state sequence; score sequence";
     if(SLIDING_WINDOW) output << "; score per sw tail; score first sw tail; root cause sw tail score; row nrs first sw tail";
     if(PREDICT_ALIGN) output << "; alignment; num misaligned";
@@ -541,16 +548,50 @@ void predict(state_merger* m, inputdata& idat, ofstream& output, parser* input_p
     if(PREDICT_TYPE) output << "; trace type; type probability; predicted trace type; predicted type probability";
     if(PREDICT_SYMBOL) output << "; next trace symbol; next symbol probability; predicted symbol; predicted symbol probability";
     output << endl;
+}
+
+void predict(state_merger* m, inputdata& idat, ostream& output, parser* input_parser){
+    predict_header(output);
 
     unique_ptr<reader_strategy> parser_strategy = make_unique<in_order>();
-    std::optional<trace*> trace_opt = idat.read_trace(*input_parser, *parser_strategy);
-    while(trace_opt){
-        trace* tr = trace_opt.value();
-
+    for (auto* tr : idat.trace_iterator(*input_parser, *parser_strategy)) {
         predict_trace(m, output, tr);
         add_visits(m, tr);
         tr->erase();
-
-        trace_opt = idat.read_trace(*input_parser, *parser_strategy);
     }
+}
+
+// TODO: Refactor predict.cpp so that this is easier to do.
+std::unordered_map<std::string, std::string> get_prediction_mapping(state_merger* m, trace* tr) {
+    std::stringstream ss;
+    predict_header(ss);
+
+    predict_trace(m, ss, tr);
+
+    std::string line;
+    std::stringstream line_ss;
+    std::string x;
+
+    std::vector<std::string> header;
+    std::getline(ss, line, '\n');
+    line_ss << line;
+    while(std::getline(line_ss, x, ';')) {
+        trim(x);
+        header.push_back(x);
+    }
+
+    std::vector<std::string> values;
+    std::getline(ss, line, '\n');
+    std::stringstream().swap(line_ss);
+    line_ss << line;
+    while(std::getline(line_ss, x, ';')) {
+        trim(x);
+        values.push_back(x);
+    }
+
+    std::unordered_map<std::string, std::string> data;
+    for (auto && [k, v] : utils::zip(header, values)) {
+        data.insert(std::make_pair(k, v));
+    }
+    return data;
 }

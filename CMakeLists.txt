@@ -14,6 +14,29 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 option(COMPILE_DOCS "This is settable from the command line" OFF)
 #set(CMAKE_MESSAGE_LOG_LEVEL WARNING)
 
+include(FetchContent)
+function(CloneRepository repositoryURL gitTag projectName sourceDir)
+  #Commands are left empty so that we only checkout the source and no not perform any kind of build
+  message("Starting to clone ${projectName} into ${sourceDir}")
+  FetchContent_Declare(
+    "${projectName}"
+    GIT_REPOSITORY "${repositoryURL}"
+    SOURCE_DIR "${sourceDir}"
+    GIT_TAG "${gitTag}"
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+  )
+  FetchContent_MakeAvailable(${projectName})
+endfunction(CloneRepository)
+
+# Please note that libpqxx requires pre-building its library
+# you cannot rely on including header files globally
+# you must link with target_link_libraries(.. pqxx) in EVERY module that requires it.
+# git tag from jan 1 2024.
+CloneRepository("https://github.com/jtv/libpqxx" "d8b6b9977a0c016fc168186b5fcf695d1af28a52" "libpqxx" "build-pqxx")
+
+
 add_subdirectory(source/utility/lexy)
 add_subdirectory(source/utility/fmt-9.1.0)
 
@@ -75,7 +98,9 @@ target_link_libraries(flexfringe
         Source
         Util
         foonathan::lexy
-        fmt::fmt)
+        fmt::fmt
+        pqxx
+        )
 
 
 find_package(Threads)
@@ -138,6 +163,7 @@ if(NOT SKIP_TESTS)
             Util
             foonathan::lexy
             fmt::fmt
+            pqxx
             ${CMAKE_THREAD_LIBS_INIT})
 
     if(NOT WIN32)

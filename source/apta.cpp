@@ -13,6 +13,7 @@
 #include "utility/loguru.hpp"
 #include "input/abbadingoreader.h"
 #include "input/inputdatalocator.h"
+#include "input/parsers/abbadingoparser.h"
 
 using namespace std;
 
@@ -40,11 +41,9 @@ apta::apta(){
 }
 
 void apta::print_dot(iostream& output){
-    int ncounter = 0;
     // needed for the correct printing of intermediate models after undoing merges
-    for(APTA_iterator Ait = APTA_iterator(root); *Ait != 0; ++Ait){
-        (*Ait)->number = ncounter++;
-    }
+    // Hielke: Fix numbering of states properly with suggestion in #23.
+    merger->renumber_states();
 
     output << "digraph DFA {\n";
     output << "\t" << root->find()->number << " [label=\"root\" shape=box];\n";
@@ -70,25 +69,26 @@ void apta::print_dot(iostream& output){
 
         output << "\t" << n->number << " [ label=\"";
         if(DEBUGGING){
-            output << n << ":#" << "\n";
-            output << "rep#" << n->representative << "\n";
+            output << n << ":#" << "\\n";
+            output << "rep#" << n->representative << "\\n";
         }
 
-        output << n->number << ":#" << n->size << "\n";
+        output << n->number << " #" << n->size << " ";
         n->data->print_state_label(output);
-        output << "\" ";
         n->data->print_state_style(output);
-        if (!n->red) output << " style=dotted";
-        
-        //output << n->number << " #" << n->size << "\" ";
-        //if (n->is_red()) output << ", style=filled, fillcolor=\"firebrick1\"";
-        //else if (n->is_blue()) output << ", style=filled, fillcolor=\"dodgerblue1\"";
-        //else if (n->is_white()) output << ", style=filled, fillcolor=\"ghostwhite\"";
-        //output << ", width=" << log(1 + log(1 + n->size));
-        //output << ", height=" << log(1 + log(1 + n->size));
+        output << "\" ";
 
-        output << ", penwidth=" << log(1 + n->size);
-        output << "];\n";
+        // As a more readable alternative for the block below.
+        // Maybe put behind a DOT_STYLE flag?
+        if (!n->red) output << " style=dotted";
+
+        // if (n->is_red()) output << ", style=filled, fillcolor=\"firebrick1\"";
+        // else if (n->is_blue()) output << ", style=filled, fillcolor=\"dodgerblue1\"";
+        // else if (n->is_white()) output << ", style=filled, fillcolor=\"ghostwhite\"";
+        // output << ", width=" << log(1 + log(1 + n->size));
+        // output << ", height=" << log(1 + log(1 + n->size));
+        // output << ", penwidth=" << log(1 + n->size);
+        // output << "];\n";
 
         for(auto it = n->guards.begin(); it != n->guards.end(); ++it){
             if(it->second->target == nullptr) continue;
@@ -108,18 +108,14 @@ void apta::print_dot(iostream& output){
 
             output << "\t\t" << n->number << " -> " << child->number << " [label=\"";
 
-            output << inputdata_locator::get()->get_symbol(it->first) << endl;
-
-            //n->data->print_transition_label(output, it->first);
-            
-            
+            output << inputdata_locator::get()->get_symbol(it->first) << " ";
+            n->data->print_transition_label(output, it->first);
             for(auto & min_attribute_value : g->min_attribute_values){
-                output << " " << inputdata_locator::get()->get_attribute(min_attribute_value.first) << " >= " << min_attribute_value.second;
+                output << "\\n" << inputdata_locator::get()->get_attribute(min_attribute_value.first) << " >= " << min_attribute_value.second;
             }
             for(auto & max_attribute_value : g->max_attribute_values){
-                output << " " << inputdata_locator::get()->get_attribute(max_attribute_value.first) << " < " << max_attribute_value.second;
+                output << "\\n" << inputdata_locator::get()->get_attribute(max_attribute_value.first) << " < " << max_attribute_value.second;
             }
-
             output << "\" ";
             output << ", penwidth=" << log(1 + n->size);
             output << " ];\n";
@@ -176,12 +172,10 @@ void apta_node::print_json_transitions(iostream& output){
 
 void apta::print_json(iostream& output){
     set_json_depths();
-    int count = 0;
     root->depth = 0;
-    for(merged_APTA_iterator Ait = merged_APTA_iterator(root); *Ait != nullptr; ++Ait){
-        apta_node* n = *Ait;
-        n->number = count++;
-    }
+    // needed for the correct printing of intermediate models after undoing merges
+    // Hielke: Fix numbering of states properly with suggestion in #23.
+    merger->renumber_states();
 
     output << "{\n";
     output << "\t\"types\" : [\n";
@@ -330,8 +324,13 @@ void apta::read_json(istream& input_stream){
         string trace = n["trace"];
         istringstream trace_stream(trace);
         node->access_trace = mem_store::create_trace();
-        // TODO: verify this with Sicco (robert)
-        // idat.read_abbadingo_sequence(trace_stream,node->access_trace);
+
+        auto parser = abbadingoparser::single_trace(trace_stream);
+        auto strategy = read_all();
+        auto trace_maybe = inputdata_locator::get()->read_trace(parser, strategy);
+        if (trace_maybe.has_value()) {
+            node->access_trace = trace_maybe.value();
+        }
     }
     for (int i = 1; i < read_apta["nodes"].size(); ++i) {
         json n = read_apta["nodes"][i];
@@ -447,7 +446,8 @@ void apta_node::initialize(apta_node* n){
     representative_of = nullptr;
     tails_head = nullptr;
     access_trace = nullptr;
-    number = -1;
+    // keep the old node number
+    // number = -1;
     size = 0;
     final = 0;
     depth = 0;

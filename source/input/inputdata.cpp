@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <algorithm>
+#include "misc/printutil.h"
+#include <sstream>
 
 //#include "inputdatalocator.h"
 
@@ -28,6 +30,9 @@ void inputdata::read(parser *input_parser) {
     traces.sort([](auto &left, auto &right) {
         return left->sequence < right->sequence;
     });
+    std::stringstream ss;
+    ss << "Conversions: r_alphabet: " << get_r_alphabet() << " r_types: " << get_r_types();
+    LOG_S(INFO) << ss.str();
 }
 
 /**
@@ -146,6 +151,16 @@ const std::map<std::string, int>& inputdata::get_r_types() const {
     return this->r_types;
 }
 
+const vector<int> inputdata::get_types() const {
+    vector<int> res(r_types.size());
+    int idx = 0;
+    for(const auto& mapping: r_types){
+        res[idx] = mapping.second;
+        ++idx;
+    }
+    return res;
+}
+
 int inputdata::get_reverse_type(std::string a) {
     return r_types[a];
 }
@@ -173,6 +188,16 @@ void inputdata::set_alphabet(const vector<int>& input_alphabet){
         this->r_alphabet[symbol_string] = this->alphabet.size();
         this->alphabet.push_back(symbol_string);
     }
+}
+void inputdata::set_alphabet(const std::map<std::string, int>& input_r_alphabet) {
+    r_alphabet = input_r_alphabet; // copy-assignment
+    alphabet.clear();
+    for (auto const& imap : input_r_alphabet) alphabet.push_back(imap.first);
+}
+void inputdata::set_types(const std::map<std::string, int>& input_r_types) {
+    r_types = input_r_types; // copy-assignment
+    types.clear();
+    for (auto const& imap : input_r_types) types.push_back(imap.first);
 }
 
 attribute *inputdata::get_trace_attribute(int attr) {
@@ -234,6 +259,10 @@ int inputdata::get_types_size() {
 
 int inputdata::get_alphabet_size() {
     return alphabet.size();
+}
+
+const std::map<std::string, int> inputdata::get_r_alphabet() const {
+    return this->r_alphabet;
 }
 
 const vector<int> inputdata::get_alphabet() const {
@@ -483,9 +512,6 @@ std::optional<trace *> inputdata::read_trace(parser &input_parser, reader_strate
     return tr_maybe;
 }
 
-
-
-
-
-
-
+TraceIterator inputdata::trace_iterator(parser &input_parser, reader_strategy &strategy) {
+    return {*this, input_parser, strategy};
+}

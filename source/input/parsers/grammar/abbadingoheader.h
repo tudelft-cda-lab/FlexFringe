@@ -137,7 +137,7 @@ namespace {
 
         // The complete abbadingo header: number:dsft/name1,... number:dsft/name2,...
         struct abbadingo_header_p {
-            static constexpr auto rule = dsl::twice(dsl::p<abbadingo_header_part_p>, dsl::trailing_sep(dsl::ascii::space));
+            static constexpr auto rule = dsl::twice(dsl::p<abbadingo_header_part_p>, dsl::trailing_sep(dsl::ascii::space)) + (dsl::newline | dsl::eof);
             static constexpr auto value = lexy::construct<abbadingo_header_info>;
         };
     }

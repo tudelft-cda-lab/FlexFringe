@@ -31,17 +31,16 @@
 
 class weighted_lsharp_algorithm : public lsharp_algorithm {
   protected:
-    void proc_counterex(const std::unique_ptr<base_teacher>& teacher, inputdata& id,
-                               unique_ptr<apta>& hypothesis, const std::vector<int>& counterex,
-                               std::unique_ptr<state_merger>& merger, const refinement_list refs,
-                               const vector<int>& alphabet) const;
+    void proc_counterex(const std::unique_ptr<base_teacher>& teacher, inputdata& id, unique_ptr<apta>& hypothesis,
+                        const std::vector<int>& counterex, std::unique_ptr<state_merger>& merger,
+                        const refinement_list refs, const vector<int>& alphabet) const;
 
-    inline std::unordered_set<apta_node*>
-    extend_fringe(std::unique_ptr<state_merger>& merger, apta_node* n, std::unique_ptr<apta>& the_apta, inputdata& id,
-                  const vector<int>& alphabet) const;
+    std::unordered_set<apta_node*> extend_fringe(std::unique_ptr<state_merger>& merger, apta_node* n,
+                                                 std::unique_ptr<apta>& the_apta, inputdata& id,
+                                                 const vector<int>& alphabet) const;
     virtual void query_weights(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id,
-                              const std::vector<int>& alphabet,
-                              std::optional<active_learning_namespace::pref_suf_t> seq_opt) const;
+                               const std::vector<int>& alphabet,
+                               std::optional<active_learning_namespace::pref_suf_t> seq_opt) const;
 
     list<refinement*> find_complete_base(unique_ptr<state_merger>& merger, unique_ptr<apta>& the_apta, inputdata& id,
                                          const std::vector<int>& alphabet);
