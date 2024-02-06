@@ -12,6 +12,7 @@
 #include "active_learning_main.h"
 
 #include "algorithm_base.h"
+#include "ldot.h"
 #include "lsharp.h"
 #include "lstar.h"
 #include "probabilistic_lsharp.h"
@@ -26,6 +27,7 @@
 #include "input_file_sul.h"
 #include "nn_sul_base.h"
 #include "nn_weighted_output_sul.h"
+#include "sqldb_sul.h"
 
 #include "abbadingoparser.h"
 #include "csvparser.h"
@@ -33,6 +35,8 @@
 #include "inputdatalocator.h"
 #include "main_helpers.h"
 #include "parameters.h"
+
+#include "loguru.hpp"
 
 #include <cassert>
 #include <fstream>
@@ -79,6 +83,9 @@ inputdata active_learning_main_func::get_inputdata() const {
 shared_ptr<sul_base> active_learning_main_func::select_sul_class(const bool ACTIVE_SUL) const {
     if (ACTIVE_SUL) {
         // TODO: select the SUL better than you do here
+        if (SQLDB) {
+            return shared_ptr<sul_base>(new sqldb_sul(*my_sqldb));
+        }
         if (INPUT_FILE.compare(INPUT_FILE.length() - 3, INPUT_FILE.length(), ".py") == 0) {
             return shared_ptr<sul_base>(new nn_weighted_output_sul());
         }
@@ -118,10 +125,29 @@ unique_ptr<eq_oracle_base> active_learning_main_func::select_oracle_class(shared
 void active_learning_main_func::run_active_learning() {
     assertm(ENSEMBLE_RUNS > 0, "nruns parameter must be larger than 0 for active learning.");
 
-    const bool ACTIVE_SUL = (INPUT_FILE.compare(INPUT_FILE.length() - 5, INPUT_FILE.length(), ".json") == 0) ||
+    // Setting some initialization for learning from SQLDB.
+    SQLDB = POSTGRESQL_TBLNAME != "";
+    bool LOADSQLDB = INPUT_FILE != "";
+
+    if (SQLDB) {
+        if (!LOADSQLDB) {
+            // If reading, not loading, from db, do not drop on initialization.
+            POSTGRESQL_DROPTBLS = false;
+        }
+        my_sqldb = make_unique<sqldb>(POSTGRESQL_TBLNAME, POSTGRESQL_CONNSTRING);
+        if (LOADSQLDB) {
+            LOG_S(INFO) << "Loading from trace file " + INPUT_FILE;
+            inputdata id = get_inputdata();
+            my_sqldb->load_traces(id);
+            LOG_S(INFO) << "Traces loaded.";
+            return;
+        }
+    }
+
+    const bool ACTIVE_SUL = !APTA_FILE.empty() || SQLDB ||
+                            (INPUT_FILE.compare(INPUT_FILE.length() - 5, INPUT_FILE.length(), ".json") == 0) ||
                             (INPUT_FILE.compare(INPUT_FILE.length() - 4, INPUT_FILE.length(), ".dot") == 0) ||
-                            (INPUT_FILE.compare(INPUT_FILE.length() - 3, INPUT_FILE.length(), ".py") == 0) ||
-                            !APTA_FILE.empty();
+                            (INPUT_FILE.compare(INPUT_FILE.length() - 3, INPUT_FILE.length(), ".py") == 0);
 
     auto sul = select_sul_class(ACTIVE_SUL);
     auto teacher = select_teacher_class(sul, ACTIVE_SUL);
@@ -140,6 +166,9 @@ void active_learning_main_func::run_active_learning() {
     } else if (ACTIVE_LEARNING_ALGORITHM == "weighted_l_sharp") {
         STORE_ACCESS_STRINGS = true;
         algorithm = unique_ptr<algorithm_base>(new weighted_lsharp_algorithm(sul, teacher, oracle));
+    } else if (ACTIVE_LEARNING_ALGORITHM == "l_dot") {
+        STORE_ACCESS_STRINGS = true;
+        algorithm = unique_ptr<algorithm_base>(new ldot_algorithm(sul, teacher, oracle));
     } else if (ACTIVE_LEARNING_ALGORITHM == "transformer_l_sharp") {
         STORE_ACCESS_STRINGS = true;
         algorithm = unique_ptr<algorithm_base>(new transformer_lsharp_algorithm(sul, teacher, oracle));
@@ -151,14 +180,14 @@ void active_learning_main_func::run_active_learning() {
     }
 
     if (ACTIVE_SUL) {
-        // we do not want to run the input file, alphabet and input data must be inferred from SUL
+        LOG_S(INFO) << "We do not want to run the input file, alphabet and input data must be inferred from SUL.";
         inputdata id;
         inputdata_locator::provide(&id);
 
         sul->pre(id);
         algorithm->run(id);
     } else {
-        // we only want to read the inputdata when we learn passively or from sequences
+        LOG_S(INFO) << "We only want to read the inputdata when we learn passively or from sequences.";
         inputdata id = get_inputdata();
 
         sul->pre(id);

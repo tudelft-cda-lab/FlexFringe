@@ -60,6 +60,7 @@ add_library(Source STATIC
         ensemble.cpp ensemble.h
         dfa_properties.cpp dfa_properties.h
         refinement_selection_strategies.h refinement_selection_strategies.cpp
+        regex_builder.h regex_builder.cpp
 
         input/trace.cpp
         input/trace.h
@@ -90,9 +91,16 @@ add_library(Source STATIC
         input/streaming.h
         input/parsers/reader_strategy.cpp
         input/parsers/reader_strategy.h
-        
+
         main_helpers.h # TODO: do we need these two?
         main_helpers.cpp
+
+        misc/printutil.h
+        misc/utils.h
+        misc/trim.h
+        misc/zip.h
+        misc/sqldb.h
+        misc/sqldb.cpp
         )
 
 ## create CMakeLists.txt in evaluation directory
@@ -110,3 +118,7 @@ file(APPEND "${cmakelists_eval}" ")")
 add_subdirectory(evaluation)
 add_subdirectory(utility)
 add_subdirectory(active_learning)
+
+# Please note that pqxx should be linked to every module that depends on it.
+# include_directories does not work.
+target_link_libraries(Source pqxx)

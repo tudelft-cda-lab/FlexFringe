@@ -161,4 +161,8 @@ extern string REJECTING_LABEL;
 extern int START_SYMBOL;
 extern int END_SYMBOL;
 
+extern string POSTGRESQL_CONNSTRING;
+extern string POSTGRESQL_TBLNAME;
+extern bool POSTGRESQL_DROPTBLS;
+
 #endif

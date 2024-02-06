@@ -410,6 +410,7 @@ public:
 
     friend class benchmark_dfaparser;
     friend class benchmarkparser_base;
+    friend class regex_builder;
 
     set<apta_node *> *get_sources();
 };
