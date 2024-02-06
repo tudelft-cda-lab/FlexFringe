@@ -34,14 +34,23 @@ class sqldb {
     inline static const std::string TRACE_NAME = "trace";
     inline static const std::string RES_NAME = "res";
 
-    char num2str(int num);
-    int str2num(char str);
-    std::vector<int> str2vec(const std::string& str);
-    std::string vec2str(const std::vector<int>& vec);
+    static char num2str(int num);
+    static int str2num(char str);
+    static std::vector<int> str2vec(const std::string& str);
+    static std::string vec2str(const std::vector<int>& vec);
 
     const std::string get_table_name() { return table_name; };
+
+    /**
+     * @brief Returning the alphabet stored in the '_meta' table.
+     */
     std::vector<std::string> get_alphabet();
+
+    /**
+     * @brief Returning the types stored in the '_meta' table.
+     */
     std::vector<std::string> get_types();
+
     void check_connection();
     void reset();
     void create_table(bool drop = false);
@@ -49,7 +58,7 @@ class sqldb {
 
     /**
      * @brief Load all traces from inputdata into the database.
-     * Also initializing the _meta table with the alphabets and output symbols.
+     * Also initializing the '_meta' table with the alphabets and output symbols.
      */
     void load_traces(inputdata& id);
     void add_row(const std::string& trace, int res);
@@ -76,6 +85,15 @@ class sqldb {
      * @brief Check if the trace can be found in the database.
      */
     bool is_member(const std::string& trace);
+
+    /**
+     * @brief Looks in the database for a regex match for the specific type that is wrong.
+     *
+     * This function can be used to check for equivalence by checking all the types and
+     * providing a regex that should match all traces outputting that specific type.
+     * (You can use regex_builder to create such regexes.)
+     */
+    std::optional<std::pair<std::vector<int>, int>> regex_equivalence(const std::string& regex, int type);
 };
 
 #endif
