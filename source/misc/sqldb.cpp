@@ -6,8 +6,10 @@
 #include "printutil.h"
 #include <fmt/format.h>
 #include <iostream>
+#include <optional>
 #include <pqxx/pqxx>
 #include <sstream>
+#include <utility>
 
 sqldb::sqldb() : connection_string(""), table_name("benching_sample"), conn("") {
     check_connection();
@@ -75,6 +77,7 @@ std::string sqldb::get_sqlarr_from_vec(const std::vector<std::string>& vec) {
 
 char sqldb::num2str(int num) {
     // TODO This only supports to ASCII, increase with UTF8 (PostgreSQL should support that).
+    // See https://stackoverflow.com/questions/26074090/iterating-through-a-utf-8-string-in-c11
     if (num > 51) {
         throw std::runtime_error("Got symbol bigger than 51. Only ASCII conversion possible, extend with UTF8.");
     }
@@ -231,4 +234,22 @@ bool sqldb::is_member(const std::string& trace) {
         fmt::format("SELECT EXISTS (SELECT * FROM {0} WHERE {1} = '{2}' )", table_name, TRACE_NAME, trace));
     tx.commit();
     return val;
+}
+
+std::optional<std::pair<std::vector<int>, int>> sqldb::regex_equivalence(const std::string& regex, int type) {
+    auto query = fmt::format("SELECT {1}, {4} FROM {0} WHERE {1} ~ '^({2})$' and {3} != {4} LIMIT 1", table_name,
+                             TRACE_NAME, regex, RES_NAME, type);
+
+    try {
+        pqxx::work tx{conn};
+        auto [trace, type] = tx.query1<std::string, int>(query);
+        tx.commit();
+
+        auto trace_vec = str2vec(trace);
+        return std::make_optional<std::pair<std::vector<int>, int>>(std::make_pair(trace_vec, type));
+    } catch (const pqxx::unexpected_rows& e) {
+        std::string exc{e.what()};
+        LOG_S(INFO) << "Found no counter example: " << exc << " Query: " << query;
+        return std::nullopt;
+    }
 }

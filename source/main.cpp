@@ -9,6 +9,7 @@
 #include <iostream>
 #include "evaluation_factory.h"
 #include <string>
+#include <unordered_map>
 #include "stream.h"
 #include "interactive.h"
 #include "searcher.h"
@@ -25,6 +26,8 @@
 
 #include "parameters.h"
 #include "csv.hpp"
+#include "regex_builder.h"
+#include "misc/sqldb.h"
 #include "input/inputdata.h"
 #include "input/inputdatalocator.h"
 #include "input/parsers/csvparser.h"
@@ -64,7 +67,30 @@ void run() {
         return;
     }
 
+    // Initialize main classes.
+    inputdata id;
+    inputdata_locator::provide(&id);
+    apta* the_apta = new apta();
     evaluation_function *eval = get_evaluation();
+    state_merger* merger = new state_merger(&id, eval, the_apta);
+    the_apta->set_context(merger);
+    eval->set_context(merger);
+
+    if(OPERATION_MODE == "regex"){
+        ifstream input_apta_stream(APTA_FILE);
+        LOG_S(INFO) << "Reading apta file - " << APTA_FILE;
+        the_apta->read_json(input_apta_stream);
+        LOG_S(INFO) << "Finished reading apta file.";
+        auto coloring = std::make_tuple(PRINT_RED, PRINT_BLUE, PRINT_WHITE);
+        regex_builder builder = regex_builder(*the_apta, *merger, coloring, sqldb::num2str);
+        LOG_S(INFO) << "Finished building the regex builder";
+        auto delimiter = "\t";
+        for (auto type : inputdata_locator::get()->get_types()) {
+            cout << std::to_string(type) << delimiter << builder.to_regex(type) << endl;
+        }
+        return;
+    }
+
 
     ifstream input_stream(INPUT_FILE);
     
@@ -83,9 +109,6 @@ void run() {
         read_csv = true;
     }
 
-    inputdata id;
-    inputdata_locator::provide(&id);
-
     if(OPERATION_MODE != "stream" && OPERATION_MODE != "predict"){
         if(read_csv) {
             auto input_parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
@@ -95,11 +118,6 @@ void run() {
             id.read(&input_parser);
         }
     }
-
-    apta* the_apta = new apta();
-    state_merger* merger = new state_merger(&id, eval, the_apta);
-    the_apta->set_context(merger);
-    eval->set_context(merger);
 
     cout << "Creating apta using evaluation class " << HEURISTIC_NAME << endl;
 
