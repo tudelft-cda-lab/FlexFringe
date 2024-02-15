@@ -47,7 +47,7 @@ evaluation_function* get_evaluation(){
     }
     try {
         eval = (DerivedRegister<evaluation_function>::getMap())->at(HEURISTIC_NAME)();
-        std::cout << "Using heuristic " << HEURISTIC_NAME << std::endl;
+        std::cerr << "Using heuristic " << HEURISTIC_NAME << std::endl;
         LOG_S(INFO) <<  "Using heuristic " << HEURISTIC_NAME;
     } catch(const std::out_of_range& oor ) {
         LOG_S(WARNING) << "No named heuristic found, defaulting back on -h flag";
