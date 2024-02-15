@@ -28,6 +28,7 @@
 #include "nn_sul_base.h"
 #include "nn_weighted_output_sul.h"
 #include "sqldb_sul.h"
+#include "sqldb_sul_regex_oracle.h"
 
 #include "abbadingoparser.h"
 #include "csvparser.h"
@@ -112,6 +113,9 @@ unique_ptr<base_teacher> active_learning_main_func::select_teacher_class(shared_
  */
 unique_ptr<eq_oracle_base> active_learning_main_func::select_oracle_class(shared_ptr<sul_base>& sul,
                                                                           const bool ACTIVE_SUL) const {
+    if (SQLDB) {
+        return unique_ptr<eq_oracle_base>(new sqldb_sul_regex_oracle(sul));
+    }
     if (ACTIVE_SUL) {
         return unique_ptr<eq_oracle_base>(new active_sul_oracle(sul));
     }
