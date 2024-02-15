@@ -45,6 +45,9 @@ const int sqldb_sul::query_trace(const std::vector<int>& query_trace, inputdata&
     return my_sqldb.query_trace(my_sqldb.vec2str(query_trace));
 }
 
-const int sqldb_sul::query_trace_maybe(const std::vector<int>& query_trace, inputdata& id) const {
+const int sqldb_sul::query_trace_maybe(const std::vector<int>& query_trace) const {
     return my_sqldb.query_trace_maybe(my_sqldb.vec2str(query_trace));
+}
+std::optional<std::pair<std::vector<int>, int>> sqldb_sul::regex_equivalence(const std::string& regex, int type) {
+    return my_sqldb.regex_equivalence(regex, type);
 }

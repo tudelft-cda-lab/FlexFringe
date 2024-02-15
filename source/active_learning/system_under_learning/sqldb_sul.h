@@ -14,6 +14,9 @@
 
 #include "misc/sqldb.h"
 #include "sul_base.h"
+#include <optional>
+#include <utility>
+#include <vector>
 
 class sqldb_sul : public sul_base {
   private:
@@ -29,8 +32,9 @@ class sqldb_sul : public sul_base {
   public:
     explicit sqldb_sul(sqldb& db);
     virtual void pre(inputdata& id) override;
-    const int query_trace_maybe(const std::vector<int>& query_trace, inputdata& id) const;
+    const int query_trace_maybe(const std::vector<int>& query_trace) const;
     sqldb& get_sqldb() { return my_sqldb; };
+    std::optional<std::pair<std::vector<int>, int>> regex_equivalence(const std::string& regex, int type);
 };
 
 #endif
