@@ -54,7 +54,7 @@ public:
     std::unordered_map<apta_node*, std::unordered_set<apta_node*>> r_transitions;
 
     // Predicted types of each state
-    std::unordered_map<int, std::vector<apta_node*>> types_map;
+    std::unordered_map<std::string, std::vector<apta_node*>> types_map;
 
 
     // The transition to the final state is empty, we use the "audible bell" character to indicate this.
@@ -69,7 +69,9 @@ public:
      * This is inspired by the implementation found here:
      * https://github.com/caleb531/automata/blob/c39df7d588164e64a0c090ddf89ab5118ee42e47/automata/fa/gnfa.py#L345
      *
+     * Argument is the external string representation.
      */
+    std::string to_regex(std::string output_state);
     std::string to_regex(int output_state);
 
     /**

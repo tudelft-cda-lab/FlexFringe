@@ -2,6 +2,7 @@
 /// \brief Command line parameter processing and entry point.
 
 #include <cstdlib>
+#include <ranges>
 #include "greedy.h"
 #include "state_merger.h"
 #include "evaluate.h"
@@ -28,6 +29,7 @@
 #include "csv.hpp"
 #include "regex_builder.h"
 #include "misc/sqldb.h"
+#include "misc/utils.h"
 #include "input/inputdata.h"
 #include "input/inputdatalocator.h"
 #include "input/parsers/csvparser.h"
@@ -85,8 +87,8 @@ void run() {
         regex_builder builder = regex_builder(*the_apta, *merger, coloring, sqldb::num2str);
         LOG_S(INFO) << "Finished building the regex builder";
         auto delimiter = "\t";
-        for (auto type : inputdata_locator::get()->get_types()) {
-            cout << std::to_string(type) << delimiter << builder.to_regex(type) << endl;
+        for (auto type : std::views::keys(inputdata_locator::get()->get_r_types())) {
+            cout << type << delimiter << builder.to_regex(type) << endl;
         }
         return;
     }
