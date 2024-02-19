@@ -36,6 +36,15 @@ endfunction(CloneRepository)
 # git tag from jan 1 2024.
 CloneRepository("https://github.com/jtv/libpqxx" "d8b6b9977a0c016fc168186b5fcf695d1af28a52" "libpqxx" "build-pqxx")
 
+set(BOOST_INCLUDE_LIBRARIES asio regex algorithm)
+set(BOOST_ENABLE_CMAKE ON)
+FetchContent_Declare(
+  Boost
+  URL https://github.com/boostorg/boost/releases/download/boost-1.84.0/boost-1.84.0.tar.xz
+  URL_MD5 893b5203b862eb9bbd08553e24ff146a
+)
+FetchContent_MakeAvailable(Boost)
+
 
 add_subdirectory(source/utility/lexy)
 add_subdirectory(source/utility/fmt-9.1.0)
@@ -137,7 +146,10 @@ if(NOT SKIP_TESTS)
             tests/testcsvparser.cpp
             tests/testabbadingoparser.cpp
             source/main.cpp tests/testinputdata.cpp
-            tests/testobservationtable.cpp)
+            tests/testobservationtable.cpp
+            tests/testregex.cpp
+            )
+
 
     if(MSVC)
         target_link_libraries(runtests
@@ -164,6 +176,7 @@ if(NOT SKIP_TESTS)
             foonathan::lexy
             fmt::fmt
             pqxx
+            Boost::regex
             ${CMAKE_THREAD_LIBS_INIT})
 
     if(NOT WIN32)
