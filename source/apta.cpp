@@ -87,8 +87,9 @@ void apta::print_dot(iostream& output){
         // else if (n->is_white()) output << ", style=filled, fillcolor=\"ghostwhite\"";
         // output << ", width=" << log(1 + log(1 + n->size));
         // output << ", height=" << log(1 + log(1 + n->size));
-        // output << ", penwidth=" << log(1 + n->size);
-        // output << "];\n";
+
+        output << ", penwidth=" << log(1 + n->size);
+        output << "];\n";
 
         for(auto it = n->guards.begin(); it != n->guards.end(); ++it){
             if(it->second->target == nullptr) continue;
