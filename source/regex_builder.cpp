@@ -14,6 +14,7 @@
 #include "apta.h"
 #include "predict.h"
 #include "state_merger.h"
+#include "input/inputdatalocator.h"
 #include "misc/utils.h"
 #include <unordered_map>
 #include <string>
@@ -105,9 +106,9 @@ void regex_builder::initialize(apta& the_apta, state_merger& merger, std::tuple<
     for (apta_node* n : states) {
         auto* tr = n->get_access_trace();
         auto data = get_prediction_mapping(&merger, tr);
-        int type;
+        std::string type;
         try {
-            type = std::stoi(data["predicted trace type"]);
+            type = data["predicted trace type"];
         } catch(std::invalid_argument &e) {
             throw runtime_error("Could not get predicted type, did you set --predicttype 1?");
         }
@@ -123,6 +124,10 @@ void regex_builder::initialize(apta& the_apta, state_merger& merger, std::tuple<
 }
 
 std::string regex_builder::to_regex(int output_state) {
+    return to_regex(inputdata_locator::get()->string_from_type(output_state));
+}
+
+std::string regex_builder::to_regex(std::string output_state) {
     // Copy (using copy-assignment) datastructures and manipulate for this output_state.
     std::unordered_set<apta_node*> my_states = states;
     std::unordered_map<apta_node*, std::unordered_set<apta_node*>> my_r_transitions = r_transitions;
@@ -178,7 +183,7 @@ std::string regex_builder::to_regex(int output_state) {
         if (!my_states.contains(remove)) continue;
 
         for (auto source : my_r_transitions[remove]) {
-            for (auto target : utils::map_keys(my_transitions[remove])) {
+            for (auto target : std::views::keys(my_transitions[remove])) {
                 auto r1 = my_transitions[source][remove];
                 if (r1[0] == EMPTY) {
                     r1 = "";
