@@ -177,7 +177,6 @@ if(NOT SKIP_TESTS)
             foonathan::lexy
             fmt::fmt
             pqxx
-            Boost::regex
             ${CMAKE_THREAD_LIBS_INIT})
 
     if(NOT WIN32)
