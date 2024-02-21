@@ -85,15 +85,19 @@ void regex_builder::initialize(apta& the_apta, state_merger& merger, std::tuple<
         // It will include also transitions to nodes we do not have.
         // TODO: Is this a bug in the to_json functionality I copied?
 
-        std::unordered_map<apta_node*, char> transition_map;
+        std::unordered_map<apta_node*, std::string> transition_map;
         for(auto& guard : n->guards){
             auto* target = guard.second->get_target();
             if(target == nullptr) continue;
 
             apta_node* child = target->find(); // Find representative.
 
-            char symbol = mapping_func(guard.first);
-            transition_map.insert(std::make_pair(child, symbol));
+            std::string symbol { mapping_func(guard.first) };
+            if (transition_map.contains(child)) {
+                transition_map[child] = transition_map[child] + "|" + symbol;
+            } else {
+                transition_map.insert(std::make_pair(child, symbol));
+            }
 
             r_transitions[child].insert(n);
         }
@@ -131,6 +135,7 @@ std::string regex_builder::to_regex(std::string output_state) {
     // Copy (using copy-assignment) datastructures and manipulate for this output_state.
     std::unordered_set<apta_node*> my_states = states;
     std::unordered_map<apta_node*, std::unordered_set<apta_node*>> my_r_transitions = r_transitions;
+    std::unordered_map<apta_node*, std::unordered_map<apta_node*, std::string>> my_transitions = transitions;
 
     // Minimally connected nodes
     // Gather connection size. (degree or valency)
@@ -145,25 +150,19 @@ std::string regex_builder::to_regex(std::string output_state) {
         min_connected.push(std::make_pair(n, r_transitions[n].size() + transitions[n].size()));
     }
 
-    // Copy and convert the transitions from char to string.
-    std::unordered_map<apta_node*, std::unordered_map<apta_node*, std::string>> my_transitions;
-    for (const auto& a_transition : transitions) {
-        auto* n = a_transition.first;
-        for (const auto& pair : a_transition.second) {
-            my_transitions[n].insert(std::make_pair(pair.first, std::string(1, pair.second)));
-        }
-    }
-
     auto final_node = make_unique<apta_node>();
 
     for (auto* n : types_map[output_state]) {
-        my_transitions[n].insert(std::make_pair(final_node.get(), std::string(1, EMPTY)));
+        my_transitions[n].insert(std::make_pair(final_node.get(), ""));
     }
 
     LOG_S(INFO) << "Initialize setup for regex, entering node elemination loop.";
 
     // Implementation inspired from:
     // https://github.com/caleb531/automata/blob/c39df7d588164e64a0c090ddf89ab5118ee42e47/automata/fa/gnfa.py#L345
+
+    // But maybe a better implemention is this:
+    // https://github.com/devongovett/regexgen/blob/master/src/regex.js
 
     // Iteratively remove all the nodes between the start node and the final node,
     // starting with the least connected node.
@@ -182,21 +181,10 @@ std::string regex_builder::to_regex(std::string output_state) {
         // https://stackoverflow.com/questions/649640/how-to-do-an-efficient-priority-update-in-stl-priority-queue
         if (!my_states.contains(remove)) continue;
 
-        for (auto source : my_r_transitions[remove]) {
-            for (auto target : std::views::keys(my_transitions[remove])) {
-                auto r1 = my_transitions[source][remove];
-                if (r1[0] == EMPTY) {
-                    r1 = "";
-                } else if (brackets(r1)) {
-                    r1 = "(" + r1 + ")";
-                }
-
-                auto r3 = my_transitions[remove][target];
-                if (r3[0] == EMPTY) {
-                    r3 = "";
-                } else if (brackets(r3)) {
-                    r3 = "(" + r3 + ")";
-                }
+        for (auto* source : my_r_transitions[remove]) {
+            for (auto* target : std::views::keys(my_transitions[remove])) {
+                auto r1 = add_maybe_brackets(my_transitions[source][remove]);
+                auto r3 = add_maybe_brackets(my_transitions[remove][target]);
 
                 // self-loop
                 std::string r2 = "";
@@ -204,18 +192,18 @@ std::string regex_builder::to_regex(std::string output_state) {
                     r2 = my_transitions[remove][remove];
                     if (r2.size() == 1) {
                         r2 = r2.append("*");
-                    } else {
+                    } else if (r2.size() > 1) {
                         r2 = "(" + r2 + ")*";
                     }
                 }
 
-                std::string replacing = r1 + r2 + r3;
+                const std::string replacing = r1 + r2 + r3;
 
                 // existing edge
                 std::string r4 = "";
                 if (my_transitions[source].contains(target)) {
                     r4 = my_transitions[source][target];
-                    if (r4[0] == EMPTY) {
+                    if (r4 == "") {
                         r4 = "?";
                     } else if (brackets(r4)) {
                         r4 = "|(" + r4 + ")";
@@ -270,4 +258,8 @@ bool regex_builder::brackets(const std::string& regex) {
         }
     }
     return false;
+}
+
+std::string regex_builder::add_maybe_brackets(const std::string& regex) {
+    return brackets(regex) ? "(" + regex + ")" : regex;
 }

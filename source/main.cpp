@@ -87,7 +87,7 @@ void run() {
         regex_builder builder = regex_builder(*the_apta, *merger, coloring, sqldb::num2str);
         LOG_S(INFO) << "Finished building the regex builder";
         auto delimiter = "\t";
-        for (auto type : std::views::keys(inputdata_locator::get()->get_r_types())) {
+        for (std::string type : std::views::keys(inputdata_locator::get()->get_r_types())) {
             cout << type << delimiter << builder.to_regex(type) << endl;
         }
         return;
