@@ -36,14 +36,15 @@ endfunction(CloneRepository)
 # git tag from jan 1 2024.
 CloneRepository("https://github.com/jtv/libpqxx" "d8b6b9977a0c016fc168186b5fcf695d1af28a52" "libpqxx" "build-pqxx")
 
-set(BOOST_INCLUDE_LIBRARIES asio regex algorithm)
-set(BOOST_ENABLE_CMAKE ON)
-FetchContent_Declare(
-  Boost
-  URL https://github.com/boostorg/boost/releases/download/boost-1.84.0/boost-1.84.0.tar.xz
-  URL_MD5 893b5203b862eb9bbd08553e24ff146a
-)
-FetchContent_MakeAvailable(Boost)
+# Boost is really nice library. Much better than std::regex and as many more nice components.
+# set(BOOST_INCLUDE_LIBRARIES asio regex algorithm)
+# set(BOOST_ENABLE_CMAKE ON)
+# FetchContent_Declare(
+#   Boost
+#   URL https://github.com/boostorg/boost/releases/download/boost-1.84.0/boost-1.84.0.tar.xz
+#   URL_MD5 893b5203b862eb9bbd08553e24ff146a
+# )
+# FetchContent_MakeAvailable(Boost)
 
 
 add_subdirectory(source/utility/lexy)
