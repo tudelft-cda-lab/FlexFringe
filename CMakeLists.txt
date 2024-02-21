@@ -54,13 +54,13 @@ if (MSVC)
     add_compile_options("/W4" "$<$<CONFIG:RELEASE>:/O2>")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     add_compile_options(
-                        "$<$<CONFIG:RELEASE>:-O3>"
-                        "$<$<CONFIG:DEBUG>:-g>")
+      "$<$<CONFIG:RELEASE>:-O3;-DNDEBUG;-g>"
+      "$<$<CONFIG:DEBUG>:-g;-D_GLIBCXX_DEBUG>")
 else()
     add_compile_options(
-                        "$<$<CONFIG:RELEASE>:-O3>"
-                        "$<$<CONFIG:DEBUG>:-g>"
-                        "-fcompare-debug-second") # This flag is only for me, to suppress notes
+      "$<$<CONFIG:RELEASE>:-O3;-DNDEBUG;-g>"
+      "$<$<CONFIG:DEBUG>:-g -D_GLIBCXX_DEBUG>"
+      "-fcompare-debug-second") # This flag is only for me, to suppress notes
 endif()
 
 add_compile_definitions(LOGURU_WITH_STREAMS=1)
