@@ -49,18 +49,13 @@ public:
     // States of the DFA
     std::unordered_set<apta_node*> states;
     // Transitions in the DFA
-    std::unordered_map<apta_node*, std::unordered_map<apta_node*, char>> transitions;
+    std::unordered_map<apta_node*, std::unordered_map<apta_node*, std::string>> transitions;
     // Reverse transitions in the DFA
     std::unordered_map<apta_node*, std::unordered_set<apta_node*>> r_transitions;
 
     // Predicted types of each state
     std::unordered_map<std::string, std::vector<apta_node*>> types_map;
 
-
-    // The transition to the final state is empty, we use the "audible bell" character to indicate this.
-    // as I hope that is never a real symbol. Another possible char is '\0', but I don't know
-    // if other weird convetions can break that, because '\0' is the default when char is initialized.
-    char EMPTY = '\a';
 
     /**
      * @brief Convert the APTA to a regex string.
@@ -79,6 +74,8 @@ public:
      * If a | is not inside existing brackets, it should be brackets.
      */
     bool brackets(const std::string& regex);
+    std::string add_maybe_brackets(const std::string& regex);
+
 };
 
 #endif
