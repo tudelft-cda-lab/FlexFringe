@@ -50,16 +50,30 @@ CloneRepository("https://github.com/jtv/libpqxx" "d8b6b9977a0c016fc168186b5fcf69
 add_subdirectory(source/utility/lexy)
 add_subdirectory(source/utility/fmt-9.1.0)
 
+# Default compiler flags:
+# Set type with: -DCMAKE_BUILD_TYPE=Debug
+# Default is Release, set in line 9 of this file.
+# Release:
+# -O3 (Be fast)
+# -DNDEBUG (Disable assert)
+# Debug:
+# -g (Debug symbols)
+# https://stackoverflow.com/a/24767451/8477066
+# Extra:
+# -D_GLIBCXX_DEBUG Use safe STD (with bounds checking etc).
+# -ggdb3 Add extra information for gdb debugger.
+# -g Also for Release, it only makes binary bigger and is still useful in practise.
+# -UDEBUG Removes #ifdef DEBUG SOME_DEBUG_CODE #endif for your own debug code.
 if (MSVC)
     add_compile_options("/W4" "$<$<CONFIG:RELEASE>:/O2>")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     add_compile_options(
-      "$<$<CONFIG:RELEASE>:-O3;-DNDEBUG;-g>"
-      "$<$<CONFIG:DEBUG>:-g;-D_GLIBCXX_DEBUG>")
+      "$<$<CONFIG:RELEASE>:-g;-UDEBUG>"
+      "$<$<CONFIG:DEBUG>:-ggdb3;-D_GLIBCXX_DEBUG>")
 else()
     add_compile_options(
-      "$<$<CONFIG:RELEASE>:-O3;-DNDEBUG;-g>"
-      "$<$<CONFIG:DEBUG>:-g -D_GLIBCXX_DEBUG>"
+      "$<$<CONFIG:RELEASE>-g;-UDEBUG>"
+      "$<$<CONFIG:DEBUG>:-ggdb3;-D_GLIBCXX_DEBUG>"
       "-fcompare-debug-second") # This flag is only for me, to suppress notes
 endif()
 
