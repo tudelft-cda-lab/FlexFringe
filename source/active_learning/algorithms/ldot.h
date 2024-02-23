@@ -35,6 +35,11 @@ class ldot_algorithm : public algorithm_base {
     void add_trace(inputdata& id, std::vector<int> seq, int answer);
 
     /**
+     * @brief Add the vector to my_apta.
+     */
+    void add_vec_to_apta(inputdata& id, const std::vector<int>& vec, int symbol);
+
+    /**
      * @brief Processing the counterexample recursively in the binary search strategy
      * as described by the paper.
      *
