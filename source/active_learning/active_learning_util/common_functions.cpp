@@ -33,6 +33,11 @@ apta_node* active_learning_namespace::get_child_node(apta_node* n, tail* t) {
     return child->find();
 }
 
+apta_node* active_learning_namespace::get_child_node(apta_node* n, int symbol) {
+    apta_node* child = n->child(symbol);
+    return child == nullptr ? nullptr : child->find();
+}
+
 /**
  * @brief There are two versions of this function. In this version we look at if the tree is
  * possibly parsable by the traces.

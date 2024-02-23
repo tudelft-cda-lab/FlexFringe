@@ -315,13 +315,14 @@ public:
         return rep;
     };
 
-    /** getting target states with bounded guards, access via tails or guard from other state */
+    /** Getting target state with bounded guards, access via tails or guard from other state. */
     apta_node* child(tail* t);
+
     apta_guard* guard(int i, apta_guard* g);
     apta_guard* guard(tail* t);
     void set_child(tail* t, apta_node* node);
 
-    /** getting target states via symbols only */
+    /** getting target state via symbols only */
     inline apta_node* child(int i){
         guard_map::iterator it = guards.find(i);
         if(it != guards.end()) return it->second->target;

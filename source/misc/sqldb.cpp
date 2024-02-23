@@ -216,7 +216,7 @@ int sqldb::query_trace(const std::string& trace) {
 
 int sqldb::query_trace_maybe(const std::string& trace) {
     auto query = fmt::format("SELECT COALESCE( (SELECT {0} FROM {1} WHERE {2} = '{3}'), -1)", RES_NAME, table_name,
-                             TRACE_NAME, trace);
+                             TRACE_NAME, trace); // The last -1 here is the default value.
     try {
         pqxx::work tx{conn};
         auto val = tx.query_value<int>(query);

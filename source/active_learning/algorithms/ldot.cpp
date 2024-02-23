@@ -23,47 +23,39 @@
 #include <memory>
 #include <vector>
 
+void ldot_algorithm::add_vec_to_apta(inputdata& id, const std::vector<int>& vec, int symbol) {
+    trace* new_trace = active_learning_namespace::vector_to_trace(vec, id, symbol);
+    id.add_trace_to_apta(new_trace, my_apta.get(), false);
+    id.add_trace(new_trace);
+}
+
 void ldot_algorithm::proc_counterex(inputdata& id, const vector<int>& alphabet, const vector<int>& counterex,
                                     const refinement_list& refs) {
     active_learning_namespace::reset_apta(my_merger.get(), refs);
     vector<int> substring;
     apta_node* n = my_apta->get_root();
+
+    // TODO: Is the base complete that you can go to the fringe and then try to add to apta? Thus, use if else here or
+    // something.
     for (auto s : counterex) {
-        if (n == nullptr) {
+        substring.push_back(s);
+        n = active_learning_namespace::get_child_node(n, s);
+        if (n == nullptr) { // Not in apta -> try to add to apta
             const int queried_type = my_sul->query_trace_maybe(substring);
-            // TODO: How to deal with gaps. ie queried_type is -1.
-            trace* new_trace = active_learning_namespace::vector_to_trace(substring, id, queried_type);
-            id.add_trace_to_apta(new_trace, my_apta.get(), false);
-            id.add_trace(new_trace);
-            substring.push_back(s);
-        } else {
-            // find the fringe
-            substring.push_back(s);
-            trace* parse_trace =
-                active_learning_namespace::vector_to_trace(substring, id, 0); // TODO: inefficient like this
-            tail* t = substring.size() == 0 ? parse_trace->get_end() : parse_trace->get_end()->past_tail;
-            n = active_learning_namespace::get_child_node(n, t);
-            mem_store::delete_trace(parse_trace);
+            if (queried_type != -1) {
+                add_vec_to_apta(id, substring, queried_type);
+            }
         }
     }
 
-    // for the last element, too
-    const int queried_type = my_sul->query_trace_maybe(substring);
-    // TODO: How to deal with gaps. ie queried_type is -1.
-    trace* new_trace = active_learning_namespace::vector_to_trace(substring, id, queried_type);
-    id.add_trace_to_apta(new_trace, my_apta.get(), false);
-    id.add_trace(new_trace);
-
     // now let's walk over the apta again, completing all the states we created
     n = my_apta->get_root();
-    trace* parsing_trace = active_learning_namespace::vector_to_trace(counterex, id);
-    tail* t = parsing_trace->get_head();
-    while (n != nullptr) {
+    for (auto s : counterex) {
+        n = active_learning_namespace::get_child_node(n, s);
         complete_state(id, alphabet, n);
-        n = active_learning_namespace::get_child_node(n, t);
-        t = t->future();
     }
 }
+
 void ldot_algorithm::add_trace(inputdata& id, std::vector<int> seq, int answer) {
     trace* new_trace = active_learning_namespace::vector_to_trace(seq, id, answer);
     id.add_trace_to_apta(new_trace, my_merger->get_aut(), false);
