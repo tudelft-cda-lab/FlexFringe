@@ -100,4 +100,4 @@ add_library(ActiveLearning STATIC
             teacher/base_teacher.cpp
 )
 
-target_link_libraries(ActiveLearning ${PYTHON_LIBRARIES} pqxx)
+target_link_libraries(ActiveLearning ${PYTHON_LIBRARIES} libpqxx::pqxx)

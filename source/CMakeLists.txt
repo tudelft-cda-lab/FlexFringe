@@ -121,4 +121,4 @@ add_subdirectory(active_learning)
 
 # Please note that pqxx should be linked to every module that depends on it.
 # include_directories does not work.
-target_link_libraries(Source pqxx)
+target_link_libraries(Source libpqxx::pqxx)
