@@ -192,12 +192,14 @@ void inputdata::set_alphabet(const vector<int>& input_alphabet){
 void inputdata::set_alphabet(const std::map<std::string, int>& input_r_alphabet) {
     r_alphabet = input_r_alphabet; // copy-assignment
     alphabet.clear();
-    for (auto const& imap : input_r_alphabet) alphabet.push_back(imap.first);
+    alphabet.resize(input_r_alphabet.size());
+    for (auto const& [str, val] : input_r_alphabet) alphabet[val] = str;
 }
 void inputdata::set_types(const std::map<std::string, int>& input_r_types) {
     r_types = input_r_types; // copy-assignment
     types.clear();
-    for (auto const& imap : input_r_types) types.push_back(imap.first);
+    types.resize(input_r_types.size());
+    for (auto const& [str, val] : input_r_types) types[val] = str;
 }
 
 attribute *inputdata::get_trace_attribute(int attr) {
