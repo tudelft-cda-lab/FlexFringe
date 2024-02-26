@@ -115,6 +115,11 @@ std::vector<std::string> sqldb::get_alphabet() {
     tx.commit();
     pqxx::array<std::string> arr{data, conn};
     std::vector<std::string> val{arr.cbegin(), arr.cend()};
+
+    stringstream ss;
+    ss << val;
+    LOG_S(INFO) << ss.str();
+
     return val;
 }
 
@@ -126,6 +131,11 @@ std::vector<std::string> sqldb::get_types() {
     tx.commit();
     pqxx::array<std::string> arr{data, conn};
     std::vector<std::string> val{arr.cbegin(), arr.cend()};
+
+    stringstream ss;
+    ss << val;
+    LOG_S(INFO) << ss.str();
+
     return val;
 }
 

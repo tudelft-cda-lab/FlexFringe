@@ -24,9 +24,26 @@
 #include <memory>
 #include <vector>
 
+template <typename T> std::string printAddress(const std::list<T>& v) {
+    stringstream ss;
+    ss << "[";
+    for (auto& e : v) ss << &e << ", ";
+    ss << "]\n";
+    return ss.str();
+}
+
 void ldot_algorithm::proc_counterex(inputdata& id, const vector<int>& alphabet, const vector<int>& counterex,
                                     const refinement_list& refs) {
     active_learning_namespace::reset_apta(my_merger.get(), refs);
+
+#ifndef NDEBUG
+    DLOG_S(1) << n_runs << ": Undoing " << refs.size() << " refs.";
+    // printing the model each time
+    print_current_automaton(my_merger.get(), "debug/model.", std::to_string(n_runs) + ".zzz");
+#endif
+
+    performed_refinements.clear();
+
     vector<int> substring;
     apta_node* n = my_apta->get_root();
 
@@ -51,7 +68,7 @@ void ldot_algorithm::proc_counterex(inputdata& id, const vector<int>& alphabet, 
     }
 }
 
-trace* ldot_algorithm::add_trace(inputdata& id, std::vector<int> seq, int answer) {
+trace* ldot_algorithm::add_trace(inputdata& id, const std::vector<int>& seq, int answer) {
     stringstream ss;
     ss << answer << " " << seq;
     DLOG_S(1) << ss.str();
@@ -86,7 +103,6 @@ std::vector<refinement*> ldot_algorithm::process_unidentified(std::vector<refine
 }
 
 void ldot_algorithm::complete_state(inputdata& id, const vector<int>& alphabet, apta_node* n) {
-    static unordered_set<apta_node*> completed_nodes;
     if (completed_nodes.contains(n))
         return;
 
@@ -115,7 +131,7 @@ void ldot_algorithm::run(inputdata& id) {
     if (my_sul == nullptr) {
         throw logic_error("ldot only works with sqldb_sul.");
     }
-    int n_runs = 1;
+    n_runs = 1;
 
     // Initialize data structures.
     my_eval = unique_ptr<evaluation_function>(get_evaluation());
@@ -135,20 +151,20 @@ void ldot_algorithm::run(inputdata& id) {
             LOG_S(INFO) << "Iteration " << n_runs + 1;
 
         bool no_isolated_states = true; // avoid iterating over a changed data structure (apta)
-        std::list<refinement*> performed_refinements;
         // The refinements for the unidentified nodes.
         std::vector<refinement_set> refs_for_unidentified;
 
 #ifndef NDEBUG
         // printing the model each time (once per n_runs).
         static int x = -1;
+        static int uid = 0;
         if (x != n_runs)
-            print_current_automaton(my_merger.get(), "debug/model.", std::to_string(n_runs) + ".pre");
+            print_current_automaton(my_merger.get(), "debug/model.", std::to_string(n_runs) + ".bef");
         x = n_runs;
 #endif
 
         for (blue_state_iterator b_it = blue_state_iterator(my_apta->get_root()); *b_it != nullptr; ++b_it) {
-            const auto blue_node = *b_it;
+            auto* blue_node = *b_it;
 
             if (blue_node->get_size() == 0)
                 throw logic_error("This should never happen: TODO: Delete line");
@@ -170,19 +186,40 @@ void ldot_algorithm::run(inputdata& id) {
                 }
             }
 
-            if (possible_refs.size() == 0) {
+            if (possible_refs.empty()) {
                 // Promotion of the blue node.
                 no_isolated_states = false;
                 refinement* ref = mem_store::create_extend_refinement(my_merger.get(), blue_node);
+
+#ifndef NDEBUG
+                print_current_automaton(my_merger.get(), "debug/model.",
+                                        std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) + ".ext_a");
                 ref->doref(my_merger.get());
                 performed_refinements.push_back(ref);
+                print_current_automaton(my_merger.get(), "debug/model.",
+                                        std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) + ".ext_b");
+                DLOG_S(2) << n_runs << ":extend:" << printAddress(performed_refinements);
+#else
+                ref->doref(my_merger.get());
+                performed_refinements.push_back(ref);
+#endif
             }
 
             if (possible_refs.size() == 1) {
                 // There is one refinement, do that one.
                 refinement* ref = *possible_refs.begin();
+#ifndef NDEBUG
+                print_current_automaton(my_merger.get(), "debug/model.",
+                                        std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) + ".one_a");
                 ref->doref(my_merger.get());
                 performed_refinements.push_back(ref);
+                print_current_automaton(my_merger.get(), "debug/model.",
+                                        std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) + ".one_b");
+                DLOG_S(2) << n_runs << ":one:" << printAddress(performed_refinements);
+#else
+                ref->doref(my_merger.get());
+                performed_refinements.push_back(ref);
+#endif
             }
 
             if (possible_refs.size() > 1) {
@@ -196,8 +233,19 @@ void ldot_algorithm::run(inputdata& id) {
             // Also might make some queries to get additional info for these unidentified blue nodes.
             auto selected_refs = process_unidentified(refs_for_unidentified);
             for (auto* ref : selected_refs) {
+#ifndef NDEBUG
+                print_current_automaton(my_merger.get(), "debug/model.",
+                                        std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) + ".pro_a");
                 ref->doref(my_merger.get());
                 performed_refinements.push_back(ref);
+                print_current_automaton(my_merger.get(), "debug/model.",
+                                        std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) + ".pro_b");
+
+                DLOG_S(2) << n_runs << ":uni:" << printAddress(performed_refinements);
+#else
+                ref->doref(my_merger.get());
+                performed_refinements.push_back(ref);
+#endif
             }
         }
 
@@ -207,7 +255,7 @@ void ldot_algorithm::run(inputdata& id) {
         }
 
 #ifndef NDEBUG
-        int selected_refs_nr = performed_refinements.size();
+        const std::size_t selected_refs_nr = performed_refinements.size();
         // printing the model each time
         print_current_automaton(my_merger.get(), "debug/model.", std::to_string(n_runs) + ".sel");
 #endif
@@ -216,10 +264,10 @@ void ldot_algorithm::run(inputdata& id) {
         active_learning_namespace::minimize_apta(performed_refinements, my_merger.get());
 
 #ifndef NDEBUG
-        DLOG_S(1) << "Got " << selected_refs_nr << " refs from selection and a total of "
-                  << performed_refinements.size() << " from minimizing.";
+        DLOG_S(1) << n_runs << ": Got " << selected_refs_nr << " refs from selection and a total of "
+                  << performed_refinements.size() << " after minimizing.";
         // printing the model each time
-        print_current_automaton(my_merger.get(), "debug/model.", std::to_string(n_runs) + ".x");
+        print_current_automaton(my_merger.get(), "debug/model.", std::to_string(n_runs) + ".xxx");
 #endif
 
         // Check equivalence, if not process the counter example.
@@ -231,7 +279,7 @@ void ldot_algorithm::run(inputdata& id) {
 
             optional<pair<vector<int>, int>> query_result = oracle->equivalence_query(my_merger.get(), teacher);
             if (!query_result) {
-                LOG_S(INFO) << "Found consistent automaton => Print to " << OUTPUT_FILE;
+                LOG_S(INFO) << n_runs << ": Found consistent automaton => Print to " << OUTPUT_FILE;
                 print_current_automaton(my_merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
                 return;                                                          // Solved!
             }
@@ -244,13 +292,13 @@ void ldot_algorithm::run(inputdata& id) {
             const vector<int>& cex = query_result.value().first;
             std::stringstream ss;
             ss << cex;
-            LOG_S(INFO) << "Counterexample of length " << cex.size() << " found: " << ss.str();
+            LOG_S(INFO) << n_runs << ": Counterexample of length " << cex.size() << " found: " << ss.str();
             proc_counterex(id, my_alphabet, cex, performed_refinements);
             break;
         }
 
         if (ENSEMBLE_RUNS > 0 && n_runs == ENSEMBLE_RUNS) {
-            LOG_S(INFO) << "Maximum of runs reached. Printing automaton to " << OUTPUT_FILE;
+            LOG_S(INFO) << n_runs << ": Maximum of runs reached. Printing automaton to " << OUTPUT_FILE;
             active_learning_namespace::minimize_apta(performed_refinements, my_merger.get());
             print_current_automaton(my_merger.get(), OUTPUT_FILE, ".final");
             return;
