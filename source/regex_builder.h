@@ -76,6 +76,7 @@ public:
     bool brackets(const std::string& regex);
     std::string add_maybe_brackets(const std::string& regex);
 
+    void print_my_transitions(std::unordered_map<apta_node*, std::unordered_map<apta_node*, std::string>> trans);
 };
 
 #endif

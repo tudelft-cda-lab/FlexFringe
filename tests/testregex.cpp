@@ -40,7 +40,7 @@ TEST_CASE( "Test regex_builder functionality", "[regex]" ) {
     LOG_S(INFO) << "Finished building the regex builder";
     std::map<int, std::regex> regexes = {};
     for (const int type : inputdata_locator::get()->get_types()) {
-        regexes[type] = std::regex{ "^(" + builder.to_regex(type) + ")$" };
+        regexes[type] = std::regex{ builder.to_regex(type) };
     }
 
     std::ifstream input_stream{ INPUT_FILE };
