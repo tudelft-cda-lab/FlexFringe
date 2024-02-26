@@ -3,6 +3,7 @@
  */
 
 #include "sqldb_sul_regex_oracle.h"
+#include "main_helpers.h"
 #include "misc/sqldb.h"
 #include "regex_builder.h"
 #include <memory>
@@ -19,6 +20,7 @@ std::optional<CEX> sqldb_sul_regex_oracle::equivalence_query(state_merger* merge
     static const auto& types = id.get_types();
 
     auto coloring = std::make_tuple(PRINT_RED, PRINT_BLUE, PRINT_WHITE);
+    print_current_automaton(merger, OUTPUT_FILE, ".regex"); // printing the final model each time
     regex_builder builder = regex_builder(hypothesis, *merger, coloring, sqldb::num2str);
 
     // TODO; perform alteration for the types to check as a performance enhancement.

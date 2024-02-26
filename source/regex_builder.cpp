@@ -42,7 +42,8 @@ void regex_builder::initialize(apta& the_apta, state_merger& merger, std::tuple<
 
     // Gather nodes.
     for(merged_APTA_iterator Ait = merged_APTA_iterator(root); *Ait != nullptr; ++Ait) {
-        apta_node *n = *Ait;
+        apta_node* n = *Ait;
+        if (n == root) { std::cout << "INCLUDEING ROOT" << std::endl; }
 
         if(!include_red && n->red) continue;
 
@@ -116,19 +117,27 @@ void regex_builder::initialize(apta& the_apta, state_merger& merger, std::tuple<
         } catch(std::invalid_argument &e) {
             throw runtime_error("Could not get predicted type, did you set --predicttype 1?");
         }
+        if (type.size() == 0) {
+            throw runtime_error("Could not get predicted type, did you set --predicttype 1?");
+        }
+        std::cout << n->get_number() << " " << type << std::endl;
         types_map[type].push_back(n);
     }
 
     LOG_S(INFO) << "Gathered predictions";
-
-
-    // Root does not be evualated anymore.
-    // It should only be in the transitions and predictions.
-    states.erase(root); 
 }
 
 std::string regex_builder::to_regex(int output_state) {
     return to_regex(inputdata_locator::get()->string_from_type(output_state));
+}
+
+void regex_builder::print_my_transitions(std::unordered_map<apta_node*, std::unordered_map<apta_node*, std::string>> trans) {
+    std::cout << "TRANS" << std::endl;
+    for (const auto& x : trans) {
+        for (const auto& y : x.second) {
+            std::cout << x.first->get_number() << "->" << y.first->get_number() << ":" << y.second << std::endl;
+        }
+    }
 }
 
 std::string regex_builder::to_regex(std::string output_state) {
@@ -136,6 +145,15 @@ std::string regex_builder::to_regex(std::string output_state) {
     std::unordered_set<apta_node*> my_states = states;
     std::unordered_map<apta_node*, std::unordered_set<apta_node*>> my_r_transitions = r_transitions;
     std::unordered_map<apta_node*, std::unordered_map<apta_node*, std::string>> my_transitions = transitions;
+
+    // Add epsilon transitions to final and start node not interacting with the whole.
+    auto final_node = make_unique<apta_node>();
+    for (auto* n : types_map[output_state]) {
+        my_transitions[n].insert(std::make_pair(final_node.get(), ""));
+    }
+    auto start_node = make_unique<apta_node>();
+    my_transitions[start_node.get()].insert(std::make_pair(root, ""));
+    my_r_transitions[root].insert(start_node.get());
 
     // Minimally connected nodes
     // Gather connection size. (degree or valency)
@@ -148,12 +166,6 @@ std::string regex_builder::to_regex(std::string output_state) {
     std::priority_queue<DEGREE, std::deque<DEGREE>, degree_cmp> min_connected;
     for (apta_node* n : states) {
         min_connected.push(std::make_pair(n, r_transitions[n].size() + transitions[n].size()));
-    }
-
-    auto final_node = make_unique<apta_node>();
-
-    for (auto* n : types_map[output_state]) {
-        my_transitions[n].insert(std::make_pair(final_node.get(), ""));
     }
 
     LOG_S(INFO) << "Initialize setup for regex, entering node elemination loop.";
@@ -172,6 +184,7 @@ std::string regex_builder::to_regex(std::string output_state) {
     // I don't know if the overhead of tracking the degree of the nodes 
     // outweights the advantage of removing these kind of nodes first.
     // Might need to be tested.
+    std::vector<std::pair<apta_node*, apta_node*>> loop_pairs;
     while(!my_states.empty()) {
         apta_node* remove = min_connected.top().first;
         min_connected.pop(); // remove
@@ -181,45 +194,52 @@ std::string regex_builder::to_regex(std::string output_state) {
         // https://stackoverflow.com/questions/649640/how-to-do-an-efficient-priority-update-in-stl-priority-queue
         if (!my_states.contains(remove)) continue;
 
-        for (auto* source : my_r_transitions[remove]) {
-            for (auto* target : std::views::keys(my_transitions[remove])) {
-                auto r1 = add_maybe_brackets(my_transitions[source][remove]);
-                auto r3 = add_maybe_brackets(my_transitions[remove][target]);
-
-                // self-loop
-                std::string r2 = "";
-                if (my_transitions[remove].contains(remove)) {
-                    r2 = my_transitions[remove][remove];
-                    if (r2.size() == 1) {
-                        r2 = r2.append("*");
-                    } else if (r2.size() > 1) {
-                        r2 = "(" + r2 + ")*";
-                    }
-                }
-
-                const std::string replacing = r1 + r2 + r3;
-
-                // existing edge
-                std::string r4 = "";
-                if (my_transitions[source].contains(target)) {
-                    r4 = my_transitions[source][target];
-                    if (r4 == "") {
-                        r4 = "?";
-                    } else if (brackets(r4)) {
-                        r4 = "|(" + r4 + ")";
-                    } else {
-                        r4 = "|" + r4;
-                    }
-                }        
-
-                // Update the data structures and set the new regex.
-                if (r4 == "?" && replacing.size() > 1) {
-                    my_transitions[source][target] = "(" + replacing + ")" + r4;
-                } else {
-                    my_transitions[source][target] = replacing + r4;
-                }
-                my_r_transitions[target].insert(source);
+        loop_pairs.clear();
+        for (apta_node* source : my_r_transitions[remove]) {
+            if (remove == source) continue; // Do not replace self-loops
+            for (apta_node* target : std::views::keys(my_transitions[remove])) {
+                if (remove == target) continue; // Do not replace self-loops
+                loop_pairs.emplace_back(source, target);
             }
+        }
+
+        for (const auto [source, target] : loop_pairs) {
+            auto r1 = add_maybe_brackets(my_transitions[source][remove]);
+            auto r3 = add_maybe_brackets(my_transitions[remove][target]);
+
+            // self-loop
+            std::string r2 = "";
+            if (my_transitions[remove].contains(remove)) {
+                r2 = my_transitions[remove][remove];
+                if (r2.size() == 1) {
+                    r2 = r2.append("*");
+                } else if (r2.size() > 1) {
+                    r2 = "(" + r2 + ")*";
+                }
+            }
+
+            const std::string replacing = r1 + r2 + r3;
+
+            // existing edge
+            std::string r4 = "";
+            if (my_transitions[source].contains(target)) {
+                r4 = my_transitions[source][target];
+                if (r4 == "") {
+                    r4 = "?";
+                } else if (brackets(r4)) {
+                    r4 = "|(" + r4 + ")";
+                } else {
+                    r4 = "|" + r4;
+                }
+            }        
+
+            // Update the data structures and set the new regex.
+            if (r4 == "?" && replacing.size() > 1) {
+                my_transitions[source][target] = "(" + replacing + ")" + r4;
+            } else {
+                my_transitions[source][target] = replacing + r4;
+            }
+            my_r_transitions[target].insert(source);
         }
 
         // Remove 'remove' from all datastructures
@@ -237,7 +257,9 @@ std::string regex_builder::to_regex(std::string output_state) {
         my_r_transitions.erase(remove);
     }
 
-    return my_transitions[root][final_node.get()];
+    std:string regex = my_transitions[start_node.get()][final_node.get()];
+    if (regex.size() == 0) return ".*";
+    return "^(" + regex + ")$";
 }
 
 
