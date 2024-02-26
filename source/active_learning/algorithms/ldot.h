@@ -16,6 +16,7 @@
 #include "apta.h"
 #include "base_teacher.h"
 #include "eq_oracle_base.h"
+#include "input/trace.h"
 #include "inputdata.h"
 #include "sqldb_sul.h"
 #include "state_merger.h"
@@ -32,12 +33,7 @@ class ldot_algorithm : public algorithm_base {
     /**
      * @brief Add a new trace to the data structures (apta, mem_store).
      */
-    void add_trace(inputdata& id, std::vector<int> seq, int answer);
-
-    /**
-     * @brief Add the vector to my_apta.
-     */
-    void add_vec_to_apta(inputdata& id, const std::vector<int>& vec, int symbol);
+    trace* add_trace(inputdata& id, std::vector<int> seq, int answer);
 
     /**
      * @brief Processing the counterexample recursively in the binary search strategy

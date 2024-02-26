@@ -13,6 +13,7 @@
 #include "ldot.h"
 #include "common_functions.h"
 #include "evaluate.h"
+#include "input/trace.h"
 #include "loguru.hpp"
 #include "main_helpers.h"
 #include "misc/printutil.h"
@@ -23,28 +24,22 @@
 #include <memory>
 #include <vector>
 
-void ldot_algorithm::add_vec_to_apta(inputdata& id, const std::vector<int>& vec, int symbol) {
-    trace* new_trace = active_learning_namespace::vector_to_trace(vec, id, symbol);
-    id.add_trace_to_apta(new_trace, my_apta.get(), false);
-    id.add_trace(new_trace);
-}
-
 void ldot_algorithm::proc_counterex(inputdata& id, const vector<int>& alphabet, const vector<int>& counterex,
                                     const refinement_list& refs) {
     active_learning_namespace::reset_apta(my_merger.get(), refs);
     vector<int> substring;
     apta_node* n = my_apta->get_root();
 
-    // TODO: Is the base complete that you can go to the fringe and then try to add to apta? Thus, use if else here or
-    // something.
     for (auto s : counterex) {
         substring.push_back(s);
-        n = active_learning_namespace::get_child_node(n, s);
-        if (n == nullptr) { // Not in apta -> try to add to apta
-            const int queried_type = my_sul->query_trace_maybe(substring);
-            if (queried_type != -1) {
-                add_vec_to_apta(id, substring, queried_type);
-            }
+        if (n != nullptr) {
+            // Look for fringe, then add to apta.
+            n = active_learning_namespace::get_child_node(n, s);
+            continue;
+        }
+        const int queried_type = my_sul->query_trace_maybe(substring);
+        if (queried_type != -1) {
+            add_trace(id, substring, queried_type);
         }
     }
 
@@ -56,10 +51,15 @@ void ldot_algorithm::proc_counterex(inputdata& id, const vector<int>& alphabet, 
     }
 }
 
-void ldot_algorithm::add_trace(inputdata& id, std::vector<int> seq, int answer) {
+trace* ldot_algorithm::add_trace(inputdata& id, std::vector<int> seq, int answer) {
+    stringstream ss;
+    ss << answer << " " << seq;
+    LOG_S(1) << ss.str();
+
     trace* new_trace = active_learning_namespace::vector_to_trace(seq, id, answer);
     id.add_trace_to_apta(new_trace, my_merger->get_aut(), false);
     id.add_trace(new_trace);
+    return new_trace;
 }
 
 std::vector<refinement*> ldot_algorithm::process_unidentified(std::vector<refinement_set> refs_for_unidentified) {
@@ -122,6 +122,8 @@ void ldot_algorithm::run(inputdata& id) {
     my_eval->initialize_before_adding_traces();
     my_apta = make_unique<apta>();
     my_merger = make_unique<state_merger>(&id, my_eval.get(), my_apta.get());
+    my_apta->set_context(my_merger.get());
+    my_eval->set_context(my_merger.get());
     const vector<int> my_alphabet = id.get_alphabet();
 
     // init the root node, s.t. we have blue states to iterate over
@@ -212,7 +214,7 @@ void ldot_algorithm::run(inputdata& id) {
 
             optional<pair<vector<int>, int>> query_result = oracle->equivalence_query(my_merger.get(), teacher);
             if (!query_result) {
-                LOG_S(INFO) << "Found consistent automaton => Print.";
+                LOG_S(INFO) << "Found consistent automaton => Print to " << OUTPUT_FILE;
                 print_current_automaton(my_merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
                 return;                                                          // Solved!
             }
@@ -230,12 +232,12 @@ void ldot_algorithm::run(inputdata& id) {
             break;
         }
 
-        ++n_runs;
         if (ENSEMBLE_RUNS > 0 && n_runs == ENSEMBLE_RUNS) {
-            LOG_S(INFO) << "Maximum of runs reached. Printing automaton.";
-            for (auto* top_ref : performed_refinements) { top_ref->doref(my_merger.get()); }
+            LOG_S(INFO) << "Maximum of runs reached. Printing automaton to " << OUTPUT_FILE;
+            active_learning_namespace::minimize_apta(performed_refinements, my_merger.get());
             print_current_automaton(my_merger.get(), OUTPUT_FILE, ".final");
             return;
         }
+        ++n_runs;
     }
 }
