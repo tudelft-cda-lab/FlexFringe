@@ -108,6 +108,7 @@ void trace::reverse(){
 }
 
 string trace::to_string(){
+    if(this == nullptr) return "NULL";
     tail* t = head;
     if(t == nullptr) return "0 0";
     while(t->future() != nullptr) t = t->future();

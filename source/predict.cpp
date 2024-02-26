@@ -308,7 +308,8 @@ void predict_trace_update_sequences(state_merger* m, tail* t){
     apta_node* n = m->get_aut()->get_root();
     double score = 0.0;
 
-    for(int j = 0; j < t->get_length(); j++){
+    const int l = t == nullptr ? 0 : t->get_length();
+    for(int j = 0; j < l; j++){
         score = compute_score(n, t);
         score_sequence.push_back(score);
 
@@ -319,7 +320,7 @@ void predict_trace_update_sequences(state_merger* m, tail* t){
             break;
         }
 
-        t = t->future();
+        if(t->future() != nullptr) t = t->future();
         state_sequence.push_back(n->get_number());
         align_sequence.push_back(true);
     }
@@ -333,7 +334,8 @@ void predict_trace_update_sequences(state_merger* m, tail* t){
 
     ending_state = n;
     ending_tail = t;
-    if(ending_tail->is_final()) ending_tail = ending_tail->past();
+    if(ending_tail != nullptr && ending_tail->is_final()) 
+        ending_tail = ending_tail->past();
 }
 
 template <typename T>
@@ -457,8 +459,11 @@ void predict_trace(state_merger* m, ostream& output, trace* tr){
 
     if(ending_state != nullptr){
         if(PREDICT_TYPE){
-            output << "; " << inputdata_locator::get()->string_from_type(tr->get_type());
-            output << "; " << ending_state->get_data()->predict_type_score(tr->get_head());
+            int trace_type = tr->get_type();
+            output << "; " << inputdata_locator::get()->string_from_type(trace_type == -1 ? 0 : trace_type);
+
+            double type_score = tr->get_head() == nullptr ? 0.0 : ending_state->get_data()->predict_type_score(tr->get_head());
+            output << "; " << type_score;
 
             int type_predict = ending_state->get_data()->predict_type(ending_tail);
             output << "; " << inputdata_locator::get()->string_from_type(type_predict);

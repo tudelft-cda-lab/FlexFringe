@@ -36,6 +36,7 @@ apta::apta(){
 
     LOG_S(INFO) << "Creating APTA data structure";
     root = new apta_node();
+    root->access_trace = mem_store::create_trace();
     root->red = true;
     merger = nullptr;
 }
