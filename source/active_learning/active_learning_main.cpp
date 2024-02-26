@@ -17,9 +17,9 @@
 #include "lstar.h"
 #include "probabilistic_lsharp.h"
 #include "probabilistic_lsharp_v2.h"
-#include "weighted_lsharp.h"
 #include "transformer_lsharp.h"
 #include "transformer_weighted_lsharp.h"
+#include "weighted_lsharp.h"
 
 #include "active_sul_oracle.h"
 #include "dfa_sul.h"
@@ -35,6 +35,7 @@
 #include "inputdata.h"
 #include "inputdatalocator.h"
 #include "main_helpers.h"
+#include "misc/printutil.h"
 #include "parameters.h"
 
 #include "loguru.hpp"

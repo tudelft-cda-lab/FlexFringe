@@ -18,6 +18,7 @@
 #include "eq_oracle_base.h"
 #include "input/trace.h"
 #include "inputdata.h"
+#include "refinement.h"
 #include "sqldb_sul.h"
 #include "state_merger.h"
 #include <memory>
@@ -25,6 +26,9 @@
 
 class ldot_algorithm : public algorithm_base {
   private:
+    int n_runs;
+    std::list<refinement*> performed_refinements;
+    unordered_set<apta_node*> completed_nodes;
     /**
      * For a specific node (n) complete for as possible all the 1 size steps.
      */
@@ -33,7 +37,7 @@ class ldot_algorithm : public algorithm_base {
     /**
      * @brief Add a new trace to the data structures (apta, mem_store).
      */
-    trace* add_trace(inputdata& id, std::vector<int> seq, int answer);
+    trace* add_trace(inputdata& id, const std::vector<int>& seq, int answer);
 
     /**
      * @brief Processing the counterexample recursively in the binary search strategy

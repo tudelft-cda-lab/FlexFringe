@@ -43,10 +43,7 @@ void regex_builder::initialize(apta& the_apta, state_merger& merger, std::tuple<
     // Gather nodes.
     for(merged_APTA_iterator Ait = merged_APTA_iterator(root); *Ait != nullptr; ++Ait) {
         apta_node* n = *Ait;
-        if (n == root) { std::cout << "INCLUDEING ROOT" << std::endl; }
-
         if(!include_red && n->red) continue;
-
         if (!include_white && !n->red) {
             if (n->source != nullptr) {
                 if (!n->source->find()->red)
@@ -120,9 +117,21 @@ void regex_builder::initialize(apta& the_apta, state_merger& merger, std::tuple<
         if (type.size() == 0) {
             throw runtime_error("Could not get predicted type, did you set --predicttype 1?");
         }
-        std::cout << n->get_number() << " " << type << std::endl;
         types_map[type].push_back(n);
     }
+#ifndef NDEBUG
+    stringstream ss;
+    ss << "[";
+    for (const auto& [type, nn] : types_map) {
+        ss << "(" << type << ": ";
+        for (const auto* n : nn) {
+            ss << n->get_number() << ", ";
+        }
+        ss << ")";
+    }
+    ss << "]";
+    std::cout << "Regex from types_map: " << ss.str() << std::endl;
+#endif
 
     LOG_S(INFO) << "Gathered predictions";
 }
