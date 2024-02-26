@@ -203,7 +203,7 @@ void sqldb::add_row(const std::string& trace, int res) {
 
 int sqldb::query_trace(const std::string& trace) {
     auto query = fmt::format("SELECT {0} FROM {1} WHERE {2} = '{3}'", RES_NAME, table_name, TRACE_NAME, trace);
-    LOG_S(1) << query;
+    DLOG_S(1) << query;
     try {
         pqxx::work tx{conn};
         auto val = tx.query_value<int>(query);
@@ -218,7 +218,7 @@ int sqldb::query_trace(const std::string& trace) {
 int sqldb::query_trace_maybe(const std::string& trace) {
     auto query = fmt::format("SELECT COALESCE( (SELECT {0} FROM {1} WHERE {2} = '{3}'), -1)", RES_NAME, table_name,
                              TRACE_NAME, trace); // The last -1 here is the default value.
-    LOG_S(1) << query;
+    DLOG_S(1) << query;
     try {
         pqxx::work tx{conn};
         auto val = tx.query_value<int>(query);
@@ -241,7 +241,7 @@ bool sqldb::is_member(const std::string& trace) {
 std::optional<std::pair<std::vector<int>, int>> sqldb::regex_equivalence(const std::string& regex, int type) {
     auto query = fmt::format("SELECT {1}, {4} FROM {0} WHERE {1} ~ '{2}' and {3} != {4} LIMIT 1", table_name,
                              TRACE_NAME, regex, RES_NAME, type);
-    LOG_S(1) << query;
+    DLOG_S(1) << query;
     try {
         pqxx::work tx{conn};
         auto [trace, type] = tx.query1<std::string, int>(query);

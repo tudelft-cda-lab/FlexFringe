@@ -54,7 +54,7 @@ void ldot_algorithm::proc_counterex(inputdata& id, const vector<int>& alphabet, 
 trace* ldot_algorithm::add_trace(inputdata& id, std::vector<int> seq, int answer) {
     stringstream ss;
     ss << answer << " " << seq;
-    LOG_S(1) << ss.str();
+    DLOG_S(1) << ss.str();
 
     trace* new_trace = active_learning_namespace::vector_to_trace(seq, id, answer);
     id.add_trace_to_apta(new_trace, my_merger->get_aut(), false);
@@ -139,6 +139,14 @@ void ldot_algorithm::run(inputdata& id) {
         // The refinements for the unidentified nodes.
         std::vector<refinement_set> refs_for_unidentified;
 
+#ifndef NDEBUG
+        // printing the model each time (once per n_runs).
+        static int x = -1;
+        if (x != n_runs)
+            print_current_automaton(my_merger.get(), "debug/model.", std::to_string(n_runs) + ".pre");
+        x = n_runs;
+#endif
+
         for (blue_state_iterator b_it = blue_state_iterator(my_apta->get_root()); *b_it != nullptr; ++b_it) {
             const auto blue_node = *b_it;
 
@@ -198,12 +206,21 @@ void ldot_algorithm::run(inputdata& id) {
             continue;
         }
 
-        // build hypothesis
+#ifndef NDEBUG
+        int selected_refs_nr = performed_refinements.size();
+        // printing the model each time
+        print_current_automaton(my_merger.get(), "debug/model.", std::to_string(n_runs) + ".sel");
+#endif
+
+        // build hypothesis -> try to reduce the apta.
         active_learning_namespace::minimize_apta(performed_refinements, my_merger.get());
 
-        static int model_nr = 0;
-        print_current_automaton(my_merger.get(), "model.",
-                                to_string(++model_nr) + ".after_ref"); // printing the final model each time
+#ifndef NDEBUG
+        DLOG_S(1) << "Got " << selected_refs_nr << " refs from selection and a total of "
+                  << performed_refinements.size() << " from minimizing.";
+        // printing the model each time
+        print_current_automaton(my_merger.get(), "debug/model.", std::to_string(n_runs) + ".x");
+#endif
 
         // Check equivalence, if not process the counter example.
         while (true) {

@@ -166,12 +166,10 @@ bool active_learning_namespace::aut_accepts_trace(trace* tr, apta* aut, const co
  */
 void active_learning_namespace::minimize_apta(list<refinement*>& refs, state_merger* merger) {
     refinement* top_ref = merger->get_best_refinement();
-    cout << "Found a refinement. Do and find another one" << endl;
     while (top_ref != 0) {
         refs.push_back(top_ref);
         top_ref->doref(merger);
         top_ref = merger->get_best_refinement();
-        cout << "Found a refinement. Do and find another one" << endl;
     }
 }
 
