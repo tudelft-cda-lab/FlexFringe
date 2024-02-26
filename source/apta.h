@@ -264,17 +264,17 @@ private:
     evaluation_data* data;
 
 public:
-    inline trace* get_access_trace(){ return access_trace; }
-    inline apta_node* get_source(){ return source; }
-    inline apta_node* get_merged_head(){ return representative_of; }
-    inline apta_node* get_next_merged(){ return next_merged_node; }
-    inline evaluation_data* get_data(){ return data; }
-    inline int get_number(){ return number; }
-    inline int get_size(){ return size; }
-    inline int get_final(){ return final; }
-    inline int get_depth(){ return depth; }
+    inline trace* get_access_trace() const { return access_trace; }
+    inline apta_node* get_source() const { return source; }
+    inline apta_node* get_merged_head() const { return representative_of; }
+    inline apta_node* get_next_merged() const { return next_merged_node; }
+    inline evaluation_data* get_data() const { return data; }
+    inline int get_number() const { return number; }
+    inline int get_size() const { return size; }
+    inline int get_final() const { return final; }
+    inline int get_depth() const { return depth; }
     inline void set_red(bool b){ red = b; };
-    inline apta_node* rep(){ return representative; }
+    inline apta_node* rep() const { return representative; }
     void reset_data() noexcept; 
 
     void add_tail(tail* t);
