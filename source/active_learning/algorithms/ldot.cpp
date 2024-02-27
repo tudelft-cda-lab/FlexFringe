@@ -14,9 +14,9 @@
 #include "common_functions.h"
 #include "evaluate.h"
 #include "input/trace.h"
-#include "loguru.hpp"
 #include "main_helpers.h"
 #include "misc/printutil.h"
+#include "utility/loguru.hpp"
 #include "parameters.h"
 #include "refinement.h"
 #include "sqldb_sul.h"
@@ -33,9 +33,8 @@ template <typename T> std::string printAddress(const std::list<T>& v) {
 }
 
 void ldot_algorithm::proc_counterex(inputdata& id, const vector<int>& alphabet, const vector<int>& counterex,
-                                    const refinement_list& refs) {
+                                    const int type, const refinement_list& refs) {
     active_learning_namespace::reset_apta(my_merger.get(), refs);
-
 #ifndef NDEBUG
     DLOG_S(1) << n_runs << ": Undoing " << refs.size() << " refs.";
     // printing the model each time
@@ -47,20 +46,26 @@ void ldot_algorithm::proc_counterex(inputdata& id, const vector<int>& alphabet, 
     vector<int> substring;
     apta_node* n = my_apta->get_root();
 
-    for (auto s : counterex) {
-        substring.push_back(s);
+    for (const int s : counterex) {
+        // Look for fringe, then add to apta.
         if (n != nullptr) {
-            // Look for fringe, then add to apta.
+            substring.push_back(s);
             n = active_learning_namespace::get_child_node(n, s);
-            continue;
-        }
-        const int queried_type = my_sul->query_trace_maybe(substring);
-        if (queried_type != -1) {
-            add_trace(id, substring, queried_type);
+            // apta_node n and substring point now to same place in apta.
+        } else {
+            // apta_node n points to non existent place in apta.
+            const int queried_type = my_sul->query_trace_maybe(substring);
+            if (queried_type != -1) {
+                add_trace(id, substring, queried_type);
+            }
+            substring.push_back(s);
         }
     }
 
-    // now let's walk over the apta again, completing all the states we created
+    // Now, add the counterex.
+    add_trace(id, substring, type);
+
+    // Now let's walk over the apta again, completing all the states we created.
     n = my_apta->get_root();
     for (auto s : counterex) {
         n = active_learning_namespace::get_child_node(n, s);
@@ -69,9 +74,7 @@ void ldot_algorithm::proc_counterex(inputdata& id, const vector<int>& alphabet, 
 }
 
 trace* ldot_algorithm::add_trace(inputdata& id, const std::vector<int>& seq, int answer) {
-    stringstream ss;
-    ss << answer << " " << seq;
-    DLOG_S(1) << ss.str();
+    DLOG_S(1) << answer << " " << seq;
 
     trace* new_trace = active_learning_namespace::vector_to_trace(seq, id, answer);
     id.add_trace_to_apta(new_trace, my_merger->get_aut(), false);
@@ -79,7 +82,24 @@ trace* ldot_algorithm::add_trace(inputdata& id, const std::vector<int>& seq, int
     return new_trace;
 }
 
-std::vector<refinement*> ldot_algorithm::process_unidentified(std::vector<refinement_set> refs_for_unidentified) {
+void ldot_algorithm::merge_processed_ref(refinement* ref) {
+#ifndef NDEBUG
+    print_current_automaton(my_merger.get(), "debug/model.",
+                            std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) + ".pro_a");
+    ref->doref(my_merger.get());
+    performed_refinements.push_back(ref);
+    print_current_automaton(my_merger.get(), "debug/model.",
+                            std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) + ".pro_b");
+
+    DLOG_S(2) << n_runs << ":uni:" << printAddress(performed_refinements);
+#else
+    ref->doref(my_merger.get());
+    performed_refinements.push_back(ref);
+#endif
+}
+
+std::vector<refinement*>
+ldot_algorithm::process_unidentified(const std::vector<refinement_set>& refs_for_unidentified) {
     // SOME HEURISTIC THAT BALANCES EXPLORATION VS EXPLOITATION.
     // What to do when a state is unidentified (subroutine LdotProcessUnidentified). Here we take some
     // different approaches and we should see what works best. Additionally, what is in the unidentified
@@ -95,9 +115,19 @@ std::vector<refinement*> ldot_algorithm::process_unidentified(std::vector<refine
 
     std::vector<refinement*> selected_refs;
 
-    for (auto possible_refs : refs_for_unidentified) {
-        refinement* best_merge = *possible_refs.begin(); // TODO: is this best merge?
-        selected_refs.push_back(best_merge);
+    for (const auto possible_refs : refs_for_unidentified) {
+        refinement_set consistent_possible_refs;
+        for (const auto ref : possible_refs) {
+            if (ref->test_ref_consistency(my_merger.get()))
+                consistent_possible_refs.insert(ref);
+        }
+        if (consistent_possible_refs.empty()) {
+            isolated_states = true;
+            continue;
+        }
+
+        refinement* best_merge = *consistent_possible_refs.begin(); // TODO: is this indeed best merge?
+        merge_processed_ref(best_merge);
     }
     return selected_refs;
 }
@@ -150,14 +180,13 @@ void ldot_algorithm::run(inputdata& id) {
         if (n_runs % 100 == 0)
             LOG_S(INFO) << "Iteration " << n_runs + 1;
 
-        bool no_isolated_states = true; // avoid iterating over a changed data structure (apta)
+        isolated_states = false; // Continue untill all isolated states are gone.
         // The refinements for the unidentified nodes.
         std::vector<refinement_set> refs_for_unidentified;
 
 #ifndef NDEBUG
         // printing the model each time (once per n_runs).
         static int x = -1;
-        static int uid = 0;
         if (x != n_runs)
             print_current_automaton(my_merger.get(), "debug/model.", std::to_string(n_runs) + ".bef");
         x = n_runs;
@@ -188,7 +217,7 @@ void ldot_algorithm::run(inputdata& id) {
 
             if (possible_refs.empty()) {
                 // Promotion of the blue node.
-                no_isolated_states = false;
+                isolated_states = true;
                 refinement* ref = mem_store::create_extend_refinement(my_merger.get(), blue_node);
 
 #ifndef NDEBUG
@@ -231,25 +260,11 @@ void ldot_algorithm::run(inputdata& id) {
         if (!refs_for_unidentified.empty()) {
             // Select based on some criteria some refs
             // Also might make some queries to get additional info for these unidentified blue nodes.
-            auto selected_refs = process_unidentified(refs_for_unidentified);
-            for (auto* ref : selected_refs) {
-#ifndef NDEBUG
-                print_current_automaton(my_merger.get(), "debug/model.",
-                                        std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) + ".pro_a");
-                ref->doref(my_merger.get());
-                performed_refinements.push_back(ref);
-                print_current_automaton(my_merger.get(), "debug/model.",
-                                        std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) + ".pro_b");
-
-                DLOG_S(2) << n_runs << ":uni:" << printAddress(performed_refinements);
-#else
-                ref->doref(my_merger.get());
-                performed_refinements.push_back(ref);
-#endif
-            }
+            // Maybe move this into the blue iterator loop?
+            process_unidentified(refs_for_unidentified);
         }
 
-        if (!no_isolated_states) {
+        if (isolated_states) {
             // There are still isolated states that need to be resolved.
             continue;
         }
@@ -283,17 +298,20 @@ void ldot_algorithm::run(inputdata& id) {
                 print_current_automaton(my_merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
                 return;                                                          // Solved!
             }
-
-            const int type = query_result.value().second;
+            auto cex_res = query_result.value();
+            const int type = cex_res.second;
             // If this query could not be found ask for a new counter example.
             if (type < 0)
                 continue;
 
-            const vector<int>& cex = query_result.value().first;
-            std::stringstream ss;
-            ss << cex;
-            LOG_S(INFO) << n_runs << ": Counterexample of length " << cex.size() << " found: " << ss.str();
-            proc_counterex(id, my_alphabet, cex, performed_refinements);
+            const vector<int>& cex = cex_res.first;
+
+            std::string cex_log = ": Counterexample of length ";
+            LOG_S(INFO) << n_runs << cex_log << cex.size() << " found: " << type << ": " << cex;
+#ifndef NDEBUG
+            std::cout << n_runs << cex_log << cex.size() << " found: " << type << ": " << cex << std::endl;
+#endif
+            proc_counterex(id, my_alphabet, cex, type, performed_refinements);
             break;
         }
 
