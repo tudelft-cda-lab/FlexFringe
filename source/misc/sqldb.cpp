@@ -1,9 +1,9 @@
 #include "sqldb.h"
 #include "csv.hpp"
 #include "input/inputdata.h"
-#include "loguru.hpp"
+#include "misc/printutil.h"
 #include "parameters.h"
-#include "printutil.h"
+#include "utility/loguru.hpp"
 #include <fmt/format.h>
 #include <iostream>
 #include <optional>
@@ -115,10 +115,7 @@ std::vector<std::string> sqldb::get_alphabet() {
     tx.commit();
     pqxx::array<std::string> arr{data, conn};
     std::vector<std::string> val{arr.cbegin(), arr.cend()};
-
-    stringstream ss;
-    ss << val;
-    LOG_S(INFO) << ss.str();
+    LOG_S(INFO) << val;
 
     return val;
 }
@@ -131,10 +128,7 @@ std::vector<std::string> sqldb::get_types() {
     tx.commit();
     pqxx::array<std::string> arr{data, conn};
     std::vector<std::string> val{arr.cbegin(), arr.cend()};
-
-    stringstream ss;
-    ss << val;
-    LOG_S(INFO) << ss.str();
+    LOG_S(INFO) << val;
 
     return val;
 }
@@ -249,7 +243,7 @@ bool sqldb::is_member(const std::string& trace) {
 }
 
 std::optional<std::pair<std::vector<int>, int>> sqldb::regex_equivalence(const std::string& regex, int type) {
-    auto query = fmt::format("SELECT {1}, {4} FROM {0} WHERE {1} ~ '{2}' and {3} != {4} LIMIT 1", table_name,
+    auto query = fmt::format("SELECT {1}, {3} FROM {0} WHERE {1} ~ '{2}' and {3} != {4} LIMIT 1", table_name,
                              TRACE_NAME, regex, RES_NAME, type);
     DLOG_S(1) << query;
     try {

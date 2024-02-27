@@ -35,10 +35,10 @@
 #include "inputdata.h"
 #include "inputdatalocator.h"
 #include "main_helpers.h"
-#include "misc/printutil.h"
 #include "parameters.h"
 
-#include "loguru.hpp"
+#include "misc/printutil.h"
+#include "utility/loguru.hpp"
 
 #include <cassert>
 #include <fstream>
