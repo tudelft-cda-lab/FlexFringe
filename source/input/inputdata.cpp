@@ -30,9 +30,7 @@ void inputdata::read(parser *input_parser) {
     traces.sort([](auto &left, auto &right) {
         return left->sequence < right->sequence;
     });
-    std::stringstream ss;
-    ss << "Conversions: r_alphabet: " << get_r_alphabet() << " r_types: " << get_r_types();
-    LOG_S(INFO) << ss.str();
+    LOG_S(INFO) << "Conversions: r_alphabet: " << get_r_alphabet() << " r_types: " << get_r_types();
 }
 
 /**

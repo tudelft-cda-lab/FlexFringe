@@ -131,6 +131,7 @@ void regex_builder::initialize(apta& the_apta, state_merger& merger, std::tuple<
     }
     ss << "]";
     std::cout << "Regex from types_map: " << ss.str() << std::endl;
+    LOG_S(INFO) << "Regex from types_map: " << ss.str() << std::endl;
 #endif
 
     LOG_S(INFO) << "Gathered predictions";

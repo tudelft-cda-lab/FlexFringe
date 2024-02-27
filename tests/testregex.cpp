@@ -1,5 +1,6 @@
 #include "catch.hpp"
-#include "loguru.hpp"
+#include "misc/printutil.h"
+#include "utility/loguru.hpp"
 #include "parameters.h"
 
 #include <iostream>

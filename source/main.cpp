@@ -22,7 +22,8 @@
 
 #include "main_helpers.h" // TODO: shall we leave this or can we find a smarter structure to incorporate the active learning?
 
-#include "loguru.hpp"
+#include "misc/printutil.h"
+#include "utility/loguru.hpp"
 #include "CLI11.hpp"
 
 #include "parameters.h"

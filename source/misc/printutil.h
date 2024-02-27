@@ -1,3 +1,22 @@
+/**
+ * @file misc/printutil.h
+ * @author Hielke Walinga (hielkewalinga@gmail.com)
+ * @brief Overload << for easier printing
+ * @version 0.1
+ * @date 2023-04-06
+ *
+ * @copyright Copyright (c) 2023
+ *
+ * This file provides some overloads for << to provide easier printing with containers.
+ * If your containers have objects that also can be printed, it works recursive!
+ * For use with utility/loguru.hpp include misc/printutil.h first (automatic if sorting includes alphabetically).
+ * Finally it adds utils::tostr which can be used to convert everything that could be used with << to a string directly.
+ */
+
+#ifndef _PRINTUTIL_H_
+#define _PRINTUTIL_H_
+
+#include "utils.h"
 #include <iostream>
 #include <map>
 #include <set>
@@ -74,3 +93,12 @@ std::ostream& operator<<(std::ostream& o, const std::unordered_map<KeyT, ValueT>
     o << key << ": " << value << "}";
     return o;
 }
+
+namespace utils {
+template <class... Args> std::string tostr(Args&&... args) {
+    std::ostringstream ostr;
+    (ostr << ... << args);
+    return ostr.str();
+}
+} // namespace utils
+#endif

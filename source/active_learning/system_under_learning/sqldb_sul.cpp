@@ -10,7 +10,8 @@
  */
 
 #include "sqldb_sul.h"
-#include "loguru.hpp"
+#include "misc/printutil.h"
+#include "utility/loguru.hpp"
 #include <sstream>
 
 sqldb_sul::sqldb_sul(sqldb& db) : my_sqldb(db) {}

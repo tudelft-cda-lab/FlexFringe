@@ -1,5 +1,5 @@
 /**
- * @file sqldb_sul.cpp
+ * @file misc/sqldb.h
  * @author Hielke Walinga (hielkewalinga@gmail.com)
  * @brief Connect to a database and make queries
  * @version 0.1
