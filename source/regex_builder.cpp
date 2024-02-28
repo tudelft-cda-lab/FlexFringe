@@ -20,6 +20,8 @@
 #include <string>
 #include <tuple>
 #include <ranges>
+#include <random>
+#include <algorithm>
 
 regex_builder::regex_builder(apta& the_apta, state_merger& merger, std::tuple<bool, bool, bool>& coloring, std::unordered_map<int, char>& mapping){
     const auto mapping_func = [&mapping](int i) {
@@ -141,6 +143,29 @@ std::string regex_builder::to_regex(int output_state) {
     return to_regex(inputdata_locator::get()->string_from_type(output_state));
 }
 
+std::vector<std::string> regex_builder::to_regex(const std::string& output_state, size_t parts) {
+    static auto rng = std::default_random_engine{};
+    std::vector<apta_node*> from = types_map[output_state];
+    std::shuffle(std::begin(from), std::end(from), rng); // Lets try to get a lucky combination.
+
+    std::vector<std::string> res;
+
+    size_t part_size = from.size() / parts;
+    size_t extra_size = from.size() % parts;
+    auto it = from.begin();
+    for (size_t i = 0; i < parts; i++) {
+        size_t this_part_size = part_size + (i < extra_size ? 1 : 0);
+        std::vector<apta_node*> final_states {it, it + this_part_size};
+        it += this_part_size;
+        res.push_back(to_regex(final_states));
+    }
+    return res;
+}
+
+std::vector<std::string> regex_builder::to_regex(int output_state, size_t parts) {
+    return to_regex(inputdata_locator::get()->string_from_type(output_state), parts);
+}
+
 void regex_builder::print_my_transitions(std::unordered_map<apta_node*, std::unordered_map<apta_node*, std::string>> trans) {
     std::cout << "TRANS" << std::endl;
     for (const auto& x : trans) {
@@ -150,7 +175,16 @@ void regex_builder::print_my_transitions(std::unordered_map<apta_node*, std::uno
     }
 }
 
-std::string regex_builder::to_regex(std::string output_state) {
+std::string regex_builder::to_regex(const std::string& output_state) {
+    return to_regex(types_map[output_state]);
+}
+
+std::string regex_builder::to_regex(std::vector<apta_node*> final_nodes) {
+    cout << "regex for nodes:";
+    for (auto* n : final_nodes) {
+        cout << n->get_number() << ",";
+    }
+    cout << endl;
     // Copy (using copy-assignment) datastructures and manipulate for this output_state.
     std::unordered_set<apta_node*> my_states = states;
     std::unordered_map<apta_node*, std::unordered_set<apta_node*>> my_r_transitions = r_transitions;
@@ -158,15 +192,16 @@ std::string regex_builder::to_regex(std::string output_state) {
 
     // Add epsilon transitions to final and start node not interacting with the whole.
     auto final_node = make_unique<apta_node>();
-    for (auto* n : types_map[output_state]) {
+    for (auto* n : final_nodes) {
         my_transitions[n].insert(std::make_pair(final_node.get(), ""));
     }
     auto start_node = make_unique<apta_node>();
     my_transitions[start_node.get()].insert(std::make_pair(root, ""));
     my_r_transitions[root].insert(start_node.get());
 
-    // Minimally connected nodes
+    // Minimally connected nodes.
     // Gather connection size. (degree or valency)
+    // Test prove this creates much smaller regex, but dont know why.
     typedef std::pair<apta_node*, int> DEGREE;
     struct degree_cmp {
         bool operator()(const DEGREE& a, const DEGREE&b) {
@@ -188,12 +223,7 @@ std::string regex_builder::to_regex(std::string output_state) {
 
     // Iteratively remove all the nodes between the start node and the final node,
     // starting with the least connected node.
-    // This is why 'states' does not contain the start and end node.
-
-    // I implement here an order that first removes the least connected nodes.
-    // I don't know if the overhead of tracking the degree of the nodes 
-    // outweights the advantage of removing these kind of nodes first.
-    // Might need to be tested.
+    // This is why 'states' does not contain the start and end nodes.
     std::vector<std::pair<apta_node*, apta_node*>> loop_pairs;
     while(!my_states.empty()) {
         apta_node* remove = min_connected.top().first;
@@ -268,6 +298,7 @@ std::string regex_builder::to_regex(std::string output_state) {
     }
 
     std:string regex = my_transitions[start_node.get()][final_node.get()];
+    cout << "Got regex with size: " << regex.size() << endl;
     if (regex.size() == 0) return ".*";
     return "^(" + regex + ")$";
 }

@@ -96,7 +96,9 @@ void run() {
         LOG_S(INFO) << "Finished building the regex builder";
         auto delimiter = "\t";
         for (std::string type : std::views::keys(inputdata_locator::get()->get_r_types())) {
-            cout << type << delimiter << builder.to_regex(type) << endl;
+            for (auto regex : builder.to_regex(type, 5)) 
+                cout << "Got regex with size: " << regex.size() << endl;
+                /* cout << type << delimiter << regex << endl; */
         }
         return;
     }
@@ -215,9 +217,7 @@ void run() {
             the_apta->read_json(input_apta_stream);
             cout << "Finished reading apta file." << endl;
 
-            std::ostringstream res_stream;
-            res_stream << APTA_FILE << ".result";
-            ofstream output(res_stream.str().c_str());
+            ofstream output(OUTPUT_FILE + ".result");
 
             // TODO: @Sicco think about where to put these things to avoid duplicate code and havea nice flow
             if(read_csv) {
@@ -299,6 +299,7 @@ int main(int argc, char *argv[]){
     app.add_option("--outputfile", OUTPUT_FILE, "The prefix of the output file name. Default is same as input.");
     app.add_option("--output", OUTPUT_TYPE, "Switch between output in dot, json, or both (default) formats.");
     app.add_option("--logpath", LOG_PATH, "The path to write the flexfringe log file to. Defaults to \"flexfringe.log\"");
+    app.add_option("--debugdir", DEBUG_DIR, "The dir to write any debug data.");
     app.set_config("--ini", default_file_name, "Read an ini file", false);
     app.add_option("--mode", OPERATION_MODE, "batch (default), interactive, or stream depending on the mode of operation.");
     app.add_option("--heuristic-name,--heuristic_name", HEURISTIC_NAME, "Name of the merge heuristic to use; default count_driven. Use any heuristic in the evaluation directory. It is often beneficial to write your own, as heuristics are very application specific.")->required();

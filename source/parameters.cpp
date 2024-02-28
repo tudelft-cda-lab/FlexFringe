@@ -12,6 +12,7 @@ string INPUT_FILE = "test.dat";
 string OUTPUT_FILE = "";
 string OUTPUT_TYPE = "both";
 string LOG_PATH = "flexfringe.log";
+string DEBUG_DIR = "debug";
 
 string OPERATION_MODE = "greedy";
 
