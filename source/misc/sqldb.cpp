@@ -245,7 +245,7 @@ bool sqldb::is_member(const std::string& trace) {
 std::optional<std::pair<std::vector<int>, int>> sqldb::regex_equivalence(const std::string& regex, int type) {
     auto query = fmt::format("SELECT {1}, {3} FROM {0} WHERE {1} ~ '{2}' and {3} != {4} LIMIT 1", table_name,
                              TRACE_NAME, regex, RES_NAME, type);
-    DLOG_S(1) << query;
+    /* DLOG_S(1) << query; */
     try {
         pqxx::work tx{conn};
         auto [trace, type] = tx.query1<std::string, int>(query);

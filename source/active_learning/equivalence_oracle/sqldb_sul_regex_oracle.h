@@ -11,6 +11,8 @@
 #include <utility>
 
 class sqldb_sul_regex_oracle : public eq_oracle_base {
+  private:
+    int parts = 1; // Amount of parts to split the regex in.
   protected:
     std::shared_ptr<sul_base> sul;
     std::shared_ptr<sqldb_sul> my_sqldb_sul;

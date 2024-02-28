@@ -27,6 +27,7 @@ extern bool SYMMETRY_BREAKING;
 extern bool FORCING;
 extern string OUTPUT_TYPE;
 extern string LOG_PATH;
+extern string DEBUG_DIR;
 extern bool MERGE_MOST_VISITED;
 extern bool MERGE_BLUE_BLUE;
 extern bool RED_FIXED;

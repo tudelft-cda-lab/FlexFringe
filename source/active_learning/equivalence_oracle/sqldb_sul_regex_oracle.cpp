@@ -3,11 +3,17 @@
  */
 
 #include "sqldb_sul_regex_oracle.h"
+#include "input/inputdatalocator.h"
 #include "main_helpers.h"
+#include "misc/printutil.h"
 #include "misc/sqldb.h"
 #include "regex_builder.h"
+#include "utility/loguru.hpp"
+#include <algorithm>
 #include <memory>
 #include <optional>
+#include <random>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -17,17 +23,74 @@ std::optional<CEX> sqldb_sul_regex_oracle::equivalence_query(state_merger* merge
                                                              const std::unique_ptr<base_teacher>& teacher) {
     inputdata& id = *(merger->get_dat());
     apta& hypothesis = *(merger->get_aut());
+
     static const auto& types = id.get_types();
+    static auto rng = std::default_random_engine{};
+
+    auto my_types = types;
+    std::shuffle(std::begin(my_types), std::end(my_types), rng);
+    cout << "Types shuffled: " << my_types << endl;
 
     auto coloring = std::make_tuple(PRINT_RED, PRINT_BLUE, PRINT_WHITE);
-    print_current_automaton(merger, OUTPUT_FILE, ".regex"); // printing the final model each time
     regex_builder builder = regex_builder(hypothesis, *merger, coloring, sqldb::num2str);
 
     // TODO; perform alteration for the types to check as a performance enhancement.
-    for (auto type : types) {
-        std::optional<CEX> cex = my_sqldb_sul->regex_equivalence(builder.to_regex(type), type);
-        if (cex)
-            return cex;
+    int i = 0;
+    std::vector<bool> errors(types.size(), false);
+    int parts = 1;
+    while (i < my_types.size()) {
+        int type = my_types[i];
+        int nodes = builder.get_types_map()[inputdata_locator::get()->string_from_type(type)].size();
+
+        for (std::string regex : builder.to_regex(type, parts)) {
+            cout << "We have " << parts << " parts and got a regex with size " << regex.size() << endl;
+            try {
+                std::optional<CEX> cex = my_sqldb_sul->regex_equivalence(regex, type);
+                if (cex) {
+                    // Found counter example, return immidiatly.
+                    return cex;
+                }
+            } catch (const pqxx::data_exception& e) {
+                // Regex got too big, lets split into multiple parts.
+                errors[i] = true;
+                std::string exc{e.what()};
+                LOG_S(INFO) << "We got error: " << exc;
+                if (exc.find("too complex") != std::string::npos) {
+                    continue;
+                } else {
+                    throw std::runtime_error("Something wrong with regex to database: " + exc);
+                }
+            }
+        }
+        if (errors[i]) {
+            if (parts == nodes) {
+                // Looked at all nodes individually, go to new type.
+                errors[i] = true;
+                i++;
+                parts = 1;
+                continue; // Let's investigate next type.
+            }
+            // No new type, but try again this type with bigger parts number (thus larger split).
+            parts *= 2;
+            if (parts > nodes)
+                parts = nodes; // final try -> all nodes individually.
+
+            errors[i] = false;
+            LOG_S(INFO) << "Increase the amount of parts we split the regexes with " << parts;
+            continue;
+        }
+        // No counter example yet, check new type.
+        i++;
+        parts = 1;
+    }
+
+    // final procedure.
+
+    for (bool e : errors) {
+        if (e) {
+            throw std::runtime_error(
+                "Regex was too complex, no counter example found, this is your final state machine.");
+        }
     }
 
     // No difference found: No counter example: Found the truth.

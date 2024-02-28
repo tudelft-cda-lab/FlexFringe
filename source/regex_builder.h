@@ -42,6 +42,8 @@ public:
     explicit regex_builder(apta& the_apta, state_merger& merger, std::tuple<bool, bool, bool>& coloring, std::unordered_map<int, char>& mapping);
     explicit regex_builder(apta& the_apta, state_merger& merger, std::tuple<bool, bool, bool>& coloring, const std::function<char(int)>& mapping_func);
 
+    std::unordered_map<std::string, std::vector<apta_node*>> get_types_map() const { return types_map; }
+
     void initialize(apta& the_apta, state_merger& merger, std::tuple<bool, bool, bool>& coloring, const std::function<char(int)>& mapping_func);
 
     apta_node* root;
@@ -65,9 +67,14 @@ public:
      * https://github.com/caleb531/automata/blob/c39df7d588164e64a0c090ddf89ab5118ee42e47/automata/fa/gnfa.py#L345
      *
      * Argument is the external string representation.
+     * A second argument parts indicate to split the amount of final states in multiple ones.
+     * This results in more but shorter regexes.
      */
-    std::string to_regex(std::string output_state);
+    std::string to_regex(const std::string& output_state);
     std::string to_regex(int output_state);
+    std::vector<std::string> to_regex(int output_state, size_t parts);
+    std::vector<std::string> to_regex(const std::string& output_state, size_t parts);
+    std::string to_regex(std::vector<apta_node*> final_nodes);
 
     /**
      * @brief Check if the regex string needs to bracketed.

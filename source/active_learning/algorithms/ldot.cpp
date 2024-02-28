@@ -16,10 +16,11 @@
 #include "input/trace.h"
 #include "main_helpers.h"
 #include "misc/printutil.h"
-#include "utility/loguru.hpp"
 #include "parameters.h"
 #include "refinement.h"
 #include "sqldb_sul.h"
+#include "utility/loguru.hpp"
+#include <filesystem>
 #include <fmt/format.h>
 #include <memory>
 #include <vector>
@@ -38,7 +39,7 @@ void ldot_algorithm::proc_counterex(inputdata& id, const vector<int>& alphabet, 
 #ifndef NDEBUG
     DLOG_S(1) << n_runs << ": Undoing " << refs.size() << " refs.";
     // printing the model each time
-    print_current_automaton(my_merger.get(), "debug/model.", std::to_string(n_runs) + ".zzz");
+    print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.", std::to_string(n_runs) + ".zzz");
 #endif
 
     performed_refinements.clear();
@@ -84,11 +85,11 @@ trace* ldot_algorithm::add_trace(inputdata& id, const std::vector<int>& seq, int
 
 void ldot_algorithm::merge_processed_ref(refinement* ref) {
 #ifndef NDEBUG
-    print_current_automaton(my_merger.get(), "debug/model.",
+    print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.",
                             std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) + ".pro_a");
     ref->doref(my_merger.get());
     performed_refinements.push_back(ref);
-    print_current_automaton(my_merger.get(), "debug/model.",
+    print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.",
                             std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) + ".pro_b");
 
     DLOG_S(2) << n_runs << ":uni:" << printAddress(performed_refinements);
@@ -118,15 +119,16 @@ ldot_algorithm::process_unidentified(const std::vector<refinement_set>& refs_for
     for (const auto possible_refs : refs_for_unidentified) {
         refinement_set consistent_possible_refs;
         for (const auto ref : possible_refs) {
-            if (ref->test_ref_consistency(my_merger.get()))
+            if (ref->test_ref_consistency(my_merger.get())) {
                 consistent_possible_refs.insert(ref);
+            }
         }
         if (consistent_possible_refs.empty()) {
             isolated_states = true;
             continue;
         }
 
-        refinement* best_merge = *consistent_possible_refs.begin(); // TODO: is this indeed best merge?
+        refinement* best_merge = *consistent_possible_refs.begin();
         merge_processed_ref(best_merge);
     }
     return selected_refs;
@@ -156,6 +158,10 @@ void ldot_algorithm::complete_state(inputdata& id, const vector<int>& alphabet, 
 }
 
 void ldot_algorithm::run(inputdata& id) {
+#ifndef NDEBUG
+    LOG_S(INFO) << "Creating debug directory " << DEBUG_DIR;
+    std::filesystem::create_directories(DEBUG_DIR);
+#endif
     LOG_S(INFO) << "Running the ldot algorithm.";
     my_sul = dynamic_pointer_cast<sqldb_sul>(sul);
     if (my_sul == nullptr) {
@@ -176,6 +182,8 @@ void ldot_algorithm::run(inputdata& id) {
     complete_state(id, my_alphabet, my_apta->get_root());
     print_current_automaton(my_merger.get(), "debug", "");
 
+    std::vector<int> prev_cex = {-1};
+
     while (ENSEMBLE_RUNS > 0 && n_runs <= ENSEMBLE_RUNS) {
         if (n_runs % 100 == 0)
             LOG_S(INFO) << "Iteration " << n_runs + 1;
@@ -188,7 +196,7 @@ void ldot_algorithm::run(inputdata& id) {
         // printing the model each time (once per n_runs).
         static int x = -1;
         if (x != n_runs)
-            print_current_automaton(my_merger.get(), "debug/model.", std::to_string(n_runs) + ".bef");
+            print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.", std::to_string(n_runs) + ".bef");
         x = n_runs;
 #endif
 
@@ -221,11 +229,11 @@ void ldot_algorithm::run(inputdata& id) {
                 refinement* ref = mem_store::create_extend_refinement(my_merger.get(), blue_node);
 
 #ifndef NDEBUG
-                print_current_automaton(my_merger.get(), "debug/model.",
+                print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.",
                                         std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) + ".ext_a");
                 ref->doref(my_merger.get());
                 performed_refinements.push_back(ref);
-                print_current_automaton(my_merger.get(), "debug/model.",
+                print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.",
                                         std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) + ".ext_b");
                 DLOG_S(2) << n_runs << ":extend:" << printAddress(performed_refinements);
 #else
@@ -238,11 +246,11 @@ void ldot_algorithm::run(inputdata& id) {
                 // There is one refinement, do that one.
                 refinement* ref = *possible_refs.begin();
 #ifndef NDEBUG
-                print_current_automaton(my_merger.get(), "debug/model.",
+                print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.",
                                         std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) + ".one_a");
                 ref->doref(my_merger.get());
                 performed_refinements.push_back(ref);
-                print_current_automaton(my_merger.get(), "debug/model.",
+                print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.",
                                         std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) + ".one_b");
                 DLOG_S(2) << n_runs << ":one:" << printAddress(performed_refinements);
 #else
@@ -272,7 +280,7 @@ void ldot_algorithm::run(inputdata& id) {
 #ifndef NDEBUG
         const std::size_t selected_refs_nr = performed_refinements.size();
         // printing the model each time
-        print_current_automaton(my_merger.get(), "debug/model.", std::to_string(n_runs) + ".sel");
+        print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.", std::to_string(n_runs) + ".sel");
 #endif
 
         // build hypothesis -> try to reduce the apta.
@@ -282,7 +290,7 @@ void ldot_algorithm::run(inputdata& id) {
         DLOG_S(1) << n_runs << ": Got " << selected_refs_nr << " refs from selection and a total of "
                   << performed_refinements.size() << " after minimizing.";
         // printing the model each time
-        print_current_automaton(my_merger.get(), "debug/model.", std::to_string(n_runs) + ".xxx");
+        print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.", std::to_string(n_runs) + ".xxx");
 #endif
 
         // Check equivalence, if not process the counter example.
@@ -292,32 +300,60 @@ void ldot_algorithm::run(inputdata& id) {
             hypothesis. This puts a burden on the equivalence oracle to make sure no query is asked twice, else we
             end up in infinite loop.*/
 
-            optional<pair<vector<int>, int>> query_result = oracle->equivalence_query(my_merger.get(), teacher);
-            if (!query_result) {
-                LOG_S(INFO) << n_runs << ": Found consistent automaton => Print to " << OUTPUT_FILE;
-                print_current_automaton(my_merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
-                return;                                                          // Solved!
-            }
-            auto cex_res = query_result.value();
-            const int type = cex_res.second;
-            // If this query could not be found ask for a new counter example.
-            if (type < 0)
-                continue;
+            try {
+                optional<pair<vector<int>, int>> query_result = oracle->equivalence_query(my_merger.get(), teacher);
+                if (!query_result) {
+                    LOG_S(INFO) << n_runs << ": Found consistent automaton => Print to " << OUTPUT_FILE;
+                    print_current_automaton(my_merger.get(), OUTPUT_FILE,
+                                            ".final"); // printing the final model.
+                    return;                            // Solved!
+                }
+                auto cex_res = query_result.value();
+                const int type = cex_res.second;
+                // If this query could not be found ask for a new counter example.
+                if (type < 0)
+                    continue;
 
-            const vector<int>& cex = cex_res.first;
+                const vector<int>& cex = cex_res.first;
 
-            std::string cex_log = ": Counterexample of length ";
-            LOG_S(INFO) << n_runs << cex_log << cex.size() << " found: " << type << ": " << cex;
+                if (cex == prev_cex) {
+                    throw std::runtime_error("repeated cex");
+                }
+                prev_cex = cex;
+
+                std::string cex_log = ": Counterexample of length ";
+                LOG_S(INFO) << n_runs << cex_log << cex.size() << " found: " << type << ": " << cex;
 #ifndef NDEBUG
-            std::cout << n_runs << cex_log << cex.size() << " found: " << type << ": " << cex << std::endl;
+                std::cout << n_runs << cex_log << cex.size() << " found: " << type << ": " << cex << std::endl;
 #endif
-            proc_counterex(id, my_alphabet, cex, type, performed_refinements);
-            break;
+                proc_counterex(id, my_alphabet, cex, type, performed_refinements);
+                break;
+
+            } catch (const std::runtime_error& e) {
+                std::string exc{e.what()};
+                LOG_S(ERROR) << "We got error: " << exc;
+                if (exc.find("too complex") != std::string::npos) {
+                    // Regex got too big, print and return.
+                    LOG_S(INFO) << n_runs << ": Regex too big. Printing automaton to " << OUTPUT_FILE;
+                    print_current_automaton(my_merger.get(), OUTPUT_FILE, ".partial");
+                    return;
+                }
+
+                if (exc.find("repeated cex") != std::string::npos) {
+                    LOG_S(INFO) << n_runs
+                                << ": Got repeated counterexample. The equivalence builder sends a default one if all "
+                                   "regex fails (namely ^(.*)$ from root node.) Write to "
+                                << OUTPUT_FILE;
+                    print_current_automaton(my_merger.get(), OUTPUT_FILE, ".partial");
+                    return;
+                }
+
+                throw std::runtime_error("Something wrong equivalence query " + exc);
+            }
         }
 
         if (ENSEMBLE_RUNS > 0 && n_runs == ENSEMBLE_RUNS) {
             LOG_S(INFO) << n_runs << ": Maximum of runs reached. Printing automaton to " << OUTPUT_FILE;
-            active_learning_namespace::minimize_apta(performed_refinements, my_merger.get());
             print_current_automaton(my_merger.get(), OUTPUT_FILE, ".final");
             return;
         }
