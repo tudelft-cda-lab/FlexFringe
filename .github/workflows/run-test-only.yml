@@ -3,29 +3,5 @@ on: [pull_request]
 
 jobs:
   build-and-test:
-    name: build-test-linux
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v1
-
-      - name: Setup cmake
-        uses: jwlawson/actions-setup-cmake@v1.12
-        with:
-          cmake-version: '3.25.x'
-
-      - name: build
-        run: |
-          mkdir build && cd build
-          cmake .. -DCMAKE_BUILD_TYPE=Release
-          make -j$(nproc)
-
-      - name: run-tests
-        run: build/runtests -r junit > testresults.xml
-
-      - name: publish-test-results
-        uses: EnricoMi/publish-unit-test-result-action@v1
-        if: always()
-        with:
-          check_name: "Unit Test Results"
-          files: "testresults.xml"
+    uses: tudelft-cda-lab/FlexFringe/.github/workflows/build-test-all.yml@main
+    secrets: inherit
