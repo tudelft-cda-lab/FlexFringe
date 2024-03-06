@@ -36,7 +36,7 @@ jobs:
           update: true
           msystem: mingw64
           install: >-
-            mingw-w64-x86_64-build-essential
+            mingw-w64-x86_64-gcc
             mingw-w64-x86_64-cmake
 
       - name: build-windows
