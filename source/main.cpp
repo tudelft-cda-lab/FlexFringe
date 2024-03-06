@@ -263,7 +263,7 @@ void run() {
 int main(int argc, char *argv[]){
 
     for(int i = 0; i < argc; i++) {
-      COMMAND_LINE += string(argv[i]) + string(" ");
+      COMMAND_LINE += std::string(argv[i]) + std::string(" ");
     }
 
     //cout << "welcome, running git commit " << gitversion <<  " with: "<< param->command << endl;
