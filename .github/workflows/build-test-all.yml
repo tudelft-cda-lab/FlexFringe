@@ -31,16 +31,9 @@ jobs:
 
       - name: prepare-windows
         if: runner.os == 'Windows'
-        uses: msys2/setup-msys2@v2
-        with:
-          update: true
-          msystem: mingw64
-          install: >-
-            mingw-w64-x86_64-gcc
-            mingw-w64-x86_64-cmake
+        uses: ilammy/msvc-dev-cmd@v1
 
       - name: build-windows
-        shell: msys2 {0}
         if: runner.os == 'Windows'
         run: |
           mkdir build && cd build
