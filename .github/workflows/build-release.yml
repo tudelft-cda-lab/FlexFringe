@@ -6,7 +6,7 @@ on:
 
 jobs:
   build-and-test:
-    uses: tudelft-cda-lab/FlexFringe/.github/workflows/build-test-all.yml
+    uses: tudelft-cda-lab/FlexFringe/.github/workflows/build-test-all.yml@main
     secrets: inherit
 
   release-nightly:
