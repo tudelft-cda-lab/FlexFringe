@@ -51,7 +51,7 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           cd build
-          tree /f
+          tree /f .
 
       - name: rename-binary
         run: |
