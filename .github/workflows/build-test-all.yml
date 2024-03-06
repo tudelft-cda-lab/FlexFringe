@@ -47,6 +47,12 @@ jobs:
           cmake .. -DCMAKE_BUILD_TYPE=Release
           make -j$(nproc)
 
+      - name: where-is-the-binary-ugh
+        if: runner.os == 'Windows'
+        run: |
+          cd build
+          tree /f
+
       - name: rename-binary
         run: |
           cd build
