@@ -39,8 +39,6 @@ jobs:
           mkdir build && cd build
           cmake ..
           cmake --build . --config Release
-          mv Release/flexfringe.exe .
-          mv Release/runtests.exe .
 
       - name: build-unix
         if: runner.os == 'Linux' || runner.os == 'macOS'
