@@ -39,6 +39,7 @@ jobs:
           mkdir build && cd build
           cmake ..
           cmake --build . --config Release
+          mv Release/flexfringe.exe .
 
       - name: build-unix
         if: runner.os == 'Linux' || runner.os == 'macOS'
@@ -46,12 +47,6 @@ jobs:
           mkdir build && cd build
           cmake .. -DCMAKE_BUILD_TYPE=Release
           make -j$(nproc)
-
-      - name: where-is-the-binary-ugh
-        if: runner.os == 'Windows'
-        run: |
-          cd build
-          tree /f .
 
       - name: rename-binary
         run: |
