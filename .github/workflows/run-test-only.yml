@@ -3,5 +3,5 @@ on: [pull_request]
 
 jobs:
   build-and-test:
-    uses: tudelft-cda-lab/FlexFringe/.github/workflows/build-test-all.yml@main
+    uses: ./.github/workflows/build-test-all.yml
     secrets: inherit
