@@ -23,10 +23,10 @@ void count_data::initialize(){
     final_counts.clear();
 };
 
-void count_data::print_transition_label(iostream& output, int symbol){
+void count_data::print_transition_label(std::iostream& output, int symbol){
 };
 
-void count_data::print_state_label(iostream& output){
+void count_data::print_state_label(std::iostream& output){
     output << "fin: ";
     for(auto & final_count : final_counts){
         if(final_count.second > 0) output << inputdata_locator::get()->string_from_type(final_count.first) << ":" << final_count.second << " , ";
@@ -37,10 +37,10 @@ void count_data::print_state_label(iostream& output){
     }
 };
 
-void count_data::print_transition_label_json(iostream& output, int symbol){
+void count_data::print_transition_label_json(std::iostream& output, int symbol){
 };
 
-void count_data::print_state_label_json(iostream& output){
+void count_data::print_state_label_json(std::iostream& output){
     output << "fin: ";
     for(auto & final_count : final_counts){
         output << final_count.first << ":" << final_count.second << " , ";
@@ -107,13 +107,13 @@ void count_data::write_json(json& data){
         int type = final_count.first;
         int count = final_count.second;
 
-        data["final_counts"][to_string(type)] = count;
+        data["final_counts"][std::to_string(type)] = count;
     }
     for(auto & path_count : path_counts) {
         int type = path_count.first;
         int count = path_count.second;
 
-        data["path_counts"][to_string(type)] = count;
+        data["path_counts"][std::to_string(type)] = count;
     }
 
     data["total_final"] = total_final;

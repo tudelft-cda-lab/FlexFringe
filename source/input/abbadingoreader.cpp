@@ -12,8 +12,8 @@ void abbadingo_inputdata::read(std::istream &input_stream) {
     }
 }
 
-void abbadingo_inputdata::read_abbadingo_sequence(istream &input_stream, trace* new_trace) {
-    string temp, temp_symbol, data, type_string, type_attr, symbol_string, symbol_attr, val;
+void abbadingo_inputdata::read_abbadingo_sequence(std::istream &input_stream, trace* new_trace) {
+    std::string temp, temp_symbol, data, type_string, type_attr, symbol_string, symbol_attr, val;
     int length;
     std::stringstream l1, l2, l3;
 
@@ -39,8 +39,8 @@ void abbadingo_inputdata::read_abbadingo_sequence(istream &input_stream, trace* 
     new_trace->sequence = num_sequences++;
 }
 
-void abbadingo_inputdata::read_abbadingo_type(istream &input_stream, trace* new_trace) {
-    string temp, type_string, type_attr, val;
+void abbadingo_inputdata::read_abbadingo_type(std::istream &input_stream, trace* new_trace) {
+    std::string temp, type_string, type_attr, val;
     std::stringstream l1, l2;
 
     input_stream >> temp;
@@ -67,8 +67,8 @@ void abbadingo_inputdata::read_abbadingo_type(istream &input_stream, trace* new_
     new_trace->type = r_types[type_string];
 }
 
-void abbadingo_inputdata::read_abbadingo_symbol(istream &input_stream, tail* new_tail) {
-    string temp, temp_symbol, data, type_string, type_attr, symbol_string, symbol_attr, val;
+void abbadingo_inputdata::read_abbadingo_symbol(std::istream &input_stream, tail* new_tail) {
+    std::string temp, temp_symbol, data, type_string, type_attr, symbol_string, symbol_attr, val;
     std::stringstream l1, l2, l3;
 
     auto td = new_tail->td;
@@ -104,22 +104,22 @@ void abbadingo_inputdata::read_abbadingo_symbol(istream &input_stream, tail* new
     }
 }
 
-void abbadingo_inputdata::read_abbadingo_header(istream &input_stream) {
+void abbadingo_inputdata::read_abbadingo_header(std::istream &input_stream) {
     input_stream >> max_sequences;
 
-    string tuple;
+    std::string tuple;
     input_stream >> tuple;
 
     std::stringstream lineStream;
     lineStream.str(tuple);
 
-    string alph;
+    std::string alph;
     std::getline(lineStream,alph,':');
     //alphabet_size = stoi(alph);
 
-    string trace_attr;
+    std::string trace_attr;
     std::getline(lineStream,trace_attr, ':');
-    string symbol_attr;
+    std::string symbol_attr;
     std::getline(lineStream,symbol_attr);
     if(symbol_attr.empty()){
         symbol_attr = trace_attr;
@@ -129,7 +129,7 @@ void abbadingo_inputdata::read_abbadingo_header(istream &input_stream) {
 
     if(!trace_attr.empty()){
         lineStream.str(trace_attr);
-        string attr;
+        std::string attr;
         std::getline(lineStream,attr, ',');
         while(!std::getline(lineStream,attr, ',').eof()){
             trace_attributes.emplace_back(attr);
@@ -140,7 +140,7 @@ void abbadingo_inputdata::read_abbadingo_header(istream &input_stream) {
 
     if(!symbol_attr.empty()){
         lineStream.str(symbol_attr);
-        string attr;
+        std::string attr;
         std::getline(lineStream,attr, ',');
         while(!std::getline(lineStream,attr, ',').eof()){
             symbol_attributes.emplace_back(attr);

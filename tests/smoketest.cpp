@@ -13,7 +13,7 @@ using Catch::Matchers::Equals;
 
 //TODO: refactor: These should probably be taken out of main.cpp
 evaluation_function* get_evaluation();
-void print_current_automaton(state_merger*, const string&, const string&);
+void print_current_automaton(state_merger*, const std::string&, const std::string&);
 
 TEST_CASE( "Smoke test: greedy alergia on stamina 1_training", "[smoke]" ) {
     HEURISTIC_NAME = "alergia";
@@ -22,9 +22,9 @@ TEST_CASE( "Smoke test: greedy alergia on stamina 1_training", "[smoke]" ) {
     evaluation_function *eval = get_evaluation();
     REQUIRE(eval != nullptr);
 
-    ifstream input_stream("data/staminadata/1_training.txt");
+    std::ifstream input_stream("data/staminadata/1_training.txt");
     if (!input_stream) {
-        cerr << "Error: " << strerror(errno);
+        std::cerr << "Error: " << strerror(errno);
     }
     REQUIRE(input_stream);
 
@@ -64,7 +64,7 @@ TEST_CASE( "Smoke test: greedy edsm on stamina 1_training", "[smoke]" ) {
     evaluation_function *eval = get_evaluation();
     REQUIRE(eval != nullptr);
 
-    ifstream input_stream("data/staminadata/1_training.txt");
+    std::ifstream input_stream("data/staminadata/1_training.txt");
     REQUIRE(input_stream);
 
     inputdata id;
@@ -91,9 +91,9 @@ TEST_CASE( "Smoke test: greedy edsm on stamina 1_training", "[smoke]" ) {
 }
 
 TEST_CASE( "Smoke test: abbadingo input data with empty traces", "[smoke]" ) {
-    ifstream input_stream("data/PAutomaC-competition_sets/1.pautomac.train.dat");
+    std::ifstream input_stream("data/PAutomaC-competition_sets/1.pautomac.train.dat");
     if (!input_stream) {
-        cerr << "Error: " << strerror(errno);
+        std::cerr << "Error: " << strerror(errno);
     }
     REQUIRE(input_stream);
 

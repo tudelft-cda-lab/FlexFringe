@@ -39,7 +39,7 @@ void stream_object::greedyrun_no_undo(state_merger* merger, const int seq_nr, co
     ++count_batches;
 
     if(seq_nr > count_printouts * P_PERCENT || last_sequence){
-      cout << "Processed " << count_printouts * 10 << " percent" << endl;
+      std::cout << "Processed " << count_printouts * 10 << " percent" << std::endl;
       ++count_printouts;
     }
 }
@@ -53,15 +53,15 @@ void stream_object::greedyrun_no_undo(state_merger* merger, const int seq_nr, co
  * @param id Input-data wrapper object. 
  * @return int 
  */
-int stream_object::stream_mode(state_merger* merger, ifstream& input_stream, abbadingo_inputdata* id) {
+int stream_object::stream_mode(state_merger* merger, std::ifstream& input_stream, abbadingo_inputdata* id) {
     const int BATCH_SIZE = 500;
     unsigned int seq_nr = 0;
     bool last_sequence = false;
 
     P_PERCENT = static_cast<int>(id->get_max_sequences() / 10); // to track the percent
-    cout << "P_PERCENT: " << P_PERCENT << endl;
+    std::cout << "P_PERCENT: " << P_PERCENT << std::endl;
 
-    ofstream time_doc("times_per_batch.txt");
+    std::ofstream time_doc("times_per_batch.txt");
     //merger->eval->initialize(merger);
 
     // for performance measurement
@@ -103,7 +103,7 @@ int stream_object::stream_mode(state_merger* merger, ifstream& input_stream, abb
 
 
       if(input_stream.eof()){
-        cout << "Finished parsing file. End of program." << endl;
+        std::cout << "Finished parsing file. End of program." << std::endl;
         time_doc.close();
         return 0;
       }

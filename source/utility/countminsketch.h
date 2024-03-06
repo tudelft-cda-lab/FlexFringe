@@ -30,7 +30,7 @@ class CountMinSketch{
   private:
     const int width, depth;
     int size;
-    vector<int> row_sizes;
+    std::vector<int> row_sizes;
     std::vector< std::vector<unsigned int> > counts; // counts stored in table
 
     inline static HashFunction<int> indexHasher;

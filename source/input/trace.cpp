@@ -46,7 +46,7 @@ void trace::reverse(){
     temp_head->future_tail = end_tail;
 }
 
-string trace::to_string(){
+std::string trace::to_string(){
     tail* t = head;
     if(t == nullptr) return "0 0";
     while(t->future() != nullptr) t = t->future();

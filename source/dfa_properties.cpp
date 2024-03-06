@@ -5,25 +5,25 @@
 #include "dfa_properties.h"
 #include "apta.h"
 
-bool is_counting_path(string str){
+bool is_counting_path(std::string str){
     return ((str + str).find(str, 1) != str.size());
 }
 
 bool counting_path_occurs(apta_node* n1, apta_node* n2){
-    map<int,tail*> tail_map;
+    std::map<int,tail*> tail_map;
     for(auto it = tail_iterator(n2); *it != nullptr; ++it){
-        tail_map.insert(pair<int, tail*>((*it)->get_sequence(), nullptr));
+        tail_map.insert(std::pair<int, tail*>((*it)->get_sequence(), nullptr));
     }
     for(auto it = tail_iterator(n1); *it != nullptr; ++it){
         auto hit = tail_map.find((*it)->get_sequence());
         if(hit != tail_map.end()) hit->second = *it;
     }
-    set<string> traces;
+    std::set<std::string> traces;
     for(auto it = tail_map.begin(); it != tail_map.end(); ++it) {
         tail *t = it->second;
         if(t == nullptr) continue;
 
-        string sequence;
+        std::string sequence;
         apta_node *node = n1;
         while (node != n2 && node != nullptr) {
             sequence.push_back(t->get_symbol());
@@ -106,7 +106,7 @@ int merged_apta_distance(apta_node* l, apta_node* r, int bound){
 }
 
 int num_distinct_sources(apta_node* node){
-    set<apta_node*>* sources = node->get_sources();
+    std::set<apta_node*>* sources = node->get_sources();
     int result = sources->size();
     delete sources;
     return result;

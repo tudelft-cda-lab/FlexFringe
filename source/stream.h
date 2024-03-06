@@ -28,7 +28,7 @@ public:
     nextrun = new refinement_list();
   }
 
-  int stream_mode(state_merger* merger, ifstream& input_stream, abbadingo_inputdata* id);
+  int stream_mode(state_merger* merger, std::ifstream& input_stream, abbadingo_inputdata* id);
   void greedyrun_no_undo(state_merger* merger, const int seq_nr, const bool last_sequence, const int n_runs);
 };
 

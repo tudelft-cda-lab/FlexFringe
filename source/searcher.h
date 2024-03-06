@@ -25,8 +25,6 @@
 #ifndef _SEARCHER_H_
 #define _SEARCHER_H_
 
-using namespace std;
-
 #include <fstream>
 #include <iostream>
 #include <list>

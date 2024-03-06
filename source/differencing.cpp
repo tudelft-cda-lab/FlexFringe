@@ -17,8 +17,8 @@ double difference(apta* apta1, apta* apta2){
         tail* t = n1->get_data()->sample_tail();
         //cerr << t->to_string() << endl;
         while(!t->is_final() && length < DIFF_MAX_LENGTH){
-            double kl_score1 = max(compute_score(n1, t), DIFF_MIN);
-            double kl_score2 = max(compute_score(n2, t), DIFF_MIN);
+            double kl_score1 = std::max(compute_score(n1, t), DIFF_MIN);
+            double kl_score2 = std::max(compute_score(n2, t), DIFF_MIN);
             score1 += exp(kl_score1) * kl_score1;
             score2 += exp(kl_score1) * kl_score2;
             n1 = single_step(n1, t, apta1);
@@ -30,8 +30,8 @@ double difference(apta* apta1, apta* apta2){
             length++;
         }
         if(FINAL_PROBABILITIES && t->is_final()){
-            score1 += max(compute_score(n1, t), DIFF_MIN);
-            score2 += max(compute_score(n2, t), DIFF_MIN);
+            score1 += std::max(compute_score(n1, t), DIFF_MIN);
+            score2 += std::max(compute_score(n2, t), DIFF_MIN);
         }
         mem_store::delete_tail(t);
 

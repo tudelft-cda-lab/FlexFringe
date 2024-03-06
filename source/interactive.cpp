@@ -17,13 +17,13 @@
  * @return refinement_list* list of refinments executed by the state merger
  */
 refinement_list* interactive(state_merger* merger){
-    cerr << "starting greedy merging" << endl; // cerr?
+    std::cerr << "starting greedy merging" << std::endl; // cerr?
     int num = 1;
     refinement_list* all_refs = new refinement_list();
     merger->get_eval()->initialize_after_adding_traces(merger);
 
-    string command = string("");
-    string arg;
+    std::string command = std::string("");
+    std::string arg;
     int choice = 1; // what merge was picked
     int pos = 0; // what merge we are looking at
     int step = 1; // current step number
@@ -39,23 +39,23 @@ refinement_list* interactive(state_merger* merger){
 
     while( true ){
         while( true ){
-            cout << " ";
+            std::cout << " ";
             // output current merged apta
-            merger->print_dot("pre_" + to_string(num % 2) + ".dot");
+            merger->print_dot("pre_" + std::to_string(num % 2) + ".dot");
 
             refs = merger->get_possible_refinements();
             chosen_ref = *refs->begin();
 
-            cout << "Possible refinements: " << endl;
+            std::cout << "Possible refinements: " << std::endl;
             for(refinement_set::iterator it = refs->begin(); it != refs->end(); ++it){
                 (*it)->print();
-                cout << " , ";
+                std::cout << " , ";
             }
 
-            cout << endl << "Your choice at step " << step << ": " << endl;
+            std::cout << std::endl << "Your choice at step " << step << ": " << std::endl;
             getline(std::cin, command);
 
-            stringstream cline(command);
+            std::stringstream cline(command);
             cline >> arg;
 
             // parse (prefix-free) commands
@@ -64,7 +64,7 @@ refinement_list* interactive(state_merger* merger){
                 (*all_refs->begin())->undo(merger);
                 all_refs->pop_front();
                 step--;
-                cout << "undid last merge" << endl;
+                std::cout << "undid last merge" << std::endl;
             } else if(arg == "restart") {
                 // undo_merge all merges up to here
                 while(all_refs->begin() != all_refs->end()) {
@@ -72,7 +72,7 @@ refinement_list* interactive(state_merger* merger){
                     all_refs->pop_front();
                 }
                 step = 1;
-                cout << "Restarted" << endl;
+                std::cout << "Restarted" << std::endl;
             } else if (arg == "leap") {
                 // automatically do the next n steps
                 // TODO: error handling for n = NaN
@@ -80,7 +80,7 @@ refinement_list* interactive(state_merger* merger){
                 countdown = stoi(arg);
 
                 manual = true;
-                arg = string("1");
+                arg = std::string("1");
                 execute = true;
                 break;
             } else if(arg == "set") {
@@ -89,47 +89,47 @@ refinement_list* interactive(state_merger* merger){
                 if(arg == "state_count") {
                     cline >> arg;
                     STATE_COUNT = stoi(arg);
-                    cout << "STATE_COUNT is now " << STATE_COUNT << endl;
+                    std::cout << "STATE_COUNT is now " << STATE_COUNT << std::endl;
                 }
                 if(arg == "symbol_count") {
                     cline >> arg;
                     SYMBOL_COUNT = stoi(arg);
-                    cout << "SYMBOL_COUNT is now " << SYMBOL_COUNT << endl;
+                    std::cout << "SYMBOL_COUNT is now " << SYMBOL_COUNT << std::endl;
                 }
                 if(arg == "lower_bound") {
                     cline >> arg;
                     LOWER_BOUND = stoi(arg);
-                    cout << "LOWER_BOUND is now " << LOWER_BOUND << endl;
+                    std::cout << "LOWER_BOUND is now " << LOWER_BOUND << std::endl;
                 }
                 if(arg == "sinkson") {
                     cline >> arg;
                     USE_SINKS = stoi(arg);
-                    cout << "USE_SINKS is now " << (USE_SINKS==true ? "true" : "false") << endl;
+                    std::cout << "USE_SINKS is now " << (USE_SINKS==true ? "true" : "false") << std::endl;
                 }
                 if(arg == "blueblue") {
                     cline >> arg;
                     MERGE_BLUE_BLUE = stoi(arg);
-                    cout << "MERGE_BLUE_BLUE is now " << (MERGE_BLUE_BLUE==true ? "true" : "false") << endl;
+                    std::cout << "MERGE_BLUE_BLUE is now " << (MERGE_BLUE_BLUE==true ? "true" : "false") << std::endl;
                 }
                 if(arg == "shallowfirst") {
                     cline >> arg;
                     DEPTH_FIRST = stoi(arg);
-                    cout << "SHALLOW_FIRST is now " << (DEPTH_FIRST==true ? "true" : "false") << endl;
+                    std::cout << "SHALLOW_FIRST is now " << (DEPTH_FIRST==true ? "true" : "false") << std::endl;
                 }
                 if(arg == "largestblue") {
                     cline >> arg;
                     MERGE_MOST_VISITED = stoi(arg);
-                    cout << "MERGE_MOST_VISITED is now " << (MERGE_MOST_VISITED==true ? "true" : "false") << endl;
+                    std::cout << "MERGE_MOST_VISITED is now " << (MERGE_MOST_VISITED==true ? "true" : "false") << std::endl;
                 }
             } else if(arg == "force") {
                 // implements are mandatory merge
-                cout << "State two sequences in abg format, ending in the same state: " << endl;
-                string seq1 = "";
-                string seq2 = "";
+                std::cout << "State two sequences in abg format, ending in the same state: " << std::endl;
+                std::string seq1 = "";
+                std::string seq2 = "";
 
 
             } else if(arg == "help") {
-                cout << "Available commands: set <param> value, undo_merge, help; insert <sample> in abd format; <int> merges the <int>th merge from the proposed list" << endl;
+                std::cout << "Available commands: set <param> value, undo_merge, help; insert <sample> in abd format; <int> merges the <int>th merge from the proposed list" << std::endl;
                 // next command?
 
             } else {
@@ -137,7 +137,7 @@ refinement_list* interactive(state_merger* merger){
                     choice = stoi(arg);
                     break;
                 } catch(std::invalid_argument e) {
-                    cout << "Invalid command. Try \"help\" if you are lost" << endl;
+                    std::cout << "Invalid command. Try \"help\" if you are lost" << std::endl;
                     execute = false;
                 }
             }
@@ -163,13 +163,13 @@ refinement_list* interactive(state_merger* merger){
 
         // execute choice
         if(refs->empty()){
-            cerr << "no more possible merges" << endl;
+            std::cerr << "no more possible merges" << std::endl;
             break;
         }
 
         // chosen ref instead of best ref
         chosen_ref->print_short();
-        cerr << " ";
+        std::cerr << " ";
 
         chosen_ref->doref(merger);
 
@@ -183,11 +183,11 @@ refinement_list* interactive(state_merger* merger){
 
         execute = false;
     }
-    cout << endl;
+    std::cout << std::endl;
 
     int size =  merger->get_final_apta_size();
     int red_size = merger->get_num_red_states();
-    cout << endl << "Found heuristic solution with " << size << " states, of which " << red_size << " are red states." << endl;
+    std::cout << std::endl << "Found heuristic solution with " << size << " states, of which " << red_size << " are red states." << std::endl;
     return all_refs;
 };
 

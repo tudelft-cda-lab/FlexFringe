@@ -10,8 +10,6 @@
 #include "state_merger.h"
 #include "refinement.h"
 
-using namespace std;
-
 refinement_list* interactive(state_merger* merger);
 
 #endif /* _INTERACTIVE_H_ */

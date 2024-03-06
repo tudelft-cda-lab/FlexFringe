@@ -10,8 +10,7 @@
 #include "state_merger.h"
 #include "refinement.h"
 
-using namespace std;
 
-void bagging(state_merger* merger, string output_file, int nr_estimators);
+void bagging(state_merger* merger, std::string output_file, int nr_estimators);
 
 #endif /* _ENSEMBLE_H_ */

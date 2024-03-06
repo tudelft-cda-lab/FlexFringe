@@ -29,14 +29,14 @@ const char* names[] = { "?", "A", "D", "C", "E" };
 overlap4logs_data::overlap4logs_data() {
     num_type = num_map();
     num_delays = num_long_map();
-    trace_ids = set<string>();
+    trace_ids = std::set<std::string>();
 };
 
-void overlap4logs_data::store_id(string id) {
+void overlap4logs_data::store_id(std::string id) {
    trace_ids.insert(id);
 };
 
-void overlap4logs_data::print_state_label(iostream& output){
+void overlap4logs_data::print_state_label(std::iostream& output){
     if(sink_type()){
         int sum_types = 0;
         for(num_map::iterator it = num_type.begin(); it != num_type.end(); ++it)
@@ -51,7 +51,7 @@ void overlap4logs_data::print_state_label(iostream& output){
     }
 };
 
-void overlap4logs_data::print_state_style(iostream& output){
+void overlap4logs_data::print_state_style(std::iostream& output){
     if(sink_type()){
         int largest_type = 0;
         int count = -1;
@@ -68,7 +68,7 @@ void overlap4logs_data::print_state_style(iostream& output){
         for(int i = 0; i < inputdata_locator::get()->get_alphabet_size(); ++i){
             if(node->get_child(i) != 0 && node->get_child(i)->get_data()->sink_type() == stype){
                 apta_node* c = node->get_child(i);
-                for(set<string>::iterator it3 = reinterpret_cast<overlap4logs_data*>(c->get_data())->trace_ids.begin(); it3 != reinterpret_cast<overlap4logs_data*>(c->get_data())->trace_ids.end(); ++it3){
+                for(std::set<std::string>::iterator it3 = reinterpret_cast<overlap4logs_data*>(c->get_data())->trace_ids.begin(); it3 != reinterpret_cast<overlap4logs_data*>(c->get_data())->trace_ids.end(); ++it3){
                     output <<  it3->c_str() << " ";
                 }
             }
@@ -76,7 +76,7 @@ void overlap4logs_data::print_state_style(iostream& output){
     }
 };
 
-void overlap4logs_data::print_transition_label(iostream& output, int symbol){
+void overlap4logs_data::print_transition_label(std::iostream& output, int symbol){
     if(node->get_child(symbol) != 0){
         output << " " << inputdata_locator::get()->get_symbol(symbol).c_str() << "\n";
 
@@ -101,22 +101,22 @@ void overlap4logs_data::print_transition_label(iostream& output, int symbol){
 };
 
 // this should have a pair, set<pair<int, eval_data*>>
-void overlap4logs_data::print_transition_style(iostream& output, set<int> symbols){
+void overlap4logs_data::print_transition_style(std::iostream& output, std::set<int> symbols){
     apta_node* root = node;
     while(root->get_source() != nullptr) root = root->get_source()->find();
     int root_size = root->get_size();
     int edge_sum = 0;
-    for(set<int>::iterator it = symbols.begin(); it != symbols.end(); ++it){
+    for(std::set<int>::iterator it = symbols.begin(); it != symbols.end(); ++it){
         edge_sum += pos(*it);// old: + neg(*it);
     }
-    float penwidth = 0.5 + max(0.1, ((double)edge_sum*10)/(double)root_size);
+    float penwidth = 0.5 + std::max(0.1, ((double)edge_sum*10)/(double)root_size);
 
     int color = 0;
 
     long minDelay = LONG_MAX;
     long maxDelay = -1;
 
-    for(set<int>::iterator sym_it = symbols.begin(); sym_it != symbols.end(); sym_it++){
+    for(std::set<int>::iterator sym_it = symbols.begin(); sym_it != symbols.end(); sym_it++){
         int symbol = *sym_it;
         double meanDelay = delay_mean(symbol);
         for(long_map::iterator delay_it = num_delays[symbol].begin(); delay_it != num_delays[symbol].end(); delay_it++) {
@@ -215,7 +215,7 @@ void overlap4logs_data::update(evaluation_data* right){
 void overlap4logs_data::undo(evaluation_data* right){
 
     if(right == undo_pointer) {
-        for (set<string>::iterator rit = reinterpret_cast<overlap4logs_data*>(right)->trace_ids.begin(); rit != reinterpret_cast<overlap4logs_data*>(right)->trace_ids.end(); ++rit) {
+        for (std::set<std::string>::iterator rit = reinterpret_cast<overlap4logs_data*>(right)->trace_ids.begin(); rit != reinterpret_cast<overlap4logs_data*>(right)->trace_ids.end(); ++rit) {
             trace_ids.erase(rit->c_str());
         }
     }
@@ -334,7 +334,7 @@ int overlap4logs_data::num_sink_types(){
 };
 
 /*** Output logic ***/
-int overlap4logs::print_labels(iostream& output, apta* aut, overlap4logs_data* data, int symbol) {
+int overlap4logs::print_labels(std::iostream& output, apta* aut, overlap4logs_data* data, int symbol) {
     int total = data->pos(symbol); // old: + data->neg(symbol);
     output << " " << inputdata_locator::get()->get_symbol(symbol).c_str() << " (" << total << "=" << (((double)total*100)/(double)aut->get_root()->find()->get_size()) << "%)\n";
 

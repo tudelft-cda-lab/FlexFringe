@@ -3,8 +3,8 @@
 
 #include "overlap.h"
 
-typedef map<long, long> long_map;
-typedef map<int, map<long, long>> num_long_map;
+typedef std::map<long, long> long_map;
+typedef std::map<int, std::map<long, long>> num_long_map;
 
 /* The data contained in every node of the prefix tree or DFA */
 class overlap4logs_data: public overlap_data {
@@ -21,8 +21,8 @@ public:
 
     overlap4logs_data();
 
-    set<string> trace_ids;
-    virtual void store_id(string id);
+    std::set<std::string> trace_ids;
+    virtual void store_id(std::string id);
 
     virtual void add_tail(tail* t);
     virtual double delay_mean(int symbol);
@@ -34,10 +34,10 @@ public:
     virtual bool sink_consistent(int type);
     virtual int num_sink_types();
 
-    virtual void print_state_label(iostream& output);
-    virtual void print_state_style(iostream& output);
-    virtual void print_transition_label(iostream& output, int symbol);
-    virtual void print_transition_style(iostream& output, set<int> symbols);
+    virtual void print_state_label(std::iostream& output);
+    virtual void print_state_style(std::iostream& output);
+    virtual void print_transition_label(std::iostream& output, int symbol);
+    virtual void print_transition_style(std::iostream& output, std::set<int> symbols);
     virtual int find_end_type(apta_node* node);
 
 protected:
@@ -53,8 +53,8 @@ public:
     virtual bool consistent(state_merger *merger, apta_node* left, apta_node* right);
     virtual void update_score(state_merger *merger, apta_node* left, apta_node* right);
     virtual double compute_score(state_merger*, apta_node* left, apta_node* right);
-    virtual int print_labels(iostream& output, apta* aut, overlap4logs_data* data, int symbol);
-    //virtual void print_dot(iostream& output, state_merger* merger);
+    virtual int print_labels(std::iostream& output, apta* aut, overlap4logs_data* data, int symbol);
+    //virtual void print_dot(std::iostream& output, state_merger* merger);
 };
 
 #endif

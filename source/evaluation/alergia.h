@@ -32,8 +32,8 @@ public:
         return symbol_counts.end();
     }
 
-    virtual void print_transition_label(iostream& output, int symbol);
-    virtual void print_state_label(iostream& output);
+    virtual void print_transition_label(std::iostream& output, int symbol);
+    virtual void print_state_label(std::iostream& output);
 
     virtual void update(evaluation_data* right);
     virtual void undo(evaluation_data* right);

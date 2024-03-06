@@ -3,13 +3,13 @@
 #include "input/inputdatalocator.h"
 #include <iostream>
 
-list< apta_node* > mem_store::node_store;
-list< apta_guard* > mem_store::guard_store;
-list< tail* > mem_store::tail_store;
-list< trace* > mem_store::trace_store;
-list< merge_refinement* > mem_store::mergeref_store;
-list< split_refinement* > mem_store::splitref_store;
-list< extend_refinement* > mem_store::extendref_store;
+std::list< apta_node* > mem_store::node_store;
+std::list< apta_guard* > mem_store::guard_store;
+std::list< tail* > mem_store::tail_store;
+std::list< trace* > mem_store::trace_store;
+std::list< merge_refinement* > mem_store::mergeref_store;
+std::list< split_refinement* > mem_store::splitref_store;
+std::list< extend_refinement* > mem_store::extendref_store;
 
 void mem_store::delete_node(apta_node* node){
     assert(node != nullptr);

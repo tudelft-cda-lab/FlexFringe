@@ -73,10 +73,10 @@ cms_data::cms_data() : alergia_data::alergia_data() {
  * @param tails A vector with the tails.
  * @return const vector<int> 
  */
-const vector<int> cms_data::get_n_grams(tail* t, const int n_steps) const {
+const std::vector<int> cms_data::get_n_grams(tail* t, const int n_steps) const {
     // TODO: this approach can't handle negative numbers yet
     assert(n_steps > 0);
-    vector<int> res;
+    std::vector<int> res;
 
     for(int i = 0; i < n_steps; ++i){
         if(t == 0){
@@ -156,7 +156,7 @@ void cms_data::undo(evaluation_data *right) {
     }
 };
 
-void cms_data::print_state_label(iostream& output){
+void cms_data::print_state_label(std::iostream& output){
     alergia_data::print_state_label(output);
 
 /*     output << "\n\nShort term:\n";
@@ -220,7 +220,7 @@ bool cms::consistent(state_merger *merger, apta_node *left, apta_node *right) {
         }
     }
     else{
-        throw invalid_argument("Input parameter cms-distance metric should only be a single digit from 1 to 7.");
+        throw std::invalid_argument("Input parameter cms-distance metric should only be a single digit from 1 to 7.");
     }
 
     if (!all_sketches_similar){

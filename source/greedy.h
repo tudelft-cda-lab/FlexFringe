@@ -10,8 +10,6 @@
 #include "state_merger.h"
 #include "refinement.h"
 
-using namespace std;
-
 const int RANDOMG = 1;
 const int NORMALG = 2;
 

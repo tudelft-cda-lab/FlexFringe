@@ -22,14 +22,14 @@ class cms_data : public alergia_data {
 protected:
     REGISTER_DEC_DATATYPE(cms_data);
 
-    const vector<int> get_n_grams(tail* t, const int n_steps) const;
-    vector< CountMinSketch<int> > sketches;
+    const std::vector<int> get_n_grams(tail* t, const int n_steps) const;
+    std::vector< CountMinSketch<int> > sketches;
 
 public:
 
     cms_data();
 
-    inline const vector< CountMinSketch<int> >& get_sketches() const {return this->sketches; }
+    inline const std::vector< CountMinSketch<int> >& get_sketches() const {return this->sketches; }
 
     virtual void update(evaluation_data *right) override;
     virtual void undo(evaluation_data *right) override;
@@ -66,7 +66,7 @@ public:
         return 2;
     };
 
-    void print_state_label(iostream& output);
+    void print_state_label(std::iostream& output);
 };
 
 class cms : public alergia {

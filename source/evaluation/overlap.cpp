@@ -7,11 +7,11 @@
 REGISTER_DEF_DATATYPE(overlap_data);
 REGISTER_DEF_TYPE(overlap_driven);
 
-void overlap_data::print_transition_label(iostream& output, int symbol){
+void overlap_data::print_transition_label(std::iostream& output, int symbol){
     output << pos(symbol) << " ";
 };
 
-void overlap_data::print_state_label(iostream& output){
+void overlap_data::print_state_label(std::iostream& output){
     count_data::print_state_label(output);
     output << "\n" << num_paths() << " " << num_final();
 };

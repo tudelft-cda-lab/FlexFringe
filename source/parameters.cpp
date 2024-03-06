@@ -5,21 +5,21 @@ std::uniform_real_distribution<double> unif(0.0, 1.0);
 std::default_random_engine re;
 double random_double(){ return unif(re); }
 
-string HEURISTIC_NAME = "alergia";
-string DATA_NAME = "default";
-string EVALUATION_PARAMETERS = "";
-string INPUT_FILE = "test.dat";
-string OUTPUT_FILE = "";
-string OUTPUT_TYPE = "both";
-string LOG_PATH = "flexfringe.log";
+std::string HEURISTIC_NAME = "alergia";
+std::string DATA_NAME = "default";
+std::string EVALUATION_PARAMETERS = "";
+std::string INPUT_FILE = "test.dat";
+std::string OUTPUT_FILE = "";
+std::string OUTPUT_TYPE = "both";
+std::string LOG_PATH = "flexfringe.log";
 
-string OPERATION_MODE = "greedy";
+std::string OPERATION_MODE = "greedy";
 
-string SAT_SOLVER = "glucose";
-string APTA_FILE = "";
-string APTA_FILE2 = "";
+std::string SAT_SOLVER = "glucose";
+std::string APTA_FILE = "";
+std::string APTA_FILE2 = "";
 
-string COMMAND_LINE = "";
+std::string COMMAND_LINE = "";
 
 bool DEBUGGING = false;
 bool ADD_TAILS = true;

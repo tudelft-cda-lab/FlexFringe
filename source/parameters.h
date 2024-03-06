@@ -4,8 +4,6 @@
 #include <string>
 #include <vector>
 
-using namespace std;
-
 double random_double();
 
 extern bool MERGE_SINKS;
@@ -25,8 +23,8 @@ extern int EXTRA_STATES;
 extern bool TARGET_REJECTING;
 extern bool SYMMETRY_BREAKING;
 extern bool FORCING;
-extern string OUTPUT_TYPE;
-extern string LOG_PATH;
+extern std::string OUTPUT_TYPE;
+extern std::string LOG_PATH;
 extern bool MERGE_MOST_VISITED;
 extern bool MERGE_BLUE_BLUE;
 extern bool RED_FIXED;
@@ -34,7 +32,7 @@ extern bool ALL_FIXED;
 extern bool MERGE_WHEN_TESTING;
 extern bool DEPTH_FIRST;
 extern int RANGE;
-extern string COMMAND;
+extern std::string COMMAND;
 extern bool FINAL_PROBABILITIES;
 extern int MERGE_LOCAL;
 extern int MERGE_LOCAL_COLLECTOR_COUNT;
@@ -120,18 +118,18 @@ extern int DISTANCE_METRIC_SKETCHES;
 extern int RANDOM_INITIALIZATION_SKETCHES;
 extern int NSTEPS_SKETCHES;
 
-extern string HEURISTIC_NAME;
-extern string DATA_NAME;
-extern string INPUT_FILE;
-extern string OUTPUT_FILE;
-extern string EVALUATION_PARAMETERS;
-extern string OPERATION_MODE;
+extern std::string HEURISTIC_NAME;
+extern std::string DATA_NAME;
+extern std::string INPUT_FILE;
+extern std::string OUTPUT_FILE;
+extern std::string EVALUATION_PARAMETERS;
+extern std::string OPERATION_MODE;
 
-extern string SAT_SOLVER;
-extern string APTA_FILE;
-extern string APTA_FILE2;
+extern std::string SAT_SOLVER;
+extern std::string APTA_FILE;
+extern std::string APTA_FILE2;
 
-extern string COMMAND_LINE;
+extern std::string COMMAND_LINE;
 
 extern bool DEBUGGING;
 extern int ENSEMBLE_RUNS;

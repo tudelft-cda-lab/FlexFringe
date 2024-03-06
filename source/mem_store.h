@@ -10,20 +10,18 @@
 #include "input/trace.h"
 #include "input/tail.h"
 
-using namespace std;
-
 class mem_store {
 private:
-    static list<trace*> trace_store;
-    static list<tail*> tail_store;
+    static std::list<trace*> trace_store;
+    static std::list<tail*> tail_store;
 public:
-    static list< apta_node* > node_store;
-    static list< apta_guard* > guard_store;
-//    static list< tail* > tail_store;
-//    static list< trace* > trace_store;
-    static list< merge_refinement* > mergeref_store;
-    static list< split_refinement* > splitref_store;
-    static list< extend_refinement* > extendref_store;
+    static std::list< apta_node* > node_store;
+    static std::list< apta_guard* > guard_store;
+//    static std::list< tail* > tail_store;
+//    static std::list< trace* > trace_store;
+    static std::list< merge_refinement* > mergeref_store;
+    static std::list< split_refinement* > splitref_store;
+    static std::list< extend_refinement* > extendref_store;
 
     static void delete_node(apta_node*);
     static apta_node* create_node(apta_node* other_node);

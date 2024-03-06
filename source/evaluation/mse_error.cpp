@@ -45,8 +45,8 @@ void mse_data::undo(evaluation_data* right){
         mean = 0;
 };
 
-string mse_data::predict_data(tail*){
-    return to_string(mean);
+std::string mse_data::predict_data(tail*){
+    return std::to_string(mean);
 };
 
 bool mse_error::consistent(state_merger *merger, apta_node* left, apta_node* right){
