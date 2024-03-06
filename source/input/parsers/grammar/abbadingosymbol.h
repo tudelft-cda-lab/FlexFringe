@@ -115,7 +115,13 @@ namespace {
                 return dsl::peek(dec_number) >> dec_number | dsl::error<attr_val_error>;
             }();
             static constexpr auto value = lexy::callback<std::string_view>([](auto integer, auto decimal) {
-                std::string_view tmp(integer.begin(), decimal.end());
+                // Workaround for apple clang not implementing string_view correctly:
+                // std::string_view tmp(integer.begin(), decimal.end());
+                size_t count = 0;
+                for (auto i = integer.begin(); i != decimal.end(); i++) {
+                    count += 1;
+                }
+                std::string_view tmp(integer.begin(), count);
                 return tmp;
             });
         };
