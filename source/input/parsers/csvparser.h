@@ -9,7 +9,6 @@
 #include "csv.hpp"
 #include "input/trace.h"
 #include "symbol_info.h"
-#include <coroutine>
 #include <optional>
 
 class csv_header_parser {
