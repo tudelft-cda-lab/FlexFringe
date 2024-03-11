@@ -105,8 +105,6 @@ TEST_CASE("CSVReader: Special characters", "[parsing]") {
 }
 
 TEST_CASE("CSVReader: Sliding window csv", "[parsing]") {
-    // check if we can parse csv files with the abbadingo delimiter symbols
-
     std::string input_whitespace = "id, symb\n"
                                    "1, a\n"
                                    "1, b\n"
@@ -136,8 +134,6 @@ TEST_CASE("CSVReader: Sliding window csv", "[parsing]") {
 }
 
 TEST_CASE("CSVReader: Sliding window abbadingo", "[parsing]") {
-    // check if we can parse csv files with the abbadingo delimiter symbols
-
     std::string input_whitespace = "1 4\n"
                                    "0 4 a b c d";
     std::istringstream input(input_whitespace);
