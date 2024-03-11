@@ -128,5 +128,9 @@ if(MSVC)
             MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
-set_property(TARGET flexfringe PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-set_property(TARGET runtests PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+# XCode 15 currently has known issues with LTO:
+# https://developer.apple.com/documentation/xcode-release-notes/xcode-15-release-notes#Known-Issues
+if (NOT APPLE)
+    set_property(TARGET flexfringe PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+    set_property(TARGET runtests PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+endif()
