@@ -109,7 +109,7 @@ void csv_header_parser::setup_col_maps() {
 }
 
 void csv_header_parser::parse(const std::vector<std::string> &headers) {
-    // The type names that indicate a column containins trace or symbol attributes
+    // The type names that indicate a column containing trace or symbol attributes
     const std::set<std::string> type_name_attrs = reserved_col_type_names;
 
     // The type names that indicate a column contains other relevant information
