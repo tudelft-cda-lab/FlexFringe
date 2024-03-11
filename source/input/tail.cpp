@@ -173,7 +173,6 @@ int tail::get_nr(){
     return td->tail_nr;
 }
 
-// TODO
 tail_data::tail_data() {
     auto inputdata = inputdata_locator::get();
     index = -1;
@@ -186,12 +185,9 @@ tail_data::tail_data() {
     tail_nr = -1;
 }
 
-// TODO
-tail_data::~tail_data() {
 
-}
+tail_data::~tail_data() = default;
 
-// TODO
 void tail_data::initialize() {
     auto inputdata = inputdata_locator::get();
     index = -1;
