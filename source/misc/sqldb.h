@@ -69,6 +69,7 @@ class sqldb {
      * @brief Loop over all queries starting with prefix. Performing function func, continuing as func returns true.
      */
     void prefix_query(const std::string& prefix, const std::function<bool(std::string, int)>& func);
+    std::vector<std::pair<std::vector<int>, int>> prefix_query(const std::string& prefix, int n);
 
     /**
      * @brief Return the type of the trace.

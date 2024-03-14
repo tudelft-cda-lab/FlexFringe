@@ -15,15 +15,15 @@
 #include "predict.h"
 #include "state_merger.h"
 #include "input/inputdatalocator.h"
+#include "parameters.h"
 #include "misc/utils.h"
-#include <unordered_map>
+#include <map>
 #include <string>
 #include <tuple>
 #include <ranges>
-#include <random>
 #include <algorithm>
 
-regex_builder::regex_builder(apta& the_apta, state_merger& merger, std::tuple<bool, bool, bool>& coloring, std::unordered_map<int, char>& mapping){
+regex_builder::regex_builder(apta& the_apta, state_merger& merger, std::tuple<bool, bool, bool>& coloring, std::map<int, char>& mapping){
     const auto mapping_func = [&mapping](int i) {
         return mapping[i];
     };
@@ -85,7 +85,7 @@ void regex_builder::initialize(apta& the_apta, state_merger& merger, std::tuple<
         // It will include also transitions to nodes we do not have.
         // TODO: Is this a bug in the to_json functionality I copied?
 
-        std::unordered_map<apta_node*, std::string> transition_map;
+        std::map<apta_node*, std::string> transition_map;
         for(auto& guard : n->guards){
             auto* target = guard.second->get_target();
             if(target == nullptr) continue;
@@ -144,9 +144,8 @@ std::string regex_builder::to_regex(int output_state) {
 }
 
 std::vector<std::string> regex_builder::to_regex(const std::string& output_state, size_t parts) {
-    static auto rng = std::default_random_engine{};
     std::vector<apta_node*> from = types_map[output_state];
-    std::shuffle(std::begin(from), std::end(from), rng); // Lets try to get a lucky combination.
+    std::shuffle(std::begin(from), std::end(from), RNG); // Lets try to get a lucky combination.
 
     std::vector<std::string> res;
 
@@ -166,7 +165,7 @@ std::vector<std::string> regex_builder::to_regex(int output_state, size_t parts)
     return to_regex(inputdata_locator::get()->string_from_type(output_state), parts);
 }
 
-void regex_builder::print_my_transitions(std::unordered_map<apta_node*, std::unordered_map<apta_node*, std::string>> trans) {
+void regex_builder::print_my_transitions(std::map<apta_node*, std::map<apta_node*, std::string>> trans) {
     std::cout << "TRANS" << std::endl;
     for (const auto& x : trans) {
         for (const auto& y : x.second) {
@@ -186,9 +185,9 @@ std::string regex_builder::to_regex(std::vector<apta_node*> final_nodes) {
     }
     cout << endl;
     // Copy (using copy-assignment) datastructures and manipulate for this output_state.
-    std::unordered_set<apta_node*> my_states = states;
-    std::unordered_map<apta_node*, std::unordered_set<apta_node*>> my_r_transitions = r_transitions;
-    std::unordered_map<apta_node*, std::unordered_map<apta_node*, std::string>> my_transitions = transitions;
+    std::set<apta_node*> my_states = states;
+    std::map<apta_node*, std::set<apta_node*>> my_r_transitions = r_transitions;
+    std::map<apta_node*, std::map<apta_node*, std::string>> my_transitions = transitions;
 
     // Add epsilon transitions to final and start node not interacting with the whole.
     auto final_node = make_unique<apta_node>();

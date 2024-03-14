@@ -52,3 +52,7 @@ const int sqldb_sul::query_trace_maybe(const std::vector<int>& query_trace) cons
 std::optional<std::pair<std::vector<int>, int>> sqldb_sul::regex_equivalence(const std::string& regex, int type) {
     return my_sqldb.regex_equivalence(regex, type);
 }
+
+std::vector<std::pair<std::vector<int>, int>> sqldb_sul::prefix_query(const std::vector<int>& prefix, int n) {
+    return my_sqldb.prefix_query(my_sqldb.vec2str(prefix), n);
+}

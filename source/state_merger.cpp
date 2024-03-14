@@ -37,6 +37,7 @@ apta_node* state_merger::get_state_from_trace(trace* t) const {
     while(cur_tail != nullptr){
         cur_state = cur_state->find();
         cur_state = cur_state->child(cur_tail);
+        if (cur_state == nullptr) return nullptr;
         cur_tail = cur_tail->future();
     }
     return cur_state;
@@ -252,7 +253,7 @@ bool state_merger::merge(apta_node* left, apta_node* right, int depth, bool eval
     if(evaluate) {
         eval->update_score_after_recursion(this, left, right);
     }
-    return true;
+    return result;
 }
 
 bool state_merger::merge(apta_node* left, apta_node* right) {
@@ -692,7 +693,7 @@ void state_merger::undo_perform_split(apta_node* red, tail* t, int attr){
 void state_merger::extend(apta_node* blue){
     blue->red = true;
     blue->sink = blue->sink_type();
-    if(blue->source->find()->sink != -1) blue->sink = blue->source->find()->sink;
+    if(blue->source && blue->source->find()->sink != -1) blue->sink = blue->source->find()->sink;
 }
 
 /* undo_merge making a given blue state red */
@@ -810,6 +811,7 @@ bool state_merger::pre_consistent(apta_node* left, apta_node* right){
 refinement* state_merger::test_merge(apta_node* left, apta_node* right){
     eval->reset(this);
 
+    /* if(left->representative || right->representative) return nullptr; */
     if(!pre_consistent(left, right)) return nullptr;
 
     double score_result = -1;
@@ -823,6 +825,7 @@ refinement* state_merger::test_merge(apta_node* left, apta_node* right){
     if(merge_result && !eval->compute_before_merge) score_result = eval->compute_score(this, left, right);
     if(USE_LOWER_BOUND && score_result < LOWER_BOUND) merge_result = false;
     if((merge_result && !eval->compute_consistency(this, left, right))) merge_result = false;
+    /* if(right->representative == left && PERFORM_MERGE_CHECK && MERGE_WHEN_TESTING) undo_merge(left,right); */
     if(PERFORM_MERGE_CHECK && MERGE_WHEN_TESTING) undo_merge(left,right);
 
     if(PERFORM_DEPTH_CHECK && merge_result){
@@ -1124,6 +1127,7 @@ int state_merger::get_num_merges() {
 }
 
 void state_merger::renumber_states(){
+    return;
     int ncounter = 0;
     for(merged_APTA_iterator Ait = merged_APTA_iterator(aut->get_root()); *Ait != 0; ++Ait){
         (*Ait)->number = ncounter++;

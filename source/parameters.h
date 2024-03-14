@@ -3,10 +3,12 @@
 
 #include <string>
 #include <vector>
+#include <random>
 
 using namespace std;
 
 double random_double();
+extern std::default_random_engine RNG;
 
 extern bool MERGE_SINKS;
 extern int STATE_COUNT;

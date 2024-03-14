@@ -182,7 +182,7 @@ void trace::pop_front() {
  */
 const std::vector<int> trace::get_input_sequence(const bool is_access_trace, const bool prepare_empty_slot) const {
     tail* t = head;
-    if(t->get_symbol() == -1) return prepare_empty_slot ? std::vector<int>(1) : std::vector<int>(); // empty strings
+    if(t == nullptr || t->get_symbol() == -1) return prepare_empty_slot ? std::vector<int>(1) : std::vector<int>(); // empty strings
 
     std::vector<int> res = prepare_empty_slot ? std::vector<int>(this->length + 1) : std::vector<int>(this->length);
     int idx = 0;

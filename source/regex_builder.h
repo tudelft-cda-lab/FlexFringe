@@ -13,8 +13,8 @@
 #define __REGEX_BUILDER_H__
 
 #include <string>
-#include <unordered_map>
-#include <unordered_set>
+#include <map>
+#include <set>
 #include <queue>
 #include "apta.h"
 #include "state_merger.h"
@@ -39,24 +39,24 @@ public:
      * See: https://stackoverflow.com/questions/26074090/iterating-through-a-utf-8-string-in-c11
      */
     
-    explicit regex_builder(apta& the_apta, state_merger& merger, std::tuple<bool, bool, bool>& coloring, std::unordered_map<int, char>& mapping);
+    explicit regex_builder(apta& the_apta, state_merger& merger, std::tuple<bool, bool, bool>& coloring, std::map<int, char>& mapping);
     explicit regex_builder(apta& the_apta, state_merger& merger, std::tuple<bool, bool, bool>& coloring, const std::function<char(int)>& mapping_func);
 
-    std::unordered_map<std::string, std::vector<apta_node*>> get_types_map() const { return types_map; }
+    std::map<std::string, std::vector<apta_node*>> get_types_map() const { return types_map; }
 
     void initialize(apta& the_apta, state_merger& merger, std::tuple<bool, bool, bool>& coloring, const std::function<char(int)>& mapping_func);
 
     apta_node* root;
 
     // States of the DFA
-    std::unordered_set<apta_node*> states;
+    std::set<apta_node*> states;
     // Transitions in the DFA
-    std::unordered_map<apta_node*, std::unordered_map<apta_node*, std::string>> transitions;
+    std::map<apta_node*, std::map<apta_node*, std::string>> transitions;
     // Reverse transitions in the DFA
-    std::unordered_map<apta_node*, std::unordered_set<apta_node*>> r_transitions;
+    std::map<apta_node*, std::set<apta_node*>> r_transitions;
 
     // Predicted types of each state
-    std::unordered_map<std::string, std::vector<apta_node*>> types_map;
+    std::map<std::string, std::vector<apta_node*>> types_map;
 
 
     /**
@@ -83,7 +83,7 @@ public:
     bool brackets(const std::string& regex);
     std::string add_maybe_brackets(const std::string& regex);
 
-    void print_my_transitions(std::unordered_map<apta_node*, std::unordered_map<apta_node*, std::string>> trans);
+    void print_my_transitions(std::map<apta_node*, std::map<apta_node*, std::string>> trans);
 };
 
 #endif

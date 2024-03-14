@@ -96,9 +96,9 @@ void run() {
         LOG_S(INFO) << "Finished building the regex builder";
         auto delimiter = "\t";
         for (std::string type : std::views::keys(inputdata_locator::get()->get_r_types())) {
-            for (auto regex : builder.to_regex(type, 5)) 
-                cout << "Got regex with size: " << regex.size() << endl;
-                /* cout << type << delimiter << regex << endl; */
+            for (auto regex : builder.to_regex(type, 1)) 
+                /* cout << "Got regex with size: " << regex.size() << endl; */
+                cout << type << delimiter << regex << endl;
         }
         return;
     }

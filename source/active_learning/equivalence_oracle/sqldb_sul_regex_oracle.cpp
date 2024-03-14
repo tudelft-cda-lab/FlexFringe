@@ -7,12 +7,13 @@
 #include "main_helpers.h"
 #include "misc/printutil.h"
 #include "misc/sqldb.h"
+#include "misc/trim.h"
+#include "parameters.h"
 #include "regex_builder.h"
 #include "utility/loguru.hpp"
 #include <algorithm>
 #include <memory>
 #include <optional>
-#include <random>
 #include <string>
 #include <utility>
 #include <vector>
@@ -25,10 +26,9 @@ std::optional<CEX> sqldb_sul_regex_oracle::equivalence_query(state_merger* merge
     apta& hypothesis = *(merger->get_aut());
 
     static const auto& types = id.get_types();
-    static auto rng = std::default_random_engine{};
 
     auto my_types = types;
-    std::shuffle(std::begin(my_types), std::end(my_types), rng);
+    std::shuffle(std::begin(my_types), std::end(my_types), RNG);
     cout << "Types shuffled: " << my_types << endl;
 
     auto coloring = std::make_tuple(PRINT_RED, PRINT_BLUE, PRINT_WHITE);
@@ -42,8 +42,21 @@ std::optional<CEX> sqldb_sul_regex_oracle::equivalence_query(state_merger* merge
         int type = my_types[i];
         int nodes = builder.get_types_map()[inputdata_locator::get()->string_from_type(type)].size();
 
+        if (nodes > 30) {
+            LOG_S(INFO) << "Stop regex, is likely too complex.";
+            throw std::runtime_error("Regex likely too complex.");
+        }
+
         for (std::string regex : builder.to_regex(type, parts)) {
+            if (regex.size() > 1000000000) {
+                LOG_S(INFO) << "Stop regex, is likely too complex.";
+                throw std::runtime_error("Regex likely too complex.");
+            }
             cout << "We have " << parts << " parts and got a regex with size " << regex.size() << endl;
+            if (regex.size() > 400000) { // too complex
+                errors[i] = true;
+                continue;
+            }
             try {
                 std::optional<CEX> cex = my_sqldb_sul->regex_equivalence(regex, type);
                 if (cex) {
@@ -54,6 +67,7 @@ std::optional<CEX> sqldb_sul_regex_oracle::equivalence_query(state_merger* merge
                 // Regex got too big, lets split into multiple parts.
                 errors[i] = true;
                 std::string exc{e.what()};
+                trim(exc);
                 LOG_S(INFO) << "We got error: " << exc;
                 if (exc.find("too complex") != std::string::npos) {
                     continue;

@@ -2,6 +2,7 @@
 #include "csv.hpp"
 #include "input/inputdata.h"
 #include "misc/printutil.h"
+#include "misc/trim.h"
 #include "parameters.h"
 #include "utility/loguru.hpp"
 #include <fmt/format.h>
@@ -198,6 +199,18 @@ void sqldb::prefix_query(const std::string& prefix, const std::function<bool(std
     tx.commit();
 }
 
+std::vector<std::pair<std::vector<int>, int>> sqldb::prefix_query(const std::string& prefix, int n) {
+    pqxx::work tx = pqxx::work(conn);
+    const std::string query = fmt::format("SELECT {0}, {1} FROM {2} WHERE {0} LIKE '{3}%' LIMIT {4}", TRACE_NAME,
+                                          RES_NAME, table_name, prefix, n);
+    std::vector<std::pair<std::vector<int>, int>> ans;
+    for (auto const& [trace, res] : tx.stream<std::string, int>(query)) {
+        ans.push_back(std::make_pair(str2vec(trace), res));
+    }
+    DLOG_S(1) << query << " answered with " << ans.size();
+    return ans;
+}
+
 void sqldb::add_row(const std::string& trace, int res) {
     pqxx::work tx{conn};
     tx.exec0(
@@ -215,6 +228,7 @@ int sqldb::query_trace(const std::string& trace) {
         return val;
     } catch (const pqxx::unexpected_rows& e) {
         std::string exc{e.what()};
+        trim(exc);
         throw std::runtime_error(exc + " Query: " + query);
     }
 }
@@ -223,6 +237,7 @@ int sqldb::query_trace_maybe(const std::string& trace) {
     auto query = fmt::format("SELECT COALESCE( (SELECT {0} FROM {1} WHERE {2} = '{3}'), -1)", RES_NAME, table_name,
                              TRACE_NAME, trace); // The last -1 here is the default value.
     DLOG_S(1) << query;
+    LOG_S(INFO) << "Query: " << trace;
     try {
         pqxx::work tx{conn};
         auto val = tx.query_value<int>(query);
@@ -230,6 +245,7 @@ int sqldb::query_trace_maybe(const std::string& trace) {
         return val;
     } catch (const pqxx::unexpected_rows& e) {
         std::string exc{e.what()};
+        trim(exc);
         throw std::runtime_error(exc + " Query: " + query);
     }
 }
@@ -255,6 +271,7 @@ std::optional<std::pair<std::vector<int>, int>> sqldb::regex_equivalence(const s
         return std::make_optional<std::pair<std::vector<int>, int>>(std::make_pair(trace_vec, type));
     } catch (const pqxx::unexpected_rows& e) {
         std::string exc{e.what()};
+        trim(exc);
         LOG_S(INFO) << "Found no counter example: " << exc << " Query: " << query;
         return std::nullopt;
     }

@@ -33,8 +33,8 @@ template <typename T> std::string printAddress(const std::list<T>& v) {
     return ss.str();
 }
 
-void ldot_algorithm::proc_counterex(inputdata& id, const vector<int>& alphabet, const vector<int>& counterex,
-                                    const int type, const refinement_list& refs) {
+void ldot_algorithm::proc_counterex(inputdata& id, const vector<int>& counterex, const int type,
+                                    const refinement_list& refs) {
     active_learning_namespace::reset_apta(my_merger.get(), refs);
 #ifndef NDEBUG
     DLOG_S(1) << n_runs << ": Undoing " << refs.size() << " refs.";
@@ -70,7 +70,7 @@ void ldot_algorithm::proc_counterex(inputdata& id, const vector<int>& alphabet, 
     n = my_apta->get_root();
     for (auto s : counterex) {
         n = active_learning_namespace::get_child_node(n, s);
-        complete_state(id, alphabet, n);
+        complete_state(id, n);
     }
 }
 
@@ -99,8 +99,7 @@ void ldot_algorithm::merge_processed_ref(refinement* ref) {
 #endif
 }
 
-std::vector<refinement*>
-ldot_algorithm::process_unidentified(const std::vector<refinement_set>& refs_for_unidentified) {
+void ldot_algorithm::process_unidentified(inputdata& id, const std::vector<refinement_set>& refs_for_unidentified) {
     // SOME HEURISTIC THAT BALANCES EXPLORATION VS EXPLOITATION.
     // What to do when a state is unidentified (subroutine LdotProcessUnidentified). Here we take some
     // different approaches and we should see what works best. Additionally, what is in the unidentified
@@ -114,8 +113,7 @@ ldot_algorithm::process_unidentified(const std::vector<refinement_set>& refs_for
     // For unidentified states, we might already have a very high merge probability. We can then make this
     // merge.
 
-    std::vector<refinement*> selected_refs;
-
+    std::vector<apta_node*> listed_for_completion;
     for (const auto possible_refs : refs_for_unidentified) {
         refinement_set consistent_possible_refs;
         for (const auto ref : possible_refs) {
@@ -127,34 +125,73 @@ ldot_algorithm::process_unidentified(const std::vector<refinement_set>& refs_for
             isolated_states = true;
             continue;
         }
+        if (consistent_possible_refs.size() == 1) {
+            refinement* best_merge = *consistent_possible_refs.begin();
+            merge_processed_ref(best_merge);
+            continue;
+        }
 
-        refinement* best_merge = *consistent_possible_refs.begin();
-        merge_processed_ref(best_merge);
-    }
-    return selected_refs;
-}
+        // compare more than 2.
 
-void ldot_algorithm::complete_state(inputdata& id, const vector<int>& alphabet, apta_node* n) {
-    if (completed_nodes.contains(n))
-        return;
+        auto it = consistent_possible_refs.begin();
+        refinement* best_merge = *it;
+        it++;
+        refinement* sec_merge = *it;
+        if (sec_merge->score * 2 < best_merge->score) {
+            merge_processed_ref(best_merge);
+        } else {
+            merge_refinement* best_merge_ref = dynamic_cast<merge_refinement*>(best_merge);
+            merge_refinement* sec_merge_ref = dynamic_cast<merge_refinement*>(sec_merge);
 
-    // TODO: Optimize with a prefix query.
-    for (const int symbol : alphabet) {
-        if (n->get_child(symbol) == nullptr) {
-            auto* access_trace = n->get_access_trace();
-
-            active_learning_namespace::pref_suf_t seq = {symbol};
-            if (n->get_number() != -1) {
-                seq = access_trace->get_input_sequence(true, true);
-                seq[seq.size() - 1] = symbol;
+            bool completed = complete_state(id, best_merge_ref->blue);
+            if (completed) {
+                // There was completion, there is now more information available
+                isolated_states = true;
+            } else {
+                // otherwise merge the best anyway.
+                merge_processed_ref(best_merge);
             }
-
-            const int answer = my_sul->query_trace_maybe(seq);
-            if (answer != -1)
-                add_trace(id, seq, answer);
         }
     }
+}
+
+bool ldot_algorithm::complete_state(inputdata& id, apta_node* n) {
+    if (completed_nodes.contains(n))
+        return false;
+
+    auto* access_trace = n->get_access_trace();
+    auto seq = access_trace->get_input_sequence(true, true);
+    for (const auto& [res, answer] : my_sul->prefix_query(seq, 10)) { add_trace(id, res, answer); }
+
+    // Old code for random search.
+    /* for (const int symbol : alphabet) { */
+    /*     if (n->get_child(symbol) == nullptr) { */
+    /*         auto* access_trace = n->get_access_trace(); */
+
+    /*         active_learning_namespace::pref_suf_t seq = {symbol}; */
+    /*         if (n->get_number() != -1) { */
+    /*             seq = access_trace->get_input_sequence(true, true); */
+    /*             seq[seq.size() - 1] = symbol; */
+    /*         } */
+
+    /*         const int answer = my_sul->query_trace_maybe(seq); */
+    /*         if (answer != -1) */
+    /*             add_trace(id, seq, answer); */
+    /*     } */
+    /* } */
+
     completed_nodes.insert(n);
+    return true;
+}
+
+void ldot_algorithm::test_access_traces() {
+    for (APTA_iterator Ait = APTA_iterator(my_apta->get_root()); *Ait != 0; ++Ait) {
+        apta_node* n = *Ait;
+        apta_node* access_node = my_merger->get_state_from_trace(n->get_access_trace());
+        /* if (access_node == nullptr) */
+        /*     continue; */
+        assert(access_node->find() == n->find());
+    }
 }
 
 void ldot_algorithm::run(inputdata& id) {
@@ -179,7 +216,7 @@ void ldot_algorithm::run(inputdata& id) {
     const vector<int> my_alphabet = id.get_alphabet();
 
     // init the root node, s.t. we have blue states to iterate over
-    complete_state(id, my_alphabet, my_apta->get_root());
+    complete_state(id, my_apta->get_root());
     print_current_automaton(my_merger.get(), "debug", "");
 
     std::vector<int> prev_cex = {-1};
@@ -210,7 +247,7 @@ void ldot_algorithm::run(inputdata& id) {
             // but we it improved statistical methods
             // TODO: Robert: do we need this one here really? I can't see it at the moment why
             // TODO: Hielke: For ldot just make an improved prefix query as initialize more states.
-            complete_state(id, my_alphabet, blue_node);
+            /* complete_state(id, my_alphabet, blue_node); */
 
             refinement_set possible_refs;
             for (red_state_iterator r_it = red_state_iterator(my_apta->get_root()); *r_it != nullptr; ++r_it) {
@@ -229,6 +266,7 @@ void ldot_algorithm::run(inputdata& id) {
                 refinement* ref = mem_store::create_extend_refinement(my_merger.get(), blue_node);
 
 #ifndef NDEBUG
+                test_access_traces();
                 print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.",
                                         std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) + ".ext_a");
                 ref->doref(my_merger.get());
@@ -246,6 +284,7 @@ void ldot_algorithm::run(inputdata& id) {
                 // There is one refinement, do that one.
                 refinement* ref = *possible_refs.begin();
 #ifndef NDEBUG
+                test_access_traces();
                 print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.",
                                         std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) + ".one_a");
                 ref->doref(my_merger.get());
@@ -269,7 +308,7 @@ void ldot_algorithm::run(inputdata& id) {
             // Select based on some criteria some refs
             // Also might make some queries to get additional info for these unidentified blue nodes.
             // Maybe move this into the blue iterator loop?
-            process_unidentified(refs_for_unidentified);
+            process_unidentified(id, refs_for_unidentified);
         }
 
         if (isolated_states) {
@@ -278,6 +317,7 @@ void ldot_algorithm::run(inputdata& id) {
         }
 
 #ifndef NDEBUG
+        test_access_traces();
         const std::size_t selected_refs_nr = performed_refinements.size();
         // printing the model each time
         print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.", std::to_string(n_runs) + ".sel");
@@ -303,7 +343,7 @@ void ldot_algorithm::run(inputdata& id) {
             try {
                 optional<pair<vector<int>, int>> query_result = oracle->equivalence_query(my_merger.get(), teacher);
                 if (!query_result) {
-                    LOG_S(INFO) << n_runs << ": Found consistent automaton => Print to " << OUTPUT_FILE;
+                    LOG_S(INFO) << n_runs << ":END: Found consistent automaton => Print to " << OUTPUT_FILE;
                     print_current_automaton(my_merger.get(), OUTPUT_FILE,
                                             ".final"); // printing the final model.
                     return;                            // Solved!
@@ -321,12 +361,12 @@ void ldot_algorithm::run(inputdata& id) {
                 }
                 prev_cex = cex;
 
-                std::string cex_log = ": Counterexample of length ";
+                const char* cex_log = ": Counterexample of length ";
                 LOG_S(INFO) << n_runs << cex_log << cex.size() << " found: " << type << ": " << cex;
 #ifndef NDEBUG
                 std::cout << n_runs << cex_log << cex.size() << " found: " << type << ": " << cex << std::endl;
 #endif
-                proc_counterex(id, my_alphabet, cex, type, performed_refinements);
+                proc_counterex(id, cex, type, performed_refinements);
                 break;
 
             } catch (const std::runtime_error& e) {
@@ -334,16 +374,17 @@ void ldot_algorithm::run(inputdata& id) {
                 LOG_S(ERROR) << "We got error: " << exc;
                 if (exc.find("too complex") != std::string::npos) {
                     // Regex got too big, print and return.
-                    LOG_S(INFO) << n_runs << ": Regex too big. Printing automaton to " << OUTPUT_FILE;
+                    LOG_S(INFO) << n_runs << ":END: Regex too big. Printing automaton to " << OUTPUT_FILE;
                     print_current_automaton(my_merger.get(), OUTPUT_FILE, ".partial");
                     return;
                 }
 
                 if (exc.find("repeated cex") != std::string::npos) {
-                    LOG_S(INFO) << n_runs
-                                << ": Got repeated counterexample. The equivalence builder sends a default one if all "
-                                   "regex fails (namely ^(.*)$ from root node.) Write to "
-                                << OUTPUT_FILE;
+                    LOG_S(INFO)
+                        << n_runs
+                        << ":END: Got repeated counterexample. The equivalence builder sends a default one if all "
+                           "regex fails (namely ^(.*)$ from root node.) Write to "
+                        << OUTPUT_FILE;
                     print_current_automaton(my_merger.get(), OUTPUT_FILE, ".partial");
                     return;
                 }
@@ -353,7 +394,7 @@ void ldot_algorithm::run(inputdata& id) {
         }
 
         if (ENSEMBLE_RUNS > 0 && n_runs == ENSEMBLE_RUNS) {
-            LOG_S(INFO) << n_runs << ": Maximum of runs reached. Printing automaton to " << OUTPUT_FILE;
+            LOG_S(INFO) << n_runs << ":END: Maximum of runs reached. Printing automaton to " << OUTPUT_FILE;
             print_current_automaton(my_merger.get(), OUTPUT_FILE, ".final");
             return;
         }

@@ -172,7 +172,7 @@ void active_learning_main_func::run_active_learning() {
         STORE_ACCESS_STRINGS = true;
         algorithm = unique_ptr<algorithm_base>(new weighted_lsharp_algorithm(sul, teacher, oracle));
     } else if (ACTIVE_LEARNING_ALGORITHM == "l_dot") {
-        STORE_ACCESS_STRINGS = true;
+        STORE_ACCESS_STRINGS = true; // refinement uses this to get nodes, but that seems buggy somehow.
         algorithm = unique_ptr<algorithm_base>(new ldot_algorithm(sul, teacher, oracle));
     } else if (ACTIVE_LEARNING_ALGORITHM == "transformer_l_sharp") {
         STORE_ACCESS_STRINGS = true;
