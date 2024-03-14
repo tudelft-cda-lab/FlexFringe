@@ -35,6 +35,7 @@ class sqldb_sul : public sul_base {
     const int query_trace_maybe(const std::vector<int>& query_trace) const;
     sqldb& get_sqldb() { return my_sqldb; };
     std::optional<std::pair<std::vector<int>, int>> regex_equivalence(const std::string& regex, int type);
+    std::vector<std::pair<std::vector<int>, int>> prefix_query(const std::vector<int>& prefix, int n);
 };
 
 #endif

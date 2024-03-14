@@ -43,7 +43,7 @@ class refinement{
 public:
     double score;
     trace* red_trace;
-	apta_node* red;
+    apta_node* red;
     int size;
     int refs;
 
@@ -52,10 +52,11 @@ public:
     refinement();
     virtual ~refinement(){ };
 
-	virtual void print() const;
-	virtual void print_short() const;
-	virtual void doref(state_merger* m);
-	virtual void undo(state_merger* m);
+    virtual void print() const;
+    virtual void print_short() const;
+    virtual void doref(state_merger* m);
+    virtual void undo(state_merger* m);
+
     virtual bool testref(state_merger* m);
 
     virtual void increfs();
@@ -82,16 +83,16 @@ public:
  */
 class merge_refinement : public refinement {
 public:
-	trace* blue_trace;
+    trace* blue_trace;
     apta_node* blue;
 
-	merge_refinement(state_merger* m, double s, apta_node* l, apta_node* r);
+    merge_refinement(state_merger* m, double s, apta_node* l, apta_node* r);
     void initialize(state_merger* m, double s, apta_node* l, apta_node* r);
 
-	virtual inline void print() const;
-	virtual inline void print_short() const;
-	virtual inline void doref(state_merger* m);
-	virtual inline void undo(state_merger* m);
+    virtual inline void print() const;
+    virtual inline void print_short() const;
+    virtual inline void doref(state_merger* m);
+    virtual inline void undo(state_merger* m);
     //virtual inline bool testref(state_merger* m);
 
     virtual inline void erase();

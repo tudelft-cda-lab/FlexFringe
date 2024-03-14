@@ -27,7 +27,7 @@
 class ldot_algorithm : public algorithm_base {
   private:
     int n_runs;
-    std::list<refinement*> performed_refinements;
+    void performed_refinements;
     unordered_set<apta_node*> completed_nodes;
     bool isolated_states;
     int uid = 0;
@@ -35,7 +35,8 @@ class ldot_algorithm : public algorithm_base {
     /**
      * For a specific node (n) complete for as possible all the 1 size steps.
      */
-    void complete_state(inputdata& id, const std::vector<int>& alphabet, apta_node* n);
+    bool complete_state(inputdata& id, apta_node* n);
+    void test_access_traces();
 
     /**
      * @brief Add a new trace to the data structures (apta, mem_store).
@@ -56,10 +57,10 @@ class ldot_algorithm : public algorithm_base {
      * @param counterex The counterexample.
      * @param refs The list of refinments made.
      */
-    void proc_counterex(inputdata& id, const vector<int>& alphabet, const vector<int>& counterex, const int type,
-                        const refinement_list& refs);
+    void proc_counterex(inputdata& id, const vector<int>& counterex, const int type, const refinement_list& refs);
 
-    std::vector<refinement*> process_unidentified(const std::vector<refinement_set>& refs_for_unidentified);
+    std::vector<refinement*> process_unidentified(inputdata& id,
+                                                  const std::vector<refinement_set>& refs_for_unidentified);
     void merge_processed_ref(refinement*);
 
     unique_ptr<evaluation_function> my_eval;

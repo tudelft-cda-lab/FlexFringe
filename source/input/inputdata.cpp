@@ -363,7 +363,7 @@ trace *inputdata::access_trace(tail *t) {
     for (int i = 0; i < this->get_num_trace_attributes(); ++i) {
         tr->trace_attr[i] = t->tr->trace_attr[i];
     }
-    if (STORE_ACCESS_STRINGS) {
+    if (true) { // used to be STORE_ACCESS_STRINGS
         tail *ti = t->tr->head->split_to_end();
         tail *tir = this->access_tail(ti);
         tr->head = tir;
