@@ -488,44 +488,7 @@ void predict_trace(state_merger* m, std::ofstream& output, trace* tr){
     output << std::endl;
 }
 
-void predict_csv(state_merger* m, std::istream& input, std::ofstream& output){
-    throw std::runtime_error("Not implemented yet");
-
-    inputdata* id = m->get_dat();
-    rownr = -1;
-
-    output << "row nr; abbadingo trace; state sequence; score sequence";
-    if(SLIDING_WINDOW) output << "; score per sw tail; score first sw tail; root cause sw tail score; row nrs first sw tail";
-    if(PREDICT_ALIGN) output << "; alignment; num misaligned";
-    if(PREDICT_TRACE) output << "; sum scores; mean scores; min score";
-    if(PREDICT_TYPE) output << "; trace type; type probability; predicted trace type; predicted type probability";
-    if(PREDICT_SYMBOL) output << "; next trace symbol; next symbol probability; predicted symbol; predicted symbol probability";
-    output << std::endl;
-
-    //TODO fix
-//    while(!input.eof()) {
-//        rownr += 1;
-//        trace* tr = id->read_csv_row(input);
-//        if(tr == nullptr) continue;
-//        if(!tr->get_end()->is_final()){
-//            continue;
-//        }
-//        predict_trace(m, output, tr);
-//        tail* tail_it = tr->get_head();
-//        //cerr << "predicted " << tr->to_string() << " " << tail_it->get_nr() << " " << tail_it->tr->get_sequence() << endl;
-//        for(int i = 0; i < SLIDING_WINDOW_STRIDE; i++){
-//            tail* tail_to_delete = tail_it;
-//            while(tail_to_delete->split_from != nullptr) tail_to_delete = tail_to_delete->split_from;
-//            if(tail_to_delete->get_index() < SLIDING_WINDOW_SIZE - SLIDING_WINDOW_STRIDE) continue;
-//            add_visits(m, tail_to_delete->tr);
-//            //cerr << "deleting " << tail_to_delete->tr->to_string() << " " << tail_to_delete->get_nr() << " " << tail_to_delete->tr->get_sequence() << endl;
-//            tail_to_delete->tr->erase();
-//            tail_it = tail_it->future();
-//        }
-//    }
-}
-
-
+// TODO: Streaming predict mode for large input files. Currently the entire input data is loaded into memory
 void predict(state_merger* m, inputdata& idat, std::ofstream& output){
     output << "row nr; abbadingo trace; state sequence; score sequence";
     if(SLIDING_WINDOW) output << "; score per sw tail; score first sw tail; root cause sw tail score; row nrs first sw tail";
@@ -538,6 +501,5 @@ void predict(state_merger* m, inputdata& idat, std::ofstream& output){
     for (auto trace: idat) {
         predict_trace(m, output, trace);
         add_visits(m, trace);
-        trace->erase();
     }
 }
