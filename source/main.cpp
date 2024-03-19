@@ -208,19 +208,22 @@ void run() {
         LOG_S(INFO) << "Predict mode selected, starting run";
 
         if(!APTA_FILE.empty()){
+
             std::ifstream input_apta_stream(APTA_FILE);
             std::cerr << "reading apta file - " << APTA_FILE << std::endl;
+
+            // First, we read the apta file into the global inputdata, so we can obtain the alphabet mapping
             the_apta->read_json(input_apta_stream);
 
-            read_input_file(&id);
+            // Then we create a separate inputdata with traces to predict, using the alphabet obtained from the apta file
+            inputdata to_predict = inputdata::with_alphabet_from(id);
+            read_input_file(&to_predict);
 
+            // Now we can predict on the new inputdata!
             std::ostringstream res_stream;
             res_stream << APTA_FILE << ".result";
             std::ofstream output(res_stream.str().c_str());
-
-            predict(merger, id, output);
-
-            output.close();
+            predict(merger, to_predict, output);
         } else {
             std::cerr << "require a json formatted apta file to make predictions" << std::endl;
         }
