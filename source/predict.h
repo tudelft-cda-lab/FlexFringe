@@ -9,9 +9,10 @@
 
 apta_node* single_step(apta_node* n, tail* t, apta* a);
 double compute_score(apta_node* next_node, tail* next_tail);
-double predict_trace(state_merger* m, trace* tr);
-void predict_csv(state_merger* m, std::istream& input, std::ofstream& output);
-void predict(state_merger* m, inputdata& idat, std::ofstream& output);
+[[maybe_unused]] double predict_trace(state_merger* m, trace* tr);
 
+
+[[maybe_unused]] void predict(state_merger* m, inputdata& idat, std::ofstream& output);
+void predict_streaming(state_merger* m, parser& parser, reader_strategy& strategy, std::ofstream& output);
 
 #endif //FLEXFRINGE_PREDICT_H

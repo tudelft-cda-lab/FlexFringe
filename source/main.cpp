@@ -92,7 +92,7 @@ void read_input_file(inputdata* id) {
     }
 
     bool read_csv = false;
-    if(INPUT_FILE.compare(INPUT_FILE.length() - 4, INPUT_FILE.length(), ".csv") == 0){
+    if(INPUT_FILE.ends_with(".csv")){
         read_csv = true;
     }
 
@@ -209,21 +209,36 @@ void run() {
 
         if(!APTA_FILE.empty()){
 
+            // First, we read the apta file into the global inputdata, so we can obtain the alphabet mapping
             std::ifstream input_apta_stream(APTA_FILE);
             std::cerr << "reading apta file - " << APTA_FILE << std::endl;
-
-            // First, we read the apta file into the global inputdata, so we can obtain the alphabet mapping
             the_apta->read_json(input_apta_stream);
 
-            // Then we create a separate inputdata with traces to predict, using the alphabet obtained from the apta file
-            inputdata to_predict = inputdata::with_alphabet_from(id);
-            read_input_file(&to_predict);
-
-            // Now we can predict on the new inputdata!
+            // Setup output file stream
             std::ostringstream res_stream;
             res_stream << APTA_FILE << ".result";
             std::ofstream output(res_stream.str().c_str());
-            predict(merger, to_predict, output);
+
+            // We stream the to predict traces into inputdata one by one to save memory
+            // Set up the parser for the input stream
+            std::ifstream input_stream(INPUT_FILE);
+            std::unique_ptr<parser> parser;
+            if(INPUT_FILE.ends_with(".csv")) {
+                parser = std::make_unique<csv_parser>(input_stream, csv::CSVFormat().trim({' '}));
+            } else {
+                parser = std::make_unique<abbadingoparser>(input_stream);
+            }
+
+            // Set up the reading strategy. Currently only sliding window and in-order traces are supported
+            // TODO: add support for sentinel symbol reading strategy
+            std::unique_ptr<reader_strategy> strategy;
+            if (SLIDING_WINDOW) {
+                strategy = std::make_unique<slidingwindow>(SLIDING_WINDOW_SIZE, SLIDING_WINDOW_STRIDE, SLIDING_WINDOW_TYPE);
+            } else {
+                strategy = std::make_unique<in_order>();
+            }
+
+            predict_streaming(merger, *parser, *strategy, output);
         } else {
             std::cerr << "require a json formatted apta file to make predictions" << std::endl;
         }

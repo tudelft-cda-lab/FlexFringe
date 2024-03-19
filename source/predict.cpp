@@ -261,7 +261,7 @@ apta_node* single_step(apta_node* n, tail* t, apta* a){
     return child->find();
 }
 
-double predict_trace(state_merger* m, trace* tr){
+[[maybe_unused]] double predict_trace(state_merger* m, trace* tr){
     apta_node* n = m->get_aut()->get_root();
     tail* t = tr->get_head();
     double score = 0.0;
@@ -489,7 +489,7 @@ void predict_trace(state_merger* m, std::ofstream& output, trace* tr){
     output << std::endl;
 }
 
-// TODO: Streaming predict mode for large input files. Currently the entire input data is loaded into memory
+
 void predict(state_merger* m, inputdata& idat, std::ofstream& output){
     output << "row nr; abbadingo trace; state sequence; score sequence";
     if(SLIDING_WINDOW) output << "; score per sw tail; score first sw tail; root cause sw tail score; row nrs first sw tail";
@@ -502,5 +502,32 @@ void predict(state_merger* m, inputdata& idat, std::ofstream& output){
     for (auto trace: idat) {
         predict_trace(m, output, trace);
         add_visits(m, trace);
+    }
+}
+
+
+void predict_streaming(state_merger* m, parser& parser, reader_strategy& strategy, std::ofstream& output) {
+    output << "row nr; abbadingo trace; state sequence; score sequence";
+    if(SLIDING_WINDOW) output << "; score per sw tail; score first sw tail; root cause sw tail score; row nrs first sw tail";
+    if(PREDICT_ALIGN) output << "; alignment; num misaligned";
+    if(PREDICT_TRACE) output << "; sum scores; mean scores; min score";
+    if(PREDICT_TYPE) output << "; trace type; type probability; predicted trace type; predicted type probability";
+    if(PREDICT_SYMBOL) output << "; next trace symbol; next symbol probability; predicted symbol; predicted symbol probability";
+    output << std::endl;
+
+    inputdata idat = inputdata::with_alphabet_from(*inputdata_locator::get());
+
+    std::optional<trace*> trace_maybe = idat.read_trace(parser, strategy);
+
+    while (trace_maybe) {
+        auto trace = *trace_maybe;
+
+        predict_trace(m, output, trace);
+        add_visits(m, trace);
+
+        // TODO: Deleting the traces should probably also invalidate the trace pointers in inputdata,
+        //  but since we have a separate inputdata local to this function it is sort of ok here?
+        trace->erase();
+        trace_maybe = idat.read_trace(parser, strategy);
     }
 }
