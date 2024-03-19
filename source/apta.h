@@ -11,6 +11,8 @@
 #include <string>
 #include <queue>
 
+#include "input/trace.h"
+
 class apta;
 class apta_node;
 class APTA_iterator;
@@ -18,30 +20,29 @@ struct size_compare;
 class evaluation_data;
 class apta_guard;
 
-using namespace std;
+typedef std::list<int> int_list;
+typedef std::list<double> double_list;
 
-typedef list<int> int_list;
-typedef list<double> double_list;
+typedef std::pair<bool, double> score_pair;
+typedef std::pair< std::pair<int, int>, score_pair > ts_pair;
+typedef std::map< apta_node*, ts_pair > score_map;
+typedef std::list< std::pair< int, int > > size_list;
 
-typedef pair<bool, double> score_pair;
-typedef pair< pair<int, int>, score_pair > ts_pair;
-typedef map< apta_node*, ts_pair > score_map;
-typedef list< pair< int, int > > size_list;
+typedef std::set<apta_node*, size_compare> state_set;
 
-typedef set<apta_node*, size_compare> state_set;
+typedef std::list<int> int_list;
+typedef std::list<double> double_list;
 
-typedef list<int> int_list;
-typedef list<double> double_list;
+typedef std::map<int, int> num_map;
 
-typedef map<int, int> num_map;
-
-typedef multimap<int, apta_guard*> guard_map;
-typedef map<int, double> bound_map;
+typedef std::multimap<int, apta_guard*> guard_map;
+typedef std::map<int, double> bound_map;
 
 #include "parameters.h"
-#include "inputdata.h"
+#include "evaluate.h"
+#include "input/inputdata.h"
 
-typedef list< pair< tail*, int > > split_list;
+typedef std::list< std::pair< tail*, int > > split_list;
 
 class apta_guard{
 private:
@@ -90,7 +91,7 @@ public:
     apta_node* base;
     apta_node* current;
 
-    queue<apta_node*> q;
+    std::queue<apta_node*> q;
     
     APTA_iterator(apta_node* start);
 
@@ -105,7 +106,7 @@ public:
     apta_node* base;
     apta_node* current;
 
-    queue<apta_node*> q;
+    std::queue<apta_node*> q;
 
     merged_APTA_iterator(apta_node* start);
 
@@ -157,7 +158,7 @@ public:
     tail_iterator& operator++() { increment(); return *this; }
 };
 
-typedef set<apta_node*, size_compare> state_set;
+typedef std::set<apta_node*, size_compare> state_set;
 
 #include "evaluate.h"
 
@@ -183,10 +184,10 @@ public:
     inline void set_context(state_merger* m){ merger = m; }
 
     /** reading and writing an apta to and from file */
-    void print_dot(iostream& output);
-    void print_json(iostream& output);
-    void read_json(istream &input_stream);
-    void print_sinks_json(iostream &output) const;
+    void print_dot(std::iostream& output);
+    void print_json(std::iostream& output);
+    void read_json(std::istream &input_stream);
+    void print_sinks_json(std::iostream &output) const;
 
     /** for better layout when visualizing state machines from the json file
      * set nodes to this depth in a hierarchical view */
@@ -200,6 +201,7 @@ public:
     friend class red_state_iterator;
     friend class tail_iterator;
     friend class inputdata;
+    friend class IInputData; // TODO: rename
     friend class state_merger;
 };
 
@@ -334,7 +336,7 @@ public:
                 guards.erase(it);
         } else {
             apta_guard* g = new apta_guard();
-            guards.insert(pair<int,apta_guard*>(i,g));
+            guards.insert(std::pair<int,apta_guard*>(i,g));
             g->target = node;
         }
     };
@@ -355,14 +357,8 @@ public:
     inline bool is_white(){
         return source != 0 && is_red() == false && !source->find()->is_red();
     }
-    inline bool is_sink() const{
-        if(sink != -1) return true;
-        return data->sink_type() != -1;
-    }
-    inline int sink_type() const{
-        if(sink != -1) return sink;
-        return data->sink_type();
-    }
+    bool is_sink() const;
+    int sink_type() const;
 
     /** constructors and intializers */
     apta_node();
@@ -370,8 +366,8 @@ public:
     void initialize(apta_node* n);
 
     /** print to json output, use later in predict functions */
-    void print_json(iostream &output);
-    void print_json_transitions(iostream &output);
+    void print_json(std::iostream &output);
+    void print_json_transitions(std::iostream &output);
 
     /** below are functions use by special heuristics/settings and output printing */
 
@@ -384,9 +380,10 @@ public:
     friend class red_state_iterator;
     friend class tail_iterator;
     friend class inputdata;
+    friend class IInputData; // TODO: rename
     friend class state_merger;
 
-    set<apta_node *> *get_sources();
+    std::set<apta_node *> *get_sources();
 };
 
 struct size_compare

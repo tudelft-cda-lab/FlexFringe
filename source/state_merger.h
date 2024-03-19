@@ -18,15 +18,13 @@ class state_merger;
 #include "refinement.h"
 #include "mem_store.h"
 
-using namespace std;
-
 /**
  * @brief The state merger. Whereas the 
  * 
  */
 class state_merger{
 private:
-    list<apta_node*> temporary_node_store;
+    std::list<apta_node*> temporary_node_store;
 
     apta* aut;
     inputdata* dat;
@@ -34,8 +32,8 @@ private:
 
     int num_merges = 0;
 
-    map<int,apta_node*>* left_depth_map;
-    map<int,apta_node*>* right_depth_map;
+    std::map<int,apta_node*>* left_depth_map;
+    std::map<int,apta_node*>* right_depth_map;
 
     /* recursive state merging routines */
     bool merge(apta_node* red, apta_node* blue);
@@ -105,8 +103,8 @@ public:
     bool sink_consistent(apta_node* node, int type);
     int num_sink_types();
 
-    string dot_output;
-    string json_output;
+    std::string dot_output;
+    std::string json_output;
 
     void tojsonsinks();
 
@@ -120,16 +118,16 @@ public:
 
     bool split_init(apta_node *red, tail *t, int attr, int depth, bool evaluate, bool perform, bool test);
 
-    void print_dot(const string& file_name);
-    void print_dot(ostream& output);
+    void print_dot(const std::string& file_name);
+    void print_dot(std::ostream& output);
 
-    void print_json(const string& file_name);
+    void print_json(const std::string& file_name);
 
     int get_num_merges();
 
     void depth_check_init();
 
-    void depth_check_fill(apta_node *node, map<int, apta_node *> *depth_map, int depth, bool use_symbol);
+    void depth_check_fill(apta_node *node, std::map<int, apta_node *> *depth_map, int depth, bool use_symbol);
 
     bool depth_check_run(apta_node *left, apta_node *right, bool use_symbol);
 

@@ -1,5 +1,7 @@
 
 #include "conflict_graph.h"
+using std::cout;
+using std::endl;
 
 void apta_graph::add_conflicts(state_merger* merger){
     cout << "adding conflicts " << nodes.size() << endl;
@@ -133,12 +135,12 @@ node_set *apta_graph::find_clique(){
 	return result;
 }
 
-pair<node_set*, node_set*> apta_graph::find_bipartite(){
-    if(nodes.empty()) return pair<node_set*, node_set*>(NULL,NULL);
+std::pair<node_set*, node_set*> apta_graph::find_bipartite(){
+    if(nodes.empty()) return std::pair<node_set*, node_set*>(NULL,NULL);
 
     ordered_node_set ordered_nodes = ordered_node_set(nodes);
 
-    cerr << "bipartite: " << ordered_nodes.size() << endl;
+    std::cerr << "bipartite: " << ordered_nodes.size() << endl;
 
 	node_set* left_result = new node_set();
     node_set* right_result = new node_set();
@@ -154,7 +156,7 @@ pair<node_set*, node_set*> apta_graph::find_bipartite(){
         }
     }
 
-    if(right_head == NULL) return pair<node_set*, node_set*>(left_result, right_result);
+    if(right_head == NULL) return std::pair<node_set*, node_set*>(left_result, right_result);
 
     left_result->insert(left_head);
     right_result->insert(right_head);
@@ -195,15 +197,15 @@ pair<node_set*, node_set*> apta_graph::find_bipartite(){
         }
     }
 
-    cerr << "bipartite subgraph: " << left_result->size() << " " << right_result->size() << endl;
+    std::cerr << "bipartite subgraph: " << left_result->size() << " " << right_result->size() << endl;
 
-	return pair<node_set*, node_set*>(left_result, right_result);
+	return std::pair<node_set*, node_set*>(left_result, right_result);
 }
 
 
 void apta_graph::extract_types(int min_bip_size){
     while(true){
-        pair<node_set*, node_set*> bip = find_bipartite();
+        std::pair<node_set*, node_set*> bip = find_bipartite();
         if(bip.first == NULL || bip.second == NULL) break;
         if(bip.first->size() + bip.second->size() < min_bip_size){
             delete bip.first;

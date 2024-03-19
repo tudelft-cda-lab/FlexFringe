@@ -1,9 +1,7 @@
 #include "state_merger.h"
 #include "evaluate.h"
-#include <map>
 #include "parameters.h"
 #include "apta.h"
-#include "inputdata.h"
 
 evaluation_data::evaluation_data(){
     node_type = -1;
@@ -53,33 +51,33 @@ bool evaluation_data::print_state_true(){
     return true;
 };
 
-void evaluation_data::print_state_label(iostream& output){
+void evaluation_data::print_state_label(std::iostream& output){
 };
 
-void evaluation_data::print_state_style(iostream& output){
+void evaluation_data::print_state_style(std::iostream& output){
 };
 
-void evaluation_data::print_transition_label(iostream& output, int symbol){
+void evaluation_data::print_transition_label(std::iostream& output, int symbol){
 };
 
-void evaluation_data::print_state_label_json(iostream& output){
+void evaluation_data::print_state_label_json(std::iostream& output){
 };
 
-void evaluation_data::print_state_style_json(iostream& output){
+void evaluation_data::print_state_style_json(std::iostream& output){
 };
 
-void evaluation_data::print_transition_label_json(iostream& output, int symbol){
+void evaluation_data::print_transition_label_json(std::iostream& output, int symbol){
 };
 
 // JSON output functions
-void evaluation_data::print_state_properties(iostream& output) {
+void evaluation_data::print_state_properties(std::iostream& output) {
 };
 
-void evaluation_data::print_transition_properties(iostream& output, int symbol) {
+void evaluation_data::print_transition_properties(std::iostream& output, int symbol) {
 };
 
 // this should have a pair, set<pair<int, eval_data*>>
-void evaluation_data::print_transition_style(iostream& output, set<int> symbols){
+void evaluation_data::print_transition_style(std::iostream& output, std::set<int> symbols){
 };
 
 int evaluation_data::sink_type(){
@@ -132,11 +130,11 @@ double evaluation_data::predict_attr_score(int attr, tail* t){
     return predict_attr_score(attr, t->get_symbol_value(attr));
 };
 
-string evaluation_data::predict_data(tail*){
+std::string evaluation_data::predict_data(tail*){
     return "0";
 };
 
-double evaluation_data::predict_data_score(string s){
+double evaluation_data::predict_data_score(std::string s){
     return 0.0;
 };
 
@@ -168,7 +166,7 @@ evaluation_function::evaluation_function() {
     compute_before_merge = false;
 };
 
-void evaluation_function::set_params(string params) {   
+void evaluation_function::set_params(std::string params) {
   this->evalpar = params;
 };
 
@@ -189,7 +187,7 @@ bool evaluation_function::merge_no_final(apta_node* left, apta_node* right){
 }
 
 int evaluation_function::merge_depth_score(apta_node* left, apta_node* right){
-    set<apta_node*> path;
+    std::set<apta_node*> path;
     for(apta_node* n = left; n != 0; n = n->get_source()->find()){
         path.insert(n);
         if(n->get_source() == 0) break;

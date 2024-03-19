@@ -3,7 +3,7 @@
 
 #include "evaluate.h"
 
-typedef list<double> double_list;
+typedef std::list<double> double_list;
 
 /* The data contained in every node of the prefix tree or DFA */
 class mse_data: public evaluation_data {
@@ -23,7 +23,7 @@ public:
     virtual void update(evaluation_data* right);
     virtual void undo(evaluation_data* right);
 
-    virtual string predict_data(tail *);
+    virtual std::string predict_data(tail *);
 };
 
 class mse_error: public evaluation_function{

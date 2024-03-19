@@ -3,7 +3,7 @@
 
 #include "evaluate.h"
 
-typedef map<int, int> num_map;
+typedef std::map<int, int> num_map;
 
 /* The data contained in every node of the prefix tree or DFA */
 class count_data: public evaluation_data {
@@ -20,11 +20,11 @@ public:
 
     count_data();
     
-    virtual void print_transition_label(iostream& output, int symbol);
-    virtual void print_state_label(iostream& output);
+    virtual void print_transition_label(std::iostream& output, int symbol);
+    virtual void print_state_label(std::iostream& output);
 
-    virtual void print_transition_label_json(iostream& output, int symbol);
-    virtual void print_state_label_json(iostream& output);
+    virtual void print_transition_label_json(std::iostream& output, int symbol);
+    virtual void print_state_label_json(std::iostream& output);
 
     virtual void update(evaluation_data* right);
     virtual void undo(evaluation_data* right);

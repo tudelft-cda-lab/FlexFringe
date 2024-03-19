@@ -8,6 +8,7 @@
 
 #include "parameters.h"
 #include "dfa_properties.h"
+#include "input/inputdatalocator.h"
 
 /**
  * @brief Construct a new state merger::state merger object.
@@ -396,8 +397,8 @@ bool state_merger::split(apta_node* new_node, apta_node* old_node, int depth, bo
 
     tail_iterator it = tail_iterator(old_node);
     tail* t = *it;
-    new_node->access_trace = inputdata::access_trace(new_node->tails_head->past());
-    if(t != nullptr) old_node->access_trace = inputdata::access_trace(t->past());
+    new_node->access_trace = inputdata_locator::get()->access_trace(new_node->tails_head->past());
+    if(t != nullptr) old_node->access_trace = inputdata_locator::get()->access_trace(t->past());
 
     if(test) {
         // test early stopping conditions
@@ -537,11 +538,11 @@ bool state_merger::split_init(apta_node* red, tail* t, int attr, int depth, bool
     if(perform){
         if(red->performed_splits == nullptr)
             red->performed_splits = new split_list();
-        red->performed_splits->push_front(pair< tail*, int >(t, attr));
+        red->performed_splits->push_front(std::pair< tail*, int >(t, attr));
         new_guard = mem_store::create_guard(old_guard);
         old_guard->min_attribute_values[attr] = val;
         new_guard->max_attribute_values[attr] = val;
-        red->guards.insert(pair<int, apta_guard *>(symbol, new_guard));
+        red->guards.insert(std::pair<int, apta_guard *>(symbol, new_guard));
     }
 
     apta_node* blue = old_guard->target;
@@ -622,8 +623,8 @@ void state_merger::undo_split_init(apta_node* red, tail* t, int attr){
     new_it--;
     apta_guard* new_guard = (*new_it).second;
     int sym2 = new_it->first;
-    if(symbol != sym2) { cerr << "error" << endl; assert(false); }
-    if(old_guard->min_attribute_values[attr] != val || new_guard->max_attribute_values[attr] != val) { cerr << "error" << endl; assert(false); }
+    if(symbol != sym2) { std::cerr << "error" << std::endl; assert(false); }
+    if(old_guard->min_attribute_values[attr] != val || new_guard->max_attribute_values[attr] != val) { std::cerr << "error" << std::endl; assert(false); }
 
     apta_node* blue = old_guard->target;
     apta_node *new_child = new_guard->target;
@@ -714,10 +715,10 @@ void state_merger::undo_perform_merge(apta_node* left, apta_node* right){
 
 void state_merger::depth_check_init(){
     if(left_depth_map == nullptr){
-        left_depth_map = new map<int, apta_node*>();
+        left_depth_map = new std::map<int, apta_node*>();
     }
     if(right_depth_map == nullptr){
-        right_depth_map = new map<int, apta_node*>();
+        right_depth_map = new std::map<int, apta_node*>();
     }
 
     while(!left_depth_map->empty()){
@@ -733,14 +734,14 @@ void state_merger::depth_check_init(){
     }
 }
 
-void state_merger::depth_check_fill(apta_node* node, map<int,apta_node*>* depth_map, int depth, bool use_symbol){
+void state_merger::depth_check_fill(apta_node* node, std::map<int,apta_node*>* depth_map, int depth, bool use_symbol){
     if(DEPTH_CHECK_MAX_DEPTH != -1 && depth > DEPTH_CHECK_MAX_DEPTH) return;
 
     int index = depth;
     if(use_symbol) index = node->get_access_trace()->get_end()->get_symbol();
 
     if(depth_map->find(index) == depth_map->end()){
-        depth_map->insert(pair<int, apta_node*>(index, mem_store::create_node(node)));
+        depth_map->insert(std::pair<int, apta_node*>(index, mem_store::create_node(node)));
     }
     apta_node* depth_node = depth_map->find(index)->second;
     depth_node->data->update(node->data);
@@ -844,10 +845,10 @@ refinement* state_merger::test_splits(apta_node* blue){
         if(!dat->is_splittable(attr)) continue;
 
         eval->reset_split(this, blue);
-        multimap<float, tail*> sorted_tails;
+        std::multimap<float, tail*> sorted_tails;
         for(tail_iterator it = tail_iterator(blue); *it != nullptr; ++it){
             tail* t = *it;
-            sorted_tails.insert(pair<float, tail*>(t->past_tail->get_value(attr),t));
+            sorted_tails.insert(std::pair<float, tail*>(t->past_tail->get_value(attr),t));
         }
         
         apta_node* new_node = mem_store::create_node(blue);
@@ -1016,20 +1017,20 @@ double state_merger::get_best_refinement_score() {
 
 /* output functions */
 void state_merger::todot(){
-    stringstream dot_output_buf;
+    std::stringstream dot_output_buf;
     aut->print_dot(dot_output_buf);
     //dot_output = "// produced with flexfringe from git commit"  + string(gitversion) + '\n' + "// " + COMMAND + '\n'+ dot_output_buf.str();
     dot_output = "// produced with flexfringe // " + COMMAND + '\n'+ dot_output_buf.str();
 }
 
 void state_merger::tojson(){
-    stringstream output_buf;
+    std::stringstream output_buf;
     aut->print_json(output_buf);
     json_output = output_buf.str(); // json does not support comments, maybe we need to introduce a meta section
 }
 
 void state_merger::tojsonsinks(){
-    stringstream output_buf;
+    std::stringstream output_buf;
     aut->print_sinks_json(output_buf);
     json_output = output_buf.str(); // json does not support comments, maybe we need to introduce a meta section
 }
@@ -1044,10 +1045,10 @@ void state_merger::print_dot(FILE* output)
     fprintf(output, "%s", dot_output.c_str());
 }
 
-void state_merger::print_dot(const string& file_name)
+void state_merger::print_dot(const std::string& file_name)
 {
     todot();
-    ofstream output1(file_name.c_str());
+    std::ofstream output1(file_name.c_str());
     if (output1.fail()) {
         throw std::ofstream::failure("Unable to open file for writing: " + file_name);
     }
@@ -1055,16 +1056,16 @@ void state_merger::print_dot(const string& file_name)
     output1.close();
 }
 
-void state_merger::print_dot(ostream& output)
+void state_merger::print_dot(std::ostream& output)
 {
     todot();
     output << dot_output;
 }
 
-void state_merger::print_json(const string& file_name)
+void state_merger::print_json(const std::string& file_name)
 {
     tojson();
-    ofstream output1(file_name.c_str());
+    std::ofstream output1(file_name.c_str());
     if (output1.fail()) {
         throw std::ofstream::failure("Unable to open file for writing: " + file_name);
     }
@@ -1087,10 +1088,10 @@ int state_merger::num_sink_types(){
 } // this got moved to eval data */
 
 state_merger::~state_merger(){
-    delete aut;
-    delete eval;
-    delete dat;
-    cerr << "deleted merger" << endl;
+//    delete aut;
+//    delete eval;
+//    delete dat;
+    std::cerr << "deleted merger" << std::endl;
 }
 
 int state_merger::get_num_merges() {

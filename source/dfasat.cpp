@@ -19,6 +19,7 @@
 
 #include "parameters.h"
 #include "conflict_graph.h"
+#include "input/inputdatalocator.h"
 
 void dfasat::reset_literals(bool init){
     int v, i, j, a, t; // TODO: aren't there better names for those?
@@ -940,7 +941,7 @@ void dfasat::print_aut_output(const char* aut_output){
     fprintf(output,"%i %i\n", dfa_size, alphabet_size);
     fprintf(output,"%i\n", state_number[aut->get_root()->find()]);
     
-    set<int>::iterator it = trueliterals.begin();
+    std::set<int>::iterator it = trueliterals.begin();
     for(v = 0; v < num_states; ++v)
         for(i = 0; i < dfa_size; ++i)
             if(x[v][i] == *it) ++it;
@@ -1003,7 +1004,7 @@ dfasat::dfasat(state_merger* m, int best_solution){
     //ag->add_conflicts(merger);
     //ag->extract_types(50);
 
-    alphabet_size = inputdata::get_alphabet_size();
+    alphabet_size = inputdata_locator::get()->get_alphabet_size();
 
     red_states = merger->get_red_states();
     non_red_states = merger->get_candidate_states();
@@ -1020,7 +1021,7 @@ dfasat::dfasat(state_merger* m, int best_solution){
     if (!MERGE_SINKS_PRESOLVE) non_red_states->insert(sink_states->begin(), sink_states->end());
     num_states = red_states->size() + non_red_states->size();
 
-    if (best_solution != -1) dfa_size = min(dfa_size, best_solution);
+    if (best_solution != -1) dfa_size = std::min(dfa_size, best_solution);
     new_states = dfa_size - red_states->size();
     new_init = red_states->size();
 
@@ -1050,18 +1051,18 @@ dfasat::dfasat(state_merger* m, int best_solution){
     clause_counter = 0;
     literal_counter = 1;
 
-    cerr << "creating literals..." << endl;
+    std::cerr << "creating literals..." << std::endl;
     create_literals();
 }
 
 void dfasat::compute_header() {
-    cerr << "number of red states: " << red_states->size() << endl;
-    cerr << "number of non_red states: " << non_red_states->size() << endl;
-    cerr << "number of sink states: " << sink_states->size() << endl;
-    cerr << "dfa size: " << dfa_size << endl;
-    cerr << "sink types: " << sinks_size << endl;
-    cerr << "new states: " << new_states << endl;
-    cerr << "new init: " << new_init << endl;
+    std::cerr << "number of red states: " << red_states->size() << std::endl;
+    std::cerr << "number of non_red states: " << non_red_states->size() << std::endl;
+    std::cerr << "number of sink states: " << sink_states->size() << std::endl;
+    std::cerr << "dfa size: " << dfa_size << std::endl;
+    std::cerr << "sink types: " << sinks_size << std::endl;
+    std::cerr << "new states: " << new_states << std::endl;
+    std::cerr << "new init: " << new_init << std::endl;
 
     fix_red_values();
     if (USE_SINKS) fix_sink_values();
@@ -1078,16 +1079,16 @@ void dfasat::compute_header() {
     clause_counter += print_conflicts();
     clause_counter += print_accept();
     clause_counter += print_transitions();
-    cerr << "total clauses before symmetry: " << clause_counter << endl;
+    std::cerr << "total clauses before symmetry: " << clause_counter << std::endl;
     if (SYMMETRY_BREAKING) {
-        cerr << "Breaking symmetry in SAT" << endl;
+        std::cerr << "Breaking symmetry in SAT" << std::endl;
         clause_counter += print_t_transitions();
         clause_counter += print_p_transitions();
         clause_counter += print_a_transitions();
         clause_counter += print_symmetry();
     }
     if (FORCING) {
-        cerr << "Forcing in SAT" << endl;
+        std::cerr << "Forcing in SAT" << std::endl;
         clause_counter += print_forcing_transitions();
     }
 
@@ -1096,7 +1097,7 @@ void dfasat::compute_header() {
         clause_counter += print_sink_transitions();
         clause_counter += print_sink_paths();
     }
-    cerr << "header: p cnf " << literal_counter - 1 << " " << clause_counter << endl;
+    std::cerr << "header: p cnf " << literal_counter - 1 << " " << clause_counter << std::endl;
 }
 
 void dfasat::translate(FILE* sat_file) {
@@ -1128,11 +1129,11 @@ void dfasat::translate(FILE* sat_file) {
     fprintf(sat_file, "%s", sat_stream.str().c_str());
     fclose(sat_file);
 
-    cerr << "sent problem to SAT solver" << endl;
+    std::cerr << "sent problem to SAT solver" << std::endl;
 }
 
 void dfasat::read_solution(FILE* sat_file, int best_solution) {
-    trueliterals = set<int>();
+    trueliterals = std::set<int>();
 
     char line[500];
 
@@ -1141,11 +1142,11 @@ void dfasat::read_solution(FILE* sat_file, int best_solution) {
         char *pch = strtok(line, " ");
         if (strcmp(pch, "s") == 0) {
             pch = strtok(NULL, " ");
-            cerr << pch << endl;
+            std::cerr << pch << std::endl;
             if (strcmp(pch, "SATISFIABLE\n") == 0) {
-                cerr << "new solution, size = " << dfa_size << endl;
+                std::cerr << "new solution, size = " << dfa_size << std::endl;
                 if (best_solution == -1 || best_solution > dfa_size) {
-                    cerr << "new best solution, size = " << dfa_size << endl;
+                    std::cerr << "new best solution, size = " << dfa_size << std::endl;
                     best_solution = dfa_size;
                     improved = true;
                 }
@@ -1166,14 +1167,14 @@ void dfasat::read_solution(FILE* sat_file, int best_solution) {
     delete_literals();
 }
 
-void start_sat_solver(string sat_program){
+void start_sat_solver(std::string sat_program){
 #ifdef _WIN32
-    cerr << "DFASAT does not work under Windows OS" << endl;
+    std::cerr << "DFASAT does not work under Windows OS" << std::endl;
 #else
-    cerr << "starting SAT solver " << sat_program << endl;
+    std::cerr << "starting SAT solver " << sat_program << std::endl;
     char* copy_sat = strdup(sat_program.c_str());
     char* pch = strtok (copy_sat," ");
-    vector<char*> args;
+    std::vector<char*> args;
     while (pch != NULL){
         args.push_back(strdup(pch));
         pch = strtok (NULL," ");
@@ -1182,7 +1183,7 @@ void start_sat_solver(string sat_program){
     free(pch);
     args.push_back((char*)NULL);
     execvp(args[0], &args[0]);
-    cerr << "finished SAT solver" << endl;
+    std::cerr << "finished SAT solver" << std::endl;
     for(int argi = 0; argi < args.size(); ++argi) free(args[argi]);
     int status;
     wait(&status);
@@ -1198,9 +1199,9 @@ void start_sat_solver(string sat_program){
  * translate result to a DFA
  * print result
  * */
-void run_dfasat(state_merger* m, string sat_program, int best_solution) {
+void run_dfasat(state_merger* m, std::string sat_program, int best_solution) {
 #ifdef _WIN32
-    cerr << "DFASAT does not work under Windows OS" << endl;
+    std::cerr << "DFASAT does not work under Windows OS" << std::endl;
 #else
     sat_program = "./glucose";
 
@@ -1212,7 +1213,7 @@ void run_dfasat(state_merger* m, string sat_program, int best_solution) {
         int pipetosat[2];
         int pipefromsat[2];
         if (pipe(pipetosat) < 0 || pipe(pipefromsat) < 0){
-            cerr << "Unable to create pipe for SAT solver: " << strerror(errno) << endl;
+            std::cerr << "Unable to create pipe for SAT solver: " << strerror(errno) << std::endl;
             exit(1);
         }
 
@@ -1232,11 +1233,11 @@ void run_dfasat(state_merger* m, string sat_program, int best_solution) {
             FILE *sat_file = (FILE *) fdopen(pipetosat[1], "w");
             //FILE* sat_file = (FILE*) fopen("test.out", "w");
             if (sat_file == 0) {
-                cerr << "Cannot open pipe to SAT solver: " << strerror(errno) << endl;
+                std::cerr << "Cannot open pipe to SAT solver: " << strerror(errno) << std::endl;
                 exit(1);
             }
 
-            cerr << "sending problem...." << endl;
+            std::cerr << "sending problem...." << std::endl;
 
             sat_object.translate(sat_file);
 
@@ -1249,7 +1250,7 @@ void run_dfasat(state_merger* m, string sat_program, int best_solution) {
 
             sat_object.read_solution(sat_file, best_solution);
 
-            cerr << "solving took " << (time(nullptr) - begin_time) << " seconds" << endl;
+            std::cerr << "solving took " << (time(nullptr) - begin_time) << " seconds" << std::endl;
         }
 #endif // WIN32
 };

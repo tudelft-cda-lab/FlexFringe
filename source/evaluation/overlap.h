@@ -10,8 +10,8 @@ protected:
 
 public:
 
-  virtual void print_transition_label(iostream& output, int symbol);
-  virtual void print_state_label(iostream &output);
+  virtual void print_transition_label(std::iostream& output, int symbol);
+  virtual void print_state_label(std::iostream &output);
 
     inline int pos(int symbol){
         return count(symbol);

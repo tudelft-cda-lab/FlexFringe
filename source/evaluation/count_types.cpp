@@ -5,6 +5,7 @@
 #include <set>
 #include "parameters.h"
 #include "count_types.h"
+#include "input/inputdatalocator.h"
 
 REGISTER_DEF_TYPE(count_driven);
 REGISTER_DEF_DATATYPE(count_data);
@@ -22,24 +23,24 @@ void count_data::initialize(){
     final_counts.clear();
 };
 
-void count_data::print_transition_label(iostream& output, int symbol){
+void count_data::print_transition_label(std::iostream& output, int symbol){
 };
 
-void count_data::print_state_label(iostream& output){
+void count_data::print_state_label(std::iostream& output){
     output << "fin: ";
     for(auto & final_count : final_counts){
-        if(final_count.second > 0) output << inputdata::string_from_type(final_count.first) << ":" << final_count.second << " , ";
+        if(final_count.second > 0) output << inputdata_locator::get()->string_from_type(final_count.first) << ":" << final_count.second << " , ";
     }
     output << "\n path: ";
     for(auto & path_count : path_counts){
-        if(path_count.second > 0) output << inputdata::string_from_type(path_count.first) << ":" << path_count.second << " , ";
+        if(path_count.second > 0) output << inputdata_locator::get()->string_from_type(path_count.first) << ":" << path_count.second << " , ";
     }
 };
 
-void count_data::print_transition_label_json(iostream& output, int symbol){
+void count_data::print_transition_label_json(std::iostream& output, int symbol){
 };
 
-void count_data::print_state_label_json(iostream& output){
+void count_data::print_state_label_json(std::iostream& output){
     output << "fin: ";
     for(auto & final_count : final_counts){
         output << final_count.first << ":" << final_count.second << " , ";
@@ -106,13 +107,13 @@ void count_data::write_json(json& data){
         int type = final_count.first;
         int count = final_count.second;
 
-        data["final_counts"][to_string(type)] = count;
+        data["final_counts"][std::to_string(type)] = count;
     }
     for(auto & path_count : path_counts) {
         int type = path_count.first;
         int count = path_count.second;
 
-        data["path_counts"][to_string(type)] = count;
+        data["path_counts"][std::to_string(type)] = count;
     }
 
     data["total_final"] = total_final;
@@ -178,7 +179,7 @@ double count_data::predict_type_score(int t){
 int count_data::predict_type(tail*){
     int t = 0;
     double max_count = -1;
-    for(int i = 0; i < inputdata::get_types_size(); ++i){
+    for(int i = 0; i < inputdata_locator::get()->get_types_size(); ++i){
         double prob = predict_type_score(i);
         if(max_count == -1 || max_count < prob){
             max_count = prob;
@@ -266,7 +267,7 @@ bool count_data::sink_consistent(int type) {
 int count_data::num_sink_types(){
     if(!USE_SINKS) return 0;
     int result = 0;
-    if(SINK_TYPE) result += inputdata::get_types_size();
+    if(SINK_TYPE) result += inputdata_locator::get()->get_types_size();
     if(SINK_COUNT > 0) result += 1;
     return result;
 }

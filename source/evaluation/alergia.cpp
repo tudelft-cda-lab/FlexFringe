@@ -4,6 +4,7 @@
 #include "evaluate.h"
 #include "alergia.h"
 #include "parameters.h"
+#include "input/inputdatalocator.h"
 
 REGISTER_DEF_DATATYPE(alergia_data);
 REGISTER_DEF_TYPE(alergia);
@@ -125,9 +126,9 @@ void alergia_data::read_json(json& data){
 
     json& d = data["trans_counts"];
     for (auto& symbol : d.items()){
-        string sym = symbol.key();
-        string val = symbol.value();
-        symbol_counts[inputdata::symbol_from_string(sym)] = stoi(val);
+        std::string sym = symbol.key();
+        std::string val = symbol.value();
+        symbol_counts[inputdata_locator::get()->symbol_from_string(sym)] = stoi(val);
     }
 };
 
@@ -139,15 +140,15 @@ void alergia_data::write_json(json& data){
     for(auto & symbol_count : symbol_counts) {
         int symbol = symbol_count.first;
         int value = symbol_count.second;
-        data["trans_counts"][inputdata::string_from_symbol(symbol)] = to_string(value);
+        data["trans_counts"][inputdata_locator::get()->string_from_symbol(symbol)] = std::to_string(value);
     }
 };
 
-void alergia_data::print_transition_label(iostream& output, int symbol){
+void alergia_data::print_transition_label(std::iostream& output, int symbol){
     output << symbol_counts[symbol] << " ";
 };
 
-void alergia_data::print_state_label(iostream& output){
+void alergia_data::print_state_label(std::iostream& output){
     count_data::print_state_label(output);
     output << "\n" << num_paths() << " " << num_final();
 };

@@ -3,7 +3,7 @@
 
 #include "likelihood.h"
 
-typedef vector< vector<int> > quantile_map;
+typedef std::vector< std::vector<int> > quantile_map;
 
 /* The data contained in every node of the prefix tree or DFA */
 class rtiplus_data: public likelihood_data {
@@ -32,7 +32,7 @@ public:
     
     int num_parameters();
 
-    virtual void print_state_label(iostream& output);
+    virtual void print_state_label(std::iostream& output);
 };
 
 class rtiplus: public likelihoodratio {
@@ -42,7 +42,7 @@ protected:
   
 public:
     
-  static vector< vector<double> > attribute_quantiles;
+  static std::vector< std::vector<double> > attribute_quantiles;
 
   virtual void update_score(state_merger *merger, apta_node* left, apta_node* right);
   //virtual void update_score_after(state_merger *merger, apta_node* left, apta_node* right);

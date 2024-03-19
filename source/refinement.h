@@ -2,8 +2,6 @@
 #ifndef _REFINEMENT_H_
 #define _REFINEMENT_H_
 
-using namespace std;
-
 #include <list>
 #include <queue>
 #include <map>
@@ -18,9 +16,9 @@ class extend_refinement;
 struct score_compare;
 struct ref_compare;
 
-typedef list<refinement*> refinement_list;
-typedef set<refinement*, score_compare > refinement_set;
-typedef set<refinement*, ref_compare > refinement_store;
+typedef std::list<refinement*> refinement_list;
+typedef std::set<refinement*, score_compare > refinement_set;
+typedef std::set<refinement*, ref_compare > refinement_store;
 
 class state_merger;
 class apta_node;
@@ -55,9 +53,9 @@ public:
 
     virtual void erase();
 
-    virtual void print_json(iostream &output) const;
+    virtual void print_json(std::iostream &output) const;
 
-    static void print_refinement_list_json(iostream &output, refinement_list *list);
+    static void print_refinement_list_json(std::iostream &output, refinement_list *list);
 
     virtual int type();
 
@@ -85,7 +83,7 @@ public:
 
     virtual inline void erase();
 
-    virtual void print_json(iostream &output) const;
+    virtual void print_json(std::iostream &output) const;
 
     virtual int type();
 };
@@ -108,7 +106,7 @@ public:
 
     virtual inline void erase();
 
-    virtual void print_json(iostream &output) const;
+    virtual void print_json(std::iostream &output) const;
 
     virtual int type();
 };
@@ -133,7 +131,7 @@ public:
 
     virtual inline void erase();
 
-    virtual void print_json(iostream &output) const;
+    virtual void print_json(std::iostream &output) const;
 
     virtual int type();
 };

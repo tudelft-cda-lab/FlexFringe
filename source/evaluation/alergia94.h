@@ -4,7 +4,7 @@
 #include "evaluate.h"
 #include "alergia.h"
 
-typedef map<int, int> num_map;
+typedef std::map<int, int> num_map;
 
 /* The data contained in every node of the prefix tree or DFA */
 class alergia94_data: public alergia_data {

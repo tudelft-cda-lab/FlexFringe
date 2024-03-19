@@ -15,9 +15,9 @@ class tail;
 
 #include "evaluation_factory.h"
 #include "utility/loguru.hpp"
+#include "state_merger.h"
 
 using json = nlohmann::json;
-using namespace std;
 
 bool is_stream_sink(apta_node*);
 
@@ -93,18 +93,18 @@ public:
     virtual void split_undo(evaluation_data* other);
 
 /** Printing of nodes and transitions in dot output */
-    virtual void print_state_label(iostream& output);
-    virtual void print_state_style(iostream& output);
-    virtual void print_transition_label(iostream& output, int symbol);
-    virtual void print_transition_style(iostream& output, set<int> symbols);
+    virtual void print_state_label(std::iostream& output);
+    virtual void print_state_style(std::iostream& output);
+    virtual void print_transition_label(std::iostream& output, int symbol);
+    virtual void print_transition_style(std::iostream& output, std::set<int> symbols);
 
 /** Printing of nodes and transitions in json output */
-    virtual void print_state_label_json(iostream& output);
-    virtual void print_transition_label_json(iostream& output, int symbol);
+    virtual void print_state_label_json(std::iostream& output);
+    virtual void print_transition_label_json(std::iostream& output, int symbol);
 
 /** Print state/transition properties  */
-    virtual void print_state_properties(iostream& output);
-    virtual void print_transition_properties(iostream&, int symbol);
+    virtual void print_state_properties(std::iostream& output);
+    virtual void print_transition_properties(std::iostream&, int symbol);
 
 /** what to ignore, and why */
     
@@ -127,7 +127,7 @@ public:
     virtual int predict_type(tail*);
     virtual int predict_symbol(tail*);
     virtual double predict_attr(tail*, int attr);
-    virtual string predict_data(tail*);
+    virtual std::string predict_data(tail*);
 
     virtual double predict_score(tail* t);
     virtual double predict_type_score(int t);
@@ -136,7 +136,7 @@ public:
     virtual double predict_symbol_score(tail* t);
     virtual double predict_attr_score(int attr, double v);
     virtual double predict_attr_score(int attr, tail* t);
-    virtual double predict_data_score(string s);
+    virtual double predict_data_score(std::string s);
     virtual double predict_data_score(tail* t);
 
     virtual tail* sample_tail();
@@ -145,7 +145,7 @@ public:
 
     void set_context(apta_node *n);
 
-    virtual void print_state_style_json(iostream &output);
+    virtual void print_state_style_json(std::iostream &output);
 
     bool align_consistent(tail *t);
 };
@@ -162,7 +162,7 @@ class evaluation_function  {
 
 protected:
     static DerivedRegister<evaluation_function> reg;
-    string evalpar;
+    std::string evalpar;
 
     state_merger* merger;
 
@@ -177,7 +177,7 @@ public:
     int num_inconsistencies;
     int num_merges;
 
-    void set_params(string params);
+    void set_params(std::string params);
 
 /** Boolean indicating the evaluation function type;
    are are two kinds: computed before or after/during a merge.
@@ -190,7 +190,7 @@ public:
 
 /** A set containing the left states that have been merged already
    some evaluation methods use it for making different calculations */
-    set<apta_node*> merged_left_states;
+    std::set<apta_node*> merged_left_states;
     inline bool already_merged(apta_node* left){
         return merged_left_states.find(left) != merged_left_states.end();
     };

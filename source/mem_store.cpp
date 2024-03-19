@@ -1,14 +1,15 @@
 
 #include "mem_store.h"
+#include "input/inputdatalocator.h"
 #include <iostream>
 
-list< apta_node* > mem_store::node_store;
-list< apta_guard* > mem_store::guard_store;
-list< tail* > mem_store::tail_store;
-list< trace* > mem_store::trace_store;
-list< merge_refinement* > mem_store::mergeref_store;
-list< split_refinement* > mem_store::splitref_store;
-list< extend_refinement* > mem_store::extendref_store;
+std::list< apta_node* > mem_store::node_store;
+std::list< apta_guard* > mem_store::guard_store;
+std::list< tail* > mem_store::tail_store;
+std::list< trace* > mem_store::trace_store;
+std::list< merge_refinement* > mem_store::mergeref_store;
+std::list< split_refinement* > mem_store::splitref_store;
+std::list< extend_refinement* > mem_store::extendref_store;
 
 void mem_store::delete_node(apta_node* node){
     assert(node != nullptr);
@@ -40,43 +41,43 @@ apta_guard* mem_store::create_guard(apta_guard* other_guard){
     } else { guard = new apta_guard(other_guard); }
     return guard;
 };
+//
+//void mem_store::delete_tail(tail* t){
+//    assert(t != nullptr);
+//    tail_store.push_front(t);
+//};
+//tail* mem_store::create_tail(tail* other_tail){
+//    tail* t = 0;
+//    if(!tail_store.empty()){
+//        tail* t2 = tail_store.front();
+//        if(t2->next_in_list == 0) { tail_store.pop_front(); t = t2; }
+//        else { t = t2->next_in_list; t2->next_in_list = t->next_in_list; }
+//        t->initialize(other_tail);
+//    } else { t = new tail(other_tail); }
+//    return t;
+//};
 
-void mem_store::delete_tail(tail* t){
-    assert(t != nullptr);
-    tail_store.push_front(t);
-};
-tail* mem_store::create_tail(tail* other_tail){
-    tail* t = 0;
-    if(!tail_store.empty()){
-        tail* t2 = tail_store.front();
-        if(t2->next_in_list == 0) { tail_store.pop_front(); t = t2; }
-        else { t = t2->next_in_list; t2->next_in_list = t->next_in_list; }
-        t->initialize(other_tail);
-    } else { t = new tail(other_tail); }
-    return t;
-};
-
-void mem_store::delete_trace(trace* tr){
-    assert(tr != nullptr);
-    tail* t = tr->head;
-    while(t != 0){
-        mem_store::delete_tail(t);
-        tail* t2 = t;
-        t = t2->future();
-    }
-    trace_store.push_front(tr);
-};
-trace* mem_store::create_trace(){
-    trace* t;
-    if(!trace_store.empty()){
-        t = trace_store.front();
-        trace_store.pop_front();
-        t->initialize();
-    } else {
-        t = new trace();
-    }
-    return t;
-};
+//void mem_store::delete_trace(trace* tr){
+//    assert(tr != nullptr);
+//    tail* t = tr->head;
+//    while(t != 0){
+//        mem_store::delete_tail(t);
+//        tail* t2 = t;
+//        t = t2->future();
+//    }
+//    trace_store.push_front(tr);
+//};
+//trace* mem_store::create_trace(){
+//    trace* t;
+//    if(!trace_store.empty()){
+//        t = trace_store.front();
+//        trace_store.pop_front();
+//        t->initialize();
+//    } else {
+//        t = new trace();
+//    }
+//    return t;
+//};
 
 void mem_store::delete_merge_refinement(merge_refinement* ref){
     assert(ref != nullptr);
@@ -144,4 +145,49 @@ void mem_store::erase(){
         delete it;
     }
 
+}
+
+void mem_store::delete_trace(trace* trace) {
+    assert(trace != nullptr);
+    tail* t = trace->head;
+    while(t != nullptr){
+        mem_store::delete_tail(t);
+        tail* t2 = t;
+        t = t2->future();
+    }
+    delete[] trace->trace_attr;
+    trace_store.push_front(trace);
+}
+
+trace *mem_store::create_trace(inputdata* inputData) {
+    if (inputData == nullptr) {
+        // Will crash if no InputData can be located
+        inputData = inputdata_locator::get();
+    }
+
+    trace* t;
+    if(!trace_store.empty()) {
+        t = trace_store.front();
+        trace_store.pop_front();
+        t->initialize(inputData);
+    } else {
+        t = new trace(inputData);
+    }
+    return t;
+}
+
+void mem_store::delete_tail(tail * t) {
+    assert(t != nullptr);
+    tail_store.push_front(t);
+}
+
+tail* mem_store::create_tail(tail *other_tail) {
+    tail* t = nullptr;
+    if(!tail_store.empty()){
+        tail* t2 = tail_store.front();
+        if(t2->next_in_list == nullptr) { tail_store.pop_front(); t = t2; }
+        else { t = t2->next_in_list; t2->next_in_list = t->next_in_list; }
+        t->initialize(other_tail);
+    } else { t = new tail(other_tail); }
+    return t;
 };

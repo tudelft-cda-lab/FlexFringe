@@ -11,7 +11,6 @@
 #include "state_merger.h"
 #include "conflict_graph.h"
 
-using namespace std;
 /**
  * @brief The merger context class. TODO: Legacy code that will be changed in the future. Get rid of merger context.
  *
@@ -50,10 +49,10 @@ public:
     state_set* non_red_states;
     state_set* sink_states;
 
-    map<apta_node*, int> state_number;
-    map<apta_node*, int> state_colour;
+    std::map<apta_node*, int> state_number;
+    std::map<apta_node*, int> state_colour;
 
-    stringstream sat_stream; // TODO: give some information on this object
+    std::stringstream sat_stream; // TODO: give some information on this object
 
     int dfa_size;
     int sinks_size;
@@ -62,9 +61,9 @@ public:
     int new_init;
     int num_types;
 
-    set<int> trueliterals;
+    std::set<int> trueliterals;
 
-    dfasat(state_merger* merger, string sat_program, int best_solution);
+    dfasat(state_merger* merger, std::string sat_program, int best_solution);
 
     void reset_literals(bool init);
     void create_literals();
@@ -101,6 +100,6 @@ public:
     void translate(FILE *sat_file);
 };
 
-void run_dfasat(state_merger* m, string sat_program, int best_solution);
+void run_dfasat(state_merger* m, std::string sat_program, int best_solution);
 
 #endif /* _DFASAT_H_ */

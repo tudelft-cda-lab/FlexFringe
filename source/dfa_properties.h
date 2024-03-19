@@ -6,9 +6,9 @@
 #define FLEXFRINGE_DFA_PROPERTIES_H
 
 #include "apta.h"
-#include "inputdata.h"
+#include "input/inputdata.h"
 
-bool is_counting_path(string str);
+bool is_counting_path(std::string str);
 bool counting_path_occurs(apta_node* n1, apta_node* n2);
 /** subtree is identical up to max_depth k, only using symbols
  * used in ktails implementations */

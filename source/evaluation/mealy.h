@@ -5,10 +5,10 @@
 
 class mealy_data;
 
-typedef map<int, int> output_map;
-typedef map<int, mealy_data*> undo_map;
-typedef map<int, string> is_map;
-typedef map<string, int> si_map;
+typedef std::map<int, int> output_map;
+typedef std::map<int, mealy_data*> undo_map;
+typedef std::map<int, std::string> is_map;
+typedef std::map<std::string, int> si_map;
 
 /* The data contained in every node of the prefix tree or DFA */
 class mealy_data: public evaluation_data {
@@ -30,7 +30,7 @@ public:
 
     void print_transition_label(std::iostream&, int);
 
-    virtual string predict_data(tail*);
+    virtual std::string predict_data(tail*);
 };
 
 class mealy: public evaluation_function {

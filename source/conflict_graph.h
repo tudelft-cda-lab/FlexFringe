@@ -6,13 +6,11 @@
 #include "state_merger.h"
 #include "apta.h"
 
-using namespace std;
-
 class apta_graph;
 class graph_node;
 
-typedef set<graph_node*> node_set;
-typedef set<int> type_set;
+typedef std::set<graph_node*> node_set;
+typedef std::set<int> type_set;
 
 class graph_node{
 public:
@@ -49,12 +47,12 @@ struct neighbor_compare
     }
 };
 
-typedef set<graph_node*, neighbor_compare> ordered_node_set;
+typedef std::set<graph_node*, neighbor_compare> ordered_node_set;
 
 class apta_graph{
 public:
 	ordered_node_set nodes;
-	map<apta_node*, graph_node*> node_map;
+	std::map<apta_node*, graph_node*> node_map;
 	inline graph_node* get_node(apta_node* n){
 	    return node_map[n];
 	}
@@ -68,7 +66,7 @@ public:
 	void remove_edges(int);
 	void add_conflicts(state_merger* merger);
 
-    pair<node_set*, node_set*> find_bipartite();
+    std::pair<node_set*, node_set*> find_bipartite();
     void extract_types(int min_bip_size);
 };
 

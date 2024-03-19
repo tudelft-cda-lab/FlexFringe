@@ -5,7 +5,7 @@
 #include "parameters.h"
 
 void greedy_run(state_merger* merger){
-    cerr << "starting greedy merging" << endl;
+    std::cerr << "starting greedy merging" << std::endl;
     merger->get_eval()->initialize_after_adding_traces(merger);
 
     //auto* all_refs = new refinement_list();
@@ -14,9 +14,9 @@ void greedy_run(state_merger* merger){
     int num = 1;
 
     while( best_ref != nullptr ){
-        cout << " ";
+        std::cout << " ";
         best_ref->print_short();
-        cout << " ";
+        std::cout << " ";
         std::cout.flush();
 
         std::stringstream ss;
@@ -35,7 +35,7 @@ void greedy_run(state_merger* merger){
 
         num++;
     }
-    cout << "no more possible merges" << endl;
+    std::cout << "no more possible merges" << std::endl;
 };
 
 

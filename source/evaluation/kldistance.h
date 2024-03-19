@@ -3,8 +3,8 @@
 
 #include "alergia.h"
 
-typedef map<int, float> prob_map;
-typedef map<int, prob_map> type_prob_map;
+typedef std::map<int, float> prob_map;
+typedef std::map<int, prob_map> type_prob_map;
 
 /* The data contained in every node of the prefix tree or DFA */
 class kl_data: public alergia_data {
