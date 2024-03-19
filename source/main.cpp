@@ -80,20 +80,9 @@ evaluation_function* get_evaluation(){
     return eval;
 }
 
-/**
- * @brief Main run method. Branches out based on the type of session to run.
- * 
- * Possible sessions: 
- * - batch
- * - stream 
- * - inter
- * 
- * @param param The parameters. 
- */
-void run() {
-    evaluation_function *eval = get_evaluation();
-
+void read_input_file(inputdata* id) {
     std::ifstream input_stream(INPUT_FILE);
+
     if(!input_stream) {
         LOG_S(ERROR) << "Input file not found, aborting";
         std::cerr << "Input file not found, aborting" << std::endl;
@@ -107,20 +96,44 @@ void run() {
         read_csv = true;
     }
 
+    std::unique_ptr<parser> parser;
+    if(read_csv) {
+        parser = std::make_unique<csv_parser>(input_stream, csv::CSVFormat().trim({' '}));
+    } else {
+        parser = std::make_unique<abbadingoparser>(input_stream);
+    }
+
+    if (SLIDING_WINDOW) {
+        id->read_slidingwindow(parser.get(),
+                               SLIDING_WINDOW_SIZE,
+                               SLIDING_WINDOW_STRIDE,
+                               SLIDING_WINDOW_TYPE);
+    } else {
+        id->read(parser.get());
+    }
+}
+
+/**
+ * @brief Main run method. Branches out based on the type of session to run.
+ * 
+ * Possible sessions: 
+ * - batch
+ * - stream 
+ * - inter
+ * 
+ * @param param The parameters. 
+ */
+void run() {
+    evaluation_function *eval = get_evaluation();
+
     if(OUTPUT_FILE.empty()) OUTPUT_FILE = INPUT_FILE + ".ff";
 
     inputdata id;
     inputdata_locator::provide(&id);
-    if(OPERATION_MODE != "streaming" && OPERATION_MODE != "predict"){
-        if(read_csv) {
-            auto parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
-            id.read(&parser);
-        } else {
-            auto parser = abbadingoparser(input_stream);
-            id.read(&parser);
-        }
-    }
 
+    if(OPERATION_MODE != "streaming" && OPERATION_MODE != "predict"){
+        read_input_file(&id);
+    }
 
     apta* the_apta = new apta();
     auto* merger = new state_merger(&id, eval, the_apta);
@@ -131,21 +144,20 @@ void run() {
 
     if(OPERATION_MODE == "batch" || OPERATION_MODE == "greedy") {
         std::cout << "batch mode selected" << std::endl;
-//        if(read_csv) id->read_csv_file(input_stream);
-//        else id->read_abbadingo_file(input_stream);
+
         eval->initialize_before_adding_traces();
         id.add_traces_to_apta(the_apta);
         eval->initialize_after_adding_traces(merger);
         print_current_automaton(merger, OUTPUT_FILE, ".init");
         LOG_S(INFO) << "Greedy mode selected, starting run";
+
         // run the state merger
         greedy_run(merger);
 
         print_current_automaton(merger, OUTPUT_FILE, ".final");
     } else if(OPERATION_MODE == "satsolver") {
         std::cout << "satsolver mode selected" << std::endl;
-//        if(read_csv) id->read_csv_file(input_stream);
-//        else id->read_abbadingo_file(input_stream);
+
         eval->initialize_before_adding_traces();
         id.add_traces_to_apta(the_apta);
         eval->initialize_after_adding_traces(merger);
@@ -160,13 +172,9 @@ void run() {
 
         stream_object stream_obj;
         throw std::logic_error("Streaming mode is currently broken");
-//        stream_obj.stream_mode(merger, input_stream, id);
 
-        print_current_automaton(merger, OUTPUT_FILE, ".final");
     } else if(OPERATION_MODE == "search") {
         std::cout << "search mode selected" << std::endl;
-//        if(read_csv) id->read_csv_file(input_stream);
-//        else id->read_abbadingo_file(input_stream);
         eval->initialize_before_adding_traces();
         id.add_traces_to_apta(the_apta);
         eval->initialize_after_adding_traces(merger);
@@ -177,8 +185,7 @@ void run() {
         print_current_automaton(merger, OUTPUT_FILE, ".final");
     } else if(OPERATION_MODE == "bagging") {
         std::cout << "bagging mode selected" << std::endl;
-//        if(read_csv) id->read_csv_file(input_stream);
-//        else id->read_abbadingo_file(input_stream);
+
         eval->initialize_before_adding_traces();
         id.add_traces_to_apta(the_apta);
         eval->initialize_after_adding_traces(merger);
@@ -187,8 +194,7 @@ void run() {
         bagging(merger, OUTPUT_FILE,10);
     } else if(OPERATION_MODE == "interactive") {
         std::cout << "interactive mode selected" << std::endl;
-//        if(read_csv) id->read_csv_file(input_stream);
-//        else id->read_abbadingo_file(input_stream);
+
         eval->initialize_before_adding_traces();
         id.add_traces_to_apta(the_apta);
         eval->initialize_after_adding_traces(merger);
@@ -206,21 +212,14 @@ void run() {
             std::cerr << "reading apta file - " << APTA_FILE << std::endl;
             the_apta->read_json(input_apta_stream);
 
-            print_current_automaton(merger, OUTPUT_FILE, ".tom_final"); // TODO: delete. Only for debugging
-
-            if(read_csv) {
-                auto parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
-                id.read(&parser);
-            } else {
-                auto parser = abbadingoparser(input_stream);
-                id.read(&parser);
-            }
+            read_input_file(&id);
 
             std::ostringstream res_stream;
             res_stream << APTA_FILE << ".result";
             std::ofstream output(res_stream.str().c_str());
-            if(read_csv) predict_csv(merger, input_stream, output);
-            else predict(merger, id, output);
+
+            predict(merger, id, output);
+
             output.close();
         } else {
             std::cerr << "require a json formatted apta file to make predictions" << std::endl;
@@ -250,7 +249,7 @@ void run() {
        std::cerr << R"(unknown mode of operation selected, valid options are "batch", "stream", and "inter", while the parameter provided was )" << OPERATION_MODE << std::endl;
        exit(1);
     }
-    input_stream.close();
+
     delete merger;
 }
 
