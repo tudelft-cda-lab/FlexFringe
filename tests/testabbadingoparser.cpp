@@ -87,6 +87,13 @@ TEST_CASE("abbadingo header parser: whole thing", "[parsing]") {
     std::cout << "value: " << value << "\n";
 }
 
+TEST_CASE("abbadingo header parser: trailing whitespace", "[parsing]") {
+    auto input = lexy::zstring_input("50:ds/name1,ft/name2 8:d/n1,f/n2           ");
+    auto result = lexy::parse<grammar::abbadingo_header_p>(input, lexy_ext::report_error);
+    REQUIRE(result);
+    auto value = result.value();
+}
+
 TEST_CASE("abbadingo symbol parser", "[parsing]") {
     auto input = lexy::zstring_input("10.1");
     auto result = lexy::parse<symbol_grammar::attr_val_double>(input, lexy_ext::report_error);
@@ -378,4 +385,17 @@ TEST_CASE("abbadingo_parser: add single trace", "[parsing]") {
 
     REQUIRE(traces.size() == 1);
     REQUIRE(traces.at(0)->to_string() == "0 3 a b c");
+}
+
+TEST_CASE("abbadingo trace parser - trailing whitespace", "[parsing]") {
+    auto input = lexy::zstring_input("label 3 a b c          ");
+    auto result = lexy::parse<symbol_grammar::abbadingo_trace>(input, lexy_ext::report_error);
+    REQUIRE(result.has_value());
+    auto value = result.value();
+    REQUIRE(value.label == "label");
+    REQUIRE(value.trace_info.number == 3);
+    REQUIRE(value.symbols.size() == 3);
+    REQUIRE(value.symbols.at(0).name == "a");
+    REQUIRE(value.symbols.at(1).name == "b");
+    REQUIRE(value.symbols.at(2).name == "c");
 }

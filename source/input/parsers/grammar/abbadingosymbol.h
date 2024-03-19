@@ -183,7 +183,7 @@ namespace {
         };
 
         struct symbol_list {
-            static constexpr auto rule = dsl::list(dsl::p<symbol>, dsl::sep(dsl::ascii::space));
+            static constexpr auto rule = dsl::list(dsl::peek(dsl::p<symbol>) >> dsl::p<symbol>, dsl::trailing_sep(dsl::ascii::blank));
             static constexpr auto value = lexy::as_list<std::vector<abbadingo_symbol_info>>;
         };
 
@@ -193,6 +193,7 @@ namespace {
         };
 
         struct abbadingo_trace {
+
             static constexpr auto rule = [] {
                 auto trace_info_part = dsl::p<trace_label> + ws + dsl::p<trace_specifier>;
                 auto symbol_list_part = ws + dsl::p<symbol_list>;
