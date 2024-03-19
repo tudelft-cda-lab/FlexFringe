@@ -9,7 +9,7 @@
 
 struct tail_state_compare{ bool operator()(const std::pair<double, std::pair<apta_node*, tail*>> &a, const std::pair<double, std::pair<apta_node*, tail*>> &b) const{ return a.first < b.first; } };
 
-int rownr = 1;
+int rownr = 0;
 std::map<int,double> sw_score_per_symbol;
 std::map<tail*,double> sw_individual_tail_score;
 
@@ -359,6 +359,7 @@ void predict_trace(state_merger* m, std::ofstream& output, trace* tr){
     }
 
     output << rownr << "; " << "\"" << tr->to_string() << "\"";
+    rownr++;
 
     output << "; ";
     write_list(state_sequence, output);
