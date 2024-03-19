@@ -402,6 +402,17 @@ std::optional<trace *> inputdata::read_trace(parser &input_parser, reader_strate
     return tr_maybe;
 }
 
+inputdata inputdata::with_alphabet_from(inputdata &other) {
+    inputdata new_inputdata;
+
+    new_inputdata.alphabet = other.alphabet;
+    new_inputdata.r_alphabet = other.r_alphabet;
+    new_inputdata.types = other.types;
+    new_inputdata.r_types = other.r_types;
+
+    return new_inputdata;
+}
+
 
 
 

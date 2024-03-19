@@ -67,6 +67,8 @@ public:
     std::pair<trace*, tail*> process_symbol_info(symbol_info &symbolinfo,
                                                  std::unordered_map<std::string, trace*> &trace_map);
 
+    static inputdata with_alphabet_from(inputdata& other);
+
     void add_traces_to_apta(apta *the_apta);
     void add_trace_to_apta(trace *tr, apta *the_apta);
 
