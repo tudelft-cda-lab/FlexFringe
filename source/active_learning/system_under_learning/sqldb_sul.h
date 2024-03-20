@@ -19,9 +19,6 @@
 #include <vector>
 
 class sqldb_sul : public sul_base {
-  private:
-    sqldb& my_sqldb;
-
   protected:
     void reset() override{};
     const double get_string_probability(const std::vector<int>& query_trace, inputdata& id) const override{};
@@ -30,12 +27,14 @@ class sqldb_sul : public sul_base {
     const int query_trace(const std::vector<int>& query_trace, inputdata& id) const override;
 
   public:
-    explicit sqldb_sul(sqldb& db);
+    psql::db& my_sqldb;
+    explicit sqldb_sul(psql::db& db);
     virtual void pre(inputdata& id) override;
     const int query_trace_maybe(const std::vector<int>& query_trace) const;
-    sqldb& get_sqldb() { return my_sqldb; };
-    std::optional<std::pair<std::vector<int>, int>> regex_equivalence(const std::string& regex, int type);
-    std::vector<std::pair<std::vector<int>, int>> prefix_query(const std::vector<int>& prefix, int n);
+    const std::optional<psql::record> query_trace_opt(const std::vector<int>& query_trace) const;
+    psql::db& get_sqldb() { return my_sqldb; };
+    std::optional<psql::record> regex_equivalence(const std::string& regex, int type);
+    std::vector<psql::record> prefix_query(const std::vector<int>& prefix, int n);
 };
 
 #endif

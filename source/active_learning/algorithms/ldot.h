@@ -20,17 +20,39 @@
 #include "inputdata.h"
 #include "refinement.h"
 #include "sqldb_sul.h"
+#include "sqldb_sul_random_oracle.h"
+#include "sqldb_sul_regex_oracle.h"
 #include "state_merger.h"
 #include <memory>
 #include <vector>
 
 class ldot_algorithm : public algorithm_base {
   private:
+    // SETTINGS:
+
+    int PREFIX_SIZE = 10;
+    double BEST_MERGE_THRESHOLD = 2.0; // any value below 1 is a JustTakeBestMerge approach
+    bool BLUE_NODE_COMPLETION = true;
+    bool DISTINGUISHING_MERGE_TEST = false;
+
+    // EQUIVALENCE SETTINGS
+    // If regex equivalence is first, that one starts
+    // Then one of random or distinguishing is started.
+    // Random takes precedence
+    bool REGEX_EQUIVALENCE = true;
+    bool RANDOM_EQUIVALENCE = false;
+    bool DISTINGUISHING_EQUIVALENCE = false;
+
+    bool disable_regex_oracle = false;
     int n_runs;
-    void performed_refinements;
-    unordered_set<apta_node*> completed_nodes;
-    bool isolated_states;
+    int n_subs;
     int uid = 0;
+    std::list<refinement*> performed_refinements;
+    unordered_set<apta_node*> completed_nodes;
+    unordered_set<int> added_traces;
+    bool isolated_states;
+    std::vector<apta_node*> complete_these_states;
+    bool maybe_list_for_completion(apta_node* n);
 
     /**
      * For a specific node (n) complete for as possible all the 1 size steps.
@@ -41,7 +63,7 @@ class ldot_algorithm : public algorithm_base {
     /**
      * @brief Add a new trace to the data structures (apta, mem_store).
      */
-    trace* add_trace(inputdata& id, const std::vector<int>& seq, int answer);
+    trace* add_trace(inputdata& id, const psql::record& rec);
 
     /**
      * @brief Processing the counterexample recursively in the binary search strategy
@@ -57,16 +79,17 @@ class ldot_algorithm : public algorithm_base {
      * @param counterex The counterexample.
      * @param refs The list of refinments made.
      */
-    void proc_counterex(inputdata& id, const vector<int>& counterex, const int type, const refinement_list& refs);
+    void proc_counter_record(inputdata& id, const psql::record& rec, const refinement_list& refs);
 
-    std::vector<refinement*> process_unidentified(inputdata& id,
-                                                  const std::vector<refinement_set>& refs_for_unidentified);
+    void process_unidentified(inputdata& id, const std::vector<refinement_set>& refs_for_unidentified);
     void merge_processed_ref(refinement*);
+    optional<psql::record> equivalence(sqldb_sul_regex_oracle* regex_oracle);
 
     unique_ptr<evaluation_function> my_eval;
     unique_ptr<apta> my_apta;
     unique_ptr<state_merger> my_merger;
     shared_ptr<sqldb_sul> my_sul;
+    unique_ptr<sqldb_sul_random_oracle> random_oracle;
 
   public:
     ldot_algorithm(std::shared_ptr<sul_base>& sul, std::unique_ptr<base_teacher>& teacher,

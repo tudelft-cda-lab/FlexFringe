@@ -18,10 +18,8 @@
 #include <utility>
 #include <vector>
 
-using CEX = std::pair<std::vector<int>, int>; // alphabet vector with its type as the counter example.
-
-std::optional<CEX> sqldb_sul_regex_oracle::equivalence_query(state_merger* merger,
-                                                             const std::unique_ptr<base_teacher>& teacher) {
+std::optional<psql::record> sqldb_sul_regex_oracle::equivalence_query_db(state_merger* merger,
+                                                                         const std::unique_ptr<base_teacher>& teacher) {
     inputdata& id = *(merger->get_dat());
     apta& hypothesis = *(merger->get_aut());
 
@@ -32,9 +30,8 @@ std::optional<CEX> sqldb_sul_regex_oracle::equivalence_query(state_merger* merge
     cout << "Types shuffled: " << my_types << endl;
 
     auto coloring = std::make_tuple(PRINT_RED, PRINT_BLUE, PRINT_WHITE);
-    regex_builder builder = regex_builder(hypothesis, *merger, coloring, sqldb::num2str);
+    regex_builder builder = regex_builder(hypothesis, *merger, coloring, psql::db::num2str);
 
-    // TODO; perform alteration for the types to check as a performance enhancement.
     int i = 0;
     std::vector<bool> errors(types.size(), false);
     int parts = 1;
@@ -58,7 +55,7 @@ std::optional<CEX> sqldb_sul_regex_oracle::equivalence_query(state_merger* merge
                 continue;
             }
             try {
-                std::optional<CEX> cex = my_sqldb_sul->regex_equivalence(regex, type);
+                std::optional<psql::record> cex = my_sqldb_sul->regex_equivalence(regex, type);
                 if (cex) {
                     // Found counter example, return immidiatly.
                     return cex;
@@ -84,7 +81,7 @@ std::optional<CEX> sqldb_sul_regex_oracle::equivalence_query(state_merger* merge
                 parts = 1;
                 continue; // Let's investigate next type.
             }
-            // No new type, but try again this type with bigger parts number (thus larger split).
+            // No new type, but try this type again with bigger parts number (thus larger split).
             parts *= 2;
             if (parts > nodes)
                 parts = nodes; // final try -> all nodes individually.
@@ -109,4 +106,13 @@ std::optional<CEX> sqldb_sul_regex_oracle::equivalence_query(state_merger* merge
 
     // No difference found: No counter example: Found the truth.
     return std::nullopt;
+}
+
+optional<std::pair<std::vector<int>, int>>
+sqldb_sul_regex_oracle::equivalence_query(state_merger* merger, const std::unique_ptr<base_teacher>& teacher) {
+    optional<psql::record> r_maybe = equivalence_query_db(merger, teacher);
+    if (!r_maybe)
+        return std::nullopt;
+    psql::record r = r_maybe.value();
+    return std::make_optional<std::pair<std::vector<int>, int>>(std::make_pair(r.trace, r.type));
 }

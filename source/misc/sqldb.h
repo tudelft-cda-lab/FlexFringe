@@ -15,8 +15,21 @@
 #include "input/inputdata.h"
 #include <memory>
 #include <pqxx/pqxx>
+#include <string>
+#include <vector>
 
-class sqldb {
+// Short for postgresql
+namespace psql {
+
+struct record {
+    int pk;
+    std::vector<int> trace;
+    int type;
+
+    record(int i, std::vector<int> t, int o) : trace(std::move(t)), type(o), pk(i) {}
+};
+
+class db {
   private:
     const std::string connection_string;
     pqxx::connection conn;
@@ -25,21 +38,23 @@ class sqldb {
     std::string get_sqlarr_from_vec(const std::vector<std::string>& vec);
     const std::string table_name;
 
+    int max_pk = -1;
+
   public:
-    sqldb();
-    explicit sqldb(const std::string& table_name, const std::string& connection_string = "");
+    db();
+    explicit db(const std::string& table_name, const std::string& connection_string = "");
 
     pqxx::connection& get_connection() { return conn; }
 
-    inline static const std::string TRACE_NAME = "trace";
-    inline static const std::string RES_NAME = "res";
+    std::string TRACE_NAME = "trace";
+    std::string TYPE_NAME = "type";
 
     static char num2str(int num);
     static int str2num(char str);
     static std::vector<int> str2vec(const std::string& str);
     static std::string vec2str(const std::vector<int>& vec);
 
-    const std::string get_table_name() { return table_name; };
+    const std::string& get_table_name() { return table_name; };
 
     /**
      * @brief Returning the alphabet stored in the '_meta' table.
@@ -61,15 +76,19 @@ class sqldb {
      * Also initializing the '_meta' table with the alphabets and output symbols.
      */
     void load_traces(inputdata& id);
-    void add_row(const std::string& trace, int res);
+    void add_row(const std::string& trace, int type);
     void copy_data(const std::string& file_name, char delimiter = '\t');
     void tester(const std::string& val, const std::function<void(std::string)>& func);
+    int max_trace_pk();
+    std::optional<record> select_by_pk(int pk);
 
     /**
      * @brief Loop over all queries starting with prefix. Performing function func, continuing as func returns true.
      */
-    void prefix_query(const std::string& prefix, const std::function<bool(std::string, int)>& func);
-    std::vector<std::pair<std::vector<int>, int>> prefix_query(const std::string& prefix, int n);
+    void prefix_query(const std::string& prefix, const std::function<bool(record)>& func);
+    std::vector<record> prefix_query(const std::string& prefix, int n);
+
+    record distinguish_query(const std::string& trace1, const std::string& trace2);
 
     /**
      * @brief Return the type of the trace.
@@ -81,6 +100,7 @@ class sqldb {
      * @brief Return the type of the trace with maybe unknown type (-1).
      */
     int query_trace_maybe(const std::string& trace);
+    std::optional<record> query_trace_opt(const std::string& trace);
 
     /**
      * @brief Check if the trace can be found in the database.
@@ -94,7 +114,9 @@ class sqldb {
      * providing a regex that should match all traces outputting that specific type.
      * (You can use regex_builder to create such regexes.)
      */
-    std::optional<std::pair<std::vector<int>, int>> regex_equivalence(const std::string& regex, int type);
+    std::optional<record> regex_equivalence(const std::string& regex, int type);
 };
+
+} // namespace psql
 
 #endif

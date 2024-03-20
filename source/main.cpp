@@ -92,7 +92,7 @@ void run() {
         the_apta->read_json(input_apta_stream);
         LOG_S(INFO) << "Finished reading apta file.";
         auto coloring = std::make_tuple(PRINT_RED, PRINT_BLUE, PRINT_WHITE);
-        regex_builder builder = regex_builder(*the_apta, *merger, coloring, sqldb::num2str);
+        regex_builder builder = regex_builder(*the_apta, *merger, coloring, psql::db::num2str);
         LOG_S(INFO) << "Finished building the regex builder";
         auto delimiter = "\t";
         for (std::string type : std::views::keys(inputdata_locator::get()->get_r_types())) {

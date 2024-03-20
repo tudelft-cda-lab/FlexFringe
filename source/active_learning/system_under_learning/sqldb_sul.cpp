@@ -11,10 +11,11 @@
 
 #include "sqldb_sul.h"
 #include "misc/printutil.h"
+#include "misc/sqldb.h"
 #include "utility/loguru.hpp"
 #include <sstream>
 
-sqldb_sul::sqldb_sul(sqldb& db) : my_sqldb(db) {}
+sqldb_sul::sqldb_sul(psql::db& db) : my_sqldb(db) {}
 
 void sqldb_sul::pre(inputdata& id) {
     LOG_S(INFO) << fmt::format("Inferring alphabet from {0}_meta table.", my_sqldb.get_table_name());
@@ -49,10 +50,14 @@ const int sqldb_sul::query_trace(const std::vector<int>& query_trace, inputdata&
 const int sqldb_sul::query_trace_maybe(const std::vector<int>& query_trace) const {
     return my_sqldb.query_trace_maybe(my_sqldb.vec2str(query_trace));
 }
-std::optional<std::pair<std::vector<int>, int>> sqldb_sul::regex_equivalence(const std::string& regex, int type) {
+
+const std::optional<psql::record> sqldb_sul::query_trace_opt(const std::vector<int>& query_trace) const {
+    return my_sqldb.query_trace_opt(my_sqldb.vec2str(query_trace));
+}
+std::optional<psql::record> sqldb_sul::regex_equivalence(const std::string& regex, int type) {
     return my_sqldb.regex_equivalence(regex, type);
 }
 
-std::vector<std::pair<std::vector<int>, int>> sqldb_sul::prefix_query(const std::vector<int>& prefix, int n) {
+std::vector<psql::record> sqldb_sul::prefix_query(const std::vector<int>& prefix, int n) {
     return my_sqldb.prefix_query(my_sqldb.vec2str(prefix), n);
 }

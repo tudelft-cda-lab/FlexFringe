@@ -22,7 +22,7 @@
 class active_learning_main_func {
   private:
     inputdata get_inputdata() const;
-    unique_ptr<sqldb> my_sqldb;
+    unique_ptr<psql::db> my_sqldb;
     bool SQLDB = false;
 
     std::shared_ptr<sul_base> select_sul_class(const bool ACTIVE_SUL) const;
