@@ -19,6 +19,7 @@
 #include "parameters.h"
 #include "refinement.h"
 #include "sqldb_sul.h"
+#include "sqldb_sul_random_oracle.h"
 #include "utility/loguru.hpp"
 #include <filesystem>
 #include <fmt/format.h>
@@ -28,13 +29,13 @@
 template <typename T> std::string printAddress(const std::list<T>& v) {
     stringstream ss;
     ss << "[";
-    for (auto& e : v) ss << &e << ", ";
+    for (auto& e : v)
+        ss << &e << ", ";
     ss << "]\n";
     return ss.str();
 }
 
-void ldot_algorithm::proc_counterex(inputdata& id, const vector<int>& counterex, const int type,
-                                    const refinement_list& refs) {
+void ldot_algorithm::proc_counter_record(inputdata& id, const psql::record& rec, const refinement_list& refs) {
     active_learning_namespace::reset_apta(my_merger.get(), refs);
 #ifndef NDEBUG
     DLOG_S(1) << n_runs << ": Undoing " << refs.size() << " refs.";
@@ -47,7 +48,7 @@ void ldot_algorithm::proc_counterex(inputdata& id, const vector<int>& counterex,
     vector<int> substring;
     apta_node* n = my_apta->get_root();
 
-    for (const int s : counterex) {
+    for (const int s : rec.trace) {
         // Look for fringe, then add to apta.
         if (n != nullptr) {
             substring.push_back(s);
@@ -55,29 +56,30 @@ void ldot_algorithm::proc_counterex(inputdata& id, const vector<int>& counterex,
             // apta_node n and substring point now to same place in apta.
         } else {
             // apta_node n points to non existent place in apta.
-            const int queried_type = my_sul->query_trace_maybe(substring);
-            if (queried_type != -1) {
-                add_trace(id, substring, queried_type);
+            auto record_maybe = my_sul->query_trace_opt(substring);
+            if (record_maybe) {
+                add_trace(id, record_maybe.value());
             }
             substring.push_back(s);
         }
     }
 
-    // Now, add the counterex.
-    add_trace(id, substring, type);
+    // Now, add the counterex itself.
+    add_trace(id, rec);
 
     // Now let's walk over the apta again, completing all the states we created.
     n = my_apta->get_root();
-    for (auto s : counterex) {
+    for (auto s : rec.trace) {
         n = active_learning_namespace::get_child_node(n, s);
         complete_state(id, n);
     }
 }
 
-trace* ldot_algorithm::add_trace(inputdata& id, const std::vector<int>& seq, int answer) {
-    DLOG_S(1) << answer << " " << seq;
+trace* ldot_algorithm::add_trace(inputdata& id, const psql::record& r) {
+    added_traces.insert(r.pk);
+    DLOG_S(1) << r.type << " " << r.trace;
 
-    trace* new_trace = active_learning_namespace::vector_to_trace(seq, id, answer);
+    trace* new_trace = active_learning_namespace::vector_to_trace(r.trace, id, r.type);
     id.add_trace_to_apta(new_trace, my_merger->get_aut(), false);
     id.add_trace(new_trace);
     return new_trace;
@@ -105,20 +107,19 @@ void ldot_algorithm::process_unidentified(inputdata& id, const std::vector<refin
     // different approaches and we should see what works best. Additionally, what is in the unidentified
     // portion might prove that more exploration is needed, instead of building the hypothesis
     // (exploitation part).
-    // Perhaps some weak co-transitivity test can also be done here.
-    // If an unidentified state has a lot of high merge probabilities we need to find more information about
-    // these states.
+    // Another idea:
     // Keep track of the explored depth of a state and if a state has a very low explored depth, we need
     // to increase the depth that is explored for that state.
     // For unidentified states, we might already have a very high merge probability. We can then make this
     // merge.
 
-    std::vector<apta_node*> listed_for_completion;
     for (const auto possible_refs : refs_for_unidentified) {
         refinement_set consistent_possible_refs;
         for (const auto ref : possible_refs) {
             if (ref->test_ref_consistency(my_merger.get())) {
                 consistent_possible_refs.insert(ref);
+            } else {
+                ref->erase();
             }
         }
         if (consistent_possible_refs.empty()) {
@@ -137,22 +138,50 @@ void ldot_algorithm::process_unidentified(inputdata& id, const std::vector<refin
         refinement* best_merge = *it;
         it++;
         refinement* sec_merge = *it;
-        if (sec_merge->score * 2 < best_merge->score) {
+        if (sec_merge->score * BEST_MERGE_THRESHOLD < best_merge->score) {
             merge_processed_ref(best_merge);
         } else {
-            merge_refinement* best_merge_ref = dynamic_cast<merge_refinement*>(best_merge);
-            merge_refinement* sec_merge_ref = dynamic_cast<merge_refinement*>(sec_merge);
-
-            bool completed = complete_state(id, best_merge_ref->blue);
-            if (completed) {
-                // There was completion, there is now more information available
-                isolated_states = true;
+            if (DISTINGUISHING_MERGE_TEST) {
+                throw std::runtime_error("Not implemented");
+                // TODO:
+                // Idea: Do this for all representatives.
+                /* auto rec_maybe = */
+                /*     my_sul->distinguishing_query(best_merge->red->access_trace, best_merge->blue->access_trace); */
+                /* if (rec_maybe) { */
+                /*     traces_to_add(rec_maybe.value()); */
+                /* } else { */
+                /*     merge_processed_ref(best_merge); */
+                /* } */
             } else {
-                // otherwise merge the best anyway.
-                merge_processed_ref(best_merge);
+                merge_refinement* best_merge_ref = dynamic_cast<merge_refinement*>(best_merge);
+                merge_refinement* sec_merge_ref = dynamic_cast<merge_refinement*>(sec_merge);
+
+                bool already_completed_1 = maybe_list_for_completion(best_merge_ref->blue);
+                bool already_completed_2 = maybe_list_for_completion(best_merge_ref->red);
+                bool already_completed_3 = maybe_list_for_completion(sec_merge_ref->red);
+                if (already_completed_1 && already_completed_2 && already_completed_3) {
+                    // merge the best anyway, there cannot be more information found.
+                    merge_processed_ref(best_merge);
+                } else {
+                    best_merge->erase();
+                }
             }
         }
+        while (it != consistent_possible_refs.end()) {
+            refinement* ref = *it;
+            ref->erase();
+            it++;
+        }
     }
+}
+
+// Returns true if already completed
+bool ldot_algorithm::maybe_list_for_completion(apta_node* n) {
+    if (!completed_nodes.contains(n)) {
+        complete_these_states.push_back(n);
+        return false;
+    }
+    return true;
 }
 
 bool ldot_algorithm::complete_state(inputdata& id, apta_node* n) {
@@ -161,7 +190,9 @@ bool ldot_algorithm::complete_state(inputdata& id, apta_node* n) {
 
     auto* access_trace = n->get_access_trace();
     auto seq = access_trace->get_input_sequence(true, true);
-    for (const auto& [res, answer] : my_sul->prefix_query(seq, 10)) { add_trace(id, res, answer); }
+    for (const auto& rec : my_sul->prefix_query(seq, PREFIX_SIZE)) {
+        add_trace(id, rec);
+    }
 
     // Old code for random search.
     /* for (const int symbol : alphabet) { */
@@ -185,6 +216,7 @@ bool ldot_algorithm::complete_state(inputdata& id, apta_node* n) {
 }
 
 void ldot_algorithm::test_access_traces() {
+    return; // For debug
     for (APTA_iterator Ait = APTA_iterator(my_apta->get_root()); *Ait != 0; ++Ait) {
         apta_node* n = *Ait;
         apta_node* access_node = my_merger->get_state_from_trace(n->get_access_trace());
@@ -204,7 +236,18 @@ void ldot_algorithm::run(inputdata& id) {
     if (my_sul == nullptr) {
         throw logic_error("ldot only works with sqldb_sul.");
     }
+
+    unique_ptr<sqldb_sul_regex_oracle> my_oracle(dynamic_cast<sqldb_sul_regex_oracle*>(oracle.get()));
+    if (my_oracle == nullptr) {
+        throw logic_error("ldot only accepts the sqldb_sul_regex_oracle, there are more oracles, but a refactoring is "
+                          "needed in that case.");
+    }
+    oracle.release(); // illegal ownership transfer of a unique_ptr (TODO: oracle should be shared_ptr)
+
+    random_oracle = make_unique<sqldb_sul_random_oracle>(sul);
+
     n_runs = 1;
+    n_subs = 1;
 
     // Initialize data structures.
     my_eval = unique_ptr<evaluation_function>(get_evaluation());
@@ -222,8 +265,7 @@ void ldot_algorithm::run(inputdata& id) {
     std::vector<int> prev_cex = {-1};
 
     while (ENSEMBLE_RUNS > 0 && n_runs <= ENSEMBLE_RUNS) {
-        if (n_runs % 100 == 0)
-            LOG_S(INFO) << "Iteration " << n_runs + 1;
+        LOG_S(INFO) << "Iteration " << n_runs << "." << n_subs;
 
         isolated_states = false; // Continue untill all isolated states are gone.
         // The refinements for the unidentified nodes.
@@ -243,11 +285,8 @@ void ldot_algorithm::run(inputdata& id) {
             if (blue_node->get_size() == 0)
                 throw logic_error("This should never happen: TODO: Delete line");
 
-            // This is a difference with Vandraager (they only complete red nodes),
-            // but we it improved statistical methods
-            // TODO: Robert: do we need this one here really? I can't see it at the moment why
-            // TODO: Hielke: For ldot just make an improved prefix query as initialize more states.
-            /* complete_state(id, my_alphabet, blue_node); */
+            if (BLUE_NODE_COMPLETION)
+                maybe_list_for_completion(blue_node);
 
             refinement_set possible_refs;
             for (red_state_iterator r_it = red_state_iterator(my_apta->get_root()); *r_it != nullptr; ++r_it) {
@@ -312,9 +351,32 @@ void ldot_algorithm::run(inputdata& id) {
         }
 
         if (isolated_states) {
-            // There are still isolated states that need to be resolved.
+            // There are still isolated states that might need to be resolved.
             continue;
         }
+
+        if (!complete_these_states.empty()) {
+            // Complete states. NB First the whole APTA needs to be unrolled, then the information should be added.
+            active_learning_namespace::reset_apta(my_merger.get(), performed_refinements);
+#ifndef NDEBUG
+            DLOG_S(1) << n_runs << ": Undoing " << performed_refinements.size() << " refs.";
+            // printing the model each time
+            print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.", std::to_string(n_runs) + ".com");
+#endif
+            for (auto* ref : performed_refinements)
+                ref->erase();
+
+            performed_refinements.clear();
+
+            for (auto* n : complete_these_states)
+                complete_state(id, n);
+
+            complete_these_states.clear();
+            n_subs++;
+            continue;
+        }
+
+        // MERGING FINISHED, CONTINUE WITH EQUIVALENCE ORACLE;
 
 #ifndef NDEBUG
         test_access_traces();
@@ -341,20 +403,22 @@ void ldot_algorithm::run(inputdata& id) {
             end up in infinite loop.*/
 
             try {
-                optional<pair<vector<int>, int>> query_result = oracle->equivalence_query(my_merger.get(), teacher);
+
+                optional<psql::record> query_result = equivalence(my_oracle.get());
+
                 if (!query_result) {
                     LOG_S(INFO) << n_runs << ":END: Found consistent automaton => Print to " << OUTPUT_FILE;
                     print_current_automaton(my_merger.get(), OUTPUT_FILE,
                                             ".final"); // printing the final model.
                     return;                            // Solved!
                 }
-                auto cex_res = query_result.value();
-                const int type = cex_res.second;
+                auto cex_rec = query_result.value();
+                const int type = cex_rec.type;
                 // If this query could not be found ask for a new counter example.
                 if (type < 0)
                     continue;
 
-                const vector<int>& cex = cex_res.first;
+                const vector<int>& cex = cex_rec.trace;
 
                 if (cex == prev_cex) {
                     throw std::runtime_error("repeated cex");
@@ -366,10 +430,17 @@ void ldot_algorithm::run(inputdata& id) {
 #ifndef NDEBUG
                 std::cout << n_runs << cex_log << cex.size() << " found: " << type << ": " << cex << std::endl;
 #endif
-                proc_counterex(id, cex, type, performed_refinements);
+                proc_counter_record(id, cex_rec, performed_refinements);
                 break;
 
             } catch (const std::runtime_error& e) {
+
+                if (DISTINGUISHING_EQUIVALENCE || RANDOM_EQUIVALENCE) {
+                    // Go over to another oracle.
+                    disable_regex_oracle = true;
+                    continue;
+                }
+
                 std::string exc{e.what()};
                 LOG_S(ERROR) << "We got error: " << exc;
                 if (exc.find("too complex") != std::string::npos) {
@@ -399,5 +470,20 @@ void ldot_algorithm::run(inputdata& id) {
             return;
         }
         ++n_runs;
+    }
+}
+
+optional<psql::record> ldot_algorithm::equivalence(sqldb_sul_regex_oracle* regex_oracle) {
+    if (REGEX_EQUIVALENCE && !disable_regex_oracle)
+        return regex_oracle->equivalence_query_db(my_merger.get(), teacher);
+
+    if (RANDOM_EQUIVALENCE) {
+        return random_oracle->equivalence_query_db(my_merger.get(), teacher, added_traces);
+    }
+
+    if (DISTINGUISHING_EQUIVALENCE) {
+        // TODO: Implement this thing.
+        // Check for all nodes if their representatives are equivalent using a distinguishing query.
+        throw std::runtime_error("Not implemented");
     }
 }

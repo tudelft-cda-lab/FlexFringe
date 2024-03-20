@@ -139,7 +139,7 @@ void active_learning_main_func::run_active_learning() {
             // If reading, not loading, from db, do not drop on initialization.
             POSTGRESQL_DROPTBLS = false;
         }
-        my_sqldb = make_unique<sqldb>(POSTGRESQL_TBLNAME, POSTGRESQL_CONNSTRING);
+        my_sqldb = make_unique<psql::db>(POSTGRESQL_TBLNAME, POSTGRESQL_CONNSTRING);
         if (LOADSQLDB) {
             LOG_S(INFO) << "Loading from trace file " + INPUT_FILE;
             inputdata id = get_inputdata();

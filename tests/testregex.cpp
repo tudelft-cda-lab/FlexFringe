@@ -37,7 +37,7 @@ TEST_CASE( "Test regex_builder functionality", "[regex]" ) {
     the_apta.read_json(input_apta_stream);
     LOG_S(INFO) << "Finished reading apta file.";
     auto coloring = std::make_tuple(PRINT_RED, PRINT_BLUE, PRINT_WHITE);
-    regex_builder builder = regex_builder(the_apta, merger, coloring, sqldb::num2str);
+    regex_builder builder = regex_builder(the_apta, merger, coloring, psql::db::num2str);
     LOG_S(INFO) << "Finished building the regex builder";
     std::map<int, std::regex> regexes = {};
     for (const int type : inputdata_locator::get()->get_types()) {
@@ -49,7 +49,7 @@ TEST_CASE( "Test regex_builder functionality", "[regex]" ) {
     auto parser_strategy = in_order();
 
     for (auto* trace : id.trace_iterator(input_parser, parser_strategy)) {
-        const std::string tr_str = sqldb::vec2str(trace->get_input_sequence(false, false));
+        const std::string tr_str = psql::db::vec2str(trace->get_input_sequence(false, false));
         bool match = std::regex_match(tr_str, regexes[trace->type]);
         CHECK( match );
     }
