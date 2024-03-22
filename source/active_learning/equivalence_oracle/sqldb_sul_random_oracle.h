@@ -29,7 +29,7 @@ class sqldb_sul_random_oracle : public eq_oracle_base {
 
     std::optional<psql::record> equivalence_query_db(state_merger* merger,
                                                      [[maybe_unused]] const std::unique_ptr<base_teacher>& teacher,
-                                                     unordered_set<int> added_traces);
+                                                     const unordered_set<int>& added_traces);
 
     optional<std::pair<std::vector<int>, int>>
     equivalence_query(state_merger* merger, [[maybe_unused]] const std::unique_ptr<base_teacher>& teacher);

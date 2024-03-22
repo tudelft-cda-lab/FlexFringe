@@ -49,12 +49,7 @@
 using namespace std;
 using namespace active_learning_namespace;
 
-inputdata active_learning_main_func::get_inputdata() const {
-    bool read_csv = false;
-    if (INPUT_FILE.compare(INPUT_FILE.length() - 4, INPUT_FILE.length(), ".csv") == 0) {
-        read_csv = true;
-    }
-
+ifstream active_learning_main_func::get_inputstream() const {
     ifstream input_stream(INPUT_FILE);
     cout << "Input file: " << INPUT_FILE << endl;
     if (!input_stream) {
@@ -63,16 +58,25 @@ inputdata active_learning_main_func::get_inputdata() const {
     } else {
         cout << "Using input file: " << INPUT_FILE << endl;
     }
+    return input_stream;
+}
+
+std::unique_ptr<parser> active_learning_main_func::get_parser(ifstream& input_stream) const {
+    if (INPUT_FILE.ends_with(".csv")) {
+        return make_unique<csv_parser>(input_stream, csv::CSVFormat().trim({' '}));
+    } else {
+        return make_unique<abbadingoparser>(input_stream);
+    }
+}
+
+inputdata active_learning_main_func::get_inputdata() const {
+    ifstream input_stream = get_inputstream();
 
     inputdata id;
     inputdata_locator::provide(&id);
-    if (read_csv) {
-        auto input_parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
-        id.read(&input_parser);
-    } else {
-        auto input_parser = abbadingoparser(input_stream);
-        id.read(&input_parser);
-    }
+
+    auto input_parser = get_parser(input_stream);
+    id.read(input_parser.get());
     input_stream.close();
     return id;
 }
@@ -142,8 +146,11 @@ void active_learning_main_func::run_active_learning() {
         my_sqldb = make_unique<psql::db>(POSTGRESQL_TBLNAME, POSTGRESQL_CONNSTRING);
         if (LOADSQLDB) {
             LOG_S(INFO) << "Loading from trace file " + INPUT_FILE;
-            inputdata id = get_inputdata();
-            my_sqldb->load_traces(id);
+            ifstream input_stream = get_inputstream();
+            inputdata id;
+            inputdata_locator::provide(&id);
+            auto input_parser = get_parser(input_stream);
+            my_sqldb->load_traces(id, *input_parser);
             LOG_S(INFO) << "Traces loaded.";
             return;
         }

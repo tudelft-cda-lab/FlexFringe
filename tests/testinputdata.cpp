@@ -309,7 +309,6 @@ TEST_CASE("Inputdata: abbadingo with empty trace", "[parsing]") {
     auto parser = abbadingoparser(input);
 
     auto strategy = in_order();
-
     auto tr_maybe = input_data.read_trace(parser, strategy);
     REQUIRE(tr_maybe.has_value());
     auto tr = tr_maybe.value();

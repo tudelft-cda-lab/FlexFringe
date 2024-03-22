@@ -46,9 +46,8 @@ TEST_CASE( "Test regex_builder functionality", "[regex]" ) {
 
     std::ifstream input_stream{ INPUT_FILE };
     auto input_parser = abbadingoparser(input_stream);
-    auto parser_strategy = in_order();
-
-    for (auto* trace : id.trace_iterator(input_parser, parser_strategy)) {
+    auto strategy = in_order();
+    for (auto* trace : id.trace_iterator(input_parser, strategy)) {
         const std::string tr_str = psql::db::vec2str(trace->get_input_sequence(false, false));
         bool match = std::regex_match(tr_str, regexes[trace->type]);
         CHECK( match );

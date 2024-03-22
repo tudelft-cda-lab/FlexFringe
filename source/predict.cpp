@@ -558,8 +558,8 @@ void predict_header(ostream& output) {
 void predict(state_merger* m, inputdata& idat, ostream& output, parser* input_parser){
     predict_header(output);
 
-    unique_ptr<reader_strategy> parser_strategy = make_unique<in_order>();
-    for (auto* tr : idat.trace_iterator(*input_parser, *parser_strategy)) {
+    auto strategy = in_order();
+    for (auto* tr : idat.trace_iterator(*input_parser, strategy)) {
         predict_trace(m, output, tr);
         add_visits(m, tr);
         tr->erase();

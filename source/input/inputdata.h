@@ -68,7 +68,7 @@ public:
                             ssize_t sliding_window_stride   = 1,
                             bool sliding_window_type        = false);
 
-    std::optional<trace*> read_trace(parser& input_parser, reader_strategy& strategy);
+    std::optional<trace*> read_trace(parser& input_parser, reader_strategy& strategy, bool save = true);
 
     std::pair<trace*, tail*> process_symbol_info(symbol_info &symbolinfo,
                                                  std::unordered_map<std::string, trace*> &trace_map);
@@ -137,10 +137,12 @@ public:
     void clear_traces() noexcept{this->traces.clear();}
 
     /**
-     * @brief Loop over traces using read_trace in sequential fashion.
+     * @brief Loop over traces using read_trace in sequential fashion without saving the traces in a vector.
+     * Erase the trace afterwards to preserve memory using this iterator.
      */
     TraceIterator trace_iterator(parser& input_parser, reader_strategy& strategy);
 };
+
 
 class TraceIterator {
     inputdata& idat;
@@ -164,7 +166,8 @@ class TraceIterator {
         }
         trace* operator*() {return current;}
         void increment() {
-            std::optional<trace*> trace_opt = idat->read_trace(*input_parser, *strategy);
+            bool save = false; // do not save traces to reduce memory consumption.
+            std::optional<trace*> trace_opt = idat->read_trace(*input_parser, *strategy, save);
             if (!trace_opt) { current = nullptr; }
             else { current = trace_opt.value(); }
         }
@@ -172,7 +175,7 @@ class TraceIterator {
         bool operator!=(iterator other) const {return !(*this == other);}
     };
     public:
-    TraceIterator(inputdata& idat, parser& input_parser, reader_strategy& strategy) : idat(idat), input_parser(input_parser), strategy(strategy) {}
+    TraceIterator(inputdata& idat, parser& input_parser, reader_strategy& strategy) : idat(idat), input_parser(input_parser), strategy(strategy){}
     iterator begin() {return iterator{&idat, &input_parser, &strategy};}
     iterator end() {return iterator();}
 };
