@@ -32,6 +32,7 @@
 
 #include "abbadingoparser.h"
 #include "csvparser.h"
+#include "input/abbadingoreader.h"
 #include "inputdata.h"
 #include "inputdatalocator.h"
 #include "main_helpers.h"
@@ -147,10 +148,10 @@ void active_learning_main_func::run_active_learning() {
         if (LOADSQLDB) {
             LOG_S(INFO) << "Loading from trace file " + INPUT_FILE;
             ifstream input_stream = get_inputstream();
-            inputdata id;
+            abbadingo_inputdata id;
             inputdata_locator::provide(&id);
-            auto input_parser = get_parser(input_stream);
-            my_sqldb->load_traces(id, *input_parser);
+            /* auto input_parser = get_parser(input_stream); */
+            my_sqldb->load_traces(id, input_stream);
             LOG_S(INFO) << "Traces loaded.";
             return;
         }

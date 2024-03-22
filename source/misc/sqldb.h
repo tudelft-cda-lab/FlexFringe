@@ -12,6 +12,7 @@
 #ifndef _SQLDB_H_
 #define _SQLDB_H_
 
+#include "input/abbadingoreader.h"
 #include "input/inputdata.h"
 #include <memory>
 #include <pqxx/pqxx>
@@ -75,7 +76,7 @@ class db {
      * @brief Load all traces from inputdata into the database.
      * Also initializing the '_meta' table with the alphabets and output symbols.
      */
-    void load_traces(inputdata& id, parser& input_parser);
+    void load_traces(abbadingo_inputdata& idb, std::ifstream& input_stream);
     void add_row(const std::string& trace, int type);
     void copy_data(const std::string& file_name, char delimiter = '\t');
     void tester(const std::string& val, const std::function<void(std::string)>& func);

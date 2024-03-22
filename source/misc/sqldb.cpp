@@ -1,6 +1,8 @@
 #include "sqldb.h"
 #include "csv.hpp"
+#include "input/abbadingoreader.h"
 #include "input/inputdata.h"
+#include "mem_store.h"
 #include "misc/printutil.h"
 #include "misc/trim.h"
 #include "parameters.h"
@@ -143,7 +145,7 @@ std::vector<std::string> db::get_types() {
     return val;
 }
 
-void db::load_traces(inputdata& id, parser& input_parser) {
+void db::load_traces(abbadingo_inputdata& id, std::ifstream& input_stream) {
     bool check_dups = false; // if there are duplicates, this check is. Set false if low memory footprint required.
     LOG_S(INFO) << "Loading traces";
 
@@ -152,8 +154,10 @@ void db::load_traces(inputdata& id, parser& input_parser) {
 
     std::set<std::string> inserted;
 
-    auto strategy = in_order();
-    for (auto* tr : id.trace_iterator(input_parser, strategy)) {
+    id.read_abbadingo_header(input_stream);
+    for (int i = 0; i < id.get_max_sequences(); ++i) {
+        trace* tr = mem_store::create_trace();
+        id.read_abbadingo_sequence(input_stream, tr);
         auto trace = vec2str(tr->get_input_sequence());
         auto type = tr->get_type();
         if (check_dups) {
