@@ -17,9 +17,9 @@
 
 std::optional<psql::record> sqldb_sul_random_oracle::equivalence_query_db(state_merger* merger,
                                                                           const std::unique_ptr<base_teacher>& teacher,
-                                                                          unordered_set<int> added_traces) {
+                                                                          const unordered_set<int>& added_traces) {
     inputdata& id = *(merger->get_dat());
-    int max_pk = my_sqldb_sul->my_sqldb.max_trace_pk();
+    const int max_pk = my_sqldb_sul->my_sqldb.max_trace_pk();
     std::vector<int> possible_ids;
 
     for (int pk = 0; pk <= max_pk; pk++) {
@@ -28,20 +28,27 @@ std::optional<psql::record> sqldb_sul_random_oracle::equivalence_query_db(state_
     }
     std::shuffle(possible_ids.begin(), possible_ids.end(), RNG);
 
-    for (int i : possible_ids) {
+    for (const int i : possible_ids) {
         auto rec_maybe = my_sqldb_sul->my_sqldb.select_by_pk(i);
         if (!rec_maybe)
             continue;
         psql::record rec = rec_maybe.value();
 
         trace* t = active_learning_namespace::vector_to_trace(rec.trace, id, rec.type);
-        apta_node* ending_state = merger->get_state_from_trace(t)->find();
+        apta_node* ending_state = merger->get_state_from_trace(t);
+
+        // Found a path in database that is not in the APTA
+        if (ending_state == nullptr)
+            return make_optional<psql::record>(rec);
+
+        ending_state = ending_state->find();
         tail* ending_tail = t->end_tail;
+
         if (ending_tail->is_final())
             ending_tail = ending_tail->past();
 
         // predict the type from the current structure.
-        int type = ending_state->get_data()->predict_type(ending_tail);
+        const int type = ending_state->get_data()->predict_type(ending_tail);
 
         // if different from db, return
         if (type != rec.type) {
@@ -55,10 +62,10 @@ std::optional<psql::record> sqldb_sul_random_oracle::equivalence_query_db(state_
 
 optional<std::pair<std::vector<int>, int>>
 sqldb_sul_random_oracle::equivalence_query(state_merger* merger, const std::unique_ptr<base_teacher>& teacher) {
-    unordered_set<int> empty_set;
+    const unordered_set<int> empty_set;
     optional<psql::record> r_maybe = equivalence_query_db(merger, teacher, empty_set);
     if (!r_maybe)
         return std::nullopt;
-    psql::record r = r_maybe.value();
+    const psql::record r = r_maybe.value();
     return std::make_optional<std::pair<std::vector<int>, int>>(std::make_pair(r.trace, r.type));
 }

@@ -143,14 +143,38 @@ std::vector<std::string> db::get_types() {
     return val;
 }
 
-void db::load_traces(inputdata& id) {
+void db::load_traces(inputdata& id, parser& input_parser) {
+    bool check_dups = false; // if there are duplicates, this check is. Set false if low memory footprint required.
     LOG_S(INFO) << "Loading traces";
+
+    pqxx::work tx = pqxx::work(conn);
+    pqxx::stream_to stream = pqxx::stream_to::raw_table(tx, table_name, TRACE_NAME + ", " + TYPE_NAME);
+
+    std::set<std::string> inserted;
+
+    auto strategy = in_order();
+    for (auto* tr : id.trace_iterator(input_parser, strategy)) {
+        auto trace = vec2str(tr->get_input_sequence());
+        auto type = tr->get_type();
+        if (check_dups) {
+            if (inserted.contains(trace))
+                continue;
+        }
+        inserted.insert(trace);
+        stream << std::tuple(trace, type);
+        tr->erase();
+    }
+
+    stream.complete();
+    tx.commit();
+    LOG_S(INFO) << "Loaded traces";
 
     if (POSTGRESQL_DROPTBLS) {
         // TODO: Adding more data incrementally without dropping the tables might yield trouble as
         // inputdata will have a different conversion.
         // Instead a new routine has to be added that initializes the inputdata object with the alphabet and types from
         // the _meta table.
+
         pqxx::work txm = pqxx::work(conn);
 
         // Meta data is inserted in how the conversion for inputdata works.
@@ -160,25 +184,8 @@ void db::load_traces(inputdata& id) {
         txm.exec0(fmt::format("INSERT INTO {0} ({1}, {2}) VALUES ('{3}', {4})", table_name + "_meta", "name", "value",
                               "types", get_sqlarr_from_vec(get_vec_from_map(id.get_r_types()))));
         txm.commit();
+        LOG_S(INFO) << "Created meta";
     }
-
-    pqxx::work tx = pqxx::work(conn);
-    pqxx::stream_to stream = pqxx::stream_to::raw_table(tx, table_name, TRACE_NAME + ", " + TYPE_NAME);
-
-    std::set<std::string> inserted;
-
-    for (auto* tr : id) {
-        auto trace = vec2str(tr->get_input_sequence());
-        auto type = tr->get_type();
-        if (inserted.contains(trace))
-            continue;
-        inserted.insert(trace);
-        stream << std::tuple(trace, type);
-    }
-
-    stream.complete();
-    tx.commit();
-    LOG_S(INFO) << "Loaded traces";
 }
 
 void db::copy_data(const std::string& file_name, char delimiter) {

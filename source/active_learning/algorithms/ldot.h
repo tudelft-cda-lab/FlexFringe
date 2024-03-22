@@ -32,15 +32,20 @@ class ldot_algorithm : public algorithm_base {
 
     int PREFIX_SIZE = 10;
     double BEST_MERGE_THRESHOLD = 2.0; // any value below 1 is a JustTakeBestMerge approach
-    bool BLUE_NODE_COMPLETION = true;
+
+    bool BLUE_NODE_COMPLETION = false; // Keep false, allthough Lsharp has true.
     bool DISTINGUISHING_MERGE_TEST = false;
+
+    // When a cex is found:
+    bool COMPLETE_PATH_CEX = true;   // This completes everything that can be known on the path.
+    bool EXPLORE_OUTSIDE_CEX = true; // This uses a prefix query to explore the PREFIX_SIZE depth from its path.
 
     // EQUIVALENCE SETTINGS
     // If regex equivalence is first, that one starts
     // Then one of random or distinguishing is started.
     // Random takes precedence
-    bool REGEX_EQUIVALENCE = true;
-    bool RANDOM_EQUIVALENCE = false;
+    bool REGEX_EQUIVALENCE = false;
+    bool RANDOM_EQUIVALENCE = true;
     bool DISTINGUISHING_EQUIVALENCE = false;
 
     bool disable_regex_oracle = false;

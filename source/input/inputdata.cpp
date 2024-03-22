@@ -500,13 +500,13 @@ void inputdata::process_symbol_attributes(symbol_info &symbolinfo, tail *t) {
  * @param strategy strategy to follow for trace building
  * @return an optional trace pointer. If it is nullopt, there were not enough symbols to build a trace.
  */
-std::optional<trace *> inputdata::read_trace(parser &input_parser, reader_strategy &strategy) {
+std::optional<trace *> inputdata::read_trace(parser &input_parser, reader_strategy &strategy, bool save) {
     auto tr_maybe = strategy.read(input_parser, *this);
 
     if (tr_maybe.has_value()) {
         auto tr = tr_maybe.value();
         tr->finalize();
-        traces.push_back(tr);
+        if (save) traces.push_back(tr);
     }
 
     return tr_maybe;

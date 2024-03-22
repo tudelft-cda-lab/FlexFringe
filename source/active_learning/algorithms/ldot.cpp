@@ -38,7 +38,7 @@ template <typename T> std::string printAddress(const std::list<T>& v) {
 void ldot_algorithm::proc_counter_record(inputdata& id, const psql::record& rec, const refinement_list& refs) {
     active_learning_namespace::reset_apta(my_merger.get(), refs);
 #ifndef NDEBUG
-    DLOG_S(1) << n_runs << ": Undoing " << refs.size() << " refs.";
+    DLOG_S(1) << n_runs << ": Undoing (for cex) " << refs.size() << " refs.";
     // printing the model each time
     print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.", std::to_string(n_runs) + ".zzz");
 #endif
@@ -48,19 +48,21 @@ void ldot_algorithm::proc_counter_record(inputdata& id, const psql::record& rec,
     vector<int> substring;
     apta_node* n = my_apta->get_root();
 
-    for (const int s : rec.trace) {
-        // Look for fringe, then add to apta.
-        if (n != nullptr) {
-            substring.push_back(s);
-            n = active_learning_namespace::get_child_node(n, s);
-            // apta_node n and substring point now to same place in apta.
-        } else {
-            // apta_node n points to non existent place in apta.
-            auto record_maybe = my_sul->query_trace_opt(substring);
-            if (record_maybe) {
-                add_trace(id, record_maybe.value());
+    if (COMPLETE_PATH_CEX) {
+        for (const int s : rec.trace) {
+            // Look for fringe, then add to apta.
+            if (n != nullptr) {
+                substring.push_back(s);
+                n = active_learning_namespace::get_child_node(n, s);
+                // apta_node n and substring point now to same place in apta.
+            } else {
+                // apta_node n points to non existent place in apta.
+                auto record_maybe = my_sul->query_trace_opt(substring);
+                if (record_maybe) {
+                    add_trace(id, record_maybe.value());
+                }
+                substring.push_back(s);
             }
-            substring.push_back(s);
         }
     }
 
@@ -68,16 +70,19 @@ void ldot_algorithm::proc_counter_record(inputdata& id, const psql::record& rec,
     add_trace(id, rec);
 
     // Now let's walk over the apta again, completing all the states we created.
-    n = my_apta->get_root();
-    for (auto s : rec.trace) {
-        n = active_learning_namespace::get_child_node(n, s);
-        complete_state(id, n);
+    if (EXPLORE_OUTSIDE_CEX) {
+        n = my_apta->get_root();
+        for (auto s : rec.trace) {
+            n = active_learning_namespace::get_child_node(n, s);
+            complete_state(id, n);
+        }
     }
 }
 
 trace* ldot_algorithm::add_trace(inputdata& id, const psql::record& r) {
     added_traces.insert(r.pk);
-    DLOG_S(1) << r.type << " " << r.trace;
+
+    LOG_S(1) << "pk:" << r.pk << " " << r.type << " " << r.trace;
 
     trace* new_trace = active_learning_namespace::vector_to_trace(r.trace, id, r.type);
     id.add_trace_to_apta(new_trace, my_merger->get_aut(), false);
@@ -359,7 +364,7 @@ void ldot_algorithm::run(inputdata& id) {
             // Complete states. NB First the whole APTA needs to be unrolled, then the information should be added.
             active_learning_namespace::reset_apta(my_merger.get(), performed_refinements);
 #ifndef NDEBUG
-            DLOG_S(1) << n_runs << ": Undoing " << performed_refinements.size() << " refs.";
+            DLOG_S(1) << n_runs << ": Undoing (for completion) " << performed_refinements.size() << " refs.";
             // printing the model each time
             print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.", std::to_string(n_runs) + ".com");
 #endif
@@ -394,6 +399,13 @@ void ldot_algorithm::run(inputdata& id) {
         // printing the model each time
         print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.", std::to_string(n_runs) + ".xxx");
 #endif
+
+        // Check if we go for a next run.
+        if (ENSEMBLE_RUNS > 0 && n_runs == ENSEMBLE_RUNS) {
+            LOG_S(INFO) << n_runs << ":END: Maximum of runs reached. Printing automaton to " << OUTPUT_FILE;
+            print_current_automaton(my_merger.get(), OUTPUT_FILE, ".final");
+            return;
+        }
 
         // Check equivalence, if not process the counter example.
         while (true) {
@@ -464,11 +476,6 @@ void ldot_algorithm::run(inputdata& id) {
             }
         }
 
-        if (ENSEMBLE_RUNS > 0 && n_runs == ENSEMBLE_RUNS) {
-            LOG_S(INFO) << n_runs << ":END: Maximum of runs reached. Printing automaton to " << OUTPUT_FILE;
-            print_current_automaton(my_merger.get(), OUTPUT_FILE, ".final");
-            return;
-        }
         ++n_runs;
     }
 }

@@ -22,6 +22,8 @@
 class active_learning_main_func {
   private:
     inputdata get_inputdata() const;
+    ifstream get_inputstream() const;
+    std::unique_ptr<parser> get_parser(ifstream& input_stream) const;
     unique_ptr<psql::db> my_sqldb;
     bool SQLDB = false;
 
