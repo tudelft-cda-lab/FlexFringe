@@ -28,6 +28,8 @@ std::optional<psql::record> sqldb_sul_random_oracle::equivalence_query_db(state_
     }
     std::shuffle(possible_ids.begin(), possible_ids.end(), RNG);
 
+    int n = 0;
+
     for (const int i : possible_ids) {
         auto rec_maybe = my_sqldb_sul->my_sqldb.select_by_pk(i);
         if (!rec_maybe)
@@ -49,6 +51,10 @@ std::optional<psql::record> sqldb_sul_random_oracle::equivalence_query_db(state_
 
         // predict the type from the current structure.
         const int type = ending_state->get_data()->predict_type(ending_tail);
+        t->erase();
+
+        if (n++ % 10000 == 0)
+            LOG_S(INFO) << "Looked at " << n << "/" << possible_ids.size() << " queries for equivalence.";
 
         // if different from db, return
         if (type != rec.type) {
