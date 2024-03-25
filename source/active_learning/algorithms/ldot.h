@@ -25,6 +25,7 @@
 #include "state_merger.h"
 #include <memory>
 #include <vector>
+#include <set>
 
 class ldot_algorithm : public algorithm_base {
   private:
@@ -56,7 +57,7 @@ class ldot_algorithm : public algorithm_base {
     unordered_set<apta_node*> completed_nodes;
     unordered_set<int> added_traces;
     bool isolated_states;
-    std::vector<apta_node*> complete_these_states;
+    std::set<apta_node*> complete_these_states;
     bool maybe_list_for_completion(apta_node* n);
 
     /**

@@ -183,7 +183,7 @@ void ldot_algorithm::process_unidentified(inputdata& id, const std::vector<refin
 // Returns true if already completed
 bool ldot_algorithm::maybe_list_for_completion(apta_node* n) {
     if (!completed_nodes.contains(n)) {
-        complete_these_states.push_back(n);
+        complete_these_states.insert(n);
         return false;
     }
     return true;

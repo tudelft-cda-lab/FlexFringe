@@ -292,12 +292,12 @@ std::optional<record> db::query_trace_opt(const std::string& trace) {
     auto query = fmt::format("SELECT COALESCE( (SELECT pk FROM {1} WHERE {2} = '{3}'), -1)", "", table_name, TRACE_NAME,
                              trace); // The last -1 here is the default value.
     DLOG_S(1) << query;
-    LOG_S(INFO) << "Query: " << trace;
     try {
         pqxx::work tx{conn};
         auto val = tx.query_value<int>(query);
         tx.commit();
-        if (val < -1)
+        LOG_S(INFO) << "Query:" << query << ":" << trace << ":" << val;
+        if (val <= -1)
             return std::nullopt;
         return select_by_pk(val);
     } catch (const pqxx::unexpected_rows& e) {
