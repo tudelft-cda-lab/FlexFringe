@@ -59,6 +59,10 @@ add_library(ActiveLearning STATIC
             equivalence_oracle/string_probability_oracle.cpp
             equivalence_oracle/weight_comparing_oracle.h
             equivalence_oracle/weight_comparing_oracle.cpp
+            equivalence_oracle/sqldb_sul_regex_oracle.h
+            equivalence_oracle/sqldb_sul_regex_oracle.cpp
+            equivalence_oracle/sqldb_sul_random_oracle.h
+            equivalence_oracle/sqldb_sul_random_oracle.cpp
 
             equivalence_oracle/search_strategies/search_base.h
             equivalence_oracle/search_strategies/search_base.cpp
@@ -98,4 +102,4 @@ add_library(ActiveLearning STATIC
             teacher/base_teacher.cpp
 )
 
-target_link_libraries(ActiveLearning ${PYTHON_LIBRARIES} pqxx)
+target_link_libraries(ActiveLearning ${PYTHON_LIBRARIES} libpqxx::pqxx)

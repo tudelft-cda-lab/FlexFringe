@@ -30,9 +30,7 @@ void inputdata::read(parser *input_parser) {
     traces.sort([](auto &left, auto &right) {
         return left->sequence < right->sequence;
     });
-    std::stringstream ss;
-    ss << "Conversions: r_alphabet: " << get_r_alphabet() << " r_types: " << get_r_types();
-    LOG_S(INFO) << ss.str();
+    LOG_S(INFO) << "Conversions: r_alphabet: " << get_r_alphabet() << " r_types: " << get_r_types();
 }
 
 /**
@@ -192,12 +190,14 @@ void inputdata::set_alphabet(const vector<int>& input_alphabet){
 void inputdata::set_alphabet(const std::map<std::string, int>& input_r_alphabet) {
     r_alphabet = input_r_alphabet; // copy-assignment
     alphabet.clear();
-    for (auto const& imap : input_r_alphabet) alphabet.push_back(imap.first);
+    alphabet.resize(input_r_alphabet.size());
+    for (auto const& [str, val] : input_r_alphabet) alphabet[val] = str;
 }
 void inputdata::set_types(const std::map<std::string, int>& input_r_types) {
     r_types = input_r_types; // copy-assignment
     types.clear();
-    for (auto const& imap : input_r_types) types.push_back(imap.first);
+    types.resize(input_r_types.size());
+    for (auto const& [str, val] : input_r_types) types[val] = str;
 }
 
 attribute *inputdata::get_trace_attribute(int attr) {
@@ -363,7 +363,7 @@ trace *inputdata::access_trace(tail *t) {
     for (int i = 0; i < this->get_num_trace_attributes(); ++i) {
         tr->trace_attr[i] = t->tr->trace_attr[i];
     }
-    if (STORE_ACCESS_STRINGS) {
+    if (true) { // used to be STORE_ACCESS_STRINGS
         tail *ti = t->tr->head->split_to_end();
         tail *tir = this->access_tail(ti);
         tr->head = tir;
@@ -500,13 +500,13 @@ void inputdata::process_symbol_attributes(symbol_info &symbolinfo, tail *t) {
  * @param strategy strategy to follow for trace building
  * @return an optional trace pointer. If it is nullopt, there were not enough symbols to build a trace.
  */
-std::optional<trace *> inputdata::read_trace(parser &input_parser, reader_strategy &strategy) {
+std::optional<trace *> inputdata::read_trace(parser &input_parser, reader_strategy &strategy, bool save) {
     auto tr_maybe = strategy.read(input_parser, *this);
 
     if (tr_maybe.has_value()) {
         auto tr = tr_maybe.value();
         tr->finalize();
-        traces.push_back(tr);
+        if (save) traces.push_back(tr);
     }
 
     return tr_maybe;

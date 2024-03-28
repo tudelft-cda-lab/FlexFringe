@@ -4,11 +4,11 @@
 void apta_graph::add_conflicts(state_merger* merger){
     cout << "adding conflicts " << nodes.size() << endl;
 
-	for(node_set::iterator it = nodes.begin(); it != nodes.end(); ++it){
+	for(ordered_node_set::iterator it = nodes.begin(); it != nodes.end(); ++it){
 		graph_node* left = *it;
-		node_set::iterator next_it = it;
+		ordered_node_set::iterator next_it = it;
 		++next_it;
-		for(node_set::iterator it2 = next_it;
+		for(ordered_node_set::iterator it2 = next_it;
 				it2 != nodes.end();
 				++it2){
 			graph_node* right = *it2;
@@ -38,12 +38,12 @@ graph_node::graph_node(apta_node* an){
 }
 
 void apta_graph::remove_edges(int size){
-	node_set to_remove;
-	for(node_set::iterator it = nodes.begin(); it != nodes.end(); ++it){
+	ordered_node_set to_remove;
+	for(ordered_node_set::iterator it = nodes.begin(); it != nodes.end(); ++it){
 		if((*it)->neighbors.size() < size)
 			to_remove.insert(*it);
 	}
-	for(node_set::iterator it = to_remove.begin(); it != to_remove.end(); ++it){
+	for(ordered_node_set::iterator it = to_remove.begin(); it != to_remove.end(); ++it){
 		nodes.erase(*it);
 		for(node_set::iterator it2 = (*it)->neighbors.begin(); it2 != (*it)->neighbors.end(); ++it2){
 			(*it2)->neighbors.erase(*it);
@@ -71,7 +71,7 @@ node_set *apta_graph::find_clique(){
 
 	graph_node* head = NULL;
 	int max_degree = -1;
-	for(node_set::iterator it = nodes.begin();
+	for(ordered_node_set::iterator it = nodes.begin();
 			it != nodes.end();
 			++it){
 		graph_node* n = *it;
@@ -86,7 +86,7 @@ node_set *apta_graph::find_clique(){
 	node_set intersection = head->neighbors;
 
 	max_degree = -1;
-	for(node_set::iterator it = nodes.begin();
+	for(ordered_node_set::iterator it = nodes.begin();
 			it != nodes.end();
 			++it){
 		graph_node* n = *it;
@@ -159,7 +159,7 @@ pair<node_set*, node_set*> apta_graph::find_bipartite(){
     left_result->insert(left_head);
     right_result->insert(right_head);
 
-    for(node_set::iterator it = ordered_nodes.begin(); it != ordered_nodes.end(); ++it) {
+    for(ordered_node_set::iterator it = ordered_nodes.begin(); it != ordered_nodes.end(); ++it) {
         graph_node* node = *it;
         if(node == left_head || node == right_head) continue;
 

@@ -33,6 +33,11 @@ apta_node* active_learning_namespace::get_child_node(apta_node* n, tail* t) {
     return child->find();
 }
 
+apta_node* active_learning_namespace::get_child_node(apta_node* n, int symbol) {
+    apta_node* child = n->child(symbol);
+    return child == nullptr ? nullptr : child->find();
+}
+
 /**
  * @brief There are two versions of this function. In this version we look at if the tree is
  * possibly parsable by the traces.
@@ -161,12 +166,10 @@ bool active_learning_namespace::aut_accepts_trace(trace* tr, apta* aut, const co
  */
 void active_learning_namespace::minimize_apta(list<refinement*>& refs, state_merger* merger) {
     refinement* top_ref = merger->get_best_refinement();
-    cout << "Found a refinement. Do and find another one" << endl;
     while (top_ref != 0) {
         refs.push_back(top_ref);
         top_ref->doref(merger);
         top_ref = merger->get_best_refinement();
-        cout << "Found a refinement. Do and find another one" << endl;
     }
 }
 

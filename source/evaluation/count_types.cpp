@@ -45,11 +45,11 @@ void count_data::print_transition_label_json(iostream& output, int symbol){
 void count_data::print_state_label_json(iostream& output){
     output << "fin: ";
     for(auto & final_count : final_counts){
-        output << final_count.first << ":" << final_count.second << " , ";
+        output << inputdata_locator::get()->string_from_type(final_count.first) << ":" << final_count.second << " , ";
     }
     output << " path: ";
     for(auto & path_count : path_counts){
-        output << path_count.first << ":" << path_count.second << " , ";
+        output << inputdata_locator::get()->string_from_type(path_count.first) << ":" << path_count.second << " , ";
     }
 };
 
@@ -193,8 +193,11 @@ int count_data::predict_type(tail*){
 
 /* default evaluation, count number of performed merges */
 bool count_driven::consistent(state_merger *merger, apta_node* left, apta_node* right, int depth){
-    if(inconsistency_found) return false;    if(!TYPE_CONSISTENT) return true;    auto* l = (count_data*)left->get_data();
-    auto* r = (count_data*)right->get_data();    for(auto & final_count : l->final_counts){
+    if(inconsistency_found) return false;    
+    if(!TYPE_CONSISTENT) return true;    
+    auto* l = (count_data*)left->get_data();
+    auto* r = (count_data*)right->get_data();    
+    for(auto & final_count : l->final_counts){
         int type = final_count.first;
         int count = final_count.second;
         if(count != 0){
@@ -207,7 +210,8 @@ bool count_driven::consistent(state_merger *merger, apta_node* left, apta_node* 
                 }
             }
         }
-    }    return true;
+    }    
+    return true;
 };
 
 void count_driven::update_score(state_merger *merger, apta_node* left, apta_node* right){

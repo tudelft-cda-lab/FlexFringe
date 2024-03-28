@@ -2,8 +2,8 @@
 #include <random>
 
 std::uniform_real_distribution<double> unif(0.0, 1.0);
-std::default_random_engine re;
-double random_double(){ return unif(re); }
+std::default_random_engine RNG{ 42 };  // rand engine with seed.
+double random_double(){ return unif(RNG); }
 
 string HEURISTIC_NAME = "alergia";
 string DATA_NAME = "default";
@@ -12,6 +12,7 @@ string INPUT_FILE = "test.dat";
 string OUTPUT_FILE = "";
 string OUTPUT_TYPE = "both";
 string LOG_PATH = "flexfringe.log";
+string DEBUG_DIR = "debug";
 
 string OPERATION_MODE = "greedy";
 

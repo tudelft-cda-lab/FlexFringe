@@ -14,6 +14,46 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 option(COMPILE_DOCS "This is settable from the command line" OFF)
 #set(CMAKE_MESSAGE_LOG_LEVEL WARNING)
 
+# Default compiler flags:
+# Set type with: -DCMAKE_BUILD_TYPE=Debug
+# Default is Release, set in line 9 of this file.
+# Release:
+# -O3 (Be fast)
+# -DNDEBUG (Disable assert)
+# Debug:
+# -g (Debug symbols)
+# https://stackoverflow.com/a/24767451/8477066
+# Extra:
+# -D_GLIBCXX_DEBUG Use safe STD (with bounds checking etc).
+# -ggdb3 Add extra information for gdb debugger.
+# -g Also for Release, it only makes binary bigger and is still useful in practise.
+# -UDEBUG Removes #ifdef DEBUG SOME_DEBUG_CODE #endif for your own debug code.
+if (MSVC)
+    add_compile_options("/W4" "$<$<CONFIG:RELEASE>:/O2>")
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    add_compile_options(
+      "$<$<CONFIG:RELEASE>:-g;-UDEBUG>"
+      "$<$<CONFIG:DEBUG>:-ggdb3;-D_GLIBCXX_DEBUG>")
+else()
+    add_compile_options(
+      "$<$<CONFIG:RELEASE>-g;-UDEBUG>"
+      "$<$<CONFIG:DEBUG>:-ggdb3;-D_GLIBCXX_DEBUG>"
+      "-fcompare-debug-second") # This flag is only for me, to suppress notes
+endif()
+
+add_compile_definitions(LOGURU_WITH_STREAMS=1)
+#add_compile_definitions(CATCH_CONFIG_EXPERIMENTAL_REDIRECT=1)
+
+# On Windows we generally recommend building libpqxx as a shared
+# library.  On other platforms, we recommend a static library.
+# You can usually skip building the libpqxx tests.
+set(SKIP_BUILD_TEST ON)
+IF (WIN32)
+    set(BUILD_SHARED_LIBS ON)
+ELSE()
+    set(BUILD_SHARED_LIBS OFF)
+ENDIF()
+
 include(FetchContent)
 function(CloneRepository repositoryURL gitTag projectName sourceDir)
   #Commands are left empty so that we only checkout the source and no not perform any kind of build
@@ -32,29 +72,23 @@ endfunction(CloneRepository)
 
 # Please note that libpqxx requires pre-building its library
 # you cannot rely on including header files globally
-# you must link with target_link_libraries(.. pqxx) in EVERY module that requires it.
-# git tag from jan 1 2024.
-CloneRepository("https://github.com/jtv/libpqxx" "d8b6b9977a0c016fc168186b5fcf695d1af28a52" "libpqxx" "build-pqxx")
+# you must link with target_link_libraries(.. lipqxx::pqxx) in EVERY module that requires it.
+# git tag from version 7.9.0.
+CloneRepository("https://github.com/jtv/libpqxx" "2ffb711" "libpqxx" "build-pqxx")
+
+# Boost is really nice library. Much better than std::regex and as many more nice components.
+# set(BOOST_INCLUDE_LIBRARIES asio regex algorithm)
+# set(BOOST_ENABLE_CMAKE ON)
+# FetchContent_Declare(
+#   Boost
+#   URL https://github.com/boostorg/boost/releases/download/boost-1.84.0/boost-1.84.0.tar.xz
+#   URL_MD5 893b5203b862eb9bbd08553e24ff146a
+# )
+# FetchContent_MakeAvailable(Boost)
 
 
 add_subdirectory(source/utility/lexy)
 add_subdirectory(source/utility/fmt-9.1.0)
-
-if (MSVC)
-    add_compile_options("/W4" "$<$<CONFIG:RELEASE>:/O2>")
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    add_compile_options(
-                        "$<$<CONFIG:RELEASE>:-O3>"
-                        "$<$<CONFIG:DEBUG>:-g>")
-else()
-    add_compile_options(
-                        "$<$<CONFIG:RELEASE>:-O3>"
-                        "$<$<CONFIG:DEBUG>:-g>"
-                        "-fcompare-debug-second") # This flag is only for me, to suppress notes
-endif()
-
-add_compile_definitions(LOGURU_WITH_STREAMS=1)
-#add_compile_definitions(CATCH_CONFIG_EXPERIMENTAL_REDIRECT=1)
 
 # needed for the Neural Network, to call Python scripts
 find_package(PythonLibs REQUIRED)
@@ -99,7 +133,7 @@ target_link_libraries(flexfringe
         Util
         foonathan::lexy
         fmt::fmt
-        pqxx
+        libpqxx::pqxx
         )
 
 
@@ -137,7 +171,10 @@ if(NOT SKIP_TESTS)
             tests/testcsvparser.cpp
             tests/testabbadingoparser.cpp
             source/main.cpp tests/testinputdata.cpp
-            tests/testobservationtable.cpp)
+            tests/testobservationtable.cpp
+            tests/testregex.cpp
+            )
+
 
     if(MSVC)
         target_link_libraries(runtests
@@ -163,7 +200,7 @@ if(NOT SKIP_TESTS)
             Util
             foonathan::lexy
             fmt::fmt
-            pqxx
+            libpqxx::pqxx
             ${CMAKE_THREAD_LIBS_INIT})
 
     if(NOT WIN32)

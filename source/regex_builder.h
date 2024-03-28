@@ -13,8 +13,8 @@
 #define __REGEX_BUILDER_H__
 
 #include <string>
-#include <unordered_map>
-#include <unordered_set>
+#include <map>
+#include <set>
 #include <queue>
 #include "apta.h"
 #include "state_merger.h"
@@ -39,28 +39,25 @@ public:
      * See: https://stackoverflow.com/questions/26074090/iterating-through-a-utf-8-string-in-c11
      */
     
-    explicit regex_builder(apta& the_apta, state_merger& merger, std::tuple<bool, bool, bool>& coloring, std::unordered_map<int, char>& mapping);
+    explicit regex_builder(apta& the_apta, state_merger& merger, std::tuple<bool, bool, bool>& coloring, std::map<int, char>& mapping);
     explicit regex_builder(apta& the_apta, state_merger& merger, std::tuple<bool, bool, bool>& coloring, const std::function<char(int)>& mapping_func);
+
+    std::map<std::string, std::vector<apta_node*>> get_types_map() const { return types_map; }
 
     void initialize(apta& the_apta, state_merger& merger, std::tuple<bool, bool, bool>& coloring, const std::function<char(int)>& mapping_func);
 
     apta_node* root;
 
     // States of the DFA
-    std::unordered_set<apta_node*> states;
+    std::set<apta_node*> states;
     // Transitions in the DFA
-    std::unordered_map<apta_node*, std::unordered_map<apta_node*, char>> transitions;
+    std::map<apta_node*, std::map<apta_node*, std::string>> transitions;
     // Reverse transitions in the DFA
-    std::unordered_map<apta_node*, std::unordered_set<apta_node*>> r_transitions;
+    std::map<apta_node*, std::set<apta_node*>> r_transitions;
 
     // Predicted types of each state
-    std::unordered_map<int, std::vector<apta_node*>> types_map;
+    std::map<std::string, std::vector<apta_node*>> types_map;
 
-
-    // The transition to the final state is empty, we use the "audible bell" character to indicate this.
-    // as I hope that is never a real symbol. Another possible char is '\0', but I don't know
-    // if other weird convetions can break that, because '\0' is the default when char is initialized.
-    char EMPTY = '\a';
 
     /**
      * @brief Convert the APTA to a regex string.
@@ -69,14 +66,24 @@ public:
      * This is inspired by the implementation found here:
      * https://github.com/caleb531/automata/blob/c39df7d588164e64a0c090ddf89ab5118ee42e47/automata/fa/gnfa.py#L345
      *
+     * Argument is the external string representation.
+     * A second argument parts indicate to split the amount of final states in multiple ones.
+     * This results in more but shorter regexes.
      */
+    std::string to_regex(const std::string& output_state);
     std::string to_regex(int output_state);
+    std::vector<std::string> to_regex(int output_state, size_t parts);
+    std::vector<std::string> to_regex(const std::string& output_state, size_t parts);
+    std::string to_regex(std::vector<apta_node*> final_nodes);
 
     /**
      * @brief Check if the regex string needs to bracketed.
      * If a | is not inside existing brackets, it should be brackets.
      */
     bool brackets(const std::string& regex);
+    std::string add_maybe_brackets(const std::string& regex);
+
+    void print_my_transitions(std::map<apta_node*, std::map<apta_node*, std::string>> trans);
 };
 
 #endif
