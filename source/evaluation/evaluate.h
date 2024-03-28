@@ -13,6 +13,7 @@ class evaluation_function;
 class apta_node;
 class tail;
 
+#include "misc/printutil.h"
 #include "evaluation_factory.h"
 #include "utility/loguru.hpp"
 #include "state_merger.h"

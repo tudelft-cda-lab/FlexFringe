@@ -10,6 +10,7 @@
 #include "parameters.h"
 #include "evaluation_factory.h"
 #include "evaluate.h"
+#include "misc/printutil.h"
 #include "utility/loguru.hpp"
 #include "input/abbadingoreader.h"
 #include "input/inputdatalocator.h"
@@ -36,6 +37,7 @@ apta::apta(){
 
     LOG_S(INFO) << "Creating APTA data structure";
     root = new apta_node();
+    root->access_trace = mem_store::create_trace();
     root->red = true;
     merger = nullptr;
 }
@@ -315,7 +317,7 @@ void apta::read_json(istream& input_stream){
         states[n["id"]] = node;
         int r = n["isred"];
         node->red = r;
-        if (n["id"] == 0) {
+        if (n["id"] == -1) {
             root = node;
         }
         node->number = n["id"];
@@ -336,7 +338,7 @@ void apta::read_json(istream& input_stream){
     for (int i = 1; i < read_apta["nodes"].size(); ++i) {
         json n = read_apta["nodes"][i];
         apta_node *node = states[n["id"]];
-        if(n["source"] != -1)
+        if(n["id"] != -1)
             node->source = states[n["source"]];
         else
             node->source = nullptr;

@@ -31,6 +31,7 @@
 namespace active_learning_namespace {
 
 apta_node* get_child_node(apta_node* n, tail* t);
+apta_node* get_child_node(apta_node* n, int symbol);
 bool aut_accepts_trace(trace* tr, apta* aut);
 bool aut_accepts_trace(trace* tr, apta* aut, const count_driven* const eval);
 

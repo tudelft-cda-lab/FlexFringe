@@ -12,7 +12,6 @@
 #include "main_helpers.h"
 
 void print_current_automaton(state_merger* merger, const string& output_file, const string& append_string){
-    merger->renumber_states();
     if (OUTPUT_TYPE == "dot" || OUTPUT_TYPE == "both") {
         merger->print_dot(output_file + append_string + ".dot");
     }
@@ -47,7 +46,7 @@ evaluation_function* get_evaluation(){
     }
     try {
         eval = (DerivedRegister<evaluation_function>::getMap())->at(HEURISTIC_NAME)();
-        std::cout << "Using heuristic " << HEURISTIC_NAME << std::endl;
+        std::cerr << "Using heuristic " << HEURISTIC_NAME << std::endl;
         LOG_S(INFO) <<  "Using heuristic " << HEURISTIC_NAME;
     } catch(const std::out_of_range& oor ) {
         LOG_S(WARNING) << "No named heuristic found, defaulting back on -h flag";

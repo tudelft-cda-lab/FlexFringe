@@ -1,6 +1,9 @@
 // -------------------------------------------------------------------
 // --- Reversed iterable https://stackoverflow.com/a/28139075/8477066
 
+#ifndef _UTILS_H_
+#define _UTILS_H_
+
 #include <iterator>
 
 namespace utils {
@@ -42,3 +45,4 @@ template <class MapType> class MapKeyIterator {
 template <class MapType> MapKeyIterator<MapType> map_keys(MapType& m) { return MapKeyIterator<MapType>(m); }
 
 } // namespace utils
+#endif

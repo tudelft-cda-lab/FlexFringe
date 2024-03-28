@@ -2,6 +2,7 @@
 /// \brief Command line parameter processing and entry point.
 
 #include <cstdlib>
+#include <ranges>
 #include "greedy.h"
 #include "state_merger.h"
 #include "evaluate.h"
@@ -21,13 +22,15 @@
 
 #include "main_helpers.h" // TODO: shall we leave this or can we find a smarter structure to incorporate the active learning?
 
-#include "loguru.hpp"
+#include "misc/printutil.h"
+#include "utility/loguru.hpp"
 #include "CLI11.hpp"
 
 #include "parameters.h"
 #include "csv.hpp"
 #include "regex_builder.h"
 #include "misc/sqldb.h"
+#include "misc/utils.h"
 #include "input/inputdata.h"
 #include "input/inputdatalocator.h"
 #include "input/parsers/csvparser.h"
@@ -57,7 +60,14 @@ string COMMAND;
  * @param param The parameters. 
  */
 void run() {
-    if(OUTPUT_FILE.empty()) OUTPUT_FILE = INPUT_FILE + ".ff";
+    if(OUTPUT_FILE.empty()) {
+        if (!POSTGRESQL_TBLNAME.empty()) {
+            OUTPUT_FILE = POSTGRESQL_TBLNAME + ".ff";
+        } else {
+            OUTPUT_FILE = INPUT_FILE + ".ff";
+        }
+    }
+
 
     if(OPERATION_MODE == "active_learning"){
         cout << "Run in active learning mode." << endl;
@@ -82,11 +92,13 @@ void run() {
         the_apta->read_json(input_apta_stream);
         LOG_S(INFO) << "Finished reading apta file.";
         auto coloring = std::make_tuple(PRINT_RED, PRINT_BLUE, PRINT_WHITE);
-        regex_builder builder = regex_builder(*the_apta, *merger, coloring, sqldb::num2str);
+        regex_builder builder = regex_builder(*the_apta, *merger, coloring, psql::db::num2str);
         LOG_S(INFO) << "Finished building the regex builder";
         auto delimiter = "\t";
-        for (auto type : inputdata_locator::get()->get_types()) {
-            cout << std::to_string(type) << delimiter << builder.to_regex(type) << endl;
+        for (std::string type : std::views::keys(inputdata_locator::get()->get_r_types())) {
+            for (auto regex : builder.to_regex(type, 1)) 
+                /* cout << "Got regex with size: " << regex.size() << endl; */
+                cout << type << delimiter << regex << endl;
         }
         return;
     }
@@ -205,9 +217,7 @@ void run() {
             the_apta->read_json(input_apta_stream);
             cout << "Finished reading apta file." << endl;
 
-            std::ostringstream res_stream;
-            res_stream << APTA_FILE << ".result";
-            ofstream output(res_stream.str().c_str());
+            ofstream output(OUTPUT_FILE + ".result");
 
             // TODO: @Sicco think about where to put these things to avoid duplicate code and havea nice flow
             if(read_csv) {
@@ -289,6 +299,7 @@ int main(int argc, char *argv[]){
     app.add_option("--outputfile", OUTPUT_FILE, "The prefix of the output file name. Default is same as input.");
     app.add_option("--output", OUTPUT_TYPE, "Switch between output in dot, json, or both (default) formats.");
     app.add_option("--logpath", LOG_PATH, "The path to write the flexfringe log file to. Defaults to \"flexfringe.log\"");
+    app.add_option("--debugdir", DEBUG_DIR, "The dir to write any debug data.");
     app.set_config("--ini", default_file_name, "Read an ini file", false);
     app.add_option("--mode", OPERATION_MODE, "batch (default), interactive, or stream depending on the mode of operation.");
     app.add_option("--heuristic-name,--heuristic_name", HEURISTIC_NAME, "Name of the merge heuristic to use; default count_driven. Use any heuristic in the evaluation directory. It is often beneficial to write your own, as heuristics are very application specific.")->required();
@@ -359,7 +370,7 @@ int main(int argc, char *argv[]){
     app.add_option("--symmetry", SYMMETRY_BREAKING, "Add symmetry breaking predicates to the SAT encoding (setting 0 or 1), based on Ulyantsev et al. BFS symmetry breaking; default=1. Advice: in our experience this only improves solving speed.");
     app.add_option("--forcing", FORCING, "Add predicates to the SAT encoding that force transitions in the learned DFA to be used by input examples (setting 0 or 1); default=0. Advice: leads to non-complete models. When the data is sparse, this should be set to 1. It does make the instance larger and can have a negative effect on the solving time.");
 
-    app.add_option("--printblue", PRINT_BLUE, "Print blue states in the .dot file? Default 1 (true).");
+    app.add_option("--printblue", PRINT_BLUE, "Print blue states in the .dot file? Default 0 (false).");
     app.add_option("--printwhite", PRINT_WHITE, "Print white states in the .dot file? These are typically sinks states, i.e., states that have not been considered for merging. Default 0 (false).");
     app.add_option("--outputsinks", OUTPUT_SINKS, "Print sink states and transition in a separate json file. Default 0 (false).");
 

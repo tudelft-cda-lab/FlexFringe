@@ -17,9 +17,9 @@
 #include "lstar.h"
 #include "probabilistic_lsharp.h"
 #include "probabilistic_lsharp_v2.h"
-#include "weighted_lsharp.h"
 #include "transformer_lsharp.h"
 #include "transformer_weighted_lsharp.h"
+#include "weighted_lsharp.h"
 
 #include "active_sul_oracle.h"
 #include "dfa_sul.h"
@@ -28,15 +28,18 @@
 #include "nn_sul_base.h"
 #include "nn_weighted_output_sul.h"
 #include "sqldb_sul.h"
+#include "sqldb_sul_regex_oracle.h"
 
 #include "abbadingoparser.h"
 #include "csvparser.h"
+#include "input/abbadingoreader.h"
 #include "inputdata.h"
 #include "inputdatalocator.h"
 #include "main_helpers.h"
 #include "parameters.h"
 
-#include "loguru.hpp"
+#include "misc/printutil.h"
+#include "utility/loguru.hpp"
 
 #include <cassert>
 #include <fstream>
@@ -47,12 +50,7 @@
 using namespace std;
 using namespace active_learning_namespace;
 
-inputdata active_learning_main_func::get_inputdata() const {
-    bool read_csv = false;
-    if (INPUT_FILE.compare(INPUT_FILE.length() - 4, INPUT_FILE.length(), ".csv") == 0) {
-        read_csv = true;
-    }
-
+ifstream active_learning_main_func::get_inputstream() const {
     ifstream input_stream(INPUT_FILE);
     cout << "Input file: " << INPUT_FILE << endl;
     if (!input_stream) {
@@ -61,16 +59,25 @@ inputdata active_learning_main_func::get_inputdata() const {
     } else {
         cout << "Using input file: " << INPUT_FILE << endl;
     }
+    return input_stream;
+}
+
+std::unique_ptr<parser> active_learning_main_func::get_parser(ifstream& input_stream) const {
+    if (INPUT_FILE.ends_with(".csv")) {
+        return make_unique<csv_parser>(input_stream, csv::CSVFormat().trim({' '}));
+    } else {
+        return make_unique<abbadingoparser>(input_stream);
+    }
+}
+
+inputdata active_learning_main_func::get_inputdata() const {
+    ifstream input_stream = get_inputstream();
 
     inputdata id;
     inputdata_locator::provide(&id);
-    if (read_csv) {
-        auto input_parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
-        id.read(&input_parser);
-    } else {
-        auto input_parser = abbadingoparser(input_stream);
-        id.read(&input_parser);
-    }
+
+    auto input_parser = get_parser(input_stream);
+    id.read(input_parser.get());
     input_stream.close();
     return id;
 }
@@ -112,6 +119,9 @@ unique_ptr<base_teacher> active_learning_main_func::select_teacher_class(shared_
  */
 unique_ptr<eq_oracle_base> active_learning_main_func::select_oracle_class(shared_ptr<sul_base>& sul,
                                                                           const bool ACTIVE_SUL) const {
+    if (SQLDB) {
+        return unique_ptr<eq_oracle_base>(new sqldb_sul_regex_oracle(sul));
+    }
     if (ACTIVE_SUL) {
         return unique_ptr<eq_oracle_base>(new active_sul_oracle(sul));
     }
@@ -134,11 +144,14 @@ void active_learning_main_func::run_active_learning() {
             // If reading, not loading, from db, do not drop on initialization.
             POSTGRESQL_DROPTBLS = false;
         }
-        my_sqldb = make_unique<sqldb>(POSTGRESQL_TBLNAME, POSTGRESQL_CONNSTRING);
+        my_sqldb = make_unique<psql::db>(POSTGRESQL_TBLNAME, POSTGRESQL_CONNSTRING);
         if (LOADSQLDB) {
             LOG_S(INFO) << "Loading from trace file " + INPUT_FILE;
-            inputdata id = get_inputdata();
-            my_sqldb->load_traces(id);
+            ifstream input_stream = get_inputstream();
+            abbadingo_inputdata id;
+            inputdata_locator::provide(&id);
+            /* auto input_parser = get_parser(input_stream); */
+            my_sqldb->load_traces(id, input_stream);
             LOG_S(INFO) << "Traces loaded.";
             return;
         }
@@ -167,7 +180,7 @@ void active_learning_main_func::run_active_learning() {
         STORE_ACCESS_STRINGS = true;
         algorithm = unique_ptr<algorithm_base>(new weighted_lsharp_algorithm(sul, teacher, oracle));
     } else if (ACTIVE_LEARNING_ALGORITHM == "l_dot") {
-        STORE_ACCESS_STRINGS = true;
+        STORE_ACCESS_STRINGS = true; // refinement uses this to get nodes, but that seems buggy somehow.
         algorithm = unique_ptr<algorithm_base>(new ldot_algorithm(sul, teacher, oracle));
     } else if (ACTIVE_LEARNING_ALGORITHM == "transformer_l_sharp") {
         STORE_ACCESS_STRINGS = true;

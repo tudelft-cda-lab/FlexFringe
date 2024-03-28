@@ -76,3 +76,5 @@ public:
     std::optional<trace*> read(parser& input_parser, inputdata& idata) override;
 };
 #endif //FLEXFRINGE_READER_STRATEGY_H
+
+
