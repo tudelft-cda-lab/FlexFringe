@@ -154,13 +154,13 @@ void run() {
         eval->initialize_before_adding_traces();
         id.add_traces_to_apta(the_apta);
         eval->initialize_after_adding_traces(merger);
-//        print_current_automaton(merger, OUTPUT_FILE, ".init");
+        print_current_automaton(merger, OUTPUT_FILE, ".init");
         LOG_S(INFO) << "Greedy mode selected, starting run";
 
         // run the state merger
-//        greedy_run(merger);
+        greedy_run(merger);
 
-//        print_current_automaton(merger, OUTPUT_FILE, ".final");
+        print_current_automaton(merger, OUTPUT_FILE, ".final");
     } else if(OPERATION_MODE == "satsolver") {
         std::cout << "satsolver mode selected" << std::endl;
 
