@@ -81,6 +81,8 @@ evaluation_function* get_evaluation(){
 }
 
 void read_input_file(inputdata* id) {
+    auto start = std::chrono::steady_clock::now();
+
     std::ifstream input_stream(INPUT_FILE);
 
     if(!input_stream) {
@@ -111,6 +113,10 @@ void read_input_file(inputdata* id) {
     } else {
         id->read(parser.get());
     }
+
+    auto end = std::chrono::steady_clock::now();
+    auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    std::cout << "Parsing took " << elapsed_ms << " ms" << std::endl;
 }
 
 /**
@@ -148,13 +154,13 @@ void run() {
         eval->initialize_before_adding_traces();
         id.add_traces_to_apta(the_apta);
         eval->initialize_after_adding_traces(merger);
-        print_current_automaton(merger, OUTPUT_FILE, ".init");
+//        print_current_automaton(merger, OUTPUT_FILE, ".init");
         LOG_S(INFO) << "Greedy mode selected, starting run";
 
         // run the state merger
-        greedy_run(merger);
+//        greedy_run(merger);
 
-        print_current_automaton(merger, OUTPUT_FILE, ".final");
+//        print_current_automaton(merger, OUTPUT_FILE, ".final");
     } else if(OPERATION_MODE == "satsolver") {
         std::cout << "satsolver mode selected" << std::endl;
 
