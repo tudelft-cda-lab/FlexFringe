@@ -7,22 +7,16 @@
 #include <algorithm>
 
 const std::vector<std::string> &symbol_info::get(const std::string &name) {
-//    if (!properties.contains(name)) {
-//        properties.emplace(name, std::vector<std::string>{});
-//    }
-//    return properties.at(name);
         auto idx = get_property_index(name);
         return properties[idx];
 }
 
 void symbol_info::set(const std::string &name, const std::vector<std::string> &property_list) {
-//    properties.emplace(name, property_list);
     auto idx = get_property_index(name);
     properties[idx] = {property_list.begin(), property_list.end()};
 }
 
 void symbol_info::set(const std::string &name, const std::string &property) {
-//    properties.emplace(name, std::vector<std::string>{property});
     auto idx = get_property_index(name);
     properties[idx] = { property };
 }
@@ -44,6 +38,7 @@ ssize_t symbol_info::get_property_index(const std::string &name) {
                                    name));
 
     if (idx > symbol_info::property_types.size()) {
+        // TODO: Properly handle this
         abort();
     }
 

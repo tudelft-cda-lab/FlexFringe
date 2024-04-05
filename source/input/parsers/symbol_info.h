@@ -23,11 +23,11 @@
 class symbol_info {
 private:
     static const ssize_t num_possible_properties = 6;
+    // TODO: this could probably just be an enum
     static inline std::array<std::string, num_possible_properties> property_types {"id", "type", "symb", "eval", "attr", "tattr"};
     static ssize_t get_property_index(const std::string &name);
 
     std::array<std::vector<std::string>, 6> properties;
-//    std::unordered_map<std::string, std::vector<std::string>> properties;
     std::shared_ptr<std::vector<attribute_info>> trace_attribute_info;
     std::vector<attribute_info> symbol_attribute_info;
 
