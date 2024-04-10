@@ -26,6 +26,7 @@
 #include <memory>
 #include <vector>
 
+/** Debugging function */
 template <typename T> std::string printAddress(const std::list<T>& v) {
     stringstream ss;
     ss << "[";
@@ -33,6 +34,18 @@ template <typename T> std::string printAddress(const std::list<T>& v) {
         ss << &e << ", ";
     ss << "]\n";
     return ss.str();
+}
+
+/** Debugging function */
+void ldot_algorithm::test_access_traces() {
+    return; // For debug
+    for (APTA_iterator Ait = APTA_iterator(my_apta->get_root()); *Ait != 0; ++Ait) {
+        apta_node* n = *Ait;
+        apta_node* access_node = my_merger->get_state_from_trace(n->get_access_trace());
+        /* if (access_node == nullptr) */
+        /*     continue; */
+        assert(access_node->find() == n->find());
+    }
 }
 
 void ldot_algorithm::proc_counter_record(inputdata& id, const psql::record& rec, const refinement_list& refs) {
@@ -139,13 +152,17 @@ void ldot_algorithm::process_unidentified(inputdata& id, const std::vector<refin
 
         // compare more than 2.
 
+        // Take two best and see what we can do
         auto it = consistent_possible_refs.begin();
         refinement* best_merge = *it;
         it++;
         refinement* sec_merge = *it;
+
         if (sec_merge->score * BEST_MERGE_THRESHOLD < best_merge->score) {
+            // best merge has clearly much better score than sec merge.
             merge_processed_ref(best_merge);
         } else {
+            // Not clear, gather more information
             if (DISTINGUISHING_MERGE_TEST) {
                 throw std::runtime_error("Not implemented");
                 // TODO:
@@ -161,10 +178,30 @@ void ldot_algorithm::process_unidentified(inputdata& id, const std::vector<refin
                 merge_refinement* best_merge_ref = dynamic_cast<merge_refinement*>(best_merge);
                 merge_refinement* sec_merge_ref = dynamic_cast<merge_refinement*>(sec_merge);
 
-                bool already_completed_1 = maybe_list_for_completion(best_merge_ref->blue);
-                bool already_completed_2 = maybe_list_for_completion(best_merge_ref->red);
-                bool already_completed_3 = maybe_list_for_completion(sec_merge_ref->red);
-                if (already_completed_1 && already_completed_2 && already_completed_3) {
+                std::vector<bool> complete_checks;
+
+                // Check for the blue node and the red nodes.
+                // The blue node is the same.
+                if (COMPLETE_REPRESENTED) {
+                    for (apta_node* n : represented_by(best_merge_ref->blue)) {
+                        complete_checks.push_back(maybe_list_for_completion(n));
+                    }
+                    for (apta_node* n : represented_by(best_merge_ref->red)) {
+                        complete_checks.push_back(maybe_list_for_completion(n));
+                    }
+                    for (apta_node* n : represented_by(sec_merge_ref->red)) {
+                        complete_checks.push_back(maybe_list_for_completion(n));
+                    }
+                } else {
+                    complete_checks = {maybe_list_for_completion(best_merge_ref->blue),
+                                       maybe_list_for_completion(best_merge_ref->red),
+                                       maybe_list_for_completion(sec_merge_ref->red)};
+                }
+
+                bool all_already_completed =
+                    std::all_of(std::begin(complete_checks), std::end(complete_checks), [](bool i) { return i; });
+
+                if (all_already_completed) {
                     // merge the best anyway, there cannot be more information found.
                     merge_processed_ref(best_merge);
                 } else {
@@ -220,15 +257,26 @@ bool ldot_algorithm::complete_state(inputdata& id, apta_node* n) {
     return true;
 }
 
-void ldot_algorithm::test_access_traces() {
-    return; // For debug
-    for (APTA_iterator Ait = APTA_iterator(my_apta->get_root()); *Ait != 0; ++Ait) {
-        apta_node* n = *Ait;
-        apta_node* access_node = my_merger->get_state_from_trace(n->get_access_trace());
-        /* if (access_node == nullptr) */
-        /*     continue; */
-        assert(access_node->find() == n->find());
+std::vector<apta_node*> ldot_algorithm::represented_by(apta_node* n) {
+    n = n->find();
+    std::vector<apta_node*> res;
+    std::queue<apta_node*> nodes_to_process;
+    nodes_to_process.push(n);
+    while (!nodes_to_process.empty()) {
+
+        n = nodes_to_process.front();
+        nodes_to_process.pop();
+
+        res.push_back(n);
+
+        if (n->get_merged_head() != nullptr) {
+            nodes_to_process.push(n->get_merged_head());
+        }
+        if (n->get_next_merged() != nullptr) {
+            nodes_to_process.push(n->get_next_merged());
+        }
     }
+    return res;
 }
 
 void ldot_algorithm::run(inputdata& id) {
@@ -265,7 +313,10 @@ void ldot_algorithm::run(inputdata& id) {
 
     // init the root node, s.t. we have blue states to iterate over
     complete_state(id, my_apta->get_root());
-    print_current_automaton(my_merger.get(), "debug", "");
+
+#ifndef NDEBUG
+    print_current_automaton(my_merger.get(), DEBUG_DIR + "/debug", "");
+#endif
 
     std::vector<int> prev_cex = {-1};
 
@@ -287,11 +338,11 @@ void ldot_algorithm::run(inputdata& id) {
         for (blue_state_iterator b_it = blue_state_iterator(my_apta->get_root()); *b_it != nullptr; ++b_it) {
             auto* blue_node = *b_it;
 
-            if (blue_node->get_size() == 0)
-                throw logic_error("This should never happen: TODO: Delete line");
+            /* if (blue_node->get_size() == 0) */
+            /*     throw logic_error("This should never happen: TODO: Delete line"); */
 
-            if (BLUE_NODE_COMPLETION)
-                maybe_list_for_completion(blue_node);
+            /* if (BLUE_NODE_COMPLETION) */
+            /*     maybe_list_for_completion(blue_node); */
 
             refinement_set possible_refs;
             for (red_state_iterator r_it = red_state_iterator(my_apta->get_root()); *r_it != nullptr; ++r_it) {
@@ -453,7 +504,7 @@ void ldot_algorithm::run(inputdata& id) {
                     continue;
                 }
 
-                std::string exc{e.what()};
+                const std::string exc{e.what()};
                 LOG_S(ERROR) << "We got error: " << exc;
                 if (exc.find("too complex") != std::string::npos) {
                     // Regex got too big, print and return.

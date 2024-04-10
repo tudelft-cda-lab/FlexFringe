@@ -198,7 +198,7 @@ void db::copy_data(const std::string& file_name, char delimiter) {
     csv::CSVReader reader(file_name, format);
     pqxx::work tx = pqxx::work(conn);
     pqxx::stream_to stream = pqxx::stream_to::raw_table(tx, table_name, TRACE_NAME + ", " + TYPE_NAME);
-    for (csv::CSVRow& row : reader) {
+    for (const csv::CSVRow& row : reader) {
         std::vector<std::string> data;
         for (csv::CSVField field : row) {
             data.push_back(field.get<>());
@@ -214,7 +214,18 @@ void db::prefix_query(const std::string& prefix, const std::function<bool(record
     const std::string query =
         fmt::format("SELECT pk, {0}, {1} FROM {2} WHERE {0} LIKE '{3}%'", TRACE_NAME, TYPE_NAME, table_name, prefix);
     for (auto const& [pk, trace, type] : tx.stream<int, std::string, int>(query)) {
-        record r{pk, str2vec(trace), type};
+        const record r{pk, str2vec(trace), type};
+        if (!func(r))
+            break;
+    }
+    tx.commit();
+}
+
+void db::stream_traces(const std::function<bool(record)>& func) {
+    pqxx::work tx{conn};
+    const std::string query = fmt::format("SELECT pk, {0}, {1} FROM {2}", TRACE_NAME, TYPE_NAME, table_name);
+    for (auto const& [pk, trace, type] : tx.stream<int, std::string, int>(query)) {
+        const record r{pk, str2vec(trace), type};
         if (!func(r))
             break;
     }
