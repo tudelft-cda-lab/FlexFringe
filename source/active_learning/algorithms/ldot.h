@@ -52,7 +52,8 @@ class ldot_algorithm : public algorithm_base {
     bool RANDOM_EQUIVALENCE = true;
     bool DISTINGUISHING_EQUIVALENCE = false;
 
-    bool COMPLETE_REPRESENTED = true;
+    // Also complete the represented nodes instead of only the representative.
+    bool COMPLETE_REPRESENTED = false;
 
     // END -- SETTINGS ******
 
