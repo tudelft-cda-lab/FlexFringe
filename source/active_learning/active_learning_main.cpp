@@ -70,14 +70,13 @@ std::unique_ptr<parser> active_learning_main_func::get_parser(ifstream& input_st
     }
 }
 
-inputdata active_learning_main_func::get_inputdata() const {
+inputdata* active_learning_main_func::get_inputdata() const {
     ifstream input_stream = get_inputstream();
 
-    inputdata id;
-    inputdata_locator::provide(&id);
+    inputdata* id = inputdata_locator::get();
 
     auto input_parser = get_parser(input_stream);
-    id.read(input_parser.get());
+    id->read(input_parser.get());
     input_stream.close();
     return id;
 }
@@ -133,6 +132,8 @@ unique_ptr<eq_oracle_base> active_learning_main_func::select_oracle_class(shared
  *
  */
 void active_learning_main_func::run_active_learning() {
+    inputdata id;
+    inputdata_locator::provide(&id);
     assertm(ENSEMBLE_RUNS > 0, "nruns parameter must be larger than 0 for active learning.");
 
     // Setting some initialization for learning from SQLDB.
@@ -194,14 +195,12 @@ void active_learning_main_func::run_active_learning() {
 
     if (ACTIVE_SUL) {
         LOG_S(INFO) << "We do not want to run the input file, alphabet and input data must be inferred from SUL.";
-        inputdata id;
-        inputdata_locator::provide(&id);
 
         sul->pre(id);
         algorithm->run(id);
     } else {
         LOG_S(INFO) << "We only want to read the inputdata when we learn passively or from sequences.";
-        inputdata id = get_inputdata();
+        get_inputdata();
 
         sul->pre(id);
         algorithm->run(id);
