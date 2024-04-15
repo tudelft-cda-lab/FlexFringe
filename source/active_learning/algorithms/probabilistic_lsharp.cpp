@@ -182,7 +182,7 @@ void probabilistic_lsharp_algorithm::update_access_path(apta_node* n, apta* the_
  * @return true A node has final prob larger than 1.
  * @return false No final prob larger than 1.
  */
-/* bool */ void probabilistic_lsharp_algorithm::update_tree_dfs(apta* the_apta, const vector<int>& alphabet) const {
+void probabilistic_lsharp_algorithm::update_tree_dfs(apta* the_apta, const vector<int>& alphabet) const {
     apta_node* n = the_apta->get_root();
     string_probability_estimator::normalize_probabilities(
         static_cast<string_probability_estimator_data*>(n->get_data()));
@@ -208,11 +208,8 @@ void probabilistic_lsharp_algorithm::update_access_path(apta_node* n, apta* the_
         p_stack.pop();
 
         auto data = static_cast<string_probability_estimator_data*>(n->get_data());
-        /* bool large_fp =  */ data->update_final_prob(p);
-        /* if(large_fp){
-          cout << "Found final probability larger than 1. Extending tree." << endl;
-          return true;
-        } */
+        data->update_final_prob(p);
+
         string_probability_estimator::normalize_probabilities(data);
 
         for (auto s : alphabet) {

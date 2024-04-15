@@ -32,11 +32,15 @@ class lsharp_algorithm : public algorithm_base {
                         const std::vector<int>& counterex, std::unique_ptr<state_merger>& merger,
                         const refinement_list refs, const vector<int>& alphabet) const;
 
-    virtual void complete_state(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id,
-                        const std::vector<int>& alphabet) const;
+    std::unordered_set<apta_node*> extend_fringe(std::unique_ptr<state_merger>& merger, apta_node* n,
+                                                 std::unique_ptr<apta>& the_apta, inputdata& id,
+                                                 const vector<int>& alphabet) const;
 
     void update_state(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id,
                       const std::vector<int>& alphabet) const;
+
+    virtual list<refinement*> find_complete_base(unique_ptr<state_merger>& merger, unique_ptr<apta>& the_apta, inputdata& id,
+                                         const std::vector<int>& alphabet);
 
   public:
     lsharp_algorithm(std::shared_ptr<sul_base>& sul, std::unique_ptr<base_teacher>& teacher,
