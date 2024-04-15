@@ -56,6 +56,7 @@ const double nn_weighted_output_sul::get_string_probability(const std::vector<in
 const int nn_weighted_output_sul::query_trace(const std::vector<int>& query_trace, inputdata& id) const {
     const double nn_output = get_sigmoid_output(query_trace, id);
     if (nn_output < 0) {
+        cerr << "Output: " << nn_output << endl;
         throw runtime_error("Error in Python script, please check your code there.");
     }
     return nn_output < 0.5 ? 0 : 1;
