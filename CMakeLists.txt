@@ -36,7 +36,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
       "$<$<CONFIG:DEBUG>:-ggdb3;-D_GLIBCXX_DEBUG>")
 else()
     add_compile_options(
-      "$<$<CONFIG:RELEASE>-g;-UDEBUG>"
+      "$<$<CONFIG:RELEASE>:-g;-UDEBUG>"
       "$<$<CONFIG:DEBUG>:-ggdb3;-D_GLIBCXX_DEBUG>"
       "-fcompare-debug-second") # This flag is only for me, to suppress notes
 endif()
