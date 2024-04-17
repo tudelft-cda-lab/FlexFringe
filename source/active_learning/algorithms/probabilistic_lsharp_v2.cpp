@@ -420,6 +420,7 @@ list<refinement*> probabilistic_lsharp_v2_algorithm::find_complete_base(unique_p
 
         if (!identified_red_node) {
             cout << "Complete basis found. Forwarding hypothesis" << endl;
+            find_closed_automaton(performed_refs, the_apta, merger, string_probability_estimator_v2::get_distance);
             return performed_refs;
         } else if (!reached_fringe) {
             cout << "Processed layer " << merge_depth << endl;

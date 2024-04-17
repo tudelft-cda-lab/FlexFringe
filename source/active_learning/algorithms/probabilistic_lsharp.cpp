@@ -323,33 +323,24 @@ list<refinement*> probabilistic_lsharp_algorithm::find_complete_base(unique_ptr<
         }
 
         bool reached_fringe = blue_nodes.empty();
-        if (reached_fringe /*  || underestimated_dist */) {
+        if (reached_fringe) {
             cout << "Reached fringe. Extend and recompute merges" << endl;
             reset_apta(merger.get(), performed_refs);
             performed_refs.clear();
 
-            /* std::unordered_set<apta_node*> created_nodes; */
             for (auto blue_node : fringe_nodes) {
                 auto cn = extend_fringe(merger, blue_node, the_apta, id, alphabet);
-                /* for(auto new_node: cn) created_nodes.insert(new_node); */
             }
             fringe_nodes.clear();
-            /* underestimated_dist =  */ update_tree_dfs(the_apta.get(), alphabet);
-            /* if(underestimated_dist) */
-            /* fringe_nodes = created_nodes; */
+            update_tree_dfs(the_apta.get(), alphabet);
 
             merge_depth = 0;
             ++depth;
             continue;
         } else if (depth == MAX_DEPTH) {
-            cout << "Max-depth reached. Printing the automaton. Depth:" << depth << endl;
-            // minimize_apta(performed_refs, merger.get());
+            cout << "Max-depth reached. Minimize and print the automaton." << endl;
             find_closed_automaton(performed_refs, the_apta, merger, string_probability_estimator::get_distance);
-            cout << "Minimized. Now printing" << endl;
-            // MAX_DEPTH_REACHED = true;
-            // return performed_refs;
             print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
-            cout << "Printed. Terminating" << endl;
             exit(0);
         }
 
@@ -397,6 +388,7 @@ list<refinement*> probabilistic_lsharp_algorithm::find_complete_base(unique_ptr<
 
         if (!identified_red_node) {
             cout << "Complete basis found. Forwarding hypothesis" << endl;
+            find_closed_automaton(performed_refs, the_apta, merger, string_probability_estimator::get_distance);
             return performed_refs;
         } else if (!reached_fringe) {
             cout << "Processed layer " << merge_depth << endl;

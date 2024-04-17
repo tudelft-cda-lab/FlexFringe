@@ -148,7 +148,6 @@ list<refinement*> lsharp_algorithm::find_complete_base(unique_ptr<state_merger>&
 
     while (true) { // cancel when either not red node identified or max depth
 
-        cout << "collecting blue nodes. Depth:" << depth << endl;
         unordered_set<apta_node*> blue_nodes;
         for (blue_state_iterator b_it = blue_state_iterator(the_apta->get_root()); *b_it != nullptr; ++b_it) {
             auto blue_node = *b_it;
@@ -176,7 +175,7 @@ list<refinement*> lsharp_algorithm::find_complete_base(unique_ptr<state_merger>&
             find_closed_automaton(performed_refs, the_apta, merger, evidence_driven::get_score);
             c_iter++;
             if(c_iter==MAX_CEX_ITER){
-                cout << "Max number of iterations reached. Printing automaton." << endl;
+                cout << "Max number of counterexample iterations reached. Printing automaton." << endl;
                 print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
                 exit(0);
             }
@@ -194,7 +193,7 @@ list<refinement*> lsharp_algorithm::find_complete_base(unique_ptr<state_merger>&
         if (merge_depth <= depth)
             fringe_nodes.clear();
         bool identified_red_node = false;
-        cout << "Looking for refinements" << endl;
+        //cout << "Looking for refinements" << endl;
         for (auto blue_node : blue_nodes) {
             if (merge_depth <= depth)
                 fringe_nodes.insert(blue_node);
@@ -233,10 +232,11 @@ list<refinement*> lsharp_algorithm::find_complete_base(unique_ptr<state_merger>&
         //}
 
         if (!identified_red_node) {
-            cout << "Complete basis found. Forwarding hypothesis" << endl;
+            //cout << "Complete basis found. Forwarding hypothesis" << endl;
+            find_closed_automaton(performed_refs, the_apta, merger, evidence_driven::get_score);
             return performed_refs;
         } else if (!reached_fringe) {
-            cout << "Processed layer " << merge_depth << endl;
+            //cout << "Processed layer " << merge_depth << endl;
             continue;
         }
     }
@@ -259,14 +259,13 @@ void lsharp_algorithm::run(inputdata& id) {
         // init the root node, s.t. we have blue states to iterate over
         auto root_node = the_apta->get_root();
         pref_suf_t seq;
-        //query_weights(merger, root_node, id, alphabet, seq);
         extend_fringe(merger, root_node, the_apta, id, alphabet);
     }
 
-    {
-        static int model_nr = 0;
-        print_current_automaton(merger.get(), "model.", "root");
-    }
+    //{
+    //    static int model_nr = 0;
+    //    print_current_automaton(merger.get(), "model.", "root");
+    //}
 
    while (ENSEMBLE_RUNS > 0 && n_runs <= ENSEMBLE_RUNS) {
         if (n_runs % 100 == 0)
@@ -308,11 +307,11 @@ void lsharp_algorithm::run(inputdata& id) {
         }
 
         // TODO: this one might not hold
-        ++n_runs;
-        if (ENSEMBLE_RUNS > 0 && n_runs == ENSEMBLE_RUNS) {
-            cout << "Maximum of runs reached. Printing automaton." << endl;
-            print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
-            return;
-        }
+        //++n_runs;
+        //if (ENSEMBLE_RUNS > 0 && n_runs == ENSEMBLE_RUNS) {
+        //    cout << "Maximum of runs reached. Printing automaton." << endl;
+        //    print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
+        //    return;
+        //}
     }
 }

@@ -163,6 +163,7 @@ extern string REJECTING_LABEL;
 
 extern int START_SYMBOL;
 extern int END_SYMBOL;
+extern int MAX_CEX_LENGTH;
 
 extern string POSTGRESQL_CONNSTRING;
 extern string POSTGRESQL_TBLNAME;
