@@ -13,6 +13,7 @@
 #define _ACTIVE_SUL_ORACLE_H_
 
 #include "eq_oracle_base.h"
+#include "parameters.h"
 
 #include <optional>
 #include <utility>
@@ -27,7 +28,7 @@ class active_sul_oracle : public eq_oracle_base {
   public:
     active_sul_oracle(std::shared_ptr<sul_base>& sul) : eq_oracle_base(sul) {
         search_strategy = std::unique_ptr<search_base>(
-            new random_string_search(30)); // std::unique_ptr<search_base>(new bfs_strategy(8)); // number here is
+            new random_string_search(MAX_CEX_LENGTH)); // std::unique_ptr<search_base>(new bfs_strategy(8)); // number here is
                                            // maximum length of sequence. Find a better way to set this
         assert(dynamic_cast<input_file_sul*>(sul.get()) == nullptr);
     };

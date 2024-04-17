@@ -422,6 +422,7 @@ int main(int argc, char *argv[]){
     // active learning parameters
     app.add_option("--active_learning_algorithm", ACTIVE_LEARNING_ALGORITHM, "The basic algorithm that runs through. Current options are (l_star). DEFAULT: l_star");
     app.add_option("--use_active_learning", DO_ACTIVE_LEARNING, "Perform active learning on top of the normal learner. 1 for true, 0 for false. Default: 0");
+    app.add_option("--max_counterexample_length", MAX_CEX_LENGTH, "The maximum length a counterexample can reach. Critical in models where a maximum-string-length occurs, such as transformer-models. Default: 25");
     // TODO: shall we delete the rejecting_label option?
     app.add_option("--rejecting_label", REJECTING_LABEL, "The label as a string that is used for rejecting (non-accepting) behavior. Only in active learning mode. DEFAULT: 0");
 

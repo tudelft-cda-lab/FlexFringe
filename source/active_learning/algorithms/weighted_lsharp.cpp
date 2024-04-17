@@ -209,15 +209,13 @@ list<refinement*> weighted_lsharp_algorithm::find_complete_base(unique_ptr<state
         }
 
         bool reached_fringe = blue_nodes.empty();
-        if (reached_fringe /*  || underestimated_dist */) {
+        if (reached_fringe) {
             cout << "Reached fringe. Extend and recompute merges" << endl;
             reset_apta(merger.get(), performed_refs);
             performed_refs.clear();
 
-            /* std::unordered_set<apta_node*> created_nodes; */
             for (auto fringe_node : fringe_nodes) {
                 auto cn = extend_fringe(merger, fringe_node, the_apta, id, alphabet);
-                /* for(auto new_node: cn) created_nodes.insert(new_node); */
             }
             fringe_nodes.clear();
 
@@ -291,6 +289,7 @@ list<refinement*> weighted_lsharp_algorithm::find_complete_base(unique_ptr<state
 
         if (!identified_red_node) {
             cout << "Complete basis found. Forwarding hypothesis" << endl;
+            find_closed_automaton(performed_refs, the_apta, merger, weight_comparator::get_distance);
             return performed_refs;
         } else if (!reached_fringe) {
             cout << "Processed layer " << merge_depth << endl;

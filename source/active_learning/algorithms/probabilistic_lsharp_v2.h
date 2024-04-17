@@ -6,6 +6,8 @@
  * @date 2023-10-10
  *
  * @copyright Copyright (c) 2023
+ * 
+ * This version is the same, but I implemented Sicco's recommendation. Might not matter in the end.
  *
  */
 

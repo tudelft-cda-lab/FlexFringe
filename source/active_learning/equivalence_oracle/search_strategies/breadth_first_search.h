@@ -1,7 +1,8 @@
 /**
  * @file breadth_first_search.h
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
- * @brief Inefficient.
+ * @brief Inefficient. Instead of searching via storing the whole trace, 
+ * I can simply store the indices of the trace. Will be much more memory efficient.
  * @version 0.1
  * @date 2023-04-13
  *

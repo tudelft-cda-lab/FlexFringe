@@ -142,6 +142,7 @@ bool DO_ACTIVE_LEARNING = false;
 string REJECTING_LABEL = "0";
 int START_SYMBOL = -1;
 int END_SYMBOL = -1;
+int MAX_CEX_LENGTH = 25;
 
 string POSTGRESQL_CONNSTRING = "";
 string POSTGRESQL_TBLNAME = "";
