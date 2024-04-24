@@ -1,5 +1,5 @@
 /**
- * @file lstar.cpp
+ * @file lstar_imat.cpp
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
  * @brief
  * @version 0.1
@@ -9,7 +9,7 @@
  *
  */
 
-#include "lstar.h"
+#include "lstar_imat.h"
 #include "base_teacher.h"
 #include "common_functions.h"
 #include "input_file_oracle.h"
@@ -40,9 +40,9 @@ const bool PRINT_ALL_MODELS = false; // for debugging
  * @param id
  * @return stack<refinement*>
  */
-const list<refinement*> lstar_algorithm::construct_automaton_from_table(const observation_table& obs_table,
-                                                                        unique_ptr<state_merger>& merger,
-                                                                        inputdata& id) const {
+const list<refinement*> lstar_imat_algorithm::construct_automaton_from_table(const observation_table_imat& obs_table,
+                                                                             unique_ptr<state_merger>& merger,
+                                                                             inputdata& id) const {
     const auto& upper_table = obs_table.get_upper_table();
     const auto& lower_table = obs_table.get_lower_table();
     const auto& column_names = obs_table.get_column_names();
@@ -81,10 +81,11 @@ const list<refinement*> lstar_algorithm::construct_automaton_from_table(const ob
  *
  * @param id The inputdata, already initialized with input file.
  */
-void lstar_algorithm::run(inputdata& id) {
+void lstar_imat_algorithm::run(inputdata& id) {
+    std::cout << "lstar_imat" << std::endl;
     int n_runs = 0;
 
-    observation_table obs_table(id.get_alphabet());
+    observation_table_imat obs_table(id.get_alphabet());
 
     auto eval = unique_ptr<evaluation_function>(get_evaluation());
     eval->initialize_before_adding_traces();
@@ -142,7 +143,7 @@ void lstar_algorithm::run(inputdata& id) {
                     continue;
 
                 const pref_suf_t& cex = query_result.value().first;
-                auto cex_tr = vector_to_trace(cex, id, type);
+                auto* cex_tr = vector_to_trace(cex, id, type);
                 cout << "Found counterexample: " << cex_tr->to_string() << "\n"; // endl;
 
                 reset_apta(merger.get(), refs); // note: does not reset the identified red states we had before
@@ -156,7 +157,7 @@ void lstar_algorithm::run(inputdata& id) {
         ++n_runs;
         if (ENSEMBLE_RUNS > 0 && n_runs == ENSEMBLE_RUNS) {
             cout << "Maximum of runs reached. Printing automaton." << endl;
-            for (auto top_ref : refs) {
+            for (auto* top_ref : refs) {
                 top_ref->doref(merger.get());
             }
             print_current_automaton(merger.get(), OUTPUT_FILE, ".final");

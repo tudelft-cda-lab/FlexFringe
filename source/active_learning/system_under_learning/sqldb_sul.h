@@ -19,18 +19,19 @@
 #include <vector>
 
 class sqldb_sul : public sul_base {
-  protected:
+  public:
+    psql::db& my_sqldb;
+
     void reset() override{};
     const double get_string_probability(const std::vector<int>& query_trace, inputdata& id) const override{};
 
     bool is_member(const std::vector<int>& query_trace) const override;
-    const int query_trace(const std::vector<int>& query_trace, inputdata& id) const override;
 
-  public:
-    psql::db& my_sqldb;
     explicit sqldb_sul(psql::db& db);
     virtual void pre(inputdata& id) override;
-    const int query_trace_maybe(const std::vector<int>& query_trace) const;
+
+    const int query_trace(const std::vector<int>& query_trace, inputdata& id) const override;
+    const int query_trace_maybe(const std::vector<int>& query_trace, inputdata& id) const override;
     const std::optional<psql::record> query_trace_opt(const std::vector<int>& query_trace) const;
     psql::db& get_sqldb() { return my_sqldb; };
     std::optional<psql::record> regex_equivalence(const std::string& regex, int type);

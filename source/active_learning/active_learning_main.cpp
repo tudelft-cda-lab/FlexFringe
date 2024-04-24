@@ -15,6 +15,7 @@
 #include "ldot.h"
 #include "lsharp.h"
 #include "lstar.h"
+#include "lstar_imat.h"
 #include "probabilistic_lsharp.h"
 #include "probabilistic_lsharp_v2.h"
 #include "transformer_lsharp.h"
@@ -29,6 +30,9 @@
 #include "nn_weighted_output_sul.h"
 #include "sqldb_sul.h"
 #include "sqldb_sul_regex_oracle.h"
+
+#include "base_teacher.h"
+#include "teacher_imat.h"
 
 #include "abbadingoparser.h"
 #include "csvparser.h"
@@ -109,6 +113,9 @@ shared_ptr<sul_base> active_learning_main_func::select_sul_class(const bool ACTI
  */
 unique_ptr<base_teacher> active_learning_main_func::select_teacher_class(shared_ptr<sul_base>& sul,
                                                                          const bool ACTIVE_SUL) const {
+    if (ACTIVE_LEARNING_ALGORITHM == "l_star_imat") {
+        return unique_ptr<base_teacher>(new teacher_imat(sul));
+    }
     return unique_ptr<base_teacher>(new base_teacher(sul));
 }
 
@@ -169,6 +176,9 @@ void active_learning_main_func::run_active_learning() {
     unique_ptr<algorithm_base> algorithm;
     if (ACTIVE_LEARNING_ALGORITHM == "l_star") {
         algorithm = unique_ptr<algorithm_base>(new lstar_algorithm(sul, teacher, oracle));
+    } else if (ACTIVE_LEARNING_ALGORITHM == "l_star_imat") {
+        STORE_ACCESS_STRINGS = true;
+        algorithm = unique_ptr<algorithm_base>(new lstar_imat_algorithm(sul, teacher, oracle));
     } else if (ACTIVE_LEARNING_ALGORITHM == "l_sharp") {
         STORE_ACCESS_STRINGS = true;
         algorithm = unique_ptr<algorithm_base>(new lsharp_algorithm(sul, teacher, oracle));
@@ -180,7 +190,7 @@ void active_learning_main_func::run_active_learning() {
         STORE_ACCESS_STRINGS = true;
         algorithm = unique_ptr<algorithm_base>(new weighted_lsharp_algorithm(sul, teacher, oracle));
     } else if (ACTIVE_LEARNING_ALGORITHM == "l_dot") {
-        STORE_ACCESS_STRINGS = true; // refinement uses this to get nodes, but that seems buggy somehow.
+        STORE_ACCESS_STRINGS = true;
         algorithm = unique_ptr<algorithm_base>(new ldot_algorithm(sul, teacher, oracle));
     } else if (ACTIVE_LEARNING_ALGORITHM == "transformer_l_sharp") {
         STORE_ACCESS_STRINGS = true;
