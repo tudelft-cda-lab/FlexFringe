@@ -21,6 +21,8 @@ add_library(Evaluation STATIC
             l_star_evaluation.cpp
             likelihood.h
             likelihood.cpp
+            lsharp_eval.h
+            lsharp_eval.cpp
             mealy.h
             mealy.cpp
             mse_error.h
