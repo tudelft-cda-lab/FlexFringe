@@ -37,3 +37,5 @@ CMakeFiles/
 
 # my own
 perplexity_eval*.sh
+*.ipynb
+*.txt

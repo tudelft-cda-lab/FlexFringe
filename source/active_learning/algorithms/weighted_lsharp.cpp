@@ -39,16 +39,13 @@ using namespace active_learning_namespace;
 unordered_set<apta_node*> weighted_lsharp_algorithm::extend_fringe(unique_ptr<state_merger>& merger, apta_node* n,
                                                                    unique_ptr<apta>& the_apta, inputdata& id,
                                                                    const vector<int>& alphabet) const {
-    static unordered_set<apta_node*> extended_nodes; // TODO: we might not need this, since it is inherently backed in
-                                                     // query_weights and the size of traces
+    static unordered_set<apta_node*> extended_nodes;
     if (extended_nodes.contains(n))
         return unordered_set<apta_node*>();
 
     unordered_set<apta_node*> new_nodes;
 
-    // this path is only relevant in traces that were added via counterexample processing
     auto access_trace = n->get_access_trace();
-
     pref_suf_t seq;
     if (n->get_number() != -1 && n->get_number() != 0)
         seq = access_trace->get_input_sequence(true, true);
@@ -187,7 +184,7 @@ void weighted_lsharp_algorithm::proc_counterex(const unique_ptr<base_teacher>& t
  * @param the_apta
  * @return list<refinement*>
  */
-list<refinement*> weighted_lsharp_algorithm::find_complete_base(unique_ptr<state_merger>& merger,
+list<refinement*> weighted_lsharp_algorithm::find_complete_base_count_depth(unique_ptr<state_merger>& merger,
                                                                 unique_ptr<apta>& the_apta, inputdata& id,
                                                                 const vector<int>& alphabet) {
     static int depth = 1; // because we initialize root node with depth 1
@@ -299,6 +296,105 @@ list<refinement*> weighted_lsharp_algorithm::find_complete_base(unique_ptr<state
 }
 
 /**
+ * @brief Does what you think it does.
+ *
+ * @param merger
+ * @param the_apta
+ * @return list<refinement*>
+ */
+list<refinement*> weighted_lsharp_algorithm::find_complete_base_count_nodes(unique_ptr<state_merger>& merger,
+                                                                unique_ptr<apta>& the_apta, inputdata& id,
+                                                                const vector<int>& alphabet) {
+    static const bool COUNTEREXAMPLE_STRATEGY = false;
+
+    int n_red_nodes = 0;
+    static const int MAX_RED_NODES = 200;
+    
+    int n_iter = -1;
+
+    list<refinement*> performed_refs;
+    while (true) { // cancel when either not red node identified or max number of nodes is reached
+
+        unordered_set<apta_node*> blue_nodes;
+        unordered_set<apta_node*> red_nodes;
+
+        cout << ++n_iter << " iterations for this round. Red nodes: " << n_red_nodes << endl;
+        
+        for (blue_state_iterator b_it = blue_state_iterator(the_apta->get_root()); *b_it != nullptr; ++b_it) {
+            auto blue_node = *b_it;
+            blue_nodes.insert(blue_node);
+        }
+
+        for (red_state_iterator r_it = red_state_iterator(the_apta->get_root()); *r_it != nullptr; ++r_it) {
+            const auto red_node = *r_it;
+            red_nodes.insert(red_node);
+        }
+
+        bool identified_red_node = false;
+        for (auto blue_node : blue_nodes) {
+            refinement_set possible_merges;
+
+            for(auto red_node: red_nodes){
+                refinement* ref = merger->test_merge(red_node, blue_node);
+                if (ref != nullptr)
+                    possible_merges.insert(ref);
+            }
+
+            if (possible_merges.size() == 0) {
+                identified_red_node = true;
+                refinement* ref = mem_store::create_extend_refinement(merger.get(), blue_node);
+                ref->doref(merger.get());
+                performed_refs.push_back(ref);
+
+                ++n_red_nodes;
+                extend_fringe(merger, blue_node, the_apta, id, alphabet);
+            } else {
+                // get the best merge from the heap
+                refinement* best_merge = *(possible_merges.begin());
+                for (auto it : possible_merges) {
+                    if (it != best_merge)
+                        it->erase();
+                }
+                best_merge->doref(merger.get());
+                performed_refs.push_back(best_merge);
+            }
+        }
+
+        {
+            static int model_nr = 0;
+            cout << "printing model " << model_nr  << endl;
+            print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_refs");
+        }
+
+        if (!identified_red_node) {
+            cout << "Complete basis found. Forwarding hypothesis" << endl;
+            find_closed_automaton(performed_refs, the_apta, merger, weight_comparator::get_distance);
+            return performed_refs;
+        }
+
+        if (n_red_nodes >= MAX_RED_NODES && COUNTEREXAMPLE_STRATEGY){
+            static const int MAX_ITER = 20;
+            static int c_iter = 0;
+            cout << "Continuing search using the counterexample strategy. Iteration " << c_iter << " out of " << MAX_ITER << endl;
+            find_closed_automaton(performed_refs, the_apta, merger, weight_comparator::get_distance);
+            c_iter++;
+            if(c_iter==MAX_ITER){
+                cout << "Max number of iterations reached. Printing automaton." << endl;
+                print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
+                exit(0);
+            }
+            return performed_refs;
+        } else if (n_red_nodes >= MAX_RED_NODES) {
+            cout << "Max number of states reached and counterexample strategy disabled. Printing the automaton with " << n_red_nodes << " states." << endl;
+            find_closed_automaton(performed_refs, the_apta, merger, weight_comparator::get_distance);
+            print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
+            cout << "Printed. Terminating" << endl;
+            exit(0);
+        }
+    }
+}
+
+/**
  * @brief Main routine of this algorithm.
  *
  * @param id Inputdata.
@@ -336,7 +432,7 @@ void weighted_lsharp_algorithm::run(inputdata& id) {
         if (n_runs % 100 == 0)
             cout << "Iteration " << n_runs + 1 << endl;
 
-        auto refs = find_complete_base(merger, the_apta, id, alphabet);
+        auto refs = find_complete_base_count_nodes(merger, the_apta, id, alphabet);
         cout << "Searching for counterexamples" << endl;
 
         // only merges performed, hence we can test our hypothesis

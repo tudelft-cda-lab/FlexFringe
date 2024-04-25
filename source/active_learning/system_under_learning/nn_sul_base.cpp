@@ -157,6 +157,7 @@ see what happens."
     }
 
     cout << "Setting internal flexfringe alphabet, inferred from the network's training alphabet" << endl;
+    //vector<string> input_alphabet;
     vector<int> input_alphabet;
     const auto size = static_cast<int>(PyList_Size(p_alphabet));
     const int start_symbol = START_SYMBOL;
@@ -164,8 +165,11 @@ see what happens."
     for (int i = 0; i < size; ++i) {
         PyObject* p_item = PyList_GetItem(p_alphabet, static_cast<Py_ssize_t>(i));
 
+        //string item;
         int item;
         try {
+            //const char* s =  PyUnicode_AsUTF8(p_item);
+            //item = string(s); //PyLong_AsLong(p_item);
             item = PyLong_AsLong(p_item);
         } catch (...) {
             Py_DECREF(p_name);
@@ -175,12 +179,13 @@ see what happens."
             Py_DECREF(load_model_func);
             Py_DECREF(p_model_path);
             Py_DECREF(p_item);
-            cerr << "Alphabet returned by Python script must be a vector of integer-values." << endl;
+            cerr << "Alphabet returned by Python script must be a vector of string- or integer-values." << endl;
             exit(1);
         }
 
         Py_DECREF(p_item);
         if (item != start_symbol && item != end_symbol)
+        // Note: SOS and EOS are not allowed to be returned back
             input_alphabet.push_back(std::move(item));
     }
 

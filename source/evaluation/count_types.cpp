@@ -210,7 +210,21 @@ bool count_driven::consistent(state_merger *merger, apta_node* left, apta_node* 
                 }
             }
         }
-    }    
+    }
+
+    //if(l->total_paths < STATE_COUNT) return true;
+    //if(r->total_paths < STATE_COUNT) return true;
+    //for(auto & path_count : l->path_counts){
+    //    int type = path_count.first;
+    //    int count = path_count.second;
+    //    if(count != 0){
+    //        int count2 = r->path_counts[type];
+    //        if(count2 == 0){
+    //            inconsistency_found = true;
+    //            return false;
+    //        }
+    //    }
+    //} 
     return true;
 };
 

@@ -42,8 +42,11 @@ class weighted_lsharp_algorithm : public lsharp_algorithm {
                                const std::vector<int>& alphabet,
                                std::optional<active_learning_namespace::pref_suf_t> seq_opt) const;
 
-    list<refinement*> find_complete_base(unique_ptr<state_merger>& merger, unique_ptr<apta>& the_apta, inputdata& id,
-                                         const std::vector<int>& alphabet) override;
+    list<refinement*> find_complete_base_count_depth(unique_ptr<state_merger>& merger, unique_ptr<apta>& the_apta, inputdata& id,
+                                         const std::vector<int>& alphabet);
+
+    list<refinement*> find_complete_base_count_nodes(unique_ptr<state_merger>& merger, unique_ptr<apta>& the_apta, inputdata& id,
+                                         const std::vector<int>& alphabet);
 
   public:
     weighted_lsharp_algorithm(std::shared_ptr<sul_base>& sul, std::unique_ptr<base_teacher>& teacher,

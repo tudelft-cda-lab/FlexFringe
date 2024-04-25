@@ -190,6 +190,16 @@ class EncoderAcceptor(nn.Module):
         x = F.sigmoid(self.gelu(self.hidden_layer(x)))
         # ---------------------------------------------------------------------------------
 
+        # ---------------- only first symbol for prediction --------------------------------
+        #x = self.gelu(self.hidden_layer(x)) # shape = (seq_len, b_size, embedding_dim)
+        #x_shape = list(x.size()) # seq_length, batchsize, hidden_dim
+        #x_select = torch.zeros(( x_shape[1], x_shape[2] )).float()
+        #for i in range(x_shape[1]):
+        #    x_select[i] = x[0, i]
+        #x_select = self.gelu(self.hidden_layer(x_select)) # shape = (b_size, 1)
+        #x = F.sigmoid((x_select))
+        # ---------------------------------------------------------------------------------
+
         # ---------------- only last symbol for prediction --------------------------------
         #x = self.gelu(self.hidden_layer(x)) # shape = (seq_len, b_size, embedding_dim)
         #last_index = seq_length-1
