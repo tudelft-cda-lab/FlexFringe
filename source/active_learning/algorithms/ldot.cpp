@@ -92,7 +92,10 @@ void ldot_algorithm::proc_counter_record(inputdata& id, const psql::record& rec,
     }
 }
 
-trace* ldot_algorithm::add_trace(inputdata& id, const psql::record& r) {
+bool ldot_algorithm::add_trace(inputdata& id, const psql::record& r) {
+    if (added_traces.contains(r.pk)) {
+        return false;
+    }
     added_traces.insert(r.pk);
 
     LOG_S(1) << "pk:" << r.pk << " " << r.type << " " << r.trace;
@@ -100,7 +103,7 @@ trace* ldot_algorithm::add_trace(inputdata& id, const psql::record& r) {
     trace* new_trace = active_learning_namespace::vector_to_trace(r.trace, id, r.type);
     id.add_trace_to_apta(new_trace, my_merger->get_aut(), false);
     id.add_trace(new_trace);
-    return new_trace;
+    return true;
 }
 
 void ldot_algorithm::merge_processed_ref(refinement* ref) {
@@ -141,6 +144,7 @@ void ldot_algorithm::process_unidentified(inputdata& id, const std::vector<refin
             }
         }
         if (consistent_possible_refs.empty()) {
+            // Thus this state is isolated
             isolated_states = true;
             continue;
         }
@@ -232,8 +236,9 @@ bool ldot_algorithm::complete_state(inputdata& id, apta_node* n) {
 
     auto* access_trace = n->get_access_trace();
     auto seq = access_trace->get_input_sequence(true, true);
+    bool new_information = false;
     for (const auto& rec : my_sul->prefix_query(seq, PREFIX_SIZE)) {
-        add_trace(id, rec);
+        new_information |= add_trace(id, rec);
     }
 
     // Old code for random search.
@@ -254,7 +259,7 @@ bool ldot_algorithm::complete_state(inputdata& id, apta_node* n) {
     /* } */
 
     completed_nodes.insert(n);
-    return true;
+    return new_information;
 }
 
 std::vector<apta_node*> ldot_algorithm::represented_by(apta_node* n) {
@@ -341,8 +346,8 @@ void ldot_algorithm::run(inputdata& id) {
             /* if (blue_node->get_size() == 0) */
             /*     throw logic_error("This should never happen: TODO: Delete line"); */
 
-            /* if (BLUE_NODE_COMPLETION) */
-            /*     maybe_list_for_completion(blue_node); */
+            if (BLUE_NODE_COMPLETION)
+                maybe_list_for_completion(blue_node);
 
             refinement_set possible_refs;
             for (red_state_iterator r_it = red_state_iterator(my_apta->get_root()); *r_it != nullptr; ++r_it) {
@@ -424,12 +429,16 @@ void ldot_algorithm::run(inputdata& id) {
 
             performed_refinements.clear();
 
+            bool new_information = false;
             for (auto* n : complete_these_states)
-                complete_state(id, n);
+                new_information |= complete_state(id, n);
 
             complete_these_states.clear();
             n_subs++;
-            continue;
+            if (new_information) {
+                // Do something with the new information.
+                continue;
+            }
         }
 
         // MERGING FINISHED, CONTINUE WITH EQUIVALENCE ORACLE;

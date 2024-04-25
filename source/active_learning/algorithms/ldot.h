@@ -86,6 +86,7 @@ class ldot_algorithm : public algorithm_base {
      * That is, call a prefix query on the node,
      * thus exploring its outgoing branches and more.
      * For Lsharp, this was only all possible 1 steps.
+     * Returns false is it is already completed or if no new information is added.
      */
     bool complete_state(inputdata& id, apta_node* n);
 
@@ -94,8 +95,9 @@ class ldot_algorithm : public algorithm_base {
 
     /**
      * @brief Add a new trace to the data structures (apta, mem_store).
+     * Returns true if trace has been added.
      */
-    trace* add_trace(inputdata& id, const psql::record& rec);
+    bool add_trace(inputdata& id, const psql::record& rec);
 
     /**
      * @brief Processing the counterexample recursively in the binary search strategy
