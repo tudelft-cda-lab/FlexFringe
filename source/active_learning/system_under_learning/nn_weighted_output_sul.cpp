@@ -125,8 +125,8 @@ nn_weighted_output_sul::get_type_and_state(const std::vector<int>& query_trace, 
  *
  */
 void nn_weighted_output_sul::init_types() const {
-    inputdata_locator::get()->add_type(std::string("Type 0"));
-    inputdata_locator::get()->add_type(std::string("Type 1"));
+    inputdata_locator::get()->add_type(std::string("Type_0"));
+    inputdata_locator::get()->add_type(std::string("Type_1"));
 }
 
 /**
