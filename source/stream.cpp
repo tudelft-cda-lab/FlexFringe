@@ -277,13 +277,13 @@ int stream_object::stream_mode(state_merger* merger, int batch_size, int buffer_
     time_t last_read_time = time(nullptr); // record the last time something was read from pipe. 
     ssize_t bytes_read;
     std::vector<std::string> current_batch; 
+    int sequence_number = 0;
+    int n_runs = 0;
 
     // Read inputs from pipe. This is done via the STDIN_FILENO file descriptor.
     while (!INTERRUPTED && difftime(time(nullptr), last_read_time) < 600) {
-      cout << "GOT HERE" << endl;
         bytes_read = read(STDIN_FILENO, buffer, buffer_size); // read from the pipe
         if (bytes_read > 0) {
-          cout << "GOT HERE 2" << endl;
             for (int i = 0; i < bytes_read; ++i) {
                 char ch = buffer[i];
                 if (ch == '\n') { // If newline character is encountered
@@ -291,19 +291,24 @@ int stream_object::stream_mode(state_merger* merger, int batch_size, int buffer_
                     // line_buffer.push_back('\0'); // Null-terminate to make it a C-style string
                     current_batch.push_back(std::string(line_buffer.begin(), line_buffer.end()));
                     if (current_batch.size() >= batch_size) {
-                      cout << "Processing batch of size: " << current_batch.size() << endl;
+                      
                       // read each trace and add it to the apta.
                       for (const auto& str : current_batch) {
-                        inputdata* id = merger->get_dat();
-                        reader_strategy* parser_strategy = new in_order();
-                        cout << "Processing trace: " << str << endl;
+                        inputdata* id = merger->get_dat(); // get the input data object.
+                        reader_strategy* parser_strategy = new in_order(); // create a parser strategy.
                         std::istringstream iss(str); // create the input stream.
-                        cout << "input stream " << iss.str() << endl;
                         auto parser = abbadingoparser::single_trace(iss); // initialize a parser.
-                        cout << "Parser initialized" << endl;
                         trace* new_trace = id->read_trace(parser, *parser_strategy).value(); // read the trace.
-                        cout << "read trace: " << new_trace->to_string() << endl;
-                        exit(0);
+                        id->add_trace_to_apta(new_trace, merger->get_aut()); // add the trace to the apta.
+                        if (RETRY_MERGES) {
+                          cout << "Running retry merges" << endl;
+                          greedyrun_retry_merges(merger, sequence_number, true, n_runs); // run the greedy algorithm.
+                        } else {
+                          cout << "Running greedy run" << endl;
+                          greedyrun_no_undo(merger, sequence_number, true, n_runs); // run the greedy algorithm.
+                        }
+                        ++sequence_number; // increment the sequence number.
+                        ++n_runs; // increment the number of runs.
                       }
 
                       current_batch.clear(); // clear and wait for the next batch of traces.
