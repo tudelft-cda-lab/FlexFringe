@@ -131,7 +131,7 @@ void run() {
     inputdata id;
     inputdata_locator::provide(&id);
 
-    if(OPERATION_MODE != "streaming" && OPERATION_MODE != "predict"){
+    if(OPERATION_MODE != "stream" && OPERATION_MODE != "predict"){
         read_input_file(&id);
     }
 
@@ -303,7 +303,7 @@ int main(int argc, char *argv[]){
 
     // read parameters from ini file if desired
     std::string default_file_name = "flexfringe.ini";
-    app.add_option("tracefile", INPUT_FILE, "Name of the input file containing the traces, either in Abbadingo or JSON format.")->required();
+    app.add_option("tracefile", INPUT_FILE, "Name of the input file containing the traces, either in Abbadingo or JSON format.");
     app.add_option("--outputfile", OUTPUT_FILE, "The prefix of the output file name. Default is same as input.");
     app.add_option("--output", OUTPUT_TYPE, "Switch between output in dot, json, or both (default) formats.");
     app.add_option("--logpath", LOG_PATH, "The path to write the flexfringe log file to. Defaults to \"flexfringe.log\"");

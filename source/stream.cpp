@@ -291,17 +291,19 @@ int stream_object::stream_mode(state_merger* merger, int batch_size, int buffer_
                     // line_buffer.push_back('\0'); // Null-terminate to make it a C-style string
                     current_batch.push_back(std::string(line_buffer.begin(), line_buffer.end()));
                     if (current_batch.size() >= batch_size) {
-                      inputdata* id = merger->get_dat();
-
                       cout << "Processing batch of size: " << current_batch.size() << endl;
                       // read each trace and add it to the apta.
                       for (const auto& str : current_batch) {
+                        inputdata* id = merger->get_dat();
+                        reader_strategy* parser_strategy = new in_order();
                         cout << "Processing trace: " << str << endl;
                         std::istringstream iss(str); // create the input stream.
+                        cout << "input stream " << iss.str() << endl;
                         auto parser = abbadingoparser::single_trace(iss); // initialize a parser.
                         cout << "Parser initialized" << endl;
                         trace* new_trace = id->read_trace(parser, *parser_strategy).value(); // read the trace.
-                        cout << 'read trace: ' << new_trace->to_string() << endl;
+                        cout << "read trace: " << new_trace->to_string() << endl;
+                        exit(0);
                       }
 
                       current_batch.clear(); // clear and wait for the next batch of traces.
