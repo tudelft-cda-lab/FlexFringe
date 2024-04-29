@@ -123,5 +123,11 @@ int DIFF_SIZE = 1000;
 int DIFF_MAX_LENGTH = 50;
 double DIFF_MIN = -100.0;
 
+int BATCH_SIZE = 500;
+int BUFFER_SIZE = 100;
 
+bool CONDITIONAL_PROB = false;
+bool MINHASH = false;
+int MINHASH_SIZE = 2;
+int ALPHABET_SIZE = 0;
 

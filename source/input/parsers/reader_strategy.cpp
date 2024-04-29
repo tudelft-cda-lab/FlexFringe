@@ -62,7 +62,7 @@ std::optional<trace *> sentinel_symbol::read(parser &input_parser, inputdata &id
 }
 
 std::optional<trace *> in_order::read(parser &input_parser, inputdata &idata) {
-
+    std::cout << "got into read of strategy" << std::endl;
     while (true) {
         // Do we have another symbol from the parser?
         auto cur_symbol_maybe = input_parser.next();

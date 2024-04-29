@@ -118,6 +118,11 @@ extern int DISTANCE_METRIC_SKETCHES;
 extern int RANDOM_INITIALIZATION_SKETCHES;
 extern int NSTEPS_SKETCHES;
 
+extern bool CONDITIONAL_PROB;
+extern bool MINHASH;
+extern int MINHASH_SIZE;
+extern int ALPHABET_SIZE;
+
 extern std::string HEURISTIC_NAME;
 extern std::string DATA_NAME;
 extern std::string INPUT_FILE;
@@ -135,6 +140,8 @@ extern bool DEBUGGING;
 extern int ENSEMBLE_RUNS;
 extern bool PERFORM_SYMBOL_CHECK;
 extern int IDENTICAL_KTAIL;
+extern int BATCH_SIZE;
+extern int BUFFER_SIZE;
 
 extern bool STAR_FREE;
 extern bool SINK_TYPE;

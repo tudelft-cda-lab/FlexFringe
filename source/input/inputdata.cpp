@@ -391,11 +391,14 @@ void inputdata::process_symbol_attributes(symbol_info &symbolinfo, tail *t) {
  * @return an optional trace pointer. If it is nullopt, there were not enough symbols to build a trace.
  */
 std::optional<trace *> inputdata::read_trace(parser &input_parser, reader_strategy &strategy) {
+    cout << "Trying to read trace" << endl;
     auto tr_maybe = strategy.read(input_parser, *this);
-
+    cout << "Made it to after tr_maybe" << endl;
+    
     if (tr_maybe.has_value()) {
         auto tr = tr_maybe.value();
         tr->finalize();
+        cout << tr->to_string() << endl;
         traces.push_back(tr);
     }
 

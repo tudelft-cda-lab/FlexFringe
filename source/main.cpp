@@ -171,7 +171,8 @@ void run() {
         LOG_S(INFO) << "Stream mode selected, starting run";
 
         stream_object stream_obj;
-        throw std::logic_error("Streaming mode is currently broken");
+        stream_obj.stream_mode(merger, BATCH_SIZE, BUFFER_SIZE);
+        // throw std::logic_error("Streaming mode is currently broken");
 
     } else if(OPERATION_MODE == "search") {
         std::cout << "search mode selected" << std::endl;
@@ -407,12 +408,22 @@ int main(int argc, char *argv[]){
     app.add_option("--diffmaxlength", DIFF_MAX_LENGTH, "The maximum length of traces sampled for differencing. Default=50.");
     app.add_option("--diffmin", DIFF_MIN, "The minimum score for the behavioral difference of a sampled trace. Default=-100.");
 
+    app.add_option("--batchsize", BATCH_SIZE, "Batch size for streaming. Default=500");
+    app.add_option("--buffersize", BUFFER_SIZE, "Buffer size for reading from a piped stream. Default=100");
+    
+
     // parameters specifically for CMS heuristic
     app.add_option("--numoftables", NROWS_SKETCHES, "Number of rows of sketches upon initialization.");
     app.add_option("--vectordimension", NCOLUMNS_SKETCHES, "Number of columns of sketches upon initialization.");
     app.add_option("--distancemetric", DISTANCE_METRIC_SKETCHES, "The distance metric when comparing the sketches. 1 hoeffding-bound and cosine-similarity for score, 2 hoeffding bound in both, 3 like 1 but pooled. Default: 1");
     app.add_option("--randominitialization", RANDOM_INITIALIZATION_SKETCHES, "If 0 (zero), then initialize CMS deterministically. Elsewise, CMS becomes random. Default: 0.");
     app.add_option("--futuresteps", NSTEPS_SKETCHES, "Number of steps into future when storing future in sketches. Default: 2.");
+    app.add_option("--conditionalprob", CONDITIONAL_PROB, "Do make the sketches conditional as strings. Default=false");
+    app.add_option("--minhash", MINHASH, "Perform Min-Hash scheme on the ngrams. Only works in conjunction with --conditionalprob turned on. Default=false");
+    app.add_option("--minhashsize", MINHASH_SIZE, "Perform Min-Hash scheme on the ngrams. Only works in conjunction with --conditionalprob turned on. Default=false");
+    app.add_option("--alphabetsize", ALPHABET_SIZE, "An upper estimate on the alphabet size. Only needed with minhash-function turned on, in order to perform the permutation. Larger estimate increases runtime. Default=0");
+
+
 
     CLI11_PARSE(app, argc, argv)
 
