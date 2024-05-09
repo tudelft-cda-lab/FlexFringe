@@ -18,7 +18,6 @@
 
 class teacher_imat : public base_teacher {
   public:
-    std::shared_ptr<sul_base> sul;
     const int ask_membership_query(const active_learning_namespace::pref_suf_t& query, inputdata& id) override;
     teacher_imat(std::shared_ptr<sul_base>& sul) : base_teacher(sul){};
 };

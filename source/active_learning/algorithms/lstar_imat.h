@@ -23,16 +23,17 @@
 
 #include <list>
 #include <memory>
+#include <set>
 
 class lstar_imat_algorithm : public algorithm_base {
   private:
     const std::list<refinement*> construct_automaton_from_table(const observation_table_imat& obs_table,
-                                                                std::unique_ptr<state_merger>& merger,
-                                                                inputdata& id) const;
+                                                                std::unique_ptr<state_merger>& merger, inputdata& id);
+    std::set<vector<int>> added_traces;
 
   public:
     lstar_imat_algorithm(std::shared_ptr<sul_base>& sul, std::unique_ptr<base_teacher>& teacher,
-                    std::unique_ptr<eq_oracle_base>& oracle)
+                         std::unique_ptr<eq_oracle_base>& oracle)
         : algorithm_base(sul, teacher, oracle){};
     void run(inputdata& id) override;
 };

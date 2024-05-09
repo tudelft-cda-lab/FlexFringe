@@ -10,12 +10,16 @@
  */
 
 #include "observation_table_imat.h"
+#include "base_teacher.h"
 #include "common_functions.h"
 #include "definitions.h"
+#include "inputdata.h"
+#include "misc/utils.h"
 
 #include <algorithm>
 #include <cassert>
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <stdexcept>
 #include <utility>
@@ -40,35 +44,19 @@ observation_table_imat::observation_table_imat(const vector<int>& alphabet)
         incomplete_rows.push_back(pref_suf_t(new_row_name)); // we do a copy to circumvent the destructor
         table_mapper[pref_suf_t(new_row_name.begin(), new_row_name.end())] =
             upper_lower_t::lower; // TODO: do we need the copy of the prefix here?
-        lower_table[std::move(new_row_name)] = map<pref_suf_t, int>();
+        lower_table[std::move(new_row_name)] = {std::numeric_limits<int>::max()};
     }
 
     const auto nullv = get_null_vector();
     incomplete_rows.push_back(nullv); // we do a copy to circumvent the destructor
     table_mapper[pref_suf_t(nullv.begin(), nullv.end())] =
-        upper_lower_t::lower; // TODO: do we need the copy of the prefix here?
-    lower_table[std::move(nullv)] = map<pref_suf_t, int>();
+        upper_lower_t::upper; // TODO: do we need the copy of the prefix here?
+    upper_table[std::move(nullv)] = {std::numeric_limits<int>::max()};
 
-    all_columns.insert(get_null_vector());
+    all_columns.insert(nullv);
+    exp2ind[nullv] = 0;
+    new_ind++;
 };
-
-/**
- * @brief Checks if the record is in the table. We separated because we have two tables, hence avoids duplicate code.
- *
- * @param selected_table The selected table, upper or lower one.
- * @param row Row.
- * @param col Col.
- * @return true Entry exists.
- * @return false Doesn't exist.
- */
-const bool observation_table_imat::record_is_in_selected_table(const table_type& selected_table,
-                                                               const pref_suf_t& raw_row, const pref_suf_t& col) const {
-    const auto row = map_prefix(raw_row);
-    if (!selected_table.contains(row)) {
-        throw logic_error("The row should exist. What happened?");
-    }
-    return selected_table.at(row).contains(map_prefix(col));
-}
 
 /**
  * @brief This function exists for convenience. The empty prefix is by design the nullvector, hence we need to check we
@@ -92,23 +80,30 @@ const pref_suf_t observation_table_imat::map_prefix(const pref_suf_t& column) co
  * @return true Entry exists.
  * @return false Doesn't exist.
  */
-const bool observation_table_imat::has_record(const pref_suf_t& raw_row, const pref_suf_t& col) const {
-    const auto row = map_prefix(raw_row);
+const bool observation_table_imat::has_record(const pref_suf_t& raw_row, const pref_suf_t& col) {
+    auto row = map_prefix(raw_row);
     if (!table_mapper.contains(row)) {
         throw logic_error("Why do we ask about a row that does not exist? (observation_table_imat::has_record)");
     }
 
     auto table_select = table_mapper.at(row);
+    row_type selected_row;
     switch (table_select) {
     case upper_lower_t::upper:
-        return record_is_in_selected_table(upper_table, row, map_prefix(col));
+        selected_row = upper_table.at(row);
         break;
     case upper_lower_t::lower:
-        return record_is_in_selected_table(lower_table, row, map_prefix(col));
+        selected_row = lower_table.at(row);
         break;
     default:
-        throw runtime_error("Unknown table_select variable occured in observation_table_imat::has_record.");
+        throw runtime_error("Unknown table_select variable occured in observation_table::has_record.");
     }
+    int ind = exp2ind.at(col);
+    if (selected_row.size() <= ind)
+        return false;
+    if (selected_row.at(ind) == std::numeric_limits<int>::max())
+        return false;
+    return true;
 }
 
 /**
@@ -116,7 +111,9 @@ const bool observation_table_imat::has_record(const pref_suf_t& raw_row, const p
  */
 int observation_table_imat::get_answer_from_selected_table(const table_type& selected_table, const pref_suf_t& row,
                                                            const pref_suf_t& col) const {
-    return selected_table.at(map_prefix(row)).at(map_prefix(col));
+    auto new_col = map_prefix(col);
+    int ind = exp2ind.at(new_col);
+    return selected_table.at(map_prefix(row))[ind];
 }
 
 /**
@@ -160,7 +157,16 @@ void observation_table_imat::insert_record_in_selected_table(table_type& selecte
     if (!selected_table.contains(row)) {
         throw logic_error("The row should exist. What happened?");
     }
-    selected_table[row][map_prefix(col)] = answer;
+
+    vector<int> dest;
+    dest.insert(dest.end(), row.begin(), row.end());
+    dest.insert(dest.end(), col.begin(), col.end());
+    DLOG_S(INFO) << row << col << endl;
+    DLOG_S(INFO) << "insert:" << dest << ":" << answer << endl;
+
+    int pos = exp2ind[map_prefix(col)];
+    selected_table[row].resize(new_ind, std::numeric_limits<int>::max());
+    selected_table[row][pos] = answer;
 }
 
 /**
@@ -189,18 +195,6 @@ void observation_table_imat::insert_record(const pref_suf_t& raw_row, const pref
 }
 
 /**
- * @brief Clears the entire set and rehashes all rows. Used after finding a counterexample and extending the columns.
- *
- */
-void observation_table_imat::hash_upper_table() {
-    // upper_table_rows.clear();
-    for (auto it = upper_table.cbegin(); it != upper_table.cend(); ++it) {
-        const auto& entry = it->second;
-        upper_table_rows.insert(entry);
-    }
-}
-
-/**
  * @brief Used when we move a row to the upper table. Updates all data structures accordingly.
  *
  * @param row The row to move.
@@ -214,41 +208,71 @@ void observation_table_imat::move_to_upper_table(const active_learning_namespace
     const auto& entry = lower_table.at(row);
 
     upper_table[row] = entry;
-    upper_table_rows.insert(std::move(entry));
-
     lower_table.erase(row);
     table_mapper.at(row) = upper_lower_t::upper;
 }
 
 /**
- * @brief This function has two purposes. It checks if the table is closed as given by the algorithm. It also moves all
- * the unique entries from the lower table to the upper table. (Perhaps we should separate those two functionalities?)
+ * @brief This function has two purposes. It checks if the table is closed as given by the algorithm. It also moves
+ * all the unique entries from the lower table to the upper table. (Perhaps we should separate those two
+ * functionalities?)
  *
- * A table is closed then all rows of the lower table also exist in the upper table. If we do have a row in the lower
- * table that does not exist in the upper table, then we identified a new state, and hence we move the row from the
- * lower table to the upper table. The entries in the upper table represent the unique states in the end.
+ * A table is closed then all rows of the lower table also exist in the upper table. If we do have a row in the
+ * lower table that does not exist in the upper table, then we identified a new state, and hence we move the row
+ * from the lower table to the upper table. The entries in the upper table represent the unique states in the end.
  *
  * @return true Table is closed.
  * @return false Table not closed.
  */
 const bool observation_table_imat::is_closed() {
+    DLOG_S(INFO) << "IS_CLOSED" << endl;
     if (checked_for_closedness) {
         throw logic_error(
             "is_closed() cannot be called consecutively without extending columns or lower table in the meantime.");
     }
 
     checked_for_closedness = true;
-    hash_upper_table();
-
     bool is_closed = true;
 
     // we break the lower_table if we delete on the fly, hence we need storage
     set<pref_suf_t> rows_to_move;
-    for (const auto& it : lower_table) {
-        const auto& entry = it.second;
-        if (!upper_table_rows.contains(entry)) {
+
+    // Check every lower table row
+    // if it is different from all upper table rows,
+    // then it should be promoted.
+    for (const auto& [pref_lower, exp_lower] : lower_table) {
+        // Check for this lower table row:
+        bool equal_to_one = false;
+
+        // Compare with every upper table row:
+        for (const auto& [pref_upper, exp_upper] : upper_table) {
+
+            bool is_different = false;
+            for (int ind = 0; ind < new_ind; ind++) {
+                int val_lower = exp_lower[ind];
+                // Ignoring missing values for comparison in IMAT
+                if (val_lower == -1)
+                    continue;
+                int val_upper = exp_upper[ind];
+                if (val_upper == -1)
+                    continue;
+                if (val_lower != val_upper) {
+                    // Found a legit difference.
+                    // Stop checking other values.
+                    is_different = true;
+                    break;
+                }
+            }
+            if (!is_different) {
+                // This one was in fact equal, stop checking with the other rows now.
+                equal_to_one = true;
+                break;
+            }
+        }
+        if (!equal_to_one) {
+            // different from all inspected rows -> promote the row to upper table.
             is_closed = false;
-            rows_to_move.insert(it.first);
+            rows_to_move.insert(pref_lower);
         }
     }
 
@@ -276,19 +300,40 @@ void observation_table_imat::mark_row_complete(const pref_suf_t& row) {
     incomplete_rows.erase(position_it);
 }
 
+void observation_table_imat::complete_rows(base_teacher* teacher, inputdata& id) {
+    DLOG_S(INFO) << "COMPLETE" << endl;
+    const auto& rows_to_close =
+        list<pref_suf_t>(get_incomplete_rows()); // need a copy, since we're modifying structure in mark_row_complete().
+    const auto& column_names = get_column_names();
+
+    for (const auto& current_row : rows_to_close) {
+        for (const auto& current_column : column_names) {
+            if (has_record(current_row, current_column))
+                continue;
+
+            const int answer = teacher->ask_membership_query_lstar(current_row, current_column, id);
+            insert_record(current_row, current_column, answer);
+        }
+        mark_row_complete(current_row);
+    }
+}
+
 /**
- * @brief Extends the columns by all the prefixes the argument suffix includes. Marks all rows as incomplete, as they
- * are by design again.
+ * @brief Extends the columns by all the prefixes the argument suffix includes. Marks all rows as incomplete, as
+ * they are by design again.
  *
  * @param suffix The suffix by which to extend. Gained from a counterexample as per L* algorithm.
  */
 void observation_table_imat::extent_columns(const pref_suf_t& suffix) {
+    DLOG_S(INFO) << "EXTEND" << endl;
     checked_for_closedness = false;
 
-    pref_suf_t current_suffix;
-    for (const int symbol : suffix) {
-        current_suffix.push_back(symbol);
-        all_columns.insert(current_suffix);
+    std::deque<int> current_suffix;
+    for (const int symbol : utils::reverse(suffix)) {
+        current_suffix.push_front(symbol);
+        pref_suf_t suf(current_suffix.begin(), current_suffix.end());
+        all_columns.insert(suf);
+        exp2ind[suf] = new_ind++;
     }
 
     incomplete_rows.clear();
@@ -312,10 +357,11 @@ void observation_table_imat::extend_lower_table() {
 
     // adding to lower table while iterating its results in infinite loop, hence we do auxiliary object
     set<pref_suf_t> all_row_names;
-    for (auto it = lower_table.cbegin(); it != lower_table.cend(); ++it) {
-        const auto& row_name = it->first;
-        all_row_names.insert(row_name);
-    }
+
+    /* for (auto it = lower_table.cbegin(); it != lower_table.cend(); ++it) { */
+    /*     const auto& row_name = it->first; */
+    /*     all_row_names.insert(row_name); */
+    /* } */
 
     for (auto it = upper_table.cbegin(); it != upper_table.cend(); ++it) {
         const auto& row_name = it->first;
@@ -332,7 +378,7 @@ void observation_table_imat::extend_lower_table() {
 
             incomplete_rows.push_back(new_row_name);           // we do a copy to circumvent the destructor
             table_mapper[new_row_name] = upper_lower_t::lower; // TODO: do we need the copy of the prefix here?
-            lower_table[std::move(new_row_name)] = row_type();
+            lower_table[std::move(new_row_name)] = row_type(new_ind, std::numeric_limits<int>::max());
         }
     }
 }
@@ -342,25 +388,34 @@ void observation_table_imat::extend_lower_table() {
  *
  */
 void observation_table_imat::print() const {
-    /*   cout << "Upper table: " << endl;
-      for(auto it = upper_table.cbegin(); it != upper_table.cend(); ++it){
+    cout << "Upper table rows: " << endl;
+    for (auto it = upper_table.cbegin(); it != upper_table.cend(); ++it) {
         const auto& row_name = it->first;
         print_vector(row_name);
-      }
+    }
 
-      cout << "Lower table:" << endl;
-      for(auto it = lower_table.cbegin(); it != lower_table.cend(); ++it){
+    cout << "Upper table data: " << endl;
+    for (auto it = upper_table.cbegin(); it != upper_table.cend(); ++it) {
+        const auto& row_data = it->second;
+        for (const auto col : all_columns) {
+            cout << row_data.at(exp2ind.at(col)) << " ";
+        }
+        cout << std::endl;
+    }
+
+    cout << "Lower table rows:" << endl;
+    for (auto it = lower_table.cbegin(); it != lower_table.cend(); ++it) {
         const auto& row_name = it->first;
-        print_sequence(row_name);
-      }
+        active_learning_namespace::print_sequence(row_name.begin(), row_name.end());
+    }
 
-      cout << "Columns:" << endl;
-      for(const auto col: all_columns){
+    cout << "Columns:" << endl;
+    for (const auto col : all_columns) {
         print_vector(col);
-      }
+    }
 
-      cout << "Rows to close:" << endl;
-      for(const auto r: incomplete_rows){
+    cout << "Rows to close:" << endl;
+    for (const auto r : incomplete_rows) {
         print_vector(r);
-      } */
+    }
 }
