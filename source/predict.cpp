@@ -260,6 +260,36 @@ apta_node* single_step(apta_node* n, tail* t, apta* a){
     return child->find();
 }
 
+void store_visited_states(apta_node* n, tail* t, state_set* states){
+    while(t != nullptr && n != nullptr){
+        states->insert(n);
+        apta_node* child = n->child(t);
+        while(child->rep() != nullptr){
+            child = child->rep();
+        }
+        n = child;
+        t = t->future();
+    }
+}
+
+pair<int,int> visited_node_sizes(apta_node* n, tail* t){
+    pair<int,int> size_num = pair<int,int>(0,0);
+    while(t != nullptr && n != nullptr){
+        size_num.first += n->get_size();
+        size_num.second += 1;
+
+        apta_node* child = n->child(t);
+        while(child->rep() != nullptr){
+            size_num.first += child->get_size();
+            size_num.second += 1;
+            child = child->rep();
+        }
+        n = child;
+        t = t->future();
+    }
+    return size_num;
+}
+
 double predict_trace(state_merger* m, trace* tr){
     apta_node* n = m->get_aut()->get_root();
     tail* t = tr->get_head();

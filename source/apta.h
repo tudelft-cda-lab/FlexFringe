@@ -186,7 +186,7 @@ public:
     void print_dot(iostream& output);
     void print_json(iostream& output);
     void read_json(istream &input_stream);
-    void print_sinks_json(iostream &output) const;
+    void print_sinks_json(iostream &output);
 
     /** for better layout when visualizing state machines from the json file
      * set nodes to this depth in a hierarchical view */
@@ -201,6 +201,8 @@ public:
     friend class tail_iterator;
     friend class inputdata;
     friend class state_merger;
+
+    bool print_node(apta_node *n);
 };
 
 /**
@@ -233,10 +235,14 @@ private:
      * to get access to all tails and incoming transitions */
     apta_node* next_merged_node;
     apta_node* representative_of;
+
     /** UNION/FIND size measure, number of state occurrences
      * size = total count, final = ending occurrences */
     int size;
     int final;
+
+    /** merge score, stored after performing a merge */
+    double merge_score;
 
     /** variables used for splitting */
     /** singly linked list containing all tails in this state */
@@ -261,6 +267,8 @@ public:
     inline int get_number(){ return number; }
     inline int get_size(){ return size; }
     inline int get_final(){ return final; }
+    inline double get_score(){ return merge_score; }
+    inline void set_score(double m){  merge_score = m; }
     inline int get_depth(){ return depth; }
     inline void set_red(bool b){ red = b; };
     inline apta_node* rep(){ return representative; }
@@ -370,8 +378,9 @@ public:
     void initialize(apta_node* n);
 
     /** print to json output, use later in predict functions */
-    void print_json(iostream &output);
-    void print_json_transitions(iostream &output);
+    void print_json(json &output);
+    void print_json_transitions(json &output);
+    void print_dot(iostream& output);
 
     /** below are functions use by special heuristics/settings and output printing */
 

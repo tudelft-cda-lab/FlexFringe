@@ -134,7 +134,7 @@ void alergia_data::read_json(json& data){
 void alergia_data::write_json(json& data){
     count_data::write_json(data);
 
-    data["symbol_counts"] = {};
+    //data["symbol_counts"] = {};
 
     for(auto & symbol_count : symbol_counts) {
         int symbol = symbol_count.first;
