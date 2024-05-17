@@ -171,7 +171,29 @@ void run() {
         LOG_S(INFO) << "Stream mode selected, starting run";
 
         stream_object stream_obj;
-        stream_obj.stream_mode(merger, BATCH_SIZE, BUFFER_SIZE);
+        auto state_sizes_num = stream_obj.stream_mode(merger, BATCH_SIZE, BUFFER_SIZE);
+
+        // Write fitness function to file
+        std::cout << "Writing fitnesses of test cases to file" << std::endl;
+        std::ofstream fitness_file("ff_fitness.txt");
+        if (!fitness_file.is_open()) {
+            std::cerr << "Error opening file!" << std::endl;
+            exit(0);
+        }
+
+        for(auto& state_size : state_sizes_num) {
+            double fitness;
+            if (state_size.first == 0 || state_size.second == 0) {
+                fitness = 0.0;
+            } else {
+                std::cout << "Sum state sizes: " << state_size.first << " Sum num states " << state_size.second << std::endl;
+                fitness = (double)state_size.second/(double)state_size.first;
+            }
+            fitness_file << fitness << " " << state_size.first << " " << state_size.second << std::endl;
+        }
+        fitness_file.close();
+        std::cout << "Finished writing fitnesses of test cases to file" << std::endl;
+
         // throw std::logic_error("Streaming mode is currently broken");
 
     } else if(OPERATION_MODE == "search") {
@@ -238,7 +260,6 @@ void run() {
             } else {
                 strategy = std::make_unique<in_order>();
             }
-
             predict_streaming(merger, *parser, *strategy, output);
         } else {
             std::cerr << "require a json formatted apta file to make predictions" << std::endl;

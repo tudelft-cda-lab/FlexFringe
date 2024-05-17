@@ -70,7 +70,7 @@ public:
     static inputdata with_alphabet_from(inputdata& other);
 
     void add_traces_to_apta(apta *the_apta);
-    void add_trace_to_apta(trace *tr, apta *the_apta);
+    std::pair<double, int> add_trace_to_apta(trace *tr, apta *the_apta);
 
     std::string& get_symbol(int a);
     int get_reverse_symbol(std::string a);

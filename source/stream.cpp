@@ -50,7 +50,7 @@ void stream_object::greedyrun_no_undo(state_merger* merger, const int seq_nr, co
       top_ref = merger->get_best_refinement();
     }
 
-    if(seq_nr % 100 == 0  || last_sequence){
+    if(seq_nr % 1 == 0  || last_sequence){
       cout << "Processed " << count_printouts << " batches" << endl;
       ++count_printouts;
     }
@@ -161,14 +161,16 @@ void stream_object::greedyrun_retry_merges(state_merger* merger, const int seq_n
       top_ref = merger->get_best_refinement();
     }
 
-    ++count_printouts;
-    if(count_printouts % 100 == 0  || last_sequence){
+    // ++count_printouts;
+    if(count_printouts % 1 == 0  || last_sequence){
       cout << "Processed " << count_printouts << " batches" << endl;
     }
 
-    if(count_printouts % 1000 == 0){
+    if(count_printouts % 1 == 0){
       print_current_automaton_stream(merger, "model_batch_nr_", to_string(count_printouts));
     }
+
+    ++count_printouts;
 
     // undo the merges
     while(!refinement_stack.empty()){
@@ -270,7 +272,7 @@ int stream_object::stream_mode(state_merger* merger, ifstream& input_stream, inp
  * @param batch_size The size of the batch.
  * @return int 
  */
-int stream_object::stream_mode(state_merger* merger, int batch_size, int buffer_size) {
+std::vector<std::pair<double, int>> stream_object::stream_mode(state_merger* merger, int batch_size, int buffer_size) {
     char buffer[buffer_size]; // size of buffer to read from the pipe.
     std::vector<char> line_buffer;
     signal(SIGINT, signal_handler); // setup signal handler to catch SIGINT (Ctrl+C)
@@ -280,8 +282,10 @@ int stream_object::stream_mode(state_merger* merger, int batch_size, int buffer_
     int sequence_number = 0;
     int n_runs = 0;
 
+    std::vector<pair<double, int>> state_sizes_num_list;
+
     // Read inputs from pipe. This is done via the STDIN_FILENO file descriptor.
-    while (!INTERRUPTED && difftime(time(nullptr), last_read_time) < 600) {
+    while (!INTERRUPTED && difftime(time(nullptr), last_read_time) < 5) {
         bytes_read = read(STDIN_FILENO, buffer, buffer_size); // read from the pipe
         if (bytes_read > 0) {
             for (int i = 0; i < bytes_read; ++i) {
@@ -289,6 +293,7 @@ int stream_object::stream_mode(state_merger* merger, int batch_size, int buffer_
                 if (ch == '\n') { // If newline character is encountered
                     // Output the collected line
                     // line_buffer.push_back('\0'); // Null-terminate to make it a C-style string
+                    std::cout << "Read line: " << std::string(line_buffer.begin(), line_buffer.end()) << std::endl;
                     current_batch.push_back(std::string(line_buffer.begin(), line_buffer.end()));
                     if (current_batch.size() >= batch_size) {
                       
@@ -299,13 +304,12 @@ int stream_object::stream_mode(state_merger* merger, int batch_size, int buffer_
                         std::istringstream iss(str); // create the input stream.
                         auto parser = abbadingoparser::single_trace(iss); // initialize a parser.
                         trace* new_trace = id->read_trace(parser, *parser_strategy).value(); // read the trace.
-                        id->add_trace_to_apta(new_trace, merger->get_aut()); // add the trace to the apta.
+                        pair<double,int> states_sizes_num = id->add_trace_to_apta(new_trace, merger->get_aut()); // add the trace to the apta.
+                        state_sizes_num_list.push_back(states_sizes_num); // add the state sizes and number of state visits to the list.
                         if (RETRY_MERGES) {
-                          cout << "Running retry merges" << endl;
-                          greedyrun_retry_merges(merger, sequence_number, true, n_runs); // run the greedy algorithm.
+                          greedyrun_retry_merges(merger, sequence_number, true, n_runs);
                         } else {
-                          cout << "Running greedy run" << endl;
-                          greedyrun_no_undo(merger, sequence_number, true, n_runs); // run the greedy algorithm.
+                          greedyrun_no_undo(merger, sequence_number, true, n_runs);
                         }
                         ++sequence_number; // increment the sequence number.
                         ++n_runs; // increment the number of runs.
@@ -331,6 +335,5 @@ int stream_object::stream_mode(state_merger* merger, int batch_size, int buffer_
         std::cout << "Timeout after 10 minutes. Exiting..." << std::endl;
     }
 
-    return 0;
-
+    return state_sizes_num_list;
 }

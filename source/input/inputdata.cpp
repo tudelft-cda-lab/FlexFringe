@@ -1,6 +1,7 @@
 #include "input/inputdata.h"
 #include "apta.h"
 #include "stringutil.h"
+#include "cmath"
 
 using namespace std;
 
@@ -210,7 +211,8 @@ void inputdata::add_traces_to_apta(apta *the_apta) {
     }
 }
 
-void inputdata::add_trace_to_apta(trace *tr, apta *the_apta) {
+std::pair<double, int> inputdata::add_trace_to_apta(trace *tr, apta *the_apta) {
+    pair<double, int> state_size_sum = pair<double, int>(0.0,0);
     int depth = 0;
     apta_node *node = the_apta->root;
     /*if(node->access_trace == nullptr){
@@ -225,6 +227,11 @@ void inputdata::add_trace_to_apta(trace *tr, apta *the_apta) {
 
     while (t != nullptr) {
         node->size = node->size + 1;
+        state_size_sum.first += node->size;
+        state_size_sum.second += 1;
+
+        std::cout << "At state " << node->number << " with size " << node->size << std::endl;
+
         node->add_tail(t);
         node->data->add_tail(t);
 
@@ -248,6 +255,8 @@ void inputdata::add_trace_to_apta(trace *tr, apta *the_apta) {
         }
         t = t->future();
     }
+    
+    return state_size_sum;
 }
 
 trace *inputdata::access_trace(tail *t) {

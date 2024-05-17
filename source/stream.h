@@ -42,7 +42,7 @@ public:
 
 
   int stream_mode(state_merger* merger, std::ifstream& input_stream, inputdata* id, parser* input_parser);
-  int stream_mode(state_merger* merger, int batch_size, int buffer_size);
+  std::vector<std::pair<double, int>> stream_mode(state_merger* merger, int batch_size, int buffer_size);
   void greedyrun_no_undo(state_merger* merger, const int seq_nr, const bool last_sequence, const int n_runs);
   void greedyrun_retry_merges(state_merger* merger, const int seq_nr, const bool last_sequence, const int n_runs); // for experiments
 };
