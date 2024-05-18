@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef _AL_W_METHOD_SEARCH_H_
-#define _AL_W_METHOD_SEARCH_H_
+#ifndef _AL_RANDOM_STRING_SEARCH_SEARCH_H_
+#define _AL_RANDOM_STRING_SEARCH_SEARCH_H_
 
 #include "random_int_generator.h"
 #include "search_base.h"
@@ -37,7 +37,7 @@ class random_string_search : public search_base {
     random_string_search(const int max_depth) : search_base(max_depth) {
         samples_drawn = 0;
         last_lower_bound = 5;
-        length_generator.set_limits(1, 20);
+        length_generator.set_limits(1, max_depth);
 
         max_samples = 500000;
     };

@@ -22,6 +22,8 @@ void abbadingoparser::parse_header(std::istream &inputstream) {
     std::string line;
     std::getline(inputstream, line);
 
+    std::cout << "The line: " << line << std::endl;
+
     auto input = lexy::string_input(line);
     auto parsed_header_maybe = lexy::parse<grammar::abbadingo_header_p>(input, lexy_ext::report_error);
 

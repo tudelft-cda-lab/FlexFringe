@@ -34,6 +34,7 @@ add_library(ActiveLearning STATIC
             algorithms/ldot.cpp
             algorithms/transformer_lsharp.h
             algorithms/transformer_lsharp.cpp
+            
             # PDFAs and WFAs
             algorithms/probabilistic_lsharp.h
             algorithms/probabilistic_lsharp.cpp
@@ -70,6 +71,8 @@ add_library(ActiveLearning STATIC
             equivalence_oracle/search_strategies/breadth_first_search.cpp
             equivalence_oracle/search_strategies/random_string_search.h
             equivalence_oracle/search_strategies/random_string_search.cpp
+            equivalence_oracle/search_strategies/random_w_method.h
+            equivalence_oracle/search_strategies/random_w_method.cpp
 
             memory/observation_table.h
             memory/observation_table.cpp

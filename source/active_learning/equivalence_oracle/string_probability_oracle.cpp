@@ -38,6 +38,8 @@ string_probability_oracle::equivalence_query(state_merger* merger, const unique_
     static const auto& alphabet = id.get_alphabet();
     static const auto mu = static_cast<double>(MU);
 
+    search_strategy->reset();
+
     std::optional<vector<int>> query_string_opt = search_strategy->next(id);
     while (query_string_opt != nullopt) { // nullopt == search exhausted
         auto& query_string = query_string_opt.value();
@@ -59,7 +61,7 @@ string_probability_oracle::equivalence_query(state_merger* merger, const unique_
         while (t != nullptr) {
             if (n == nullptr) {
                 cout << "Counterexample because tree not parsable" << endl;
-                search_strategy->reset();
+                //search_strategy->reset();
                 return make_optional<pair<vector<int>, int>>(make_pair(query_string, 0));
             }
 
@@ -81,7 +83,7 @@ string_probability_oracle::equivalence_query(state_merger* merger, const unique_
         if (diff > mu) {
             cout << "Predictions of the following counterexample: The true probability: " << true_val
                  << ", predicted probability: " << sampled_probability << endl;
-            search_strategy->reset();
+            //search_strategy->reset();
             return make_optional<pair<vector<int>, int>>(make_pair(query_string, 0));
         }
 

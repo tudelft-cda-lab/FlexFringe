@@ -27,6 +27,8 @@ std::optional<pair<vector<int>, int>> active_sul_oracle::equivalence_query(state
     inputdata& id = *(merger->get_dat());
     apta& hypothesis = *(merger->get_aut());
 
+    search_strategy->reset();
+
     std::optional<vector<int>> query_string_opt = search_strategy->next(id);
     while (query_string_opt != nullopt) { // nullopt == search exhausted
         auto& query_string = query_string_opt.value();
@@ -45,7 +47,7 @@ std::optional<pair<vector<int>, int>> active_sul_oracle::equivalence_query(state
 
             if (n == nullptr) {
                 cout << "Counterexample because tree not parsable" << endl;
-                search_strategy->reset();
+                //search_strategy->reset();
                 return make_optional<pair<vector<int>, int>>(make_pair(query_string, true_val));
             }
 
@@ -55,7 +57,7 @@ std::optional<pair<vector<int>, int>> active_sul_oracle::equivalence_query(state
         if (true_val != pred_val) {
             cout << "Predictions of the following counterexample: The true value: " << true_val
                  << ", predicted: " << pred_val << endl;
-            search_strategy->reset();
+            //search_strategy->reset();
             return make_optional<pair<vector<int>, int>>(make_pair(query_string, true_val));
         }
 
