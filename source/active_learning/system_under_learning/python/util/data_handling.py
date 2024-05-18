@@ -216,3 +216,18 @@ class SequenceDataset(Dataset):
         data["PAD"] = self.PAD
 
         pk.dump(data, open(path, "wb"))
+
+
+class DistilBertData(Dataset):
+    def __init__(self, data, labels, attn_mask):
+        self.data = data
+        self.labels = torch.zeros((len(labels), 2))
+        for i, label in enumerate(labels):
+            self.labels[i, label] = 1
+        self.attn_mask = attn_mask
+
+    def __len__(self):
+        return list(self.data.size())[0]
+    
+    def __getitem__(self, idx):
+        return self.data[idx], self.labels[idx], self.attn_mask[idx]
