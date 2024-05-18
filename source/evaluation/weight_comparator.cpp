@@ -35,11 +35,11 @@ void weight_comparator_data::read_json(json& data){
         string sym = symbol.key();
         string val = symbol.value();
         auto tmp = stof(val);
-        symbol_weight_map[inputdata_locator::get()->symbol_from_string(sym)] = exp(tmp);
+        symbol_weight_map[inputdata_locator::get()->symbol_from_string(sym)] = exp(tmp)-1;
     }
 
     string fp = data["final_weight"];
-    final_weight = exp(stof(fp));
+    final_weight = exp(stof(fp))-1;
 };
 
 void weight_comparator_data::write_json(json& data){
@@ -47,10 +47,13 @@ void weight_comparator_data::write_json(json& data){
 
     for(int symbol=0; symbol<symbol_weight_map.size(); ++symbol) {
         auto value = symbol_weight_map[symbol];
-        data["trans_probs"][inputdata_locator::get()->string_from_symbol(symbol)] = to_string(log(value));
+        
+        stringstream ss;
+        ss << log(value+1);
+        data["trans_probs"][inputdata_locator::get()->string_from_symbol(symbol)] = ss.str();
     }
     
-    data["final_weight"] = to_string(log(final_weight));
+    data["final_weight"] = to_string(log(final_weight+1));
 };
 
 void weight_comparator_data::print_transition_label(iostream& output, int symbol){
@@ -59,9 +62,9 @@ void weight_comparator_data::print_transition_label(iostream& output, int symbol
 
 void weight_comparator_data::print_state_label(iostream& output){
     evaluation_data::print_state_label(output);
-    for(int symbol=0; symbol<symbol_weight_map.size(); ++symbol){
-        output << symbol << " : " << symbol_weight_map[symbol] << "\n";
-    }
+    //for(int symbol=0; symbol<symbol_weight_map.size(); ++symbol){
+    //    output << symbol << " : " << symbol_weight_map[symbol] << "\n";
+    //}
     output << "f: " << final_weight << "\n";
 };
 
@@ -95,8 +98,12 @@ int weight_comparator_data::predict_symbol(tail*){
 
 double weight_comparator_data::predict_symbol_score(int t){
     if(t == -1)
-        return final_weight == 0.0 ? -100.0 : log(final_weight);
-    return symbol_weight_map[t] == 0.0 ? -100.0 : log(symbol_weight_map[t]);
+        return final_weight == 0.0 ? -100.1 : log(final_weight);
+    return symbol_weight_map[t] == 0.0 ? -100.1 : log(symbol_weight_map[t]);
+}
+
+const float weight_comparator_data::get_weight(const int symbol) const {
+    return symbol_weight_map[symbol];
 }
 
 void weight_comparator_data::set_weight(const int symbol, const float p) {

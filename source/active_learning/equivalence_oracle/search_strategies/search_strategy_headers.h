@@ -12,3 +12,4 @@
 #include "breadth_first_search.h"
 #include "random_string_search.h"
 #include "search_base.h"
+#include "random_w_method.h"

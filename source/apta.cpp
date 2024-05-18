@@ -42,7 +42,7 @@ apta::apta(){
     merger = nullptr;
 }
 
-void apta::print_dot(iostream& output){
+void apta::print_dot(iostream& output, state_set* saved_states, unordered_set<apta_guard*>* traversed_guards){
     // needed for the correct printing of intermediate models after undoing merges
     // Hielke: Fix numbering of states properly with suggestion in #23.
     merger->renumber_states();
@@ -50,8 +50,20 @@ void apta::print_dot(iostream& output){
     output << "digraph DFA {\n";
     output << "\t" << root->find()->number << " [label=\"root\" shape=box];\n";
     output << "\t\tI -> " << root->find()->number << ";\n";
-    for(APTA_iterator Ait = APTA_iterator(root); *Ait != 0; ++Ait){
-        apta_node *n = *Ait;
+
+    state_set iterables;
+    if (saved_states==nullptr){
+        for(APTA_iterator Ait = APTA_iterator(root); *Ait != 0; ++Ait){
+            apta_node *n = *Ait;
+            iterables.insert(n);
+        }
+    }
+    else{
+        iterables = *saved_states;
+    }
+
+    for(apta_node *n: iterables){
+        //apta_node *n = *Ait;
         if(!DEBUGGING && n->rep() != nullptr) continue;
 
         if (!n->data->print_state_true()) {
@@ -90,13 +102,15 @@ void apta::print_dot(iostream& output){
         // output << ", width=" << log(1 + log(1 + n->size));
         // output << ", height=" << log(1 + log(1 + n->size));
 
-        output << ", penwidth=" << log(1 + n->size);
+        output << ", penwidth=" << 1; // log(1 + n->size);
         output << "];\n";
 
         for(auto it = n->guards.begin(); it != n->guards.end(); ++it){
             if(it->second->target == nullptr) continue;
 
             apta_guard* g = it->second;
+            if(traversed_guards != nullptr && !traversed_guards->contains(g))
+                continue;
             apta_node* child = it->second->target->find();
             if(DEBUGGING) child = it->second->target;
 
@@ -120,14 +134,14 @@ void apta::print_dot(iostream& output){
                 output << "\\n" << inputdata_locator::get()->get_attribute(max_attribute_value.first) << " < " << max_attribute_value.second;
             }
             output << "\" ";
-            output << ", penwidth=" << log(1 + n->size);
+            output << ", penwidth=" << 1;//log(1 + n->size);
             output << " ];\n";
         }
     }
     output << "}\n";
 }
 
-void apta_node::print_json(iostream& output){
+void apta_node::print_json(iostream& output){    
     output << "\t\t{\n";
     output << "\t\t\t\"id\" : " << number << ",\n";
     //output << "\t\t\t\"access\" : " << get_trace_from_state()->to_string() << ",\n";

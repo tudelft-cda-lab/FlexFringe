@@ -121,7 +121,7 @@ void run() {
         read_csv = true;
     }
 
-    if(OPERATION_MODE != "stream" && OPERATION_MODE != "predict"){
+    if(OPERATION_MODE != "stream" && OPERATION_MODE != "predict" && OPERATION_MODE != "subgraphextraction"){
         if(read_csv) {
             auto input_parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
             id.read(&input_parser);
@@ -254,6 +254,55 @@ void run() {
             delete the_apta2;
         } else {
             cerr << "require two json formatted apta files to compare" << endl;
+        }
+    } else if (OPERATION_MODE == "subgraphextraction") {
+        cout << "subgraphextraction mode selected" << endl;
+        LOG_S(INFO) << "subgraphextraction mode selected, starting run";
+
+        if(!APTA_FILE.empty()){
+            ifstream input_apta_stream(APTA_FILE);
+            cout << "reading apta file - " << APTA_FILE << endl;
+            the_apta->read_json(input_apta_stream);
+            cout << "Finished reading apta file." << endl;
+
+            if(read_csv) {
+                auto input_parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
+                id.read(&input_parser);
+            } else {
+                auto input_parser = abbadingoparser(input_stream);
+                //id.read(&input_parser);
+                cout << "starting to predict" << endl;
+                auto strategy = in_order();
+
+                state_set visited_nodes;
+                unordered_set<apta_guard*> traversed_guards;
+                for (auto* tr : id.trace_iterator(input_parser, strategy)) {    
+                    apta_node* n = merger->get_aut()->get_root();
+                    tail* t = tr->get_head();
+
+                    for(int j = 0; j < t->get_length(); j++){
+                        apta_guard* g = n->guard(t->get_symbol());
+                        traversed_guards.insert(g);
+
+                        n = single_step(n, t, merger->get_aut());
+                        if(n == nullptr) break;
+                        t = t->future();
+                        visited_nodes.insert(n);
+                    }
+                    tr->erase();
+                }
+
+                ofstream output(OUTPUT_FILE + ".part.dot");
+
+                stringstream dot_output_buf;
+                merger->get_aut()->print_dot(dot_output_buf, &visited_nodes, &traversed_guards);
+                string dot_output = "// produced with flexfringe // " + COMMAND + '\n'+ dot_output_buf.str();
+
+                output << dot_output;
+                output.close();
+            }
+        } else {
+            cerr << "require a json formatted apta file to make predictions" << endl;
         }
     } else {
        LOG_S(ERROR) << "Unknown mode of operation selected, please chose batch, stream, or inter. Provided was " << OPERATION_MODE;

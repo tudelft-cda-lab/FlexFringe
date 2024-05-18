@@ -29,7 +29,8 @@ class weight_comparing_oracle : public eq_oracle_base {
 
   public:
     weight_comparing_oracle(std::shared_ptr<sul_base>& sul) : eq_oracle_base(sul) {
-        search_strategy = std::unique_ptr<search_base>(new random_string_search(MAX_CEX_LENGTH));
+        //search_strategy = std::unique_ptr<search_base>(new random_string_search(MAX_CEX_LENGTH));
+        search_strategy = std::unique_ptr<search_base>(new random_w_method(MAX_CEX_LENGTH));
         // search_strategy = std::unique_ptr<search_base>(new bfs_strategy(8)); // number here is maximum length of
         // sequence. Find a better way to set this
         assert(dynamic_cast<input_file_sul*>(sul.get()) == nullptr);
@@ -39,6 +40,8 @@ class weight_comparing_oracle : public eq_oracle_base {
 
     std::optional<std::pair<std::vector<int>, int>>
     equivalence_query(state_merger* merger, [[maybe_unused]] const std::unique_ptr<base_teacher>& teacher);
+
+    void initialize(state_merger* merger) override;
 };
 
 #endif

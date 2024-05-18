@@ -39,6 +39,8 @@ weight_comparing_oracle::equivalence_query(state_merger* merger, const unique_pt
     static const auto mu = static_cast<double>(MU);
     static const auto EOS = END_SYMBOL;
 
+    search_strategy->reset();
+
     std::optional<vector<int>> query_string_opt = search_strategy->next(id);
     while (query_string_opt != nullopt) {
         auto& query_string = query_string_opt.value();
@@ -57,7 +59,7 @@ weight_comparing_oracle::equivalence_query(state_merger* merger, const unique_pt
                 // break;
 
                 cout << "Counterexample because tree not parsable" << endl;
-                search_strategy->reset();
+                //search_strategy->reset();
                 return make_optional<pair<vector<int>, int>>(make_pair(query_string, 0));
             }
 
@@ -83,7 +85,7 @@ weight_comparing_oracle::equivalence_query(state_merger* merger, const unique_pt
         if (diff > mu) {
             cout << "Predictions of the following counterexample: The true probability: " << true_value
                  << ", predicted probability: " << sampled_value << endl;
-            search_strategy->reset();
+            //search_strategy->reset();
             return make_optional<pair<vector<int>, int>>(make_pair(query_string, 0));
         }
 
@@ -91,4 +93,13 @@ weight_comparing_oracle::equivalence_query(state_merger* merger, const unique_pt
     }
 
     return nullopt;
+}
+
+/**
+ * @brief Initializes the search strategy. Needed for e.g. W-method.
+ * 
+ * @param merger The merger.
+ */
+void weight_comparing_oracle::initialize(state_merger* merger){
+    this->search_strategy->initialize(merger);
 }

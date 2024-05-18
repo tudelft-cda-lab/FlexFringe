@@ -14,6 +14,7 @@
 
 #include "source/input/inputdata.h"
 #include "sul_base.h"
+#include "state_merger.h"
 
 #include <memory>
 #include <optional>
@@ -28,6 +29,10 @@ class search_base {
 
     virtual std::optional<std::vector<int>> next(const inputdata& id) = 0;
     virtual void reset() = 0;
+
+    virtual void initialize(state_merger* merger){
+      std::cerr << "WARNING: Intialization method for this search method not implemented." << std::endl;
+    }
 };
 
 #endif

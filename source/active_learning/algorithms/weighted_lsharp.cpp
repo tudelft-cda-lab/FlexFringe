@@ -51,8 +51,12 @@ unordered_set<apta_node*> weighted_lsharp_algorithm::extend_fringe(unique_ptr<st
         seq = access_trace->get_input_sequence(true, true);
     else
         seq.resize(1);
-
+    
+    //auto* data = static_cast<weight_comparator_data*>(n->get_data());
     for (const int symbol : alphabet) {
+        //if(data->get_weight(symbol)==float(0.0))
+        //    continue;
+        
         seq[seq.size() - 1] = symbol;
         trace* new_trace = vector_to_trace(seq, id);
         id.add_trace_to_apta(new_trace, merger->get_aut(), false);
@@ -278,11 +282,11 @@ list<refinement*> weighted_lsharp_algorithm::find_complete_base_count_depth(uniq
             }
         }
 
-        {
-            static int model_nr = 0;
-            cout << "printing model " << model_nr << " at depth " << depth << endl;
-            print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_refs");
-        }
+        //{
+        //    static int model_nr = 0;
+        //    cout << "printing model " << model_nr << " at depth " << depth << endl;
+        //    print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_refs");
+        //}
 
         if (!identified_red_node) {
             cout << "Complete basis found. Forwarding hypothesis" << endl;
@@ -307,9 +311,9 @@ list<refinement*> weighted_lsharp_algorithm::find_complete_base_count_nodes(uniq
                                                                 const vector<int>& alphabet) {
     static const bool COUNTEREXAMPLE_STRATEGY = false;
 
-    int n_red_nodes = 0;
-    static const int MAX_RED_NODES = 200;
-    
+    int n_red_nodes = 1; // for the root node
+    static const int MAX_RED_NODES = 2500;
+    bool termination_reached = false;
     int n_iter = -1;
 
     list<refinement*> performed_refs;
@@ -348,6 +352,10 @@ list<refinement*> weighted_lsharp_algorithm::find_complete_base_count_nodes(uniq
 
                 ++n_red_nodes;
                 extend_fringe(merger, blue_node, the_apta, id, alphabet);
+                if(n_red_nodes == MAX_RED_NODES){
+                    termination_reached = true;
+                    break;
+                }
             } else {
                 // get the best merge from the heap
                 refinement* best_merge = *(possible_merges.begin());
@@ -360,37 +368,49 @@ list<refinement*> weighted_lsharp_algorithm::find_complete_base_count_nodes(uniq
             }
         }
 
-        {
-            static int model_nr = 0;
-            cout << "printing model " << model_nr  << endl;
-            print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_refs");
-        }
-
-        if (!identified_red_node) {
-            cout << "Complete basis found. Forwarding hypothesis" << endl;
-            find_closed_automaton(performed_refs, the_apta, merger, weight_comparator::get_distance);
-            return performed_refs;
-        }
-
-        if (n_red_nodes >= MAX_RED_NODES && COUNTEREXAMPLE_STRATEGY){
-            static const int MAX_ITER = 20;
-            static int c_iter = 0;
-            cout << "Continuing search using the counterexample strategy. Iteration " << c_iter << " out of " << MAX_ITER << endl;
-            find_closed_automaton(performed_refs, the_apta, merger, weight_comparator::get_distance);
-            c_iter++;
-            if(c_iter==MAX_ITER){
-                cout << "Max number of iterations reached. Printing automaton." << endl;
-                print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
-                exit(0);
-            }
-            return performed_refs;
-        } else if (n_red_nodes >= MAX_RED_NODES) {
+        if(termination_reached){
             cout << "Max number of states reached and counterexample strategy disabled. Printing the automaton with " << n_red_nodes << " states." << endl;
             find_closed_automaton(performed_refs, the_apta, merger, weight_comparator::get_distance);
             print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
             cout << "Printed. Terminating" << endl;
             exit(0);
         }
+
+        //{
+        //    static int model_nr = 0;
+        //    cout << "printing model " << model_nr  << endl;
+        //    print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_refs");
+        //}
+
+
+        if(!identified_red_node){
+            static int n_h = 0;
+            ++n_h;
+            if(n_h==10){
+                cout << "Max number of hypotheses reached. Printing the automaton with " << n_red_nodes << " states." << endl;
+                find_closed_automaton(performed_refs, the_apta, merger, weight_comparator::get_distance);
+                print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
+                cout << "Printed. Terminating" << endl;
+                exit(0);
+            }
+            cout << "Complete basis found. Forwarding hypothesis" << endl;
+            find_closed_automaton(performed_refs, the_apta, merger, weight_comparator::get_distance);
+            return performed_refs;
+        }
+
+        //if (n_red_nodes >= MAX_RED_NODES && COUNTEREXAMPLE_STRATEGY){
+        //    static const int MAX_ITER = 20;
+        //    static int c_iter = 0;
+        //    cout << "Continuing search using the counterexample strategy. Iteration " << c_iter << " out of " << MAX_ITER << endl;
+        //    find_closed_automaton(performed_refs, the_apta, merger, weight_comparator::get_distance);
+        //    c_iter++;
+        //    if(c_iter==MAX_ITER){
+        //        cout << "Max number of iterations reached. Printing automaton." << endl;
+        //        print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
+        //        exit(0);
+        //    }
+        //    return performed_refs;
+        //}
     }
 }
 
@@ -410,6 +430,7 @@ void weighted_lsharp_algorithm::run(inputdata& id) {
 
     auto the_apta = unique_ptr<apta>(new apta());
     auto merger = unique_ptr<state_merger>(new state_merger(&id, eval.get(), the_apta.get()));
+    this->oracle->initialize(merger.get());
 
     const vector<int> alphabet = id.get_alphabet();
     cout << "Alphabet: ";
@@ -423,10 +444,10 @@ void weighted_lsharp_algorithm::run(inputdata& id) {
         extend_fringe(merger, root_node, the_apta, id, alphabet);
     }
 
-    {
-        static int model_nr = 0;
-        print_current_automaton(merger.get(), "model.", "root");
-    }
+    //{
+    //    static int model_nr = 0;
+    //    print_current_automaton(merger.get(), "model.", "root");
+    //}
 
     while (ENSEMBLE_RUNS > 0 && n_runs <= ENSEMBLE_RUNS) {
         if (n_runs % 100 == 0)

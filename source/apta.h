@@ -191,7 +191,7 @@ public:
     apta_node* sift(trace* tr) const;
 
     /** reading and writing an apta to and from file */
-    void print_dot(iostream& output);
+    void print_dot(iostream& output, state_set* saved_states = nullptr, unordered_set<apta_guard*>* traversed_guards = nullptr);
     void print_json(iostream& output);
     void read_json(istream &input_stream);
     void print_sinks_json(iostream &output) const;

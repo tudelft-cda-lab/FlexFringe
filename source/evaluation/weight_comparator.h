@@ -45,6 +45,7 @@ public:
     virtual int predict_symbol(tail*) override;
     virtual double predict_symbol_score(int t) override;
 
+    const float get_weight(const int symbol) const;
     void set_weight(const int symbol, const float p);
 
     void initialize_weights(const vector<int>& alphabet){
