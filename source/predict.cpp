@@ -262,6 +262,36 @@ double prob_single_parallel(tail* p, tail* t, apta_node* n, double prod_prob, bo
     return -100000;
 }
 
+void store_visited_states(apta_node* n, tail* t, state_set* states){
+    while(t != nullptr && n != nullptr){
+        states->insert(n);
+        apta_node* child = n->child(t);
+        while(child->rep() != nullptr){
+            child = child->rep();
+        }
+        n = child;
+        t = t->future();
+    }
+}
+
+pair<int,int> visited_node_sizes(apta_node* n, tail* t){
+    pair<int,int> size_num = pair<int,int>(0,0);
+    while(t != nullptr && n != nullptr){
+        size_num.first += n->get_size();
+        size_num.second += 1;
+
+        apta_node* child = n->child(t);
+        while(child->rep() != nullptr){
+            size_num.first += child->get_size();
+            size_num.second += 1;
+            child = child->rep();
+        }
+        n = child;
+        t = t->future();
+    }
+    return size_num;
+}
+
 apta_node* single_step(apta_node* n, tail* t, apta* a){
     apta_node* child = n->child(t);
     if(child == 0){

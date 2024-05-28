@@ -194,7 +194,9 @@ public:
     void print_dot(iostream& output, state_set* saved_states = nullptr, unordered_set<apta_guard*>* traversed_guards = nullptr);
     void print_json(iostream& output);
     void read_json(istream &input_stream);
-    void print_sinks_json(iostream &output) const;
+    void print_sinks_json(iostream &output);
+
+    //void print_sinks_json(iostream& output);
 
     /** for better layout when visualizing state machines from the json file
      * set nodes to this depth in a hierarchical view */
@@ -210,6 +212,8 @@ public:
     friend class inputdata;
     friend class IInputData; // TODO: rename
     friend class state_merger;
+
+    bool print_node(apta_node *n);
 
     friend class benchmark_dfaparser;
     friend class benchmarkparser_base;
@@ -250,6 +254,9 @@ private:
     int size;
     int final;
 
+    /** merge score, stored after performing a merge */
+    double merge_score;
+
     /** variables used for splitting */
     /** singly linked list containing all tails in this state */
     tail* tails_head;
@@ -272,6 +279,8 @@ public:
     inline int get_number() const { return number; }
     inline int get_size() const { return size; }
     inline int get_final() const { return final; }
+    inline double get_score(){ return merge_score; }
+    inline void set_score(double m){  merge_score = m; }
     inline int get_depth() const { return depth; }
     inline void set_red(bool b){ red = b; };
     inline apta_node* rep() const { return representative; }
@@ -392,8 +401,11 @@ public:
     void initialize(apta_node* n);
 
     /** print to json output, use later in predict functions */
-    void print_json(iostream &output);
-    void print_json_transitions(iostream &output);
+    //void print_json(iostream &output);
+    void print_json(nlohmann::json& nodes);
+    //void print_json_transitions(iostream &output);
+    void print_json_transitions(nlohmann::json& edges);
+    void print_dot(iostream& output);
 
     /** below are functions use by special heuristics/settings and output printing */
 
