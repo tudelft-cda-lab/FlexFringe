@@ -476,7 +476,10 @@ void weighted_lsharp_algorithm::run(inputdata& id) {
 
             const vector<int>& cex = query_result.value().first;
             cout << "Counterexample of length " << cex.size() << " found: ";
-            print_vector(cex);
+            for(auto s: cex)
+                cout << id.get_symbol(s) << " ";
+            cout << endl;
+
             proc_counterex(teacher, id, the_apta, cex, merger, refs, alphabet);
 
             break;

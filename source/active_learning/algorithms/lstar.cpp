@@ -143,8 +143,11 @@ void lstar_algorithm::run(inputdata& id) {
 
                 const pref_suf_t& cex = query_result.value().first;
                 auto cex_tr = vector_to_trace(cex, id, type);
-                cout << "Found counterexample: " << cex_tr->to_string() << "\n"; // endl;
-
+                cout << "Found counterexample: ";
+                for(auto s: cex)
+                    cout << id.get_symbol(s) << " ";
+                cout << endl;
+                
                 reset_apta(merger.get(), refs); // note: does not reset the identified red states we had before
                 obs_table.extent_columns(cex);
                 break;
