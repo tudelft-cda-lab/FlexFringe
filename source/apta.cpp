@@ -62,8 +62,8 @@ void apta_node::print_dot(iostream& output){
     //else output << ", style=dotted";
     output << ", style=filled";
 
-    if (is_red()) output << ", fillcolor=\"firebrick1\"";
-    else if (is_blue()) output << ", fillcolor=\"dodgerblue1\"";
+    if (is_red()) output << ", fillcolor=\"tomato\"";
+    else if (is_blue()) output << ", fillcolor=\"lightskyblue\"";
     else if (is_white()) output << ", fillcolor=\"ghostwhite\"";
 
     output << ", width=" << log(1 + log(1 + size));
@@ -129,12 +129,14 @@ void apta_node::print_json(json& nodes){
     output["isblue"] = is_blue();
     output["issink"] = is_sink();
     output["trace"] = access_trace->to_string();
-    if(representative != nullptr){
-        output["representative"] = representative->number;
-        output["mergescore"] = merge_score;
-    } else {
-        output["representative"] = -1;
-        output["mergescore"] = 0.0;
+    if(DEBUGGING){
+        if(representative != nullptr){
+            output["representative"] = representative->number;
+            output["mergescore"] = merge_score;
+        } else {
+            output["representative"] = -1;
+            output["mergescore"] = 0.0;
+        }
     }
     json d;
     data->write_json(d);
@@ -149,7 +151,8 @@ void apta_node::print_json_transitions(json& edges){
         apta_node* child = guard.second->target;
 
         output["source"] = number;
-        output["target"] = child->number;
+        if(DEBUGGING) output["target"] = child->number;
+        else output["target"] = child->find()->number;
 
         output["label"] = inputdata::get_symbol(guard.first);
         edges.push_back(output);
@@ -185,9 +188,15 @@ void apta::print_json(iostream& outio){
             if (guard.second->target != nullptr){
                 apta_node* target = guard.second->target;
                 if(!print_node(target->find())) continue;
-                while(target->representative != nullptr){
+                if(DEBUGGING){
+                    while(target->representative != nullptr){
+                        target->print_json(nodes);
+                        target = target->representative;
+                    }
+                } else
+                {
+                    target = target->find();
                     target->print_json(nodes);
-                    target = target->representative;
                 }
             }
         }
