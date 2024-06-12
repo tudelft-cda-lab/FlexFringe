@@ -164,6 +164,7 @@ extern string REJECTING_LABEL;
 extern int START_SYMBOL;
 extern int END_SYMBOL;
 extern int MAX_CEX_LENGTH;
+extern int NUM_CEX_PARAM;
 
 extern string POSTGRESQL_CONNSTRING;
 extern string POSTGRESQL_TBLNAME;

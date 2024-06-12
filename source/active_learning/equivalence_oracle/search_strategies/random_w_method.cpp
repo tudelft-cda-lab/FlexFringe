@@ -22,21 +22,10 @@ int random_w_method::count_nodes(){
     int res = 0;
     for (red_state_iterator r_it = red_state_iterator(hypothesis->get_root()); *r_it != nullptr; ++r_it)
         ++res;
-    
     return res;
 }
 
 optional<vector<int>> random_w_method::next(const inputdata& id) {
-
-    // TODO: we can move this block into new initialize method
-    static bool initialized = false;
-    if (!initialized) {
-        alphabet_vec = id.get_alphabet();
-        alphabet_sampler.set_limits(0, alphabet_vec.size() - 1);
-
-        initialized = true;
-    }
-
     while(tested_nodes.contains(*r_it))
         r_it.increment();
 
@@ -50,6 +39,11 @@ optional<vector<int>> random_w_method::next(const inputdata& id) {
 
         auto at = (*r_it)->get_access_trace();
         current_access_sequence = at->get_input_sequence(true, false);
+        
+        cout << "Shifting to access trace: ";
+        for(int x: current_access_sequence) 
+            cout << x << " ";
+        cout << endl;
 
         samples_for_current_node = 0;
         ++n_tested_nodes;
@@ -69,13 +63,9 @@ optional<vector<int>> random_w_method::next(const inputdata& id) {
 
 void random_w_method::initialize(state_merger* merger){
     this->hypothesis = merger->get_aut();
-
-    r_it = red_state_iterator(hypothesis->get_root());
-    samples_for_current_node = 0;
-
-    auto at = (*r_it)->get_access_trace();
-    current_access_sequence = at->get_input_sequence(true, false);
-
+    this->alphabet_vec = merger->get_dat()->get_alphabet();
+    
+    alphabet_sampler.set_limits(0, alphabet_vec.size() - 1);
     n_tested_nodes = 0;
 }
 
@@ -90,8 +80,6 @@ void random_w_method::reset(){
 
     auto at = (*r_it)->get_access_trace();
     current_access_sequence = at->get_input_sequence(true, false);
-
-    //n_tested_nodes = 0;
 
     current_h_size = count_nodes();
 }

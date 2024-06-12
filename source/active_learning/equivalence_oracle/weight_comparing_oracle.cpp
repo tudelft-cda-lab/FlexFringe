@@ -35,12 +35,28 @@ weight_comparing_oracle::test_trace_accepted(apta& hypothesis, trace* const tr, 
     double true_value = 1;
 
     while (t != nullptr) {
-        if (n == nullptr) {
+        auto weights = teacher->get_weigth_distribution(current_substring, id);
+        const int symbol = t->get_symbol();
+
+        if (use_sinks && n==nullptr) {
+            cout << "Sink found in eq" << endl;
+            sampled_value = 0;
+
+            const int mapped_symbol = stoi(id.get_symbol(symbol));
+            true_value *= weights[mapped_symbol];
+            if(true_value < mu) 
+                return true;
+
+            current_substring.push_back(symbol);
+            t = t->future();
+
+            continue;
+        }
+        else if (n == nullptr) {
             cout << "Counterexample because tree not parsable" << endl;
             return false;
         }
 
-        auto weights = teacher->get_weigth_distribution(current_substring, id);
         if (t->is_final() && EOS != -1) {
             sampled_value *= static_cast<weight_comparator_data*>(n->get_data())->get_final_weight();
             true_value *= weights[EOS];
@@ -48,7 +64,6 @@ weight_comparing_oracle::test_trace_accepted(apta& hypothesis, trace* const tr, 
         } else if (t->is_final())
             break;
 
-        const int symbol = t->get_symbol();
         sampled_value *= static_cast<weight_comparator_data*>(n->get_data())->get_weight(symbol);
         const int mapped_symbol = stoi(id.get_symbol(symbol));
         true_value *= weights[mapped_symbol];
@@ -88,19 +103,58 @@ weight_comparing_oracle::equivalence_query(state_merger* merger, const unique_pt
     static const auto mu = static_cast<double>(MU);
     static const auto EOS = END_SYMBOL;
 
-    static const bool CHECK_ACCESS_STRINGS = true;
-    
+    // for debugging only
+    static const bool CHECK_ACCESS_STRINGS = false;
+    static const bool TEST_TARGET_VEC = false;
+
     if(CHECK_ACCESS_STRINGS){
+        static unordered_set<apta_node*> tested_nodes;
+
         cout << "Testing the access strings" << endl;
+
+        auto& alphabet = id.get_alphabet(); 
         for (red_state_iterator r_it = red_state_iterator(hypothesis.get_root()); *r_it != nullptr; ++r_it) {
             auto n = *r_it;
+
             while(n!=nullptr){
-                trace* at = n->get_access_trace();
-                if(!test_trace_accepted(hypothesis, at, teacher, id)){
-                    vector<int> query_string = at->get_input_sequence(true, false);
-                    return make_optional<pair<vector<int>, int>>(make_pair(query_string, 0));
+                
+                if(tested_nodes.contains(n)){
+                    n = n->get_next_merged();
+                    continue;
                 }
+                
+                // bypasses the root node, which is expected to be correct by default
+                trace* at = n->get_access_trace();
+                auto seq = at->get_input_sequence(true, true);
+
+                for(auto symbol: alphabet){
+                    seq[seq.size() - 1] = symbol;
+                    trace* nt = vector_to_trace(seq, id);
+                    if(!test_trace_accepted(hypothesis, nt, teacher, id)){
+                        vector<int> query_string = at->get_input_sequence(true, false);
+                        return make_optional<pair<vector<int>, int>>(make_pair(seq, 0));
+                    }
+                }
+                tested_nodes.insert(n);
                 n = n->get_next_merged();
+            }
+        }
+    }
+
+    if(TEST_TARGET_VEC){
+        vector<int> test_vec;
+        for(int i=2; i<=10; ++i){
+            test_vec.push_back(id.get_reverse_symbol("314"));
+
+            cout << "testing trace: ";
+            for(int j=0; j<test_vec.size(); ++j){
+                cout << id.get_symbol(test_vec[j]) << " ";
+            }
+            cout << endl;
+
+            trace* nt = vector_to_trace(test_vec, id);
+            if(!test_trace_accepted(hypothesis, nt, teacher, id)){
+                return make_optional<pair<vector<int>, int>>(make_pair(test_vec, 0));
             }
         }
     }
@@ -110,6 +164,11 @@ weight_comparing_oracle::equivalence_query(state_merger* merger, const unique_pt
     std::optional<vector<int>> query_string_opt = search_strategy->next(id);
     while (query_string_opt != nullopt) {
         auto& query_string = query_string_opt.value();
+        //for(int j=0; j<query_string.size(); ++j){
+        //    cout << id.get_symbol(query_string[j]) << " ";
+        //}
+        //cout << endl;
+
         trace* test_tr = vector_to_trace(query_string, id, 0); // type-argument irrelevant here
 
         if(!test_trace_accepted(hypothesis, test_tr, teacher, id))

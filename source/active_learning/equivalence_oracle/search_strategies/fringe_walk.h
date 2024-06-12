@@ -1,5 +1,5 @@
 /**
- * @file random_w_method.h
+ * @file fringe_walk.h
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
  * @brief 
  * @version 0.1
@@ -9,8 +9,8 @@
  * 
  */
 
-#ifndef _AL_W_METHOD_SEARCH_H_
-#define _AL_W_METHOD_SEARCH_H_
+#ifndef _FRINGE_WALK_SEARCH_H_
+#define _FRINGE_WALK_SEARCH_H_
 
 #include "random_int_generator.h"
 #include "search_base.h"
@@ -19,29 +19,30 @@
 #include <vector>
 #include <unordered_set>
 
-class random_w_method : public search_base {
+class fringe_walk : public search_base {
   private:
     apta* hypothesis; // must point to the same node that the oracle also points to
-    red_state_iterator r_it;
+    apta_node* current_node;
+    
     vector<int> current_access_sequence;
+    unordered_set<apta_node*> collect_fringe_nodes();
+    apta_node* get_next_valid_node(const unordered_set<apta_node*>& fringe_nodes, const unordered_set<apta_node*>& tested_nodes) const;
 
     unordered_set<apta_node*> tested_nodes;
-  
+    unordered_set<apta_node*> fringe_nodes;
+
     const int SAMPLES_PER_NODE = NUM_CEX_PARAM;
     int samples_for_current_node;
     int n_tested_nodes;
     int current_h_size;
-
 
     random_int_generator length_generator;
     random_int_generator alphabet_sampler;
 
     std::vector<int> alphabet_vec;
 
-    int count_nodes();
-
   public:
-    random_w_method(const int max_depth) : search_base(max_depth), r_it(nullptr){
+    fringe_walk(const int max_depth) : search_base(max_depth){
         length_generator.set_limits(1, max_depth);
         samples_for_current_node = 0;
     };

@@ -78,6 +78,10 @@ void weight_comparator_data::undo(evaluation_data* right){
     evaluation_data::undo(right);
 };
 
+double weight_comparator_data::get_access_probability() const noexcept {
+    return this->access_weight;
+}
+
 /**
  * @brief Finds the max-symbol in this node.
  * 

@@ -472,9 +472,13 @@ int main(int argc, char *argv[]){
     app.add_option("--active_learning_algorithm", ACTIVE_LEARNING_ALGORITHM, "The basic algorithm that runs through. Current options are (l_star). DEFAULT: l_star");
     app.add_option("--use_active_learning", DO_ACTIVE_LEARNING, "Perform active learning on top of the normal learner. 1 for true, 0 for false. Default: 0");
     app.add_option("--max_counterexample_length", MAX_CEX_LENGTH, "The maximum length a counterexample can reach. Critical in models where a maximum-string-length occurs, such as transformer-models. Default: 25");
+    app.add_option("--num_cex_search", NUM_CEX_PARAM, "Samples parameter indicating a number in the counterexample search. For example, in the random w-method the number of strings per node,\\
+                                                                and in random string search it is the delay. Default: 5000");
     // TODO: shall we delete the rejecting_label option?
     app.add_option("--rejecting_label", REJECTING_LABEL, "The label as a string that is used for rejecting (non-accepting) behavior. Only in active learning mode. DEFAULT: 0");
-
+    app.add_option("--start_symbol", START_SYMBOL, "The <SOS> symbol (as per NLP convention) represented by an int value. A value of -1 means that it is unused. Only in active learning mode when querying networks. DEFAULT: -1");
+    app.add_option("--end_symbol", END_SYMBOL, "The <SOS> symbol (as per NLP convention) represented by an int value. A value of -1 means that it is unused. Only in active learning mode when querying networks. DEFAULT: -1");
+    
 
     app.add_option("--postgresql-connstring", POSTGRESQL_CONNSTRING,
                    "The string that connects to a postgresql database. This is either a key value pairing or a URI. "
@@ -488,9 +492,7 @@ int main(int argc, char *argv[]){
     app.add_option("--postgresql-droptbls", POSTGRESQL_DROPTBLS,
                    "With this option you can tell the program to drop the existing tables. Default=true");
     
-    app.add_option("--start_symbol", START_SYMBOL, "The <SOS> symbol (as per NLP convention) represented by an int value. A value of -1 means that it is unused. Only in active learning mode when querying networks. DEFAULT: -1");
-    app.add_option("--end_symbol", END_SYMBOL, "The <SOS> symbol (as per NLP convention) represented by an int value. A value of -1 means that it is unused. Only in active learning mode when querying networks. DEFAULT: -1");
-    
+
     CLI11_PARSE(app, argc, argv)
 
     loguru::g_stderr_verbosity = loguru::Verbosity_OFF;

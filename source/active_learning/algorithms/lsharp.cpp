@@ -137,75 +137,41 @@ unordered_set<apta_node*> lsharp_algorithm::extend_fringe(unique_ptr<state_merge
 list<refinement*> lsharp_algorithm::find_complete_base(unique_ptr<state_merger>& merger,
                                                                 unique_ptr<apta>& the_apta, inputdata& id,
                                                                 const vector<int>& alphabet) {
-    static int depth = 1; // because we initialize root node with depth 1
-    static const int MAX_DEPTH = 29;
     static const bool COUNTEREXAMPLE_STRATEGY = false;
 
+    int n_red_nodes = 1; // for the root node
+    static const int MAX_RED_NODES = 2500;
+    bool termination_reached = false;
+    int n_iter = -1;
+
     list<refinement*> performed_refs;
-    unordered_set<apta_node*> fringe_nodes; // TODO: it is wiser to put this into the extend_fringe method as static object
-
-    int merge_depth = 0;
-
-    while (true) { // cancel when either not red node identified or max depth
+    while (true) { // cancel when either not red node identified or max number of nodes is reached
 
         unordered_set<apta_node*> blue_nodes;
+        unordered_set<apta_node*> red_nodes;
+
+        cout << ++n_iter << " iterations for this round. Red nodes: " << n_red_nodes << endl;
+        
         for (blue_state_iterator b_it = blue_state_iterator(the_apta->get_root()); *b_it != nullptr; ++b_it) {
             auto blue_node = *b_it;
             blue_nodes.insert(blue_node);
         }
 
-        bool reached_fringe = blue_nodes.empty();
-        if (reached_fringe) {
-            cout << "Reached fringe. Extend and recompute merges" << endl;
-            reset_apta(merger.get(), performed_refs); // TODO: do we need to reset here?
-            performed_refs.clear();
-
-            for (auto fringe_node : fringe_nodes) {
-                auto cn = extend_fringe(merger, fringe_node, the_apta, id, alphabet);
-            }
-            fringe_nodes.clear();
-
-            merge_depth = 0;
-            ++depth;
-            continue;
-        } else if (depth == MAX_DEPTH && COUNTEREXAMPLE_STRATEGY){
-            static const int MAX_CEX_ITER = 20;
-            static int c_iter = 0;
-            cout << "Continuing search using the counterexample strategy. Iteration " << c_iter << " out of " << MAX_CEX_ITER << endl;
-            find_closed_automaton(performed_refs, the_apta, merger, evidence_driven::get_score);
-            c_iter++;
-            if(c_iter==MAX_CEX_ITER){
-                cout << "Max number of counterexample iterations reached. Printing automaton." << endl;
-                print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
-                exit(0);
-            }
-            return performed_refs;
-        } else if (depth == MAX_DEPTH) {
-            cout << "Max-depth reached and counterexample strategy disabled. Printing the automaton. Depth:" << depth << endl;
-            find_closed_automaton(performed_refs, the_apta, merger, evidence_driven::get_score);
-            print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
-            cout << "Printed. Terminating" << endl;
-            exit(0);
+        for (red_state_iterator r_it = red_state_iterator(the_apta->get_root()); *r_it != nullptr; ++r_it) {
+            const auto red_node = *r_it;
+            red_nodes.insert(red_node);
         }
 
-        // go through each newly found fringe node, see if you can merge or extend
-        ++merge_depth;
-        if (merge_depth <= depth)
-            fringe_nodes.clear();
         bool identified_red_node = false;
-        //cout << "Looking for refinements" << endl;
         for (auto blue_node : blue_nodes) {
-            if (merge_depth <= depth)
-                fringe_nodes.insert(blue_node);
-
             refinement_set possible_merges;
-            for (red_state_iterator r_it = red_state_iterator(the_apta->get_root()); *r_it != nullptr; ++r_it) {
-                const auto red_node = *r_it;
 
+            //extend_fringe(merger, blue_node, the_apta, id, alphabet);
+
+            for(auto red_node: red_nodes){
                 refinement* ref = merger->test_merge(red_node, blue_node);
-                if (ref != nullptr) {
+                if (ref != nullptr)
                     possible_merges.insert(ref);
-                }
             }
 
             if (possible_merges.size() == 0) {
@@ -213,8 +179,15 @@ list<refinement*> lsharp_algorithm::find_complete_base(unique_ptr<state_merger>&
                 refinement* ref = mem_store::create_extend_refinement(merger.get(), blue_node);
                 ref->doref(merger.get());
                 performed_refs.push_back(ref);
+
+                ++n_red_nodes;
+                extend_fringe(merger, blue_node, the_apta, id, alphabet);
+                if(n_red_nodes == MAX_RED_NODES){
+                    termination_reached = true;
+                    break;
+                }
             } else {
-                // get the best refinement from the heap
+                // get the best merge from the heap
                 refinement* best_merge = *(possible_merges.begin());
                 for (auto it : possible_merges) {
                     if (it != best_merge)
@@ -225,19 +198,33 @@ list<refinement*> lsharp_algorithm::find_complete_base(unique_ptr<state_merger>&
             }
         }
 
+        if(termination_reached){
+            cout << "Max number of states reached and counterexample strategy disabled. Printing the automaton with " << n_red_nodes << " states." << endl;
+            find_closed_automaton(performed_refs, the_apta, merger, evidence_driven::get_score);
+            print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
+            cout << "Printed. Terminating" << endl;
+            exit(0);
+        }
+
         //{
         //    static int model_nr = 0;
-        //    cout << "printing model " << model_nr << " at depth " << depth << endl;
+        //    cout << "printing model " << model_nr  << endl;
         //    print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_refs");
         //}
 
-        if (!identified_red_node) {
-            //cout << "Complete basis found. Forwarding hypothesis" << endl;
+        if(!identified_red_node){
+            static int n_h = 0;
+            ++n_h;
+            if(n_h==10){
+                cout << "Max number of hypotheses reached. Printing the automaton with " << n_red_nodes << " states." << endl;
+                find_closed_automaton(performed_refs, the_apta, merger, evidence_driven::get_score);
+                print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
+                cout << "Printed. Terminating" << endl;
+                exit(0);
+            }
+            cout << "Complete basis found. Forwarding hypothesis" << endl;
             find_closed_automaton(performed_refs, the_apta, merger, evidence_driven::get_score);
             return performed_refs;
-        } else if (!reached_fringe) {
-            //cout << "Processed layer " << merge_depth << endl;
-            continue;
         }
     }
 }

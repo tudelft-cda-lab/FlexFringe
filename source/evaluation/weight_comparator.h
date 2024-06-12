@@ -27,11 +27,13 @@ protected:
     std::vector<float> symbol_weight_map;
 
     double access_weight;
+    bool is_sink;
 
 public:
     weight_comparator_data() : evaluation_data::evaluation_data(){        
         final_weight = 0;
         access_weight = 0;
+        is_sink = false;
     }
     virtual void print_transition_label(iostream& output, int symbol) override;
     virtual void print_state_label(iostream& output) override;
@@ -73,6 +75,16 @@ public:
 
     float get_weight(const int symbol) noexcept {
         return symbol_weight_map[symbol];
+    }
+
+    double get_access_probability() const noexcept;
+
+    int sink_type() noexcept override {
+        return is_sink ? 1 : -1;
+    }
+
+    void set_sink() noexcept {
+        is_sink = true;
     }
 
 };

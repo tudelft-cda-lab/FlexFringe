@@ -30,28 +30,27 @@
 #include <unordered_map>
 
 class weighted_lsharp_algorithm : public lsharp_algorithm {
+  private:
+    const bool use_sinks;
   protected:
     void proc_counterex(const std::unique_ptr<base_teacher>& teacher, inputdata& id, unique_ptr<apta>& hypothesis,
                         const std::vector<int>& counterex, std::unique_ptr<state_merger>& merger,
                         const refinement_list refs, const vector<int>& alphabet) const;
 
-    std::unordered_set<apta_node*> extend_fringe(std::unique_ptr<state_merger>& merger, apta_node* n,
+    void extend_fringe(std::unique_ptr<state_merger>& merger, apta_node* n,
                                                  std::unique_ptr<apta>& the_apta, inputdata& id,
                                                  const vector<int>& alphabet) const;
     virtual void query_weights(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id,
                                const std::vector<int>& alphabet,
                                std::optional<active_learning_namespace::pref_suf_t> seq_opt) const;
 
-    list<refinement*> find_complete_base_count_depth(unique_ptr<state_merger>& merger, unique_ptr<apta>& the_apta, inputdata& id,
-                                         const std::vector<int>& alphabet);
-
-    list<refinement*> find_complete_base_count_nodes(unique_ptr<state_merger>& merger, unique_ptr<apta>& the_apta, inputdata& id,
-                                         const std::vector<int>& alphabet);
+    list<refinement*> find_complete_base(unique_ptr<state_merger>& merger, unique_ptr<apta>& the_apta, inputdata& id,
+                                         const std::vector<int>& alphabet) override;
 
   public:
     weighted_lsharp_algorithm(std::shared_ptr<sul_base>& sul, std::unique_ptr<base_teacher>& teacher,
                               std::unique_ptr<eq_oracle_base>& oracle)
-        : lsharp_algorithm(sul, teacher, oracle) {
+        : lsharp_algorithm(sul, teacher, oracle), use_sinks(USE_SINKS) {
         std::cout << "Probabilistic L# only works with probabilistic oracle. Automatically switched to that one.\
 If this is undesired behavior check your input and/or source code."
                   << std::endl;
