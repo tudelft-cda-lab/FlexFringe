@@ -173,7 +173,7 @@ inline void merge_refinement::doref(state_merger* m){
         right->set_red(true);
     }
     m->perform_merge(left, right);
-    right->set_score(score);
+    //right->set_score(score);
 };
 	
 inline void merge_refinement::undo(state_merger* m){

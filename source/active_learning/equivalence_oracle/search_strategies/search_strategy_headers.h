@@ -13,3 +13,5 @@
 #include "random_string_search.h"
 #include "search_base.h"
 #include "random_w_method.h"
+#include "targeted_bfs_walk.h"
+#include "fringe_walk.h"

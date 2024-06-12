@@ -73,6 +73,10 @@ add_library(ActiveLearning STATIC
             equivalence_oracle/search_strategies/random_string_search.cpp
             equivalence_oracle/search_strategies/random_w_method.h
             equivalence_oracle/search_strategies/random_w_method.cpp
+            equivalence_oracle/search_strategies/targeted_bfs_walk.h
+            equivalence_oracle/search_strategies/targeted_bfs_walk.cpp
+            equivalence_oracle/search_strategies/fringe_walk.h
+            equivalence_oracle/search_strategies/fringe_walk.cpp
 
             memory/observation_table.h
             memory/observation_table.cpp

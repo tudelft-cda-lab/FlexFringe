@@ -36,14 +36,13 @@ using namespace active_learning_namespace;
  * This is the only function that creates new nodes (apart from the root node).
  *
  */
-unordered_set<apta_node*> weighted_lsharp_algorithm::extend_fringe(unique_ptr<state_merger>& merger, apta_node* n,
+void weighted_lsharp_algorithm::extend_fringe(unique_ptr<state_merger>& merger, apta_node* n,
                                                                    unique_ptr<apta>& the_apta, inputdata& id,
                                                                    const vector<int>& alphabet) const {
     static unordered_set<apta_node*> extended_nodes;
-    if (extended_nodes.contains(n))
-        return unordered_set<apta_node*>();
 
-    unordered_set<apta_node*> new_nodes;
+    if (extended_nodes.contains(n))
+        return;
 
     auto access_trace = n->get_access_trace();
     pref_suf_t seq;
@@ -52,19 +51,20 @@ unordered_set<apta_node*> weighted_lsharp_algorithm::extend_fringe(unique_ptr<st
     else
         seq.resize(1);
     
-    //auto* data = static_cast<weight_comparator_data*>(n->get_data());
-    for (const int symbol : alphabet) {
-        //if(data->get_weight(symbol)==float(0.0))
-        //    continue;
-        
+    auto* data = static_cast<weight_comparator_data*>(n->get_data());
+    for (const int symbol : alphabet) {        
         seq[seq.size() - 1] = symbol;
         trace* new_trace = vector_to_trace(seq, id);
         id.add_trace_to_apta(new_trace, merger->get_aut(), false);
 
         query_weights(merger, n->get_child(symbol), id, alphabet, seq);
-        new_nodes.insert(n->get_child(symbol));
+
+        // we do not create states that have zero incoming probability
+        if(use_sinks && data->get_weight(symbol)==float(0.0)){
+            auto* new_data = static_cast<weight_comparator_data*>(n->get_child(symbol)->get_data());
+            new_data->set_sink();
+        }
     }
-    return new_nodes;
 }
 
 /**
@@ -188,125 +188,7 @@ void weighted_lsharp_algorithm::proc_counterex(const unique_ptr<base_teacher>& t
  * @param the_apta
  * @return list<refinement*>
  */
-list<refinement*> weighted_lsharp_algorithm::find_complete_base_count_depth(unique_ptr<state_merger>& merger,
-                                                                unique_ptr<apta>& the_apta, inputdata& id,
-                                                                const vector<int>& alphabet) {
-    static int depth = 1; // because we initialize root node with depth 1
-    static const int MAX_DEPTH = 8;
-    static const bool COUNTEREXAMPLE_STRATEGY = false;
-
-    list<refinement*> performed_refs;
-    unordered_set<apta_node*> fringe_nodes;
-
-    int merge_depth = 0;
-
-    while (true) { // cancel when either not red node identified or max depth
-
-        cout << "collecting blue nodes. Depth:" << depth << endl;
-        unordered_set<apta_node*> blue_nodes;
-        for (blue_state_iterator b_it = blue_state_iterator(the_apta->get_root()); *b_it != nullptr; ++b_it) {
-            auto blue_node = *b_it;
-            blue_nodes.insert(blue_node);
-        }
-
-        bool reached_fringe = blue_nodes.empty();
-        if (reached_fringe) {
-            cout << "Reached fringe. Extend and recompute merges" << endl;
-            reset_apta(merger.get(), performed_refs);
-            performed_refs.clear();
-
-            for (auto fringe_node : fringe_nodes) {
-                auto cn = extend_fringe(merger, fringe_node, the_apta, id, alphabet);
-            }
-            fringe_nodes.clear();
-
-            merge_depth = 0;
-            ++depth;
-            continue;
-        } else if (depth == MAX_DEPTH && COUNTEREXAMPLE_STRATEGY){
-            static const int MAX_ITER = 20;
-            static int c_iter = 0;
-            cout << "Continuing search using the counterexample strategy. Iteration " << c_iter << " out of " << MAX_ITER << endl;
-            find_closed_automaton(performed_refs, the_apta, merger, weight_comparator::get_distance);
-            c_iter++;
-            if(c_iter==MAX_ITER){
-                cout << "Max number of iterations reached. Printing automaton." << endl;
-                print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
-                exit(0);
-            }
-            return performed_refs;
-        } else if (depth == MAX_DEPTH) {
-            cout << "Max-depth reached and counterexample strategy disabled. Printing the automaton. Depth:" << depth << endl;
-            find_closed_automaton(performed_refs, the_apta, merger, weight_comparator::get_distance);
-            print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
-            cout << "Printed. Terminating" << endl;
-            exit(0);
-        }
-
-        // go through each newly found fringe node, see if you can merge or extend
-        ++merge_depth;
-        if (merge_depth <= depth)
-            fringe_nodes.clear();
-        bool identified_red_node = false;
-        cout << "Looking for refinements" << endl;
-        for (auto blue_node : blue_nodes) {
-            if (merge_depth <= depth)
-                fringe_nodes.insert(blue_node);
-
-            refinement_set possible_merges;
-            for (red_state_iterator r_it = red_state_iterator(the_apta->get_root()); *r_it != nullptr; ++r_it) {
-                const auto red_node = *r_it;
-
-                refinement* ref = merger->test_merge(red_node, blue_node);
-                if (ref != nullptr) {
-                    possible_merges.insert(ref);
-                }
-            }
-
-            if (possible_merges.size() == 0) {
-                identified_red_node = true;
-                refinement* ref = mem_store::create_extend_refinement(merger.get(), blue_node);
-                ref->doref(merger.get());
-                performed_refs.push_back(ref);
-
-                // extend_fringe(merger, blue_node, the_apta, id, alphabet);
-            } else {
-                // get the best refinement from the heap
-                refinement* best_merge = *(possible_merges.begin());
-                for (auto it : possible_merges) {
-                    if (it != best_merge)
-                        it->erase();
-                }
-                best_merge->doref(merger.get());
-                performed_refs.push_back(best_merge);
-            }
-        }
-
-        //{
-        //    static int model_nr = 0;
-        //    cout << "printing model " << model_nr << " at depth " << depth << endl;
-        //    print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_refs");
-        //}
-
-        if (!identified_red_node) {
-            cout << "Complete basis found. Forwarding hypothesis" << endl;
-            find_closed_automaton(performed_refs, the_apta, merger, weight_comparator::get_distance);
-            return performed_refs;
-        } else if (!reached_fringe) {
-            cout << "Processed layer " << merge_depth << endl;
-            continue;
-        }
-    }
-}
-
-/**
- * @brief Does what you think it does.
- *
- * @param merger
- * @param the_apta
- * @return list<refinement*>
- */
-list<refinement*> weighted_lsharp_algorithm::find_complete_base_count_nodes(unique_ptr<state_merger>& merger,
+list<refinement*> weighted_lsharp_algorithm::find_complete_base(unique_ptr<state_merger>& merger,
                                                                 unique_ptr<apta>& the_apta, inputdata& id,
                                                                 const vector<int>& alphabet) {
     static const bool COUNTEREXAMPLE_STRATEGY = false;
@@ -336,8 +218,9 @@ list<refinement*> weighted_lsharp_algorithm::find_complete_base_count_nodes(uniq
 
         bool identified_red_node = false;
         for (auto blue_node : blue_nodes) {
-            refinement_set possible_merges;
+            if(use_sinks && blue_node->is_sink()) continue; // we don't merge sinks
 
+            refinement_set possible_merges;
             for(auto red_node: red_nodes){
                 refinement* ref = merger->test_merge(red_node, blue_node);
                 if (ref != nullptr)
@@ -382,11 +265,10 @@ list<refinement*> weighted_lsharp_algorithm::find_complete_base_count_nodes(uniq
         //    print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_refs");
         //}
 
-
         if(!identified_red_node){
             static int n_h = 0;
             ++n_h;
-            if(n_h==10){
+            if(n_h==50){
                 cout << "Max number of hypotheses reached. Printing the automaton with " << n_red_nodes << " states." << endl;
                 find_closed_automaton(performed_refs, the_apta, merger, weight_comparator::get_distance);
                 print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
@@ -453,7 +335,7 @@ void weighted_lsharp_algorithm::run(inputdata& id) {
         if (n_runs % 100 == 0)
             cout << "Iteration " << n_runs + 1 << endl;
 
-        auto refs = find_complete_base_count_nodes(merger, the_apta, id, alphabet);
+        auto refs = find_complete_base(merger, the_apta, id, alphabet);
         cout << "Searching for counterexamples" << endl;
 
         // only merges performed, hence we can test our hypothesis
