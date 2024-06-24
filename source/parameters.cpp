@@ -20,6 +20,7 @@ std::string APTA_FILE = "";
 std::string APTA_FILE2 = "";
 
 std::string COMMAND_LINE = "";
+std::string FITNESS_TYPE = "avg";
 
 bool DEBUGGING = false;
 bool ADD_TAILS = true;
@@ -130,4 +131,3 @@ bool CONDITIONAL_PROB = false;
 bool MINHASH = false;
 int MINHASH_SIZE = 2;
 int ALPHABET_SIZE = 0;
-

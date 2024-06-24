@@ -69,8 +69,8 @@ void apta::print_dot(iostream& output){
             output << "rep#" << n->representative << "\\n";
         }
         output << n->number << " #" << n->size << " ";
-        n->data->print_state_label(output);
-        n->data->print_state_style(output);
+        // n->data->print_state_label(output);
+        // n->data->print_state_style(output);
         output << "\" ";
 
         if (n->is_red()) output << ", style=filled, fillcolor=\"firebrick1\"";

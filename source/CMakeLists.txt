@@ -31,6 +31,8 @@ add_library(Source STATIC
         conflict_graph.h
         dfasat.cpp
         dfasat.h
+        ea_utils.h
+        ea_utils.cpp
         evaluation_factory.cpp
         evaluation_factory.h
         evaluators.h

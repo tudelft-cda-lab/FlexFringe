@@ -170,29 +170,38 @@ void run() {
         std::cout << "stream mode selected" << std::endl;
         LOG_S(INFO) << "Stream mode selected, starting run";
 
-        stream_object stream_obj;
-        auto state_sizes_num = stream_obj.stream_mode(merger, BATCH_SIZE, BUFFER_SIZE);
-
-        // Write fitness function to file
-        std::cout << "Writing fitnesses of test cases to file" << std::endl;
-        std::ofstream fitness_file("ff_fitness.txt");
-        if (!fitness_file.is_open()) {
-            std::cerr << "Error opening file!" << std::endl;
-            exit(0);
+        stream_object stream_obj = stream_object();
+        if (INPUT_FILE.ends_with('.csv')) {
+            std::cerr << "CSV files are not supported in streaming mode" << std::endl;
+            exit(1);
         }
 
-        for(auto& state_size : state_sizes_num) {
-            double fitness;
-            if (state_size.first == 0 || state_size.second == 0) {
-                fitness = 0.0;
-            } else {
-                std::cout << "Sum state sizes: " << state_size.first << " Sum num states " << state_size.second << std::endl;
-                fitness = (double)state_size.second/(double)state_size.first;
-            }
-            fitness_file << fitness << " " << state_size.first << " " << state_size.second << std::endl;
+        std::ifstream input_stream(INPUT_FILE);
+        auto parser = abbadingoparser(input_stream, false);
+        std::vector<double> fitnesses = stream_obj.stream_mode_batch(merger, input_stream, &parser);
+        for (int i = 0; i < fitnesses.size(); i++) {
+            std::cout << "Fitness of individual " << i << ": " << fitnesses[i] << std::endl;
         }
-        fitness_file.close();
-        std::cout << "Finished writing fitnesses of test cases to file" << std::endl;
+        // // Write fitness function to file
+        // std::cout << "Writing fitnesses of test cases to file" << std::endl;
+        // std::ofstream fitness_file("ff_fitness.txt");
+        // if (!fitness_file.is_open()) {
+        //     std::cerr << "Error opening file!" << std::endl;
+        //     exit(0);
+        // }
+
+        // for(auto& state_size : state_sizes_num) {
+        //     double fitness;
+        //     if (state_size.first == 0 || state_size.second == 0) {
+        //         fitness = 0.0;
+        //     } else {
+        //         std::cout << "Sum state sizes: " << state_size.first << " Sum num states " << state_size.second << std::endl;
+        //         fitness = (double)state_size.second/(double)state_size.first;
+        //     }
+        //     fitness_file << fitness << " " << state_size.first << " " << state_size.second << std::endl;
+        // }
+        // fitness_file.close();
+        // std::cout << "Finished writing fitnesses of test cases to file" << std::endl;
 
         // throw std::logic_error("Streaming mode is currently broken");
 
@@ -443,6 +452,10 @@ int main(int argc, char *argv[]){
     app.add_option("--minhash", MINHASH, "Perform Min-Hash scheme on the ngrams. Only works in conjunction with --conditionalprob turned on. Default=false");
     app.add_option("--minhashsize", MINHASH_SIZE, "Perform Min-Hash scheme on the ngrams. Only works in conjunction with --conditionalprob turned on. Default=false");
     app.add_option("--alphabetsize", ALPHABET_SIZE, "An upper estimate on the alphabet size. Only needed with minhash-function turned on, in order to perform the permutation. Larger estimate increases runtime. Default=0");
+
+
+    // parameters specifically for EA heuristics
+    app.add_option("--fitnesstype", FITNESS_TYPE, "The fitness function type to use for computing fitnesses for traces. Default=avg.");
 
 
 

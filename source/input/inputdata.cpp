@@ -211,8 +211,7 @@ void inputdata::add_traces_to_apta(apta *the_apta) {
     }
 }
 
-std::pair<double, int> inputdata::add_trace_to_apta(trace *tr, apta *the_apta) {
-    pair<double, int> state_size_sum = pair<double, int>(0.0,0);
+void inputdata::add_trace_to_apta(trace *tr, apta *the_apta) {
     int depth = 0;
     apta_node *node = the_apta->root;
     /*if(node->access_trace == nullptr){
@@ -227,10 +226,6 @@ std::pair<double, int> inputdata::add_trace_to_apta(trace *tr, apta *the_apta) {
 
     while (t != nullptr) {
         node->size = node->size + 1;
-        state_size_sum.first += node->size;
-        state_size_sum.second += 1;
-
-        std::cout << "At state " << node->number << " with size " << node->size << std::endl;
 
         node->add_tail(t);
         node->data->add_tail(t);
@@ -255,8 +250,6 @@ std::pair<double, int> inputdata::add_trace_to_apta(trace *tr, apta *the_apta) {
         }
         t = t->future();
     }
-    
-    return state_size_sum;
 }
 
 trace *inputdata::access_trace(tail *t) {
@@ -405,7 +398,7 @@ std::optional<trace *> inputdata::read_trace(parser &input_parser, reader_strate
     if (tr_maybe.has_value()) {
         auto tr = tr_maybe.value();
         tr->finalize();
-        cout << tr->to_string() << endl;
+        // cout << tr->to_string() << endl;
         traces.push_back(tr);
     }
 
@@ -422,7 +415,6 @@ inputdata inputdata::with_alphabet_from(inputdata &other) {
 
     return new_inputdata;
 }
-
 
 
 

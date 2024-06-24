@@ -145,4 +145,6 @@ extern int BUFFER_SIZE;
 
 extern bool STAR_FREE;
 extern bool SINK_TYPE;
+extern std::string FITNESS_TYPE;
+
 #endif
