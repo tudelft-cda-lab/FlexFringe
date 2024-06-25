@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <iostream>
 #include <stdexcept>
+#include <limits>
 
 using namespace std;
 
@@ -225,7 +226,7 @@ void active_learning_namespace::find_closed_automaton(list<refinement*>& perform
                 }
             } else {
                 // force a merge with the red node that introduces minimal error
-                pair<apta_node*, double> best_node = make_pair(nullptr, 1.1);
+                pair<apta_node*, double> best_node = make_pair(nullptr, std::numeric_limits<double>::max());
                 for (red_state_iterator r_it = red_state_iterator(aut->get_root()); *r_it != nullptr; ++r_it) {
                     const auto red_node = *r_it;
                     double err = distance_func(aut.get(), red_node, blue_node);
