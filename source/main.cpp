@@ -180,7 +180,7 @@ void run() {
         auto parser = abbadingoparser(input_stream, false);
         std::vector<double> fitnesses = stream_obj.stream_mode_batch(merger, input_stream, &parser);
         for (int i = 0; i < fitnesses.size(); i++) {
-            std::cout << "Fitness of individual " << i << ": " << fitnesses[i] << std::endl;
+            std::cout << "Fitness of individual " << i + 1 << ": " << fitnesses[i] << std::endl;
         }
         // // Write fitness function to file
         // std::cout << "Writing fitnesses of test cases to file" << std::endl;

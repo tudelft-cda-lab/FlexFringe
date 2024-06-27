@@ -35,7 +35,7 @@ double EA_utils::compute_fitness_entropy(vector<apta_node*> state_sequence, apta
     if (entropy == 0.0) {
         return 0.0;
     }
-    return 1 / entropy;
+    return entropy;
 }
 
 double EA_utils::calculate_information_entropy(vector<apta_node*> state_sequence, apta_node* root) {
@@ -47,15 +47,32 @@ double EA_utils::calculate_information_entropy(vector<apta_node*> state_sequence
           }
           sum_state_visits += n->get_size();
         }
-
+    
     double entropy = 0.0;
+    double sum_prob = 0.0;
+    set<int> visited_states;
     for (int i = 1; i < state_sequence.size(); i++) {
+        if (visited_states.contains(state_sequence[i]->get_number())) {
+            continue;
+        }
         double state_visits = state_sequence[i]->get_size();
         double state_prob = state_visits / sum_state_visits;
+        sum_prob += state_prob;
         entropy += (state_prob * log2(state_prob));
+        visited_states.insert(state_sequence[i]->get_number());
     }
 
+    entropy += ((1 - sum_prob) * log2(1 - sum_prob));
     return -entropy;
+}
+
+double EA_utils::compute_fitness_geo_mean(vector<apta_node*> state_sequence) {
+    double prod = 1.0;
+    for (int i = 1; i < state_sequence.size(); i++) {
+        double state_visits = state_sequence[i]->get_size();
+        prod *= (double) (1 / state_visits);
+    }
+    return (double) pow(prod, (double) 1/ (double) (state_sequence.size() - 1));
 }
 
 vector<double> EA_utils::compute_fitnesses(vector<vector<apta_node*>> state_sequences, apta_node* root, string type) {
@@ -67,6 +84,9 @@ vector<double> EA_utils::compute_fitnesses(vector<vector<apta_node*>> state_sequ
             fitnesses.push_back(EA_utils::compute_fitness_avg(sequence));
         } else if (type == "entropy") {
             fitnesses.push_back(EA_utils::compute_fitness_entropy(sequence, root));
+        }
+        else if (type == "geo_mean") {
+            fitnesses.push_back(EA_utils::compute_fitness_geo_mean(sequence));
         }
     }
 
