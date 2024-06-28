@@ -58,27 +58,31 @@ void lsharp_algorithm::proc_counterex(const unique_ptr<base_teacher>& teacher, i
     vector<int> substring;
     apta_node* n = hypothesis->get_root();
     for (auto s : counterex) {
-        if (n == nullptr) {
-            const auto queried_type = teacher->ask_membership_query(substring, id);
-            trace* new_trace = vector_to_trace(substring, id, queried_type);
-            id.add_trace_to_apta(new_trace, hypothesis.get(), false);
-            id.add_trace(new_trace);
-            substring.push_back(s);
-        } else {
-            // find the fringe
-            substring.push_back(s);
-            trace* parse_trace = vector_to_trace(substring, id, 0); // TODO: inefficient like this
-            tail* t = substring.size() == 0 ? parse_trace->get_end() : parse_trace->get_end()->past_tail;
-            n = active_learning_namespace::get_child_node(n, t);
-            mem_store::delete_trace(parse_trace);
+
+        substring.push_back(s);
+        trace* parse_trace = vector_to_trace(substring, id, 0); // TODO: inefficient like this, 0 is a dummy type that does not matter
+        tail* t = substring.size() == 0 ? parse_trace->get_end() : parse_trace->get_end()->past_tail;
+        apta_node* n_child = active_learning_namespace::get_child_node(n, t);
+
+        if (n_child == nullptr) {
+            extend_fringe(merger, n, hypothesis, id, alphabet);
+            n_child = active_learning_namespace::get_child_node(n, t);
         }
+
+        n = n_child;
+        mem_store::delete_trace(parse_trace);
     }
 
-    // for the last element, too
-    const auto queried_type = teacher->ask_membership_query(substring, id);
-    trace* new_trace = vector_to_trace(substring, id, queried_type);
-    id.add_trace_to_apta(new_trace, hypothesis.get(), false);
-    id.add_trace(new_trace);
+    return;
+
+    // in case that we exceed the fringe. Trying not to ask duplicate strings
+    if(n==nullptr){
+        // for the last element, too
+        const auto queried_type = teacher->ask_membership_query(substring, id);
+        trace* new_trace = vector_to_trace(substring, id, queried_type);
+        id.add_trace_to_apta(new_trace, hypothesis.get(), false);
+        id.add_trace(new_trace);
+    }
 
     // now let's walk over the apta again, completing all the states we created
     n = hypothesis->get_root();
@@ -124,6 +128,8 @@ unordered_set<apta_node*> lsharp_algorithm::extend_fringe(unique_ptr<state_merge
         id.add_trace_to_apta(new_trace, merger->get_aut(), false);
         new_nodes.insert(n->get_child(symbol));
     }
+
+    extended_nodes.insert(n);
     return new_nodes;
 }
 
@@ -213,15 +219,15 @@ list<refinement*> lsharp_algorithm::find_complete_base(unique_ptr<state_merger>&
         //}
 
         if(!identified_red_node){
-            static int n_h = 0;
-            ++n_h;
-            if(n_h==10){
-                cout << "Max number of hypotheses reached. Printing the automaton with " << n_red_nodes << " states." << endl;
-                find_closed_automaton(performed_refs, the_apta, merger, evidence_driven::get_score);
-                print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
-                cout << "Printed. Terminating" << endl;
-                exit(0);
-            }
+            //static int n_h = 0;
+            //++n_h;
+            //if(n_h==10){
+            //    cout << "Max number of hypotheses reached. Printing the automaton with " << n_red_nodes << " states." << endl;
+            //    find_closed_automaton(performed_refs, the_apta, merger, evidence_driven::get_score);
+            //    print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
+            //    cout << "Printed. Terminating" << endl;
+            //    exit(0);
+            //}
             cout << "Complete basis found. Forwarding hypothesis" << endl;
             find_closed_automaton(performed_refs, the_apta, merger, evidence_driven::get_score);
             return performed_refs;
@@ -264,7 +270,7 @@ void lsharp_algorithm::run(inputdata& id) {
         {
             static int model_nr = 0;
             cout << "printing model " << model_nr << endl;
-            print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".before_cex");
+            print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".lsharp.before_cex");
         }
 
         // only merges performed, hence we can test our hypothesis
@@ -289,9 +295,16 @@ void lsharp_algorithm::run(inputdata& id) {
             cout << "Counterexample of length " << cex.size() << " found: ";
             for(auto s: cex)
                 cout << id.get_symbol(s) << " ";
-            cout << endl;            
+            cout << endl;        
             
             proc_counterex(teacher, id, the_apta, cex, merger, refs, alphabet);
+
+            {
+                static int model_nr = 0;
+                cout << "printing model " << model_nr << endl;
+                print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".lsharp.after_cex");
+            }
+
             break;
         }
 
