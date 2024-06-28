@@ -11,7 +11,7 @@ double EA_utils::compute_fitness_min(vector<apta_node*> state_sequence) {
         }
     }
 
-    return num_states_visited / min_state_size;
+    return  num_states_visited / min_state_size;
 }
 
 double EA_utils::compute_fitness_avg(vector<apta_node*> state_sequence) {
@@ -19,14 +19,14 @@ double EA_utils::compute_fitness_avg(vector<apta_node*> state_sequence) {
     double sum_state_sizes = 0.0;
     for (int i = 1; i < state_sequence.size(); i++) {
         num_states_visited++;
-        sum_state_sizes += state_sequence[i]->get_size();
+        sum_state_sizes += log10(state_sequence[i]->get_size());
     }
     
     if (sum_state_sizes == 0.0 || num_states_visited == 0.0) {
         return 0.0;
     }
 
-    return num_states_visited / sum_state_sizes;
+    return num_states_visited / sum_state_sizes;  
 
 }
 

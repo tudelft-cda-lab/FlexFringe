@@ -26,13 +26,18 @@
 using namespace std;
 
 const bool RETRY_MERGES = true; // if true use new streaming scheme, else use the old one
-// const bool EXPERIMENTAL_RUN = true;
 bool INTERRUPTED = false;
 
-void signal_handler(int signum) {
+void signal_handler_stream(int signum) {
     if (signum == SIGINT) {
       INTERRUPTED = true;
     }
+}
+
+void logMessageStream(const string& message) {
+    std::ofstream log("/tmp/flexfringe_log.txt", std::ios::app);
+    log << message << std::endl;
+    log.close();
 }
 
 
@@ -170,16 +175,18 @@ vector<double> stream_object::stream_mode_batch(state_merger* merger, ifstream& 
     this->parser_strategy = new in_order();
     vector<double> fitnesses;
 
+    logMessageStream("Starting to read batch of traces from input file.");
+
     while (!input_stream.eof()){
       ++seq_nr;
-      std::optional<trace*> trace_opt = id->read_trace(*input_parser, *parser_strategy);
-
+      std::optional<trace*> trace_opt = id->read_trace(*input_parser, *parser_strategy);;
       if(!trace_opt){
         last_sequence = true;
         break;
       }
 
       trace* new_trace = trace_opt.value();
+      logMessageStream("Read trace " + new_trace->to_string() + " from input file.");
       new_trace->sequence = seq_nr;
       this->batch_traces.push_back(new_trace);
       
@@ -225,7 +232,7 @@ vector<double> stream_object::stream_mode_batch(state_merger* merger, ifstream& 
 std::vector<std::pair<double, int>> stream_object::stream_mode(state_merger* merger, int batch_size, int buffer_size) {
     char buffer[buffer_size]; // size of buffer to read from the pipe.
     std::vector<char> line_buffer;
-    signal(SIGINT, signal_handler); // setup signal handler to catch SIGINT (Ctrl+C)
+    signal(SIGINT, signal_handler_stream); // setup signal handler to catch SIGINT (Ctrl+C)
     time_t last_read_time = time(nullptr); // record the last time something was read from pipe. 
     ssize_t bytes_read;
     std::vector<std::string> current_batch; 
