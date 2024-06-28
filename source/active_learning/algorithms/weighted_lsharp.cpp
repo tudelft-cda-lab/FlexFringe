@@ -65,6 +65,7 @@ void weighted_lsharp_algorithm::extend_fringe(unique_ptr<state_merger>& merger, 
             new_data->set_sink();
         }
     }
+    extended_nodes.insert(n);
 }
 
 /**
@@ -145,44 +146,26 @@ void weighted_lsharp_algorithm::proc_counterex(const unique_ptr<base_teacher>& t
     vector<int> substring;
     apta_node* n = hypothesis->get_root();
     for (auto s : counterex) {
-        if (n == nullptr) {
-            // const auto queried_type = teacher->ask_membership_query(substring, id);
-            trace* new_trace = vector_to_trace(substring, id, 0); // Type here does not matter
-            id.add_trace_to_apta(new_trace, hypothesis.get(), false);
-            id.add_trace(new_trace);
-            substring.push_back(s);
-        } else {
-            // find the fringe
-            substring.push_back(s);
-            trace* parse_trace = vector_to_trace(substring, id, 0); // TODO: inefficient like this
-            tail* t = substring.size() == 0 ? parse_trace->get_end() : parse_trace->get_end()->past_tail;
-            n = active_learning_namespace::get_child_node(n, t);
-            mem_store::delete_trace(parse_trace);
+        substring.push_back(s);
+        trace* parse_trace = vector_to_trace(substring, id, 0); // TODO: inefficient like this, 0 is a dummy type that does not matter
+        tail* t = substring.size() == 0 ? parse_trace->get_end() : parse_trace->get_end()->past_tail;
+        apta_node* n_child = active_learning_namespace::get_child_node(n, t);
+        
+        if (n_child == nullptr) {
+            query_weights(merger, n, id, alphabet, nullopt);
+            extend_fringe(merger, n, hypothesis, id, alphabet);
+            n_child = active_learning_namespace::get_child_node(n, t);
         }
-    }
-
-    // for the last element, too
-    // const auto queried_type = teacher->ask_membership_query(substring, id);
-    trace* new_trace = vector_to_trace(substring, id, 0);
-    id.add_trace_to_apta(new_trace, hypothesis.get(), false);
-    id.add_trace(new_trace);
-
-    // now let's walk over the apta again, completing all the states we created
-    n = hypothesis->get_root();
-    trace* parsing_trace = vector_to_trace(counterex, id);
-    tail* t = parsing_trace->get_head();
-    // double product = 1;
-
-    while (n != nullptr) {
-        query_weights(merger, n, id, alphabet, nullopt);
-        extend_fringe(merger, n, hypothesis, id, alphabet);
-        n = active_learning_namespace::get_child_node(n, t);
-        t = t->future();
+        
+        n = n_child;
+        mem_store::delete_trace(parse_trace);
     }
 }
 
 /**
  * @brief Does what you think it does.
+ * 
+ * TODO: will be same as weighted L# and L# most likely
  *
  * @param merger
  * @param the_apta
@@ -266,15 +249,15 @@ list<refinement*> weighted_lsharp_algorithm::find_complete_base(unique_ptr<state
         //}
 
         if(!identified_red_node){
-            static int n_h = 0;
-            ++n_h;
-            if(n_h==50){
-                cout << "Max number of hypotheses reached. Printing the automaton with " << n_red_nodes << " states." << endl;
-                find_closed_automaton(performed_refs, the_apta, merger, weight_comparator::get_distance);
-                print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
-                cout << "Printed. Terminating" << endl;
-                exit(0);
-            }
+            //static int n_h = 0;
+            //++n_h;
+            //if(n_h==50){
+            //    cout << "Max number of hypotheses reached. Printing the automaton with " << n_red_nodes << " states." << endl;
+            //    find_closed_automaton(performed_refs, the_apta, merger, weight_comparator::get_distance);
+            //    print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
+            //    cout << "Printed. Terminating" << endl;
+            //    exit(0);
+            //}
             cout << "Complete basis found. Forwarding hypothesis" << endl;
             find_closed_automaton(performed_refs, the_apta, merger, weight_comparator::get_distance);
             return performed_refs;
@@ -298,6 +281,8 @@ list<refinement*> weighted_lsharp_algorithm::find_complete_base(unique_ptr<state
 
 /**
  * @brief Main routine of this algorithm.
+ * 
+ * TODO: will be same as weighted L# and L# most likely
  *
  * @param id Inputdata.
  */

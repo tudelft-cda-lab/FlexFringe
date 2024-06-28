@@ -63,6 +63,8 @@ unordered_set<apta_node*> probabilistic_lsharp_algorithm::extend_fringe(unique_p
         add_statistics(merger, n->get_child(symbol), id, alphabet, seq);
         new_nodes.insert(n->get_child(symbol));
     }
+    
+    extended_nodes.insert(n);
     return new_nodes;
 }
 
@@ -243,7 +245,6 @@ void probabilistic_lsharp_algorithm::proc_counterex(const unique_ptr<base_teache
                                                     unique_ptr<state_merger>& merger, const refinement_list refs,
                                                     const vector<int>& alphabet) const {
     // linear search to find fringe, then append new states
-    cout << "proc counterex" << endl;
     reset_apta(merger.get(), refs);
 
     vector<int> substring;
@@ -266,10 +267,12 @@ void probabilistic_lsharp_algorithm::proc_counterex(const unique_ptr<base_teache
     }
 
     // for the last element, too
-    const auto queried_type = teacher->ask_membership_query(substring, id); // TODO: necessary here?
-    trace* new_trace = vector_to_trace(substring, id, queried_type);
-    id.add_trace_to_apta(new_trace, hypothesis.get(), false);
-    id.add_trace(new_trace);
+    if(n==nullptr){
+        const auto queried_type = teacher->ask_membership_query(substring, id); // TODO: necessary here?
+        trace* new_trace = vector_to_trace(substring, id, queried_type);
+        id.add_trace_to_apta(new_trace, hypothesis.get(), false);
+        id.add_trace(new_trace);
+    }
 
     // now let's walk over the apta again, completing all the states we created
     n = hypothesis->get_root();
