@@ -39,8 +39,7 @@ void lsharp_algorithm::update_state(std::unique_ptr<state_merger>& merger, apta_
 }
 
 /**
- * @brief Processing the counterexample recursively in the binary search strategy
- * as described by the paper.
+ * @brief Processing the counterexample.
  *
  * Operations done directly on the APTA.
  *
@@ -71,27 +70,6 @@ void lsharp_algorithm::proc_counterex(const unique_ptr<base_teacher>& teacher, i
 
         n = n_child;
         mem_store::delete_trace(parse_trace);
-    }
-
-    return;
-
-    // in case that we exceed the fringe. Trying not to ask duplicate strings
-    if(n==nullptr){
-        // for the last element, too
-        const auto queried_type = teacher->ask_membership_query(substring, id);
-        trace* new_trace = vector_to_trace(substring, id, queried_type);
-        id.add_trace_to_apta(new_trace, hypothesis.get(), false);
-        id.add_trace(new_trace);
-    }
-
-    // now let's walk over the apta again, completing all the states we created
-    n = hypothesis->get_root();
-    trace* parsing_trace = vector_to_trace(counterex, id);
-    tail* t = parsing_trace->get_head();
-    while (n != nullptr) {
-        update_state(merger, n, id, alphabet);
-        n = active_learning_namespace::get_child_node(n, t);
-        t = t->future();
     }
 }
 
