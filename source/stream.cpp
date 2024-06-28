@@ -52,10 +52,10 @@ void stream_object::greedyrun_no_undo(state_merger* merger, const int seq_nr, co
 
 void print_current_automaton_stream(state_merger* merger, const string& output_file, const string& append_string){
     if (OUTPUT_TYPE == "dot" || OUTPUT_TYPE == "both") {
-        merger->print_dot(output_file + append_string + ".dot");
+        merger->print_dot(OUTPUT_DIRECTORY + output_file + append_string + ".dot");
     }
     if (OUTPUT_TYPE == "json" || OUTPUT_TYPE == "both") {
-        merger->print_json(output_file + append_string + ".json");
+        merger->print_json(OUTPUT_DIRECTORY + output_file + append_string + ".json");
     }
     if(OUTPUT_SINKS && !PRINT_WHITE){
         bool red_undo = PRINT_RED;
@@ -65,10 +65,10 @@ void print_current_automaton_stream(state_merger* merger, const string& output_f
         bool blue_undo = PRINT_BLUE;
         PRINT_BLUE = true;
         if (OUTPUT_TYPE == "dot" || OUTPUT_TYPE == "both") {
-            merger->print_dot(output_file + append_string + "sinks.dot");
+            merger->print_dot(OUTPUT_DIRECTORY + output_file + append_string + "sinks.dot");
         }
         if (OUTPUT_TYPE == "json" || OUTPUT_TYPE == "both") {
-            merger->print_json(output_file + append_string + "sinks.json");
+            merger->print_json(OUTPUT_DIRECTORY + output_file + append_string + "sinks.json");
         }
         PRINT_RED = red_undo;
         PRINT_WHITE = white_undo;
@@ -186,7 +186,6 @@ vector<double> stream_object::stream_mode_batch(state_merger* merger, ifstream& 
       }
 
       trace* new_trace = trace_opt.value();
-      logMessageStream("Read trace " + new_trace->to_string() + " from input file.");
       new_trace->sequence = seq_nr;
       this->batch_traces.push_back(new_trace);
       
@@ -194,18 +193,26 @@ vector<double> stream_object::stream_mode_batch(state_merger* merger, ifstream& 
       // if(!ADD_TAILS) new_trace->erase();
     }
 
+    logMessageStream("Finished reading batch of traces from input file.");
 
+
+    logMessageStream("Starting to process batch of traces.");
     if(RETRY_MERGES) {
+      logMessageStream("Running greedy algorithm with retries.");
       greedyrun_retry_merges(merger, seq_nr, last_sequence);
+      logMessageStream("Finished running greedy algorithm with retries.");
       // now we simulate each trace on the automaton and get the sequence of states 
       std::vector<std::vector<apta_node*>> state_sequences;
       for (auto tr : this->batch_traces) {
         state_sequences.push_back(get_state_sequence_from_trace(merger, tr));
       }
 
+      logMessageStream("Computing fitnesses for the batch of traces.");
       fitnesses = EA_utils::compute_fitnesses(state_sequences, merger->get_aut()->get_root(), FITNESS_TYPE);
 
+      logMessageStream("Printing the current automaton to file.");
       print_current_automaton_stream(merger, "model_batch_nr_", to_string(this->batch_number));
+      logMessageStream("Running undo");
       greedyrun_undo_merges(merger, seq_nr, last_sequence);
     }
     else {
@@ -218,6 +225,7 @@ vector<double> stream_object::stream_mode_batch(state_merger* merger, ifstream& 
       tr->erase();
     }
 
+    logMessageStream("Finished processing batch of traces.");
     cout << "Finished parsing batch of traces " << to_string(this->batch_number) << endl;
     return fitnesses;
 }

@@ -49,41 +49,38 @@ void signal_handler(int signum) {
 }
 
 
-// Function to log messages for debugging
-void logMessage(const std::string &message) {
-    std::ofstream log("/tmp/flexfringe_log.txt", std::ios::app);
-    log << message << std::endl;
-    log.close();
-}
-
-
 void listen_for_input(const std::string& fifo_path) {
-    logMessage("Listening for input");
-    int fd = open(fifo_path.c_str(), O_RDONLY | O_NONBLOCK);
-    if (fd == -1) {
-        logMessage("Error opening FIFO");
-        std::cerr << "Error opening FIFO" << std::endl;
-        return;
-    }
+    LOG_S(INFO) << "Listening for input";
+    while (!TERMINATED) {
+        int fd = open(fifo_path.c_str(), O_RDONLY | O_NONBLOCK);
+        if (fd == -1) {
+            LOG_S(ERROR) << "Error opening FIFO";
+            std::cerr << "Error opening FIFO" << std::endl;
+            continue;
+        }
 
-    std::ifstream input_stream(fifo_path);
-    std::string input;
-    while (!TERMINATED && std::getline(input_stream, input)) {
-        if (!input.empty()) {
-            if (input.find(".csv") != std::string::npos) {
-                logMessage("CSV Files are not supported in streaming mode");
+        std::ifstream fifoStream(fifo_path);
+        std::string input_file_path;
+        if (std::getline(fifoStream, input_file_path)) {
+            if (input_file_path.find(".csv") != std::string::npos) {
+                LOG_S(ERROR) << "CSV Files are not supported in streaming mode";
                 std::cerr << "CSV Files are not supported in streaming mode" << std::endl;
-                exit(1);
+                continue;
             }
-            STREAM_BATCH_INPUT_PATH = input;
+
+            LOG_S(INFO) << "Received input file path: " << input_file_path;
+            STREAM_BATCH_INPUT_PATH = input_file_path;
+        }
+        else {
+            fifoStream.close();
+            close(fd);
+            std::this_thread::sleep_for(std::chrono::seconds(5));
         }
     }
-    close(fd);
 }
 
-
 void daemonize() {
-    logMessage("Daemonizing");
+    LOG_S(INFO) << "Starting daemon of FlexFringe";
     pid_t pid = fork();
 
     if (pid < 0) {
@@ -111,9 +108,9 @@ void daemonize() {
         exit(EXIT_SUCCESS);
     }
 
-    umask(0);
+    umask(007);
 
-    chdir("/");
+    chdir(OUTPUT_DIRECTORY.c_str());
 
     for (long x = sysconf(_SC_OPEN_MAX); x >= 0; x--) {
         close(x);
@@ -272,26 +269,25 @@ void run() {
         while(!TERMINATED) {
             if (STREAM_BATCH_INPUT_PATH.empty()) {
                 std::cout << "No input file provided, waiting for input" << std::endl;
-                logMessage("No input file provided, waiting for input");
+                LOG_S(INFO) << "No input file provided, waiting for input";
                 std::this_thread::sleep_for(std::chrono::seconds(1));
                 continue;
             }
             else {
-                LOG_S(INFO) << "Reading input file: " << STREAM_BATCH_INPUT_PATH;
-                logMessage("Reading input file: " + STREAM_BATCH_INPUT_PATH);
+                LOG_S(INFO) << "Reading input file: " + STREAM_BATCH_INPUT_PATH;
                 std::ifstream input_stream(STREAM_BATCH_INPUT_PATH);
-                logMessage("Creating parser");
                 auto parser = abbadingoparser(input_stream, false);
-                logMessage("Computing fitnesses for test cases");
+                LOG_S(INFO) << "Computing fitnesses for test cases";
                 std::vector<double> fitnesses = stream_obj.stream_mode_batch(merger, input_stream, &parser);
-                logMessage("Computed fitnesses for test cases");
+                LOG_S(INFO) << "Computed fitnesses for test cases";
                 // Write fitness function to file
                 std::cout << "Writing fitnesses of test cases to file" << std::endl;
-                std::string fitness_out_file_name = "ff_fitness_" + FITNESS_TYPE + "_penalty.txt"; 
+                LOG_S(INFO) << "Writing fitnesses of test cases to file";
+                std::string fitness_out_file_name = OUTPUT_DIRECTORY + "ff_fitness_" + FITNESS_TYPE + "_TEST.txt"; 
                 std::ofstream fitness_file(fitness_out_file_name);
                 if (!fitness_file.is_open()) {
-                    std::cerr << "Error opening file!" << std::endl;
-                    exit(0);
+                    LOG_S(ERROR)"Error opening file! with error code: " + std::to_string(errno);
+                    exit(1);
                 }
 
                 for (double fitness : fitnesses) {
@@ -299,6 +295,8 @@ void run() {
                 }
                 fitness_file.close();
                 std::cout << "Finished writing fitnesses of test cases to file" << std::endl;
+                LOG_S(INFO) << "Finished writing fitnesses of batch, waiting for new batch";
+                STREAM_BATCH_INPUT_PATH.clear();
             }
             // std::ifstream input_stream(input_file);
             // auto parser = abbadingoparser(input_stream, false);
@@ -323,6 +321,7 @@ void run() {
 
         if (TERMINATED) {
             std::cout << "TERMINATED, exiting" << std::endl;
+            LOG_S(INFO) << "Terminate signal received, exiting";
             inputThread.join();
             exit(0);
         }
@@ -580,6 +579,7 @@ int main(int argc, char *argv[]){
     app.add_option("--minhashsize", MINHASH_SIZE, "Perform Min-Hash scheme on the ngrams. Only works in conjunction with --conditionalprob turned on. Default=false");
     app.add_option("--alphabetsize", ALPHABET_SIZE, "An upper estimate on the alphabet size. Only needed with minhash-function turned on, in order to perform the permutation. Larger estimate increases runtime. Default=0");
 
+    app.add_option("--outputdir", OUTPUT_DIRECTORY, "The directory to write the output files to. Default is the current directory.");
 
     // parameters specifically for EA heuristics
     app.add_option("--fitnesstype", FITNESS_TYPE, "The fitness function type to use for computing fitnesses for traces. Default=avg.");

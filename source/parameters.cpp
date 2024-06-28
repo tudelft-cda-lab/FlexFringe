@@ -131,3 +131,4 @@ bool CONDITIONAL_PROB = false;
 bool MINHASH = false;
 int MINHASH_SIZE = 2;
 int ALPHABET_SIZE = 0;
+std::string OUTPUT_DIRECTORY = ".";
