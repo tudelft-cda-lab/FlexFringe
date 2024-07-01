@@ -286,7 +286,7 @@ void run() {
                 std::string fitness_out_file_name = OUTPUT_DIRECTORY + "ff_fitness_" + FITNESS_TYPE + "_TEST.txt"; 
                 std::ofstream fitness_file(fitness_out_file_name);
                 if (!fitness_file.is_open()) {
-                    LOG_S(ERROR)"Error opening file! with error code: " + std::to_string(errno);
+                    LOG_S(ERROR) << "Error opening file! with error code: " + std::to_string(errno);
                     exit(1);
                 }
 
