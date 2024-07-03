@@ -88,6 +88,7 @@ class db {
      */
     void prefix_query(const std::string& prefix, const std::function<bool(record)>& func);
     std::vector<record> prefix_query(const std::string& prefix, int n);
+    void stream_traces(const std::function<bool(record)>& func);
 
     record distinguish_query(const std::string& trace1, const std::string& trace2);
 

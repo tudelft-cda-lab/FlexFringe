@@ -28,6 +28,8 @@ add_library(ActiveLearning STATIC
             # DFAs
             algorithms/lstar.h
             algorithms/lstar.cpp
+            algorithms/lstar_imat.h
+            algorithms/lstar_imat.cpp
             algorithms/lsharp.h
             algorithms/lsharp.cpp
             algorithms/ldot.h
@@ -80,6 +82,8 @@ add_library(ActiveLearning STATIC
 
             memory/observation_table.h
             memory/observation_table.cpp
+            memory/observation_table_imat.h
+            memory/observation_table_imat.cpp
             memory/adaptive_distinguishing_sequences.h
             memory/adaptive_distinguishing_sequences.cpp
 
@@ -107,6 +111,8 @@ add_library(ActiveLearning STATIC
 
             teacher/base_teacher.h
             teacher/base_teacher.cpp
+            teacher/teacher_imat.h
+            teacher/teacher_imat.cpp
 )
 
 target_link_libraries(ActiveLearning ${PYTHON_LIBRARIES} libpqxx::pqxx)

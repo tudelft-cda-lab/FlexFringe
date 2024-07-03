@@ -23,7 +23,7 @@ using namespace active_learning_namespace;
  * @param id Inputdata.
  * @return const int 0 or greater for the type, -1 if automaton cannot be parsed with the query.
  */
-const int base_teacher::ask_membership_query(const pref_suf_t& prefix, const pref_suf_t& suffix, inputdata& id) {
+const int base_teacher::ask_membership_query_lstar(const pref_suf_t& prefix, const pref_suf_t& suffix, inputdata& id) {
     pref_suf_t query(prefix);
     query.insert(query.end(), suffix.begin(), suffix.end());
 
@@ -31,7 +31,7 @@ const int base_teacher::ask_membership_query(const pref_suf_t& prefix, const pre
 }
 
 /**
- * @brief See ask_membership_query(const pref_suf_t& prefix, const pref_suf_t& suffix, inputdata& id)
+ * @brief See ask_membership_query_lstar(const pref_suf_t& prefix, const pref_suf_t& suffix, inputdata& id)
  *
  * @param query
  * @param id
@@ -41,8 +41,8 @@ const int base_teacher::ask_membership_query(const pref_suf_t& query, inputdata&
     return sul->query_trace(query, id);
 }
 
-const std::pair< int, std::vector<float> > 
-base_teacher::get_membership_state_pair(const active_learning_namespace::pref_suf_t& access_seq, inputdata& id){
+const std::pair<int, std::vector<float>>
+base_teacher::get_membership_state_pair(const active_learning_namespace::pref_suf_t& access_seq, inputdata& id) {
     return sul->get_type_and_state(access_seq, id);
 }
 
@@ -72,12 +72,12 @@ const std::vector<float> base_teacher::get_weigth_distribution(const active_lear
 
 /**
  * @brief Get the weigth state pair object
- * 
- * @param access_seq 
- * @param id 
- * @return const std::pair< std::vector<float>, std::vector<float> > 
+ *
+ * @param access_seq
+ * @param id
+ * @return const std::pair< std::vector<float>, std::vector<float> >
  */
-const std::pair< std::vector<float>, std::vector<float> > base_teacher::get_weigth_state_pair(const active_learning_namespace::pref_suf_t& access_seq,
-                                                     inputdata& id) {
+const std::pair<std::vector<float>, std::vector<float>>
+base_teacher::get_weigth_state_pair(const active_learning_namespace::pref_suf_t& access_seq, inputdata& id) {
     return sul->get_weights_and_state(access_seq, id);
 }

@@ -1,5 +1,5 @@
 /**
- * @file lstar.cpp
+ * @file lstar_imat.cpp
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
  * @brief
  * @version 0.1
@@ -9,7 +9,7 @@
  *
  */
 
-#include "lstar.h"
+#include "lstar_imat.h"
 #include "base_teacher.h"
 #include "common_functions.h"
 #include "input_file_oracle.h"
@@ -40,36 +40,50 @@ const bool PRINT_ALL_MODELS = false; // for debugging
  * @param id
  * @return stack<refinement*>
  */
-const list<refinement*> lstar_algorithm::construct_automaton_from_table(const observation_table& obs_table,
-                                                                        unique_ptr<state_merger>& merger,
-                                                                        inputdata& id) const {
+const list<refinement*> lstar_imat_algorithm::construct_automaton_from_table(const observation_table_imat& obs_table,
+                                                                             unique_ptr<state_merger>& merger,
+                                                                             inputdata& id) {
+    DLOG_S(INFO) << "CONSTRUCT" << endl;
     const auto& upper_table = obs_table.get_upper_table();
-    const auto& lower_table = obs_table.get_lower_table();
+    /* const auto& lower_table = obs_table.get_lower_table(); */
     const auto& column_names = obs_table.get_column_names();
 
     // We iterate over all prefixes and suffixes. TODO: Can cause duplicates?
+    int traces_nr = 0;
     for (auto row_it = upper_table.cbegin(); row_it != upper_table.cend(); ++row_it) {
         const pref_suf_t& prefix = row_it->first;
         const auto entry = row_it->second;
 
         // for(auto col_it = column_names.cbegin(); col_it != column_names.cend(); ++col_it){
-        for (auto col_it = entry.cbegin(); col_it != entry.cend(); ++col_it) {
-            const pref_suf_t& suffix = col_it->first;
-
+        for (const auto& suffix : obs_table.get_column_names()) {
             const int answer = obs_table.get_answer(prefix, suffix);
             if (answer == -1) {
                 // we do not want to add this state to the automaton.
                 continue;
             }
+            traces_nr++;
 
-            const auto whole_prefix = concatenate_strings(prefix, suffix);
+            vector<int> dest;
+            dest.insert(dest.end(), prefix.begin(), prefix.end());
+            dest.insert(dest.end(), suffix.begin(), suffix.end());
+            DLOG_S(INFO) << prefix << suffix << endl;
+            DLOG_S(INFO) << "build:" << dest << ":" << answer << endl;
+            auto whole_prefix = concatenate_strings(prefix, suffix);
+
+            if (added_traces.contains(whole_prefix))
+                continue;
+            added_traces.insert(whole_prefix);
 
             trace* new_trace = vector_to_trace(whole_prefix, id, answer);
             id.add_trace_to_apta(new_trace, merger->get_aut(), false);
         }
     }
 
-    cout << "Building a model => starting a greedy minimization routine" << endl;
+    stringstream ss;
+    ss << "Building a model with " << traces_nr << " traces => starting a greedy minimization routine";
+    auto msg = ss.str();
+    std::cout << msg << std::endl;
+    LOG_S(INFO) << msg;
     list<refinement*> refs;
     minimize_apta(refs, merger.get());
 
@@ -81,10 +95,11 @@ const list<refinement*> lstar_algorithm::construct_automaton_from_table(const ob
  *
  * @param id The inputdata, already initialized with input file.
  */
-void lstar_algorithm::run(inputdata& id) {
+void lstar_imat_algorithm::run(inputdata& id) {
+    std::cout << "lstar_imat" << std::endl;
     int n_runs = 0;
 
-    observation_table obs_table(id.get_alphabet());
+    observation_table_imat obs_table(id.get_alphabet());
 
     auto eval = unique_ptr<evaluation_function>(get_evaluation());
     eval->initialize_before_adding_traces();
@@ -94,28 +109,26 @@ void lstar_algorithm::run(inputdata& id) {
 
     list<refinement*> refs; // we keep track of refinements
     while (ENSEMBLE_RUNS > 0 && n_runs < ENSEMBLE_RUNS) {
-        if (n_runs % 100 == 0)
-            cout << "\nIteration: " << n_runs << endl;
-
-        const auto& rows_to_close = list<pref_suf_t>(
-            obs_table.get_incomplete_rows()); // need a copy, since we're modifying structure in mark_row_complete().
-        const auto& column_names = obs_table.get_column_names();
+        /* if (n_runs % 100 == 0) */
+        cout << "\nIteration: " << n_runs << endl;
 
         // fill the table until known
-        for (const auto& current_row : rows_to_close) {
-            for (const auto& current_column : column_names) {
-                if (obs_table.has_record(current_row, current_column))
-                    continue;
-                if (current_row.size() == 0 && current_column.size() == 0)
-                    continue; // not sure what to do about the empty word
+        obs_table.complete_rows(teacher.get(), id);
 
-                const int answer = teacher->ask_membership_query_lstar(current_row, current_column, id);
-                obs_table.insert_record(current_row, current_column, answer);
-            }
-            obs_table.mark_row_complete(current_row);
-        }
+        auto col_low = obs_table.get_lower_table().begin()->second;
+        auto col_high = obs_table.get_upper_table().begin()->second;
+
+        cout << "Table size Rows(upper): " << obs_table.get_upper_table().size()
+             << " Rows(lower): " << obs_table.get_lower_table().size() << " Columns(low):" << col_low.size()
+             << " Columns(high):" << col_high.size() << std::endl;
+#ifndef NDEBUG
+        obs_table.print();
+        cout << obs_table.exp2ind << endl;
+#endif
 
         if (obs_table.is_closed()) {
+            for (auto* r : refs)
+                r->erase();
             refs = construct_automaton_from_table(obs_table, merger, id);
 
             if (PRINT_ALL_MODELS) {
@@ -142,12 +155,13 @@ void lstar_algorithm::run(inputdata& id) {
                     continue;
 
                 const pref_suf_t& cex = query_result.value().first;
-                auto cex_tr = vector_to_trace(cex, id, type);
-                cout << "Found counterexample: ";
-                for(auto s: cex)
-                    cout << id.get_symbol(s) << " ";
-                cout << endl;
-                
+                auto* cex_tr = vector_to_trace(cex, id, type);
+                stringstream ss;
+                ss << "Found counterexample: " << cex_tr->to_string();
+                auto msg = ss.str();
+                std::cout << msg << std::endl;
+                LOG_S(INFO) << msg;
+
                 reset_apta(merger.get(), refs); // note: does not reset the identified red states we had before
                 obs_table.extent_columns(cex);
                 break;
@@ -159,7 +173,7 @@ void lstar_algorithm::run(inputdata& id) {
         ++n_runs;
         if (ENSEMBLE_RUNS > 0 && n_runs == ENSEMBLE_RUNS) {
             cout << "Maximum of runs reached. Printing automaton." << endl;
-            for (auto top_ref : refs) {
+            for (auto* top_ref : refs) {
                 top_ref->doref(merger.get());
             }
             print_current_automaton(merger.get(), OUTPUT_FILE, ".final");

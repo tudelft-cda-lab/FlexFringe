@@ -251,7 +251,9 @@ const bool observation_table::is_closed() {
         }
     }
 
-    for (const auto& row : rows_to_move) { move_to_upper_table(row); }
+    for (const auto& row : rows_to_move) {
+        move_to_upper_table(row);
+    }
 
     return is_closed;
 }
@@ -276,6 +278,23 @@ void observation_table::mark_row_complete(const pref_suf_t& row) {
 /**
  * @brief Extends the columns by all the prefixes the argument suffix includes. Marks all rows as incomplete, as they
  * are by design again.
+ *
+ * NOTA BENE:
+ * Hello person, Hielke here.
+ * I believe this is wrongly implemented.
+ * I think Robert confuses original Angluin Lstar where the prefixes are added to the RED set,
+ * with modern Lstar with Shahbaz and Groz counterexample processing
+ * where all the SUFFIXES are added to the experiment set.
+ * So it should be
+ *
+ * std::deque<int> current_suffix;
+ * for (const int symbol : ranges::view::reverse(suffix) {
+ *     current_suffix.push_front(symbol);
+ *     all_columns.emplace(current_suffix.begin(), current_suffix.end());
+ * }
+ *
+ * for modern Lstar counter example processing.
+ * But do your own research.
  *
  * @param suffix The suffix by which to extend. Gained from a counterexample as per L* algorithm.
  */

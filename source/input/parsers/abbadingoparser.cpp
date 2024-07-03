@@ -68,10 +68,13 @@ bool abbadingoparser::read_abbadingo_trace() {
     auto trace = parsed_trace_maybe.value();
 
     // Is the specified amount of symbols in the trace equal to the actual amount?
+    std::stringstream ss;
+    ss << trace;
     if (trace.trace_info.number != trace.symbols.size()) {
         throw std::runtime_error(
-                fmt::format("Error parsing abbadingo input: line {} - Incorrectly specified number of symbols in trace",
-                            line_idx));
+                fmt::format("Error parsing abbadingo input: line {} - Incorrectly specified number of symbols in trace\n"
+                    "{}\nSpecifier specified {} found {}",
+                    line_idx, ss.str(), trace.trace_info.number, trace.symbols.size()));
     }
 
     // Gather trace attribute info
