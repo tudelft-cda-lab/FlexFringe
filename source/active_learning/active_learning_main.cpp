@@ -18,8 +18,6 @@
 #include "lstar_imat.h"
 #include "probabilistic_lsharp.h"
 #include "probabilistic_lsharp_v2.h"
-#include "transformer_lsharp.h"
-#include "transformer_weighted_lsharp.h"
 #include "weighted_lsharp.h"
 
 #include "active_sul_oracle.h"
@@ -197,12 +195,6 @@ void active_learning_main_func::run_active_learning() {
     } else if (ACTIVE_LEARNING_ALGORITHM == "l_dot") {
         STORE_ACCESS_STRINGS = true;
         algorithm = unique_ptr<algorithm_base>(new ldot_algorithm(sul, teacher, oracle));
-    } else if (ACTIVE_LEARNING_ALGORITHM == "transformer_l_sharp") {
-        STORE_ACCESS_STRINGS = true;
-        algorithm = unique_ptr<algorithm_base>(new transformer_lsharp_algorithm(sul, teacher, oracle));
-    } else if (ACTIVE_LEARNING_ALGORITHM == "weighted_transformer_l_sharp") {
-        STORE_ACCESS_STRINGS = true;
-        algorithm = unique_ptr<algorithm_base>(new transformer_weighted_lsharp_algorithm(sul, teacher, oracle));
     } else {
         throw logic_error("Fatal error: Unknown active_learning_algorithm flag used: " + ACTIVE_LEARNING_ALGORITHM);
     }
