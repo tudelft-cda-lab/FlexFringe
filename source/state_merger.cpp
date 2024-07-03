@@ -1019,32 +1019,10 @@ refinement* state_merger::get_best_refinement() {
     refinement_set *rs = get_possible_refinements();
     refinement *r = nullptr;
     if (!rs->empty()) {
-        int merging = 0;
-        int extends = 0;
         r = *rs->begin();
-        merge_refinement* best_merge_ref = dynamic_cast<merge_refinement*>(r);
-        if (best_merge_ref) {
-            DLOG_S(INFO) << "Merging between " << best_merge_ref->blue->get_number() << " and " << best_merge_ref->red->get_number() << ".";
-            merging++;
-        } else {
-            DLOG_S(INFO) << "No merge";
-            extends++;
-        }
         for(auto it : *rs){
-            if(r != it) {
-                it->erase();
-                merge_refinement* other_merge_ref = dynamic_cast<merge_refinement*>(it);
-                if (other_merge_ref) {
-                    DLOG_S(INFO) << "Merging between " << other_merge_ref->blue->get_number() << " and " << other_merge_ref->red->get_number() << ".";
-                    merging++;
-                } else {
-                    DLOG_S(INFO) << "No merge";
-                    extends++;
-                }
-            }
+            if(r != it) it->erase();
         }
-        DLOG_S(INFO) << "Merging:" << merging;
-        DLOG_S(INFO) << "Extend:" << extends;
     }
 
     delete rs; // can this actually erase the refinement that we did?
