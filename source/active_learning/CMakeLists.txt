@@ -34,9 +34,7 @@ add_library(ActiveLearning STATIC
             algorithms/lsharp.cpp
             algorithms/ldot.h
             algorithms/ldot.cpp
-            algorithms/transformer_lsharp.h
-            algorithms/transformer_lsharp.cpp
-            
+
             # PDFAs and WFAs
             algorithms/probabilistic_lsharp.h
             algorithms/probabilistic_lsharp.cpp
@@ -44,8 +42,6 @@ add_library(ActiveLearning STATIC
             algorithms/probabilistic_lsharp_v2.cpp
             algorithms/weighted_lsharp.h
             algorithms/weighted_lsharp.cpp
-            algorithms/transformer_weighted_lsharp.h
-            algorithms/transformer_weighted_lsharp.cpp
 
             databases/database_base.h
             databases/database_headers.h
