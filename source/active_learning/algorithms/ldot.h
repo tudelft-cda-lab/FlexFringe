@@ -31,7 +31,7 @@ class ldot_algorithm : public algorithm_base {
   private:
     // START -- SETTINGS ******:
 
-    int PREFIX_SIZE = 10;
+    int PREFIX_SIZE = 100;
     double BEST_MERGE_THRESHOLD = 2.0; // any value below 1 is a JustTakeBestMerge approach
 
     // Keep false, does not work very well, allthough Lsharp works with true.
