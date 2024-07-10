@@ -11,8 +11,9 @@
 REGISTER_DEF_TYPE(lsharp_eval);
 REGISTER_DEF_DATATYPE(lsharp_data);
 
-
-/* default evaluation, count number of performed merges */
+/**
+ * @brief TODO: write comment how it works here
+ */
 bool lsharp_eval::consistent(state_merger *merger, apta_node* left, apta_node* right, int depth){
     if(inconsistency_found) return false;    
     if(!TYPE_CONSISTENT) return true;    

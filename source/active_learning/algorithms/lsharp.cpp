@@ -105,6 +105,8 @@ unordered_set<apta_node*> lsharp_algorithm::extend_fringe(unique_ptr<state_merge
         trace* new_trace = vector_to_trace(seq, id, answer);
         id.add_trace_to_apta(new_trace, merger->get_aut(), false);
         new_nodes.insert(n->get_child(symbol));
+
+        assert(n->get_child(symbol) != nullptr);
     }
 
     extended_nodes.insert(n);
@@ -134,7 +136,7 @@ list<refinement*> lsharp_algorithm::find_complete_base(unique_ptr<state_merger>&
         unordered_set<apta_node*> blue_nodes;
         unordered_set<apta_node*> red_nodes;
 
-        cout << ++n_iter << " iterations for this round. Red nodes: " << n_red_nodes << endl;
+        std::cout << ++n_iter << " iterations for this round. Red nodes: " << n_red_nodes << endl;
         
         for (blue_state_iterator b_it = blue_state_iterator(the_apta->get_root()); *b_it != nullptr; ++b_it) {
             auto blue_node = *b_it;
@@ -165,7 +167,12 @@ list<refinement*> lsharp_algorithm::find_complete_base(unique_ptr<state_merger>&
                 performed_refs.push_back(ref);
 
                 ++n_red_nodes;
+
+                // we have to have the unmerged tree when creating new states. Else errors might occur
+                reset_apta(merger.get(), performed_refs);
                 extend_fringe(merger, blue_node, the_apta, id, alphabet);
+                do_operations(merger.get(), performed_refs);
+
                 if(n_red_nodes == MAX_RED_NODES){
                     termination_reached = true;
                     break;
@@ -247,8 +254,7 @@ void lsharp_algorithm::run(inputdata& id) {
 
         {
             static int model_nr = 0;
-            cout << "printing model " << model_nr << endl;
-            print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".lsharp.before_cex");
+            print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".before_cex");
         }
 
         // only merges performed, hence we can test our hypothesis
@@ -276,13 +282,6 @@ void lsharp_algorithm::run(inputdata& id) {
             cout << endl;        
             
             proc_counterex(teacher, id, the_apta, cex, merger, refs, alphabet);
-
-            {
-                static int model_nr = 0;
-                cout << "printing model " << model_nr << endl;
-                print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".lsharp.after_cex");
-            }
-
             break;
         }
 
