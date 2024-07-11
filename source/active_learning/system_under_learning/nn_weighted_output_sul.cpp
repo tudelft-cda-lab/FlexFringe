@@ -68,12 +68,13 @@ const int nn_weighted_output_sul::query_trace(const std::vector<int>& query_trac
  * @brief Gets the type, assumed to be of Sigmoid output and a threshold of 0.5, along with 
  * a hidden representation of the network state.
  * 
- * @return const std::pair< int, std::vector<float> > <the type, the hidden representation>
+ * @return const std::pair< int, std::vector<float> > <the type, the hidden representations for each symbol of sequence>
  */
-const std::pair< int, std::vector<float> > 
-nn_weighted_output_sul::get_type_and_state(const std::vector<int>& query_trace, inputdata& id) const {
+const std::pair< int, std::vector< std::vector<float> > > 
+nn_weighted_output_sul::get_type_and_states(const std::vector<int>& query_trace, inputdata& id) const {
     static PyObject* p_start_symbol = START_SYMBOL == -1 ? nullptr : PyLong_FromLong(START_SYMBOL);
     static PyObject* p_end_symbol = START_SYMBOL == -1 ? nullptr : PyLong_FromLong(END_SYMBOL);
+
 
     PyObject* p_list = p_start_symbol == nullptr ? PyList_New(query_trace.size())
                                                  : PyList_New(query_trace.size() + 2); // +2 for start and end symbol
@@ -92,31 +93,39 @@ nn_weighted_output_sul::get_type_and_state(const std::vector<int>& query_trace, 
         set_list_item(p_list, p_end_symbol, query_trace.size() + 1);
     }
 
-    PyObject* p_query_result = PyObject_CallOneArg(query_func, p_list);
-    PyFloat_AsDouble(p_query_result);
-
     PyObject* p_result = PyObject_CallOneArg(query_func, p_list);
-    if (!PyTuple_Check(p_result))
-        throw std::runtime_error("Something went wrong, the Network did not return a tuple. What happened?");
-    assert(static_cast<int>(PyTuple_Size(p_result)) == 2);
+    if (!PyList_Check(p_result))
+        throw std::runtime_error("Something went wrong, the Network did not return a dictionary. What happened?");
 
-    PyObject* p_type = PyTuple_GET_ITEM(p_result, static_cast<Py_ssize_t>(0));
-    PyObject* p_state = PyTuple_GET_ITEM(p_result, static_cast<Py_ssize_t>(1));
-
-    static const int STATE_SIZE = static_cast<int>(PyList_Size(p_state));    
-    vector<float> state(STATE_SIZE);
-    for (int i = 0; i < STATE_SIZE; ++i) {
-        PyObject* s = PyList_GET_ITEM(p_state, static_cast<Py_ssize_t>(i));
-        state[i] = static_cast<float>(PyFloat_AsDouble(s));
+    // by convention, python script must return a list. list[0]=prediction, list[1]=embedding_dim, rest is hidden_representations 1D
+    PyObject* p_type = PyList_GetItem(p_result, static_cast<Py_ssize_t>(0));
+    if(!PyLong_Check(p_type)){
+        cerr << "Problem with type as returned by Python script. Is it a proper int?" << endl;
+        throw exception(); // force the catch block
     }
-
-    if(!PyFloat_Check(p_type)){
-        throw std::runtime_error("Something went wrong, the Network neither returned a float (binary acceptor model\
-        , nor did it return a list (language model)). What happened?");
+    else if(!PyLong_CheckExact(p_type)){
+        cerr << "Something weird happend here." << endl;
+        throw exception();
     }
     
-    int type = static_cast<float>(PyFloat_AsDouble(p_type)) < 0.5 ? 0 : 1;
-    return make_pair(type, state);
+    static const int HIDDEN_STATE_SIZE = static_cast<int>(PyLong_AsLong(PyList_GetItem(p_result, static_cast<Py_ssize_t>(1)))); // get first list, then return its length 
+    
+    const int n_sequences = static_cast<int>( (static_cast<int>(PyList_Size(p_result)) -2) / HIDDEN_STATE_SIZE);
+    vector< vector<float> > representations(n_sequences);
+    for (int i = 0; i < n_sequences; ++i) {
+        vector<float> hidden_rep(HIDDEN_STATE_SIZE);
+
+        for(int j=0; j<HIDDEN_STATE_SIZE; ++j){
+            int idx = i * HIDDEN_STATE_SIZE + j + 2;
+            PyObject* s = PyList_GET_ITEM(p_result, static_cast<Py_ssize_t>(idx));
+            hidden_rep[j] = static_cast<float>(PyFloat_AsDouble(s));
+        }
+
+        representations[i] = move(hidden_rep);
+    }
+
+    int type = static_cast<int>(PyLong_AsLong(p_type));
+    return make_pair(type, representations);
 }
 
 

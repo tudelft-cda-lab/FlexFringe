@@ -29,7 +29,7 @@ class nn_weighted_output_sul : public nn_sul_base {
     /* Learning from NN acceptors*/
     virtual bool is_member(const std::vector<int>& query_trace) const;
     virtual const int query_trace(const std::vector<int>& query_trace, inputdata& id) const override;
-    virtual const std::pair< int, std::vector<float> > get_type_and_state(const std::vector<int>& query_trace, inputdata& id) const override;
+    virtual const std::pair< int, std::vector< std::vector<float> > > get_type_and_states(const std::vector<int>& query_trace, inputdata& id) const override;
 
     /* Learning from Language Models */
     virtual const double get_string_probability(const std::vector<int>& query_trace, inputdata& id) const override;

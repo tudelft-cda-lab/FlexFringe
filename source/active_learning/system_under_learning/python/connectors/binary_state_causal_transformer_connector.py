@@ -12,6 +12,8 @@ import pickle as pk
 
 import re
 
+import numpy as np
+
 import torch
 import torch.nn as nn
 from torch.nn.functional import softmax
@@ -36,7 +38,6 @@ PAD = None
 
 MAXLEN = None # max length of a sequence. Used for padding and set by get_alphabet() function
 ALPHABET_SIZE = None
-
 
 def make_dict(**kwargs):
     return kwargs
@@ -107,33 +108,63 @@ def make_tensor_causal_masks(words:torch.Tensor):
     x += torch.eye(l,dtype=torch.bool, device=x.device)
     return x.type(torch.int8)
 
+def get_representation(output, last_token_idx):
+  """Gets the attention. Make sure to keep the convention: Keys go from 1...number of attention vectors, 
+  as 0 is reserved for the networks output.
+
+  Returns:
+      output (dict): 1...n_attn -> attn_vector
+  """
+  DO_FIRST_ONLY = True
+
+  if DO_FIRST_ONLY:
+    attn = torch.squeeze(output["hidden_states"][0].detach()).numpy() # (b_size, maxlen_seq, hidden_dim); b_size here will always be 1 and squeezed out!
+    #attn = torch.squeeze(output["attentions"][0].detach()).numpy() # (b_size, n_heads, maxlen_seq, maxlen_seq); b_size here will always be 1 and squeezed out!
+    #attn = np.mean(attn, axis=0) # using the attn and not the states
+  elif False:
+     pass # placeholder for different strategy
+  
+  res = list()
+  for i in range(last_token_idx+1):
+    res.extend(list(attn[i]))
+
+  return res
+
 def do_query(seq: list):
   """This is the main function, performed on a sequence.
   Returns what you want it to return, make sure it makes 
   sense in the employed SUL class. 
+
+  Must return a dictionary. For efficiency the following convention holds for the 
+  keys: 1 = prediction, 2 = attention
 
   Args:
       seq (list): List of ints.
   """
   padding = [PAD] * (MAXLEN - len(seq) - 1)
   padded_seq = seq + padding
-  last_token = len(seq) - 1
+  last_token_idx = len(seq) - 1
+  print(padded_seq, last_token_idx)
 
   query_string = torch.reshape(torch.tensor(padded_seq), (1, -1))
   mask = make_tensor_causal_masks(query_string)
   with torch.no_grad():
-    output = model(input_ids=query_string, attention_mask=mask, return_dict=True, output_attentions=False)
+    output = model(input_ids=query_string, attention_mask=mask, return_dict=True, output_attentions=False, output_hidden_states=True)
   logits = torch.squeeze(output.logits)
 
-  #last_pos = torch.where(query_string == EOS)[1]#[0]
-  preds = torch.argmax(logits[last_token])
-
+  preds = torch.argmax(logits[last_token_idx])
   if(logits.size(-1) > PAD + 1):
       preds = preds - PAD - 1
-  
+
   if preds < 0 or preds > 1:
      print("Erroneous prediction: ", preds)
-  return preds
+
+  res = get_representation(output, last_token_idx)
+  embedding_dim = int(len(res) / len(seq))
+
+  res.insert(0, embedding_dim)
+  res.insert(0, preds.item())
+  return res
 
 
 def get_alphabet(path_to_model: str):
@@ -167,11 +198,11 @@ def get_alphabet(path_to_model: str):
 
 
 if __name__ == "__main__":
-  model_path = "/home/robert/Documents/code/Flexfringe/data/active_learning/mlregtest/trained_models/distilbert_problem_04.04.SL.4.1.2.pk.finetuned"
-
+  model_path = "/home/robert/Documents/code/Flexfringe/data/active_learning/mlregtest/trained_models/distilbert_problem_04.03.TLT.2.1.2.pk.finetuned"
+  get_alphabet(model_path)
   load_nn_model(model_path)
-  #seq = [4, 0]
-  #res = do_query(seq)
-  #print(res)
+  seq = [4, 0, 5]
+  res = do_query(seq)
+  print(type(res), len(res))
 
   raise Exception("This is not a standalone script.")

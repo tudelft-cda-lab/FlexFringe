@@ -30,7 +30,7 @@ ifstream sul_base::get_input_stream() const {
     return input_stream;
 }
 
-const pair<int, vector<float>> sul_base::get_type_and_state(const std::vector<int>& query_trace, inputdata& id) const {
+const pair<int, vector< vector<float> > > sul_base::get_type_and_states(const std::vector<int>& query_trace, inputdata& id) const {
     throw logic_error("This SUL does not support type queries along with a hidden state representation. \
     Please change the program settings. Aborting program.");
 }

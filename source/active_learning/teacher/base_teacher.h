@@ -29,7 +29,7 @@ class base_teacher {
     const int ask_membership_query(const active_learning_namespace::pref_suf_t& query, inputdata& id);
     const int ask_membership_query(const active_learning_namespace::pref_suf_t& prefix,
                                    const active_learning_namespace::pref_suf_t& suffix, inputdata& id);
-    const std::pair< int, std::vector<float> > get_membership_state_pair(const active_learning_namespace::pref_suf_t& access_seq,
+    const std::pair< int, std::vector< std::vector<float> > > get_membership_state_pair(const active_learning_namespace::pref_suf_t& access_seq,
                                                      inputdata& id);
     /* For learning weighted automata or PDFA */
     const double get_string_probability(const active_learning_namespace::pref_suf_t& query, inputdata& id);

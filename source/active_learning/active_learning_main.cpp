@@ -17,7 +17,7 @@
 #include "lstar.h"
 #include "probabilistic_lsharp.h"
 #include "probabilistic_lsharp_v2.h"
-#include "transformer_lsharp.h"
+#include "transformer_l_sharp.h"
 #include "transformer_weighted_lsharp.h"
 #include "weighted_lsharp.h"
 

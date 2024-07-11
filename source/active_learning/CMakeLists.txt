@@ -32,8 +32,8 @@ add_library(ActiveLearning STATIC
             algorithms/lsharp.cpp
             algorithms/ldot.h
             algorithms/ldot.cpp
-            algorithms/transformer_lsharp.h
-            algorithms/transformer_lsharp.cpp
+            algorithms/transformer_l_sharp.h
+            algorithms/transformer_l_sharp.cpp
             
             # PDFAs and WFAs
             algorithms/probabilistic_lsharp.h
@@ -50,12 +50,15 @@ add_library(ActiveLearning STATIC
             databases/prefix_tree_database.h
             databases/prefix_tree_database.cpp
 
+            # Equivalence oracles
             equivalence_oracle/eq_oracle_base.h
             equivalence_oracle/eq_oracle_base.cpp
             equivalence_oracle/input_file_oracle.h
             equivalence_oracle/input_file_oracle.cpp
             equivalence_oracle/active_sul_oracle.h
             equivalence_oracle/active_sul_oracle.cpp
+            equivalence_oracle/active_state_sul_oracle.h
+            equivalence_oracle/active_state_sul_oracle.cpp
             equivalence_oracle/string_probability_oracle.h
             equivalence_oracle/string_probability_oracle.cpp
             equivalence_oracle/weight_comparing_oracle.h
@@ -65,6 +68,7 @@ add_library(ActiveLearning STATIC
             equivalence_oracle/sqldb_sul_random_oracle.h
             equivalence_oracle/sqldb_sul_random_oracle.cpp
 
+            # Counterexample strategies
             equivalence_oracle/search_strategies/search_base.h
             equivalence_oracle/search_strategies/search_base.cpp
             equivalence_oracle/search_strategies/breadth_first_search.h

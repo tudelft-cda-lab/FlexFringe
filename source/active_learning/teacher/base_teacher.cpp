@@ -41,9 +41,9 @@ const int base_teacher::ask_membership_query(const pref_suf_t& query, inputdata&
     return sul->query_trace(query, id);
 }
 
-const std::pair< int, std::vector<float> > 
+const std::pair< int, std::vector< std::vector<float> > > 
 base_teacher::get_membership_state_pair(const active_learning_namespace::pref_suf_t& access_seq, inputdata& id){
-    return sul->get_type_and_state(access_seq, id);
+    return sul->get_type_and_states(access_seq, id);
 }
 
 /**

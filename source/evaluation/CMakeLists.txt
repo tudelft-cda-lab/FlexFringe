@@ -25,6 +25,8 @@ add_library(Evaluation STATIC
             lsharp_eval.cpp
             mealy.h
             mealy.cpp
+            membership_state_comparator.h
+            membership_state_comparator.cpp
             mse_error.h
             mse_error.cpp
             overlap.h
