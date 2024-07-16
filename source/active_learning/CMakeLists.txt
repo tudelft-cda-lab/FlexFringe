@@ -8,7 +8,8 @@ include_directories(
         "${CMAKE_CURRENT_SOURCE_DIR}/system_under_learning/benchmark_parsers"
         "${CMAKE_CURRENT_SOURCE_DIR}/counterexample_strategies"
         "${CMAKE_CURRENT_SOURCE_DIR}/equivalence_oracle"
-        "${CMAKE_CURRENT_SOURCE_DIR}/equivalence_oracle/search_strategies"
+        "${CMAKE_CURRENT_SOURCE_DIR}/equivalence_oracle/cex_search_strategies"
+        "${CMAKE_CURRENT_SOURCE_DIR}/equivalence_oracle/cex_conflict_search"
         "${CMAKE_CURRENT_SOURCE_DIR}/algorithms"
         )
 
@@ -68,22 +69,33 @@ add_library(ActiveLearning STATIC
             equivalence_oracle/sqldb_sul_random_oracle.h
             equivalence_oracle/sqldb_sul_random_oracle.cpp
 
-            # Counterexample strategies
-            equivalence_oracle/search_strategies/search_base.h
-            equivalence_oracle/search_strategies/search_base.cpp
-            equivalence_oracle/search_strategies/breadth_first_search.h
-            equivalence_oracle/search_strategies/breadth_first_search.cpp
-            equivalence_oracle/search_strategies/random_string_search.h
-            equivalence_oracle/search_strategies/random_string_search.cpp
-            equivalence_oracle/search_strategies/random_w_method.h
-            equivalence_oracle/search_strategies/random_w_method.cpp
-            equivalence_oracle/search_strategies/targeted_bfs_walk.h
-            equivalence_oracle/search_strategies/targeted_bfs_walk.cpp
-            equivalence_oracle/search_strategies/fringe_walk.h
-            equivalence_oracle/search_strategies/fringe_walk.cpp
+            # Counterexample search strategies
+            equivalence_oracle/cex_search_strategies/search_base.h
+            equivalence_oracle/cex_search_strategies/search_base.cpp
+            equivalence_oracle/cex_search_strategies/breadth_first_search.h
+            equivalence_oracle/cex_search_strategies/breadth_first_search.cpp
+            equivalence_oracle/cex_search_strategies/random_string_search.h
+            equivalence_oracle/cex_search_strategies/random_string_search.cpp
+            equivalence_oracle/cex_search_strategies/random_w_method.h
+            equivalence_oracle/cex_search_strategies/random_w_method.cpp
+            equivalence_oracle/cex_search_strategies/targeted_bfs_walk.h
+            equivalence_oracle/cex_search_strategies/targeted_bfs_walk.cpp
+            equivalence_oracle/cex_search_strategies/fringe_walk.h
+            equivalence_oracle/cex_search_strategies/fringe_walk.cpp
 
+            # Conflict search strategies
+            equivalence_oracle/cex_conflict_search/dfa_conflict_search_base.h
+            equivalence_oracle/cex_conflict_search/dfa_conflict_search_base.cpp
+            equivalence_oracle/cex_conflict_search/linear_conflict_search.h
+            equivalence_oracle/cex_conflict_search/linear_conflict_search.cpp
+            equivalence_oracle/cex_conflict_search/binary_conflict_search.h
+            equivalence_oracle/cex_conflict_search/binary_conflict_search.cpp
+
+            # Everything related to memory and possible memoization techniques
             memory/observation_table.h
             memory/observation_table.cpp
+            memory/distinguishing_sequences_tree.h
+            memory/distinguishing_sequences_tree.cpp
             memory/adaptive_distinguishing_sequences.h
             memory/adaptive_distinguishing_sequences.cpp
 
@@ -97,7 +109,6 @@ add_library(ActiveLearning STATIC
             system_under_learning/database_sul.cpp
             system_under_learning/sqldb_sul.h
             system_under_learning/sqldb_sul.cpp
-
 
             system_under_learning/nn_sul_base.h
             system_under_learning/nn_sul_base.cpp

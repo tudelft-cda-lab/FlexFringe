@@ -57,8 +57,12 @@ std::optional<pair<vector<int>, int>> active_sul_oracle::equivalence_query(state
         if (true_val != pred_val) {
             cout << "Predictions of the following counterexample: The true value: " << true_val
                  << ", predicted: " << pred_val << endl;
-            //search_strategy->reset();
-            return make_optional<pair<vector<int>, int>>(make_pair(query_string, true_val));
+                    cout << "String: ";
+            
+            pair< vector<int>, optional<response_wrapper> > conflict_rep_pair = conflict_searcher->get_conflict_string(query_string, hypothesis, teacher, id);
+            if(conflict_rep_pair.second == nullopt)
+                return make_optional<pair<vector<int>, int>>(make_pair(query_string, true_val));
+            return make_optional<pair<vector<int>, int>>(make_pair(conflict_rep_pair.first, conflict_rep_pair.second.value().get_int_response()));
         }
 
         query_string_opt = search_strategy->next(id);

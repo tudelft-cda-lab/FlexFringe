@@ -14,7 +14,8 @@
 
 #include "base_teacher.h"
 #include "parameters.h"
-#include "search_strategies/search_strategy_headers.h"
+#include "cex_search_strategies/search_strategy_headers.h"
+#include "cex_conflict_search/conflict_search_base.h"
 #include "sul_headers.h"
 
 #include "apta.h"
@@ -29,6 +30,7 @@ class eq_oracle_base {
   protected:
     std::shared_ptr<sul_base> sul;
     std::unique_ptr<search_base> search_strategy;
+    std::unique_ptr<conflict_search_base> conflict_searcher;
 
     virtual void reset_sul() = 0;
 

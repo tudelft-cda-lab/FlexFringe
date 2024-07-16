@@ -15,6 +15,8 @@
 #include "eq_oracle_base.h"
 #include "parameters.h"
 
+#include "linear_conflict_search.h"
+
 #include <optional>
 #include <utility>
 
@@ -30,6 +32,8 @@ class active_sul_oracle : public eq_oracle_base {
         search_strategy = std::unique_ptr<search_base>(
             new random_string_search(MAX_CEX_LENGTH)); // std::unique_ptr<search_base>(new bfs_strategy(8)); // number here is
                                            // maximum length of sequence. Find a better way to set this
+
+        conflict_searcher = std::unique_ptr<conflict_search_base>(new linear_conflict_search());
         assert(dynamic_cast<input_file_sul*>(sul.get()) == nullptr);
     };
 
