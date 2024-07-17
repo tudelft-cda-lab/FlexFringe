@@ -22,18 +22,17 @@
 
 class active_sul_oracle : public eq_oracle_base {
   protected:
-    std::shared_ptr<sul_base> sul;
-    std::unique_ptr<search_base> search_strategy;
-
-    virtual void reset_sul() override{};
+    
+    virtual int get_teacher_response(const vector<int>& query_string, const std::unique_ptr<base_teacher>& teacher, inputdata& id) const;
+    void reset_sul() override {};
 
   public:
     active_sul_oracle(std::shared_ptr<sul_base>& sul) : eq_oracle_base(sul) {
         search_strategy = std::unique_ptr<search_base>(
-            new random_string_search(MAX_CEX_LENGTH)); // std::unique_ptr<search_base>(new bfs_strategy(8)); // number here is
+            new random_w_method(MAX_CEX_LENGTH)); // std::unique_ptr<search_base>(new bfs_strategy(8)); // number here is
                                            // maximum length of sequence. Find a better way to set this
 
-        conflict_searcher = std::unique_ptr<conflict_search_base>(new linear_conflict_search());
+        conflict_searcher = std::unique_ptr<conflict_search_base>(new dfa_conflict_search_namespace::linear_conflict_search());
         assert(dynamic_cast<input_file_sul*>(sul.get()) == nullptr);
     };
 

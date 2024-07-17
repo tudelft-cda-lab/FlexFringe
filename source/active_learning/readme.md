@@ -28,3 +28,6 @@ file to the python script that you want to execute. The other parameters are as 
 - input-file: The last argument of flexfringe by convention. This is the relative path to the python-script.
 
 **Important**: We highly suggest you test and debug your python scripts first if you intend to write your own custom one's, because errors in the Python script will not be passed on to C++ and error messages originating from Python will not appear, and the program might continue running.
+
+**Pitfall in PyTorch**: When inferring in the model, both model.eval() and with torch.no_grad() should be used, else correct output of the model 
+seems not guaranteed anymore.

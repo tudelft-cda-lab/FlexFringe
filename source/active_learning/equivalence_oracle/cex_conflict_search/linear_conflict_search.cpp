@@ -24,13 +24,13 @@ using namespace std;
  * @param id The inputdata wrapper.
  * @return std::vector<int> A vector leading to the conflict.
  */
-pair< vector<int>, optional<response_wrapper> > linear_conflict_search::get_conflict_string(const vector<int>& cex, apta& hypothesis, 
+pair< vector<int>, optional<response_wrapper> > dfa_conflict_search_namespace::linear_conflict_search::get_conflict_string(const vector<int>& cex, apta& hypothesis, 
                                                              const unique_ptr<base_teacher>& teacher, inputdata& id){
   vector<int> substring;
   for(auto s: cex){
     substring.push_back(s);
     
-    int true_val = teacher->ask_membership_query(substring, id);
+    int true_val = get_teacher_response(cex, teacher, id);
     int pred_value = parse_dfa(substring, hypothesis, id); // TODO: we can do this one faster too via memoization
 
     if(true_val != pred_value){

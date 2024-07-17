@@ -14,11 +14,15 @@
 
 #include "dfa_conflict_search_base.h"
 
-class linear_conflict_search : public dfa_conflict_search_base {
-  public:
-    linear_conflict_search(){};
+// We use namespace here because we want to use the same class names for PDFA cases.
+namespace dfa_conflict_search_namespace {
 
-    std::pair< std::vector<int>, std::optional<response_wrapper> > get_conflict_string(const std::vector<int>& cex, apta& hypothesis, const std::unique_ptr<base_teacher>& teacher, inputdata& id) override;
-};
+  class linear_conflict_search : public dfa_conflict_search_base {
+    public:
+      linear_conflict_search(){};
+
+      std::pair< std::vector<int>, std::optional<response_wrapper> > get_conflict_string(const std::vector<int>& cex, apta& hypothesis, const std::unique_ptr<base_teacher>& teacher, inputdata& id) override;
+  };
+}
 
 #endif

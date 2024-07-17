@@ -121,19 +121,18 @@ def do_query(seq: list):
 
   query_string = torch.reshape(torch.tensor(padded_seq), (1, -1))
   mask = make_tensor_causal_masks(query_string)
+
   with torch.no_grad():
+    model.eval()
     output = model(input_ids=query_string, attention_mask=mask, return_dict=True, output_attentions=False)
   logits = torch.squeeze(output.logits)
 
-  #last_pos = torch.where(query_string == EOS)[1]#[0]
   preds = torch.argmax(logits[last_token])
-
   if(logits.size(-1) > PAD + 1):
       preds = preds - PAD - 1
-  
   if preds < 0 or preds > 1:
      print("Erroneous prediction: ", preds)
-  return preds
+  return preds.item()
 
 
 def get_alphabet(path_to_model: str):

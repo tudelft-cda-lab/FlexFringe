@@ -12,6 +12,18 @@
 #include "dfa_conflict_search_base.h"
 
 /**
+ * @brief Used for most of the algorithms here.
+ * 
+ * @param cex 
+ * @param teacher 
+ * @param id 
+ * @return int 
+ */
+int dfa_conflict_search_base::get_teacher_response(const std::vector<int>& cex, const std::unique_ptr<base_teacher>& teacher, inputdata& id) const {
+  return teacher->ask_membership_query(cex, id);
+}
+
+/**
  * @brief Parses the DFA, returns the prediction of the DFA.
  * 
  * @param seq The sequence.

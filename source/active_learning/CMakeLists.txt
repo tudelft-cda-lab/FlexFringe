@@ -88,6 +88,8 @@ add_library(ActiveLearning STATIC
             equivalence_oracle/cex_conflict_search/dfa_conflict_search_base.cpp
             equivalence_oracle/cex_conflict_search/linear_conflict_search.h
             equivalence_oracle/cex_conflict_search/linear_conflict_search.cpp
+            equivalence_oracle/cex_conflict_search/linear_state_query_conflict_search.h
+            equivalence_oracle/cex_conflict_search/linear_state_query_conflict_search.cpp
             equivalence_oracle/cex_conflict_search/binary_conflict_search.h
             equivalence_oracle/cex_conflict_search/binary_conflict_search.cpp
 

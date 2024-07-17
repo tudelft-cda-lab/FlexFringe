@@ -15,6 +15,16 @@
 using namespace std;
 using namespace active_learning_namespace;
 
+
+/**
+ * @brief Avoids duplicate code in the active_state_sul_oracle.
+ * 
+ * @return int The response of the teacher.
+ */
+int active_sul_oracle::get_teacher_response(const vector<int>& query_string, const std::unique_ptr<base_teacher>& teacher, inputdata& id) const {
+    return teacher->ask_membership_query(query_string, id);
+}
+
 /**
  * @brief This function does what you think it does.
  *
@@ -32,7 +42,7 @@ std::optional<pair<vector<int>, int>> active_sul_oracle::equivalence_query(state
     std::optional<vector<int>> query_string_opt = search_strategy->next(id);
     while (query_string_opt != nullopt) { // nullopt == search exhausted
         auto& query_string = query_string_opt.value();
-        int true_val = teacher->ask_membership_query(query_string, id);
+        int true_val = get_teacher_response(query_string, teacher, id);
 
         if (true_val < 0)
             return make_optional<pair<vector<int>, int>>(

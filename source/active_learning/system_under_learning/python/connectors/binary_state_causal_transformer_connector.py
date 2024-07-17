@@ -144,18 +144,18 @@ def do_query(seq: list):
   padding = [PAD] * (MAXLEN - len(seq) - 1)
   padded_seq = seq + padding
   last_token_idx = len(seq) - 1
-  print(padded_seq, last_token_idx)
 
   query_string = torch.reshape(torch.tensor(padded_seq), (1, -1))
   mask = make_tensor_causal_masks(query_string)
+
   with torch.no_grad():
+    model.eval()
     output = model(input_ids=query_string, attention_mask=mask, return_dict=True, output_attentions=False, output_hidden_states=True)
   logits = torch.squeeze(output.logits)
 
   preds = torch.argmax(logits[last_token_idx])
   if(logits.size(-1) > PAD + 1):
       preds = preds - PAD - 1
-
   if preds < 0 or preds > 1:
      print("Erroneous prediction: ", preds)
 

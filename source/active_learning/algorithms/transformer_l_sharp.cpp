@@ -319,6 +319,11 @@ void transformer_lsharp_algorithm::run(inputdata& id) {
         auto refs = find_complete_base(merger, the_apta, id, alphabet);
         cout << "Searching for counterexamples" << endl;
 
+        {
+            static int model_nr = 0;
+            print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".before_cex");
+        }
+
         // only merges performed, hence we can test our hypothesis
         while (true) {
             /* While loop to check the type. type is < 0 if sul cannot properly respond to query, e.g. when the string
