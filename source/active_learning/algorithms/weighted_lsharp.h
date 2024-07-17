@@ -35,11 +35,11 @@ class weighted_lsharp_algorithm : public lsharp_algorithm {
   protected:
     void proc_counterex(const std::unique_ptr<base_teacher>& teacher, inputdata& id, unique_ptr<apta>& hypothesis,
                         const std::vector<int>& counterex, std::unique_ptr<state_merger>& merger,
-                        const refinement_list refs, const vector<int>& alphabet) const;
+                        const refinement_list refs, const vector<int>& alphabet) const override;
 
     void extend_fringe(std::unique_ptr<state_merger>& merger, apta_node* n,
                                                  std::unique_ptr<apta>& the_apta, inputdata& id,
-                                                 const vector<int>& alphabet) const;
+                                                 const vector<int>& alphabet) const override;
     virtual void query_weights(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id,
                                const std::vector<int>& alphabet,
                                std::optional<active_learning_namespace::pref_suf_t> seq_opt) const;

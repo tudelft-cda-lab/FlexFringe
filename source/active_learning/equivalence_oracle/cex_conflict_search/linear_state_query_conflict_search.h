@@ -19,7 +19,7 @@ namespace dfa_conflict_search_namespace {
   
   class linear_state_query_conflict_search : public linear_conflict_search {
     protected:
-      int get_teacher_response(const std::vector<int>& cex, const std::unique_ptr<base_teacher>& teacher, inputdata& id) const override;
+      const int get_teacher_response(const std::vector<int>& substr, const std::unique_ptr<base_teacher>& teacher, inputdata& id) const override;
 
     public:
       linear_state_query_conflict_search(){};

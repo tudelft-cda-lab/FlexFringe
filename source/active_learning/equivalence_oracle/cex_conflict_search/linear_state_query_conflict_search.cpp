@@ -19,8 +19,8 @@ using namespace std;
  * 
  * @return int The response of the teacher.
  */
-int dfa_conflict_search_namespace::linear_state_query_conflict_search::get_teacher_response(const vector<int>& cex, const std::unique_ptr<base_teacher>& teacher, inputdata& id) const {
-    const pair< int, vector< vector<float> > > answer = teacher->get_membership_state_pair(cex, id);
+const int dfa_conflict_search_namespace::linear_state_query_conflict_search::get_teacher_response(const vector<int>& substr, const std::unique_ptr<base_teacher>& teacher, inputdata& id) const {
+    const pair< int, vector< vector<float> > > answer = teacher->get_membership_state_pair(substr, id);
     int resp = answer.first;
     return resp;
 }

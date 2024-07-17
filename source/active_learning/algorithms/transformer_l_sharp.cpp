@@ -25,7 +25,6 @@
 #include "edsm.h"
 
 #include <list>
-#include <stdexcept>
 
 using namespace std;
 using namespace active_learning_namespace;
@@ -49,7 +48,7 @@ void transformer_lsharp_algorithm::extend_fringe(unique_ptr<state_merger>& merge
         seq = access_trace->get_input_sequence(true, true);
     else
         seq.resize(1); // this is the root node
-    
+
     auto* data = static_cast<membership_state_comparator_data*>(n->get_data());
     for (const int symbol : alphabet) {        
         seq[seq.size() - 1] = symbol;
@@ -126,44 +125,7 @@ void transformer_lsharp_algorithm::update_hidden_states(unique_ptr<state_merger>
 }
 
 /**
- * @brief Processing the counterexample.
- *
- * Operations done directly on the APTA.
- *
- * @param aut The merged APTA.
- * @param counterex The counterexample.
- */
-void transformer_lsharp_algorithm::proc_counterex(const unique_ptr<base_teacher>& teacher, inputdata& id,
-                                      unique_ptr<apta>& hypothesis, const vector<int>& counterex,
-                                      unique_ptr<state_merger>& merger, const refinement_list refs,
-                                      const vector<int>& alphabet) const {
-    // in this block we do a linear search for the fringe of the prefix tree. Once we found it, we ask membership
-    // queries for each substring of the counterexample (for each new state that we create), and this way add the whole
-    // counterexample to the prefix tree
-    reset_apta(merger.get(), refs);
-    vector<int> substring;
-    apta_node* n = hypothesis->get_root();
-    for (auto s : counterex) {
-
-        substring.push_back(s);
-        trace* parse_trace = vector_to_trace(substring, id, 0); // TODO: inefficient like this, 0 is a dummy type that does not matter
-        tail* t = substring.size() == 0 ? parse_trace->get_end() : parse_trace->get_end()->past_tail;
-        apta_node* n_child = active_learning_namespace::get_child_node(n, t);
-
-        if (n_child == nullptr) {
-            extend_fringe(merger, n, hypothesis, id, alphabet);
-            n_child = active_learning_namespace::get_child_node(n, t);
-        }
-
-        n = n_child;
-        mem_store::delete_trace(parse_trace);
-    }
-}
-
-/**
  * @brief Does what you think it does.
- * 
- * TODO: will be same as weighted L# and L# most likely
  *
  * @param merger
  * @param the_apta
@@ -199,7 +161,7 @@ list<refinement*> transformer_lsharp_algorithm::find_complete_base(unique_ptr<st
 
         bool identified_red_node = false;
         for (auto blue_node : blue_nodes) {
-            if(use_sinks && blue_node->is_sink()) continue; // we don't merge sinks
+            //if(use_sinks && blue_node->is_sink()) continue; // we don't merge sinks
 
             refinement_set possible_merges;
             for(auto red_node: red_nodes){
@@ -356,13 +318,5 @@ void transformer_lsharp_algorithm::run(inputdata& id) {
             }
             break;
         }
-
-        // TODO: this one might not hold
-        //++n_runs;
-        //if (ENSEMBLE_RUNS > 0 && n_runs == ENSEMBLE_RUNS) {
-        //    cout << "Maximum of runs reached. Printing automaton." << endl;
-        //    print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
-        //    return;
-        //}
     }
 }

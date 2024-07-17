@@ -24,8 +24,6 @@ class weight_comparing_oracle : public eq_oracle_base {
     const bool use_sinks; 
 
   protected:
-    std::shared_ptr<sul_base> sul;
-    std::unique_ptr<search_base> search_strategy;
     state_merger* merger;
 
     virtual void reset_sul() override{};
@@ -47,8 +45,6 @@ class weight_comparing_oracle : public eq_oracle_base {
 
     std::optional<std::pair<std::vector<int>, int>>
     equivalence_query(state_merger* merger, [[maybe_unused]] const std::unique_ptr<base_teacher>& teacher);
-
-    void initialize(state_merger* merger) override;
 };
 
 #endif

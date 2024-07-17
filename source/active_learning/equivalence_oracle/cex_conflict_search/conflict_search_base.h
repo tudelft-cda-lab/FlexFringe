@@ -68,7 +68,7 @@ class conflict_search_base {
   public:
     conflict_search_base(){};
 
-    virtual std::pair< std::vector<int>, std::optional<response_wrapper> >  get_conflict_string(const std::vector<int>& cex, apta& hypothesis, const std::unique_ptr<base_teacher>& teacher, inputdata& id) = 0;
+    virtual std::pair< std::vector<int>, std::optional<response_wrapper> > get_conflict_string(const std::vector<int>& cex, apta& hypothesis, const std::unique_ptr<base_teacher>& teacher, inputdata& id) = 0;
 };
 
 #endif

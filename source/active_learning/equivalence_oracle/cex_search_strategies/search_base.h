@@ -31,7 +31,6 @@ class search_base {
     virtual void reset() = 0;
 
     virtual void initialize(state_merger* merger){
-      std::cerr << "WARNING: Intialization method for this search method not implemented." << std::endl;
     }
 };
 

@@ -49,7 +49,7 @@ class eq_oracle_base {
     equivalence_query(state_merger* merger, [[maybe_unused]] const std::unique_ptr<base_teacher>& teacher) = 0;
 
     virtual void initialize(state_merger* merger){
-      std::cerr << "WARNING: Initialize method for this equvalence oracle is not defined. Is this a problem?" << std::endl;
+      this->search_strategy->initialize(merger);
     }
 };
 

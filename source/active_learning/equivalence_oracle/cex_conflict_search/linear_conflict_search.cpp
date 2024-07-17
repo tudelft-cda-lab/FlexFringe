@@ -30,7 +30,7 @@ pair< vector<int>, optional<response_wrapper> > dfa_conflict_search_namespace::l
   for(auto s: cex){
     substring.push_back(s);
     
-    int true_val = get_teacher_response(cex, teacher, id);
+    int true_val = get_teacher_response(substring, teacher, id);
     int pred_value = parse_dfa(substring, hypothesis, id); // TODO: we can do this one faster too via memoization
 
     if(true_val != pred_value){

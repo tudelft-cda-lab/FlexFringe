@@ -19,8 +19,8 @@
  * @param id 
  * @return int 
  */
-int dfa_conflict_search_base::get_teacher_response(const std::vector<int>& cex, const std::unique_ptr<base_teacher>& teacher, inputdata& id) const {
-  return teacher->ask_membership_query(cex, id);
+const int dfa_conflict_search_base::get_teacher_response(const std::vector<int>& substr, const std::unique_ptr<base_teacher>& teacher, inputdata& id) const {
+  return teacher->ask_membership_query(substr, id);
 }
 
 /**

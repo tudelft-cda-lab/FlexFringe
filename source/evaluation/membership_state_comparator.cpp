@@ -23,10 +23,26 @@ REGISTER_DEF_DATATYPE(membership_state_comparator_data);
 REGISTER_DEF_TYPE(membership_state_comparator);
 
 void membership_state_comparator_data::print_state_label(iostream& output){
-    evaluation_data::print_state_label(output);
-    for(auto x: LS){
-        output << x << "\n";
+    lsharp_data::print_state_label(output);
+    //for(auto x: LS){
+    //    output << x << "\n";
+    //}
+    compute_statistics();
+
+    float mean = 0;
+    float variance = 0;
+    
+    for(auto x: means){
+        mean += x;
     }
+    
+    for(auto x: std_devs){
+        variance += x;
+    }
+
+    mean = mean / means.size();
+    variance = variance / std_devs.size();
+    output << mean << " " << variance << "\n";
 };
 
 /** Merging update and undo_merge routines */

@@ -18,7 +18,7 @@
 
 class dfa_conflict_search_base : public conflict_search_base {
   protected:
-    virtual int get_teacher_response(const std::vector<int>& cex, const std::unique_ptr<base_teacher>& teacher, inputdata& id) const;
+    virtual const int get_teacher_response(const std::vector<int>& substr, const std::unique_ptr<base_teacher>& teacher, inputdata& id) const;
 
     int parse_dfa(const vector<int>& seq, apta& hypothesis, inputdata& id);
 
