@@ -43,7 +43,7 @@ std::optional<pair<vector<int>, int>> active_state_sul_oracle::equivalence_query
 
         apta_node* n = hypothesis.get_root();
         tail* t = test_tr->get_head();
-        for (int j = 0; j < t->get_length(); j++) {
+        for (int j = 0; j < test_tr->get_length(); j++) {
             n = active_learning_namespace::get_child_node(n, t);
 
             if (n == nullptr) {

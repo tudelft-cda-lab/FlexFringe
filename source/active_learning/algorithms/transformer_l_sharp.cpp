@@ -344,15 +344,20 @@ void transformer_lsharp_algorithm::run(inputdata& id) {
             cout << endl;
 
             proc_counterex(teacher, id, the_apta, cex, merger, refs, alphabet);
+
+            {
+                static int model_nr = 0;
+                print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_cex");
+            }
             break;
         }
 
         // TODO: this one might not hold
-        ++n_runs;
-        if (ENSEMBLE_RUNS > 0 && n_runs == ENSEMBLE_RUNS) {
-            cout << "Maximum of runs reached. Printing automaton." << endl;
-            print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
-            return;
-        }
+        //++n_runs;
+        //if (ENSEMBLE_RUNS > 0 && n_runs == ENSEMBLE_RUNS) {
+        //    cout << "Maximum of runs reached. Printing automaton." << endl;
+        //    print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
+        //    return;
+        //}
     }
 }

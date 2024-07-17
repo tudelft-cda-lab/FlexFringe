@@ -42,7 +42,7 @@ std::optional<pair<vector<int>, int>> active_sul_oracle::equivalence_query(state
 
         apta_node* n = hypothesis.get_root();
         tail* t = test_tr->get_head();
-        for (int j = 0; j < t->get_length(); j++) {
+        for (int j = 0; j < test_tr->get_length(); j++) {
             n = active_learning_namespace::get_child_node(n, t);
 
             if (n == nullptr) {
@@ -55,9 +55,12 @@ std::optional<pair<vector<int>, int>> active_sul_oracle::equivalence_query(state
         }
         const int pred_val = n->get_data()->predict_type(t);
         if (true_val != pred_val) {
-            cout << "Predictions of the following counterexample: The true value: " << true_val
-                 << ", predicted: " << pred_val << endl;
-                    cout << "String: ";
+            cout << "Found counterexample. The true value: " << id.get_type(true_val)
+                 << ", predicted: " << id.get_type(pred_val) << endl;
+            cout << "String before conflict resolution: ";
+            for(auto x: query_string)
+                cout << x << " ";
+            cout << endl;
             
             pair< vector<int>, optional<response_wrapper> > conflict_rep_pair = conflict_searcher->get_conflict_string(query_string, hypothesis, teacher, id);
             if(conflict_rep_pair.second == nullopt)

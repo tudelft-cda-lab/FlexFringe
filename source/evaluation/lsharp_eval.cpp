@@ -16,7 +16,8 @@ REGISTER_DEF_DATATYPE(lsharp_data);
  */
 bool lsharp_eval::consistent(state_merger *merger, apta_node* left, apta_node* right, int depth){
     if(inconsistency_found) return false;    
-    if(!TYPE_CONSISTENT) return true;    
+    if(!TYPE_CONSISTENT) return true;
+
     auto* l = (count_data*)left->get_data();
     auto* r = (count_data*)right->get_data();
 
@@ -52,3 +53,17 @@ bool lsharp_eval::consistent(state_merger *merger, apta_node* left, apta_node* r
     
     return true;
 };
+
+/** 
+ * We might not have full information, but in case many merges are possible we 
+ * want to merge into the lowest layer possible. Therefore, we use the difference in depth as well.
+*/
+double lsharp_eval::compute_score(state_merger* merger, apta_node* left, apta_node* right){
+    double score_1 = count_driven::compute_score(merger, left, right);
+    
+    // left node is always the red one as per flexfringe convention
+    auto left_depth = left->get_depth();
+    auto right_depth = right->get_depth();
+    double diff = static_cast<double>(abs(left_depth - right_depth));
+    return score_1 + diff;
+}

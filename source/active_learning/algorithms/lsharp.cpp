@@ -98,7 +98,7 @@ unordered_set<apta_node*> lsharp_algorithm::extend_fringe(unique_ptr<state_merge
     for (const int symbol : alphabet) {
         seq[seq.size() - 1] = symbol;
 
-        const auto answer = teacher->ask_membership_query(seq, id);
+        const int answer = teacher->ask_membership_query(seq, id);
         if(answer==-1)
             continue;
 
@@ -177,6 +177,12 @@ list<refinement*> lsharp_algorithm::find_complete_base(unique_ptr<state_merger>&
                     termination_reached = true;
                     break;
                 }
+            /* } else if (IDENTIFY_STATE_COMPLETELY && possible_merges.size() > 1) {
+                // we need to find a distinguishing sequence. We can either use the set we have, or turn this one red
+                reset_apta(merger.get(), performed_refs);
+                extend_fringe(merger, blue_node, the_apta, id, alphabet);
+                do_operations(merger.get(), performed_refs); */
+
             } else {
                 // get the best merge from the heap
                 refinement* best_merge = *(possible_merges.begin());
@@ -228,6 +234,7 @@ void lsharp_algorithm::run(inputdata& id) {
 
     auto the_apta = unique_ptr<apta>(new apta());
     auto merger = unique_ptr<state_merger>(new state_merger(&id, eval.get(), the_apta.get()));
+    this->oracle->initialize(merger.get());
 
     const vector<int> alphabet = id.get_alphabet();
     cout << "Alphabet: ";
@@ -282,6 +289,12 @@ void lsharp_algorithm::run(inputdata& id) {
             cout << endl;        
             
             proc_counterex(teacher, id, the_apta, cex, merger, refs, alphabet);
+
+            {
+                static int model_nr = 0;
+                print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_cex");
+            }
+
             break;
         }
 

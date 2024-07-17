@@ -36,10 +36,10 @@ public:
     }
 
     //virtual void print_transition_label(iostream& output, int symbol) override;
-    virtual void print_state_label(iostream& output) override;
+    void print_state_label(iostream& output) override;
 
-    virtual void update(evaluation_data* right) override;
-    virtual void undo(evaluation_data* right) override;
+    void update(evaluation_data* right) override;
+    void undo(evaluation_data* right) override;
 
     void update_sums(const std::vector<float>& internal_rep);
     void compute_statistics();

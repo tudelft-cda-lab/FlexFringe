@@ -28,6 +28,8 @@
 
 class lsharp_algorithm : public algorithm_base {
   protected:
+    //unordered_set< vector<int> > distinguishing_sequences;
+
     void proc_counterex(const std::unique_ptr<base_teacher>& teacher, inputdata& id, unique_ptr<apta>& hypothesis,
                         const std::vector<int>& counterex, std::unique_ptr<state_merger>& merger,
                         const refinement_list refs, const vector<int>& alphabet) const;
