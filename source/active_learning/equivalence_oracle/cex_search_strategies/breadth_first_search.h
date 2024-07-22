@@ -1,9 +1,7 @@
 /**
  * @file breadth_first_search.h
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
- * @brief TODO: Inefficient. Instead of searching via storing the whole trace, 
- * I can simply store the indices of the trace or iterate over the nodes
- * using the access trace. Will be much more memory efficient.
+ * @brief BFS search. Not practical in real scenarios, but useful for a deterministic search to look for specific issues in algorithms.
  * @version 0.1
  * @date 2023-04-13
  *
@@ -20,16 +18,16 @@
 
 class bfs_strategy : public search_base {
   private:
-    int depth;
 
-    std::stack<std::vector<int>> curr_search;
-    std::stack<std::vector<int>> old_search;
+    std::vector<int> get_vector_from_indices(const vector<int>& alphabet, const bool redo) const;
+    std::vector<int> get_next_vector(const vector<int>& alphabet);
+
+    std::vector<int> vector_idxs; // stores the indices of the respective characters of the alphabet. Content goes from [0, alphabet.size()-1]
 
   public:
-    bfs_strategy(const int max_depth) : search_base(max_depth) { depth = 0; };
+    bfs_strategy(const int max_depth) : search_base(max_depth) { };
 
-    virtual std::optional<std::vector<int>> next(const inputdata& id) override;
-    virtual void reset() noexcept override{/* can be implemented, we did not do it yet */};
+    std::optional<std::vector<int>> next(const inputdata& id) override;
 };
 
 #endif

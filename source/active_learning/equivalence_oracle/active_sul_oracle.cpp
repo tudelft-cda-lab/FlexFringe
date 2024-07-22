@@ -43,7 +43,7 @@ std::optional<pair<vector<int>, int>> active_sul_oracle::equivalence_query(state
     while (query_string_opt != nullopt) { // nullopt == search exhausted
         auto& query_string = query_string_opt.value();
         int true_val = get_teacher_response(query_string, teacher, id);
-        
+
         if (true_val < 0)
             return make_optional<pair<vector<int>, int>>(
                 query_string, true_val); // target automaton cannot be parsed with this query string

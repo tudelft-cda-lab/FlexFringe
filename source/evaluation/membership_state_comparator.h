@@ -54,10 +54,10 @@ protected:
 
 public:
     float get_diff(const vector<float>& left_v, const vector<float>& right_v) const;
-    virtual bool consistent(state_merger *merger, apta_node* left_node, apta_node* right_node, int depth) override;
+    bool consistent(state_merger *merger, apta_node* left_node, apta_node* right_node, int depth) override;
 
     //virtual double compute_score(state_merger*, apta_node* left_node, apta_node* right_node) override;
-    virtual void reset(state_merger *merger) override;
+    void reset(state_merger *merger) override;
 
     //static double get_distance(apta* aut, apta_node* left_node, apta_node* right_node);
 };

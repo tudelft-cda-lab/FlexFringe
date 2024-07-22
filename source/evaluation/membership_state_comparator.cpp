@@ -123,7 +123,7 @@ float membership_state_comparator::get_diff(const vector<float>& left_v, const v
 }
 
 /**
- * @brief TODO: add description of how it works
+ * @brief TODO: add description of how it works once you figured it out yourself.
  */
 bool membership_state_comparator::consistent(state_merger *merger, apta_node* left, apta_node* right, int depth){
     if(inconsistency_found) return false;    
@@ -191,10 +191,11 @@ bool membership_state_comparator::consistent(state_merger *merger, apta_node* le
 // };
 
 void membership_state_comparator::reset(state_merger *merger){
+    lsharp_eval::reset(merger);
+
     inconsistency_found = false;
     score = 0;
 };
-
 // double membership_state_comparator::get_distance(apta* aut, apta_node* left_node, apta_node* right_node){
 //     auto* l = static_cast<membership_state_comparator_data*>( left_node->get_data() );
 //     auto* r = static_cast<membership_state_comparator_data*>( right_node->get_data() );
