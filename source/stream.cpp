@@ -219,7 +219,7 @@ vector<double> stream_object::stream_mode_batch(state_merger* merger, ifstream& 
       greedyrun_no_undo(merger, seq_nr, last_sequence);
     }
 
-    ++(this->batch_number);    
+    (this->batch_number)++;    
     // Clear the traces before reading the next batch.
     for (auto tr : this->batch_traces) {
       tr->erase();
@@ -309,4 +309,8 @@ std::vector<apta_node*> stream_object::get_state_sequence_from_trace(state_merge
         t = t->future();
     }
     return state_sequence;
+}
+
+int stream_object::get_batch_number(){
+    return this->batch_number;
 }

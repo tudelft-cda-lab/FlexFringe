@@ -50,6 +50,7 @@ public:
   void greedyrun_retry_merges(state_merger* merger, const int seq_nr, const bool last_sequence); // for experiments
   void greedyrun_undo_merges(state_merger* merger, const int seq_nr, const bool last_sequence); // for experiments
   std::vector<apta_node*> get_state_sequence_from_trace(state_merger* merger, trace* trace);
+  int get_batch_number();
 
 };
 
