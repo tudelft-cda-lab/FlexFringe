@@ -283,7 +283,7 @@ void run() {
                 // Write fitness function to file
                 std::cout << "Writing fitnesses of test cases to file" << std::endl;
                 LOG_S(INFO) << "Writing fitnesses of test cases to file";
-                std::string fitness_out_file_name = OUTPUT_DIRECTORY + "ff_fitness_" + FITNESS_TYPE + "_" + std::to_string(stream_obj.get_batch_number() - 1) + ".txt"; 
+                std::string fitness_out_file_name = OUTPUT_DIRECTORY + "ff_fitness_" + std::to_string(stream_obj.get_batch_number() - 1) + ".txt"; 
                 std::ofstream fitness_file(fitness_out_file_name);
                 if (!fitness_file.is_open()) {
                     LOG_S(ERROR) << "Error opening file! with error code: " + std::to_string(errno);
