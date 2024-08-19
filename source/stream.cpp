@@ -221,9 +221,7 @@ vector<double> stream_object::stream_mode_batch(state_merger* merger, ifstream& 
 
     (this->batch_number)++;    
     // Clear the traces before reading the next batch.
-    for (auto tr : this->batch_traces) {
-      tr->erase();
-    }
+    this->batch_traces.clear();
 
     logMessageStream("Finished processing batch of traces.");
     cout << "Finished parsing batch of traces " << to_string(this->batch_number) << endl;
