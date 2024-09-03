@@ -5,13 +5,13 @@ double EA_utils::compute_fitness_min(vector<apta_node*> state_sequence) {
     double min_state_size = 100000000.0;
     for (int i = 1; i < state_sequence.size(); i++) {
         num_states_visited++;
-        int state_size = state_sequence[i]->get_size();
-        if (state_size < min_state_size) {
-            min_state_size = state_size;
+        double weighted_state_size = state_sequence[i]->get_size() * (double) i;
+        if (weighted_state_size < min_state_size) {
+            min_state_size = weighted_state_size;
         }
     }
 
-    return num_states_visited / min_state_size;
+    return 1.0 / min_state_size;
 }
 
 double EA_utils::compute_fitness_avg(vector<apta_node*> state_sequence) {

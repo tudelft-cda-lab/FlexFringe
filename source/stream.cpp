@@ -41,7 +41,7 @@ void logMessageStream(const string& message) {
 }
 
 
-void stream_object::greedyrun_no_undo(state_merger* merger, const int seq_nr, const bool last_sequence){
+void stream_object::greedyrun_no_undo(state_merger* merger){
     refinement* top_ref;
     top_ref = merger->get_best_refinement();
     while(top_ref != 0){
@@ -76,7 +76,7 @@ void print_current_automaton_stream(state_merger* merger, const string& output_f
     }
 }
 
-void stream_object::greedyrun_retry_merges(state_merger* merger, const int seq_nr, const bool last_sequence){
+void stream_object::greedyrun_retry_merges(state_merger* merger){
     queue<refinement*> failed_refs;
     refinement* top_ref;
     this->states_to_append_to.clear();
@@ -138,7 +138,7 @@ void stream_object::greedyrun_retry_merges(state_merger* merger, const int seq_n
 }
 
 
-void stream_object::greedyrun_undo_merges(state_merger* merger, const int seq_nr, const bool last_sequence){
+void stream_object::greedyrun_undo_merges(state_merger* merger){
    // undo the merges that were done the last run (merges done in "greedyrun_retry_merges")
     while(!current_ref_stack.empty()){
       refinement* top_ref = current_ref_stack.top();
@@ -166,133 +166,30 @@ void stream_object::greedyrun_undo_merges(state_merger* merger, const int seq_nr
  * @param param The global parameters.
  * @param input_stream The input data file.
  * @param id Input-data wrapper object. 
- * @return int 
  */
-vector<double> stream_object::stream_mode_batch(state_merger* merger, ifstream& input_stream, parser* input_parser) {
-    unsigned int seq_nr = 0;
+ void stream_object::stream_mode_batch(state_merger* merger, std::list<trace*> traces, int trace_batch_nr) {
     bool last_sequence = false;
-    inputdata* id = merger->get_dat();;
-    this->parser_strategy = new in_order();
-    vector<double> fitnesses;
-
-    logMessageStream("Starting to read batch of traces from input file.");
-
-    while (!input_stream.eof()){
-      ++seq_nr;
-      std::optional<trace*> trace_opt = id->read_trace(*input_parser, *parser_strategy);;
-      if(!trace_opt){
-        last_sequence = true;
-        break;
-      }
-
-      trace* new_trace = trace_opt.value();
-      new_trace->sequence = seq_nr;
-      this->batch_traces.push_back(new_trace);
-      
-      id->add_trace_to_apta(new_trace, merger->get_aut());
-      // if(!ADD_TAILS) new_trace->erase();
-    }
-
-    logMessageStream("Finished reading batch of traces from input file.");
-
+    inputdata* id = merger->get_dat();
 
     logMessageStream("Starting to process batch of traces.");
+    for (auto tr: traces) {
+      id->add_trace_to_apta(tr, merger->get_aut());
+    }
+
     if(RETRY_MERGES) {
       logMessageStream("Running greedy algorithm with retries.");
-      greedyrun_retry_merges(merger, seq_nr, last_sequence);
+      greedyrun_retry_merges(merger);
       logMessageStream("Finished running greedy algorithm with retries.");
-      // now we simulate each trace on the automaton and get the sequence of states 
-      std::vector<std::vector<apta_node*>> state_sequences;
-      for (auto tr : this->batch_traces) {
-        state_sequences.push_back(get_state_sequence_from_trace(merger, tr));
-      }
-
-      logMessageStream("Computing fitnesses for the batch of traces.");
-      fitnesses = EA_utils::compute_fitnesses(state_sequences, merger->get_aut()->get_root(), FITNESS_TYPE);
-
       logMessageStream("Printing the current automaton to file.");
-      print_current_automaton_stream(merger, "model_batch_nr_", to_string(this->batch_number));
+      print_current_automaton_stream(merger, "model_batch_nr_", to_string(trace_batch_nr));
       logMessageStream("Running undo");
-      greedyrun_undo_merges(merger, seq_nr, last_sequence);
+      greedyrun_undo_merges(merger);
     }
     else {
-      greedyrun_no_undo(merger, seq_nr, last_sequence);
-    }
+      greedyrun_no_undo(merger);
+    }    
 
-    (this->batch_number)++;    
-    // Clear the traces before reading the next batch.
-    this->batch_traces.clear();
-
-    logMessageStream("Finished processing batch of traces.");
-    cout << "Finished parsing batch of traces " << to_string(this->batch_number) << endl;
-    return fitnesses;
-}
-
-/**
- * @brief Run stream mode with pipe as input
- * 
- * @param merger The selected state merger instance.
- * @param batch_size The size of the batch.
- * @return int 
- */
-std::vector<std::pair<double, int>> stream_object::stream_mode(state_merger* merger, int batch_size, int buffer_size) {
-    char buffer[buffer_size]; // size of buffer to read from the pipe.
-    std::vector<char> line_buffer;
-    signal(SIGINT, signal_handler_stream); // setup signal handler to catch SIGINT (Ctrl+C)
-    time_t last_read_time = time(nullptr); // record the last time something was read from pipe. 
-    ssize_t bytes_read;
-    std::vector<std::string> current_batch; 
-    int sequence_number = 0;
-
-    std::vector<pair<double, int>> state_sizes_num_list;
-
-    // Read inputs from pipe. This is done via the STDIN_FILENO file descriptor.
-    while (!INTERRUPTED && difftime(time(nullptr), last_read_time) < 5) {
-        bytes_read = read(STDIN_FILENO, buffer, buffer_size); // read from the pipe
-        if (bytes_read > 0) {
-            for (int i = 0; i < bytes_read; ++i) {
-                char ch = buffer[i];
-                if (ch == '\n') { // If newline character is encountered
-                    // Output the collected line
-                    // line_buffer.push_back('\0'); // Null-terminate to make it a C-style string
-                    std::cout << "Read line: " << std::string(line_buffer.begin(), line_buffer.end()) << std::endl;
-                    current_batch.push_back(std::string(line_buffer.begin(), line_buffer.end()));
-                    if (current_batch.size() >= batch_size) {
-                      
-                      // read each trace and add it to the apta.
-                      for (const auto& str : current_batch) {
-                        inputdata* id = merger->get_dat(); // get the input data object.
-                        reader_strategy* parser_strategy = new in_order(); // create a parser strategy.
-                        std::istringstream iss(str); // create the input stream.
-                        auto parser = abbadingoparser::single_trace(iss); // initialize a parser.
-                        trace* new_trace = id->read_trace(parser, *parser_strategy).value(); // read the trace.
-                        id->add_trace_to_apta(new_trace, merger->get_aut()); // add the trace to the apta.
-                        greedyrun_retry_merges(merger, sequence_number, true); // run the greedy algorithm to do the merges
-                        greedyrun_undo_merges(merger, sequence_number, true); // undo the merges.
-                        ++sequence_number; // increment the sequence number.
-                      }
-
-                      current_batch.clear(); // clear and wait for the next batch of traces.
-                    }
-
-                    line_buffer.clear();
-                } else {
-                    line_buffer.push_back(ch); // Add character to the buffer.
-                }
-            }
-        }
-        else {
-          continue; // we wait until timeout or until the process is interrupted.
-        }
-    }
-
-    if (INTERRUPTED) {
-        std::cout << "Interrupted by user. Exiting..." << std::endl;
-    } else {
-        std::cout << "Timeout after 10 minutes. Exiting..." << std::endl;
-    }
-
-    return state_sizes_num_list;
+    logMessageStream("Finished processing trace batch nr: " + to_string(trace_batch_nr));
 }
 
 
@@ -302,6 +199,7 @@ std::vector<apta_node*> stream_object::get_state_sequence_from_trace(state_merge
     state_sequence.push_back(current_state);
     tail* t = trace->head;
     while(!t->is_final()){
+        // state_sequence.push_back(current_state->guard(t->get_symbol())->get_target());
         current_state = current_state->get_child(t->get_symbol());
         state_sequence.push_back(current_state);
         t = t->future();

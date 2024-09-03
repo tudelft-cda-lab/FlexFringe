@@ -25,6 +25,7 @@
 #include "input/inputdatalocator.h"
 #include "input/parsers/csvparser.h"
 #include "input/parsers/abbadingoparser.h"
+#include "ea_utils.h"
 
 #include <thread>
 #include <chrono>
@@ -38,6 +39,9 @@
 // touch anything than their own files
 std::string COMMAND;
 std::string STREAM_BATCH_INPUT_PATH;
+
+int TRACE_BATCH_NR = 0;
+
 bool debugging_enabled = false;
 
 bool TERMINATED = false;
@@ -71,7 +75,7 @@ void listen_for_input(const std::string& fifo_path) {
             LOG_S(INFO) << "Received input file path: " << input_file_path;
             STREAM_BATCH_INPUT_PATH = input_file_path;
         }
-        else {
+        else {            
             fifoStream.close();
             close(fd);
             std::this_thread::sleep_for(std::chrono::seconds(5));
@@ -119,6 +123,33 @@ void daemonize() {
     open("/dev/null", O_RDONLY);
     open("/dev/null", O_RDWR);
     open("/dev/null", O_RDWR);
+}
+
+
+void logMessage(const std::string &message) {
+    std::ofstream log("/tmp/flexfringe_log.txt", std::ios::app);
+    log << message << std::endl;
+    log.close();
+}
+
+std::list<trace*> read_traces_input_stream(state_merger* merger, ifstream& input_stream, parser* parser, reader_strategy* strategy) {
+    unsigned int seq_nr = 0;
+    std::list<trace*> traces;
+    inputdata* id = merger->get_dat();
+
+    while (!input_stream.eof()){
+        ++seq_nr;
+        std::optional<trace*> trace_opt = id->read_trace(*parser, *strategy);
+        if(!trace_opt){
+            break;
+        }
+
+        trace* new_trace = trace_opt.value();
+        new_trace->sequence = seq_nr;
+        traces.push_back(new_trace);
+    }
+
+    return traces;
 }
 
 
@@ -260,6 +291,7 @@ void run() {
         std::cout << "stream mode selected" << std::endl;
         LOG_S(INFO) << "Stream mode selected, starting run";
         stream_object stream_obj = stream_object();
+        auto strategy = new in_order();
         signal(SIGTERM, signal_handler);
         const std::string fifo_path = "/tmp/flexfringe_fifo";
         mkfifo(fifo_path.c_str(), 0666);
@@ -270,53 +302,84 @@ void run() {
             if (STREAM_BATCH_INPUT_PATH.empty()) {
                 std::cout << "No input file provided, waiting for input" << std::endl;
                 LOG_S(INFO) << "No input file provided, waiting for input";
+                logMessage("No input file provided, waiting for input");
                 std::this_thread::sleep_for(std::chrono::seconds(1));
                 continue;
             }
             else {
                 LOG_S(INFO) << "Reading input file: " + STREAM_BATCH_INPUT_PATH;
-                std::ifstream input_stream(STREAM_BATCH_INPUT_PATH);
-                auto parser = abbadingoparser(input_stream, false);
-                LOG_S(INFO) << "Computing fitnesses for test cases";
-                std::vector<double> fitnesses = stream_obj.stream_mode_batch(merger, input_stream, &parser);
-                LOG_S(INFO) << "Computed fitnesses for test cases";
-                // Write fitness function to file
-                std::cout << "Writing fitnesses of test cases to file" << std::endl;
-                LOG_S(INFO) << "Writing fitnesses of test cases to file";
-                std::string fitness_out_file_name = OUTPUT_DIRECTORY + "ff_fitness_" + std::to_string(stream_obj.get_batch_number() - 1) + ".txt"; 
-                std::ofstream fitness_file(fitness_out_file_name);
-                if (!fitness_file.is_open()) {
-                    LOG_S(ERROR) << "Error opening file! with error code: " + std::to_string(errno);
+                logMessage("Reading input file: " + STREAM_BATCH_INPUT_PATH);
+
+                bool fitness_only = false;
+                std::string filePath;
+                std::string out_name_format;
+                size_t fitness_arg_pos = STREAM_BATCH_INPUT_PATH.find("--fitness");
+                size_t file_arg_pos = STREAM_BATCH_INPUT_PATH.find("--out_name");
+
+                if (file_arg_pos == std::string::npos) {
+                    logMessage("No output file name provided. An output file name is required.");
                     exit(1);
                 }
-
-                for (double fitness : fitnesses) {
-                    fitness_file << fitness << std::endl;
+                else if (fitness_arg_pos == std::string::npos) {
+                    logMessage("Updating model");
+                    filePath = STREAM_BATCH_INPUT_PATH.substr(0, file_arg_pos);
                 }
-                fitness_file.close();
-                std::cout << "Finished writing fitnesses of test cases to file" << std::endl;
-                LOG_S(INFO) << "Finished writing fitnesses of batch, waiting for new batch";
+                else {
+                    logMessage("Only computing fitness");
+                    filePath = STREAM_BATCH_INPUT_PATH.substr(0, fitness_arg_pos);
+                    fitness_only = true;
+                }
+
+                out_name_format = STREAM_BATCH_INPUT_PATH.substr(file_arg_pos + 11, std::string::npos);
+                filePath.erase(filePath.find_last_not_of(" \n\r\t")+1); // trim trailing whitespace or other characters
+                std::ifstream input_stream(filePath);
+                
+                if (!input_stream) {
+                    logMessage("Input file not found. No actions will be executed.");
+                    STREAM_BATCH_INPUT_PATH.clear();
+                    continue;
+                }
+
+                auto parser = abbadingoparser(input_stream, false);
+                std::list<trace*> traces = read_traces_input_stream(merger, input_stream, &parser, strategy);
+
+                logMessage("Finished reading batch of traces from input file.");
+
+                if (fitness_only) {
+                    std::vector<std::vector<apta_node*>> state_sequences;
+                    for (auto tr : traces) {
+                      state_sequences.push_back(stream_obj.get_state_sequence_from_trace(merger, tr));
+                    }
+
+                    logMessage("Computing fitnesses for the batch of traces.");
+                    std::vector<double> fitnesses = EA_utils::compute_fitnesses(state_sequences, merger->get_aut()->get_root(), FITNESS_TYPE);
+                    LOG_S(INFO) << "Writing fitnesses of test cases to file";
+                    logMessage("Writing fitnesses of test cases to file");
+                    std::string fitness_out_file_name = OUTPUT_DIRECTORY + "ff_fitness_" + out_name_format + ".txt"; 
+                    std::ofstream fitness_file(fitness_out_file_name);
+                    if (!fitness_file.is_open()) {
+                        LOG_S(ERROR) << "Error opening file! with error code: " + std::to_string(errno);
+                        exit(1);
+                    }   
+
+                    for (double fitness : fitnesses) {
+                        fitness_file << fitness << std::endl;
+                    }
+
+                    fitness_file.close();
+                    std::cout << "Finished writing fitnesses of test cases to file" << std::endl;
+                    LOG_S(INFO) << "Finished writing fitnesses of batch, waiting for new batch";
+                    logMessage("Finished writing fitnesses of batch, waiting for new batch");
+
+                }
+                else {
+                    stream_obj.stream_mode_batch(merger, traces, TRACE_BATCH_NR);
+                    TRACE_BATCH_NR++;
+                }
+                
                 STREAM_BATCH_INPUT_PATH.clear();
             }
-            // std::ifstream input_stream(input_file);
-            // auto parser = abbadingoparser(input_stream, false);
-            // std::vector<double> fitnesses = stream_obj.stream_mode_batch(merger, input_stream, &parser);
-            // // Write fitness function to file
-            // std::cout << "Writing fitnesses of test cases to file" << std::endl;
-            // std::string fitness_out_file_name = "ff_fitness_" + FITNESS_TYPE + "_penalty.txt"; 
-            // std::ofstream fitness_file(fitness_out_file_name);
-            // if (!fitness_file.is_open()) {
-            //     std::cerr << "Error opening file!" << std::endl;
-            //     exit(0);
-            // }
-
-            // for (double fitness : fitnesses) {
-            //     fitness_file << fitness << std::endl;
-            // }
-            // fitness_file.close();
-            // std::cout << "Finished writing fitnesses of test cases to file" << std::endl;
-
-        // throw std::logic_error("Streaming mode is currently broken");
+            
         }
 
         if (TERMINATED) {
