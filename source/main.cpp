@@ -345,14 +345,13 @@ void run() {
 
                 logMessage("Finished reading batch of traces from input file.");
 
-                std::vector<std::vector<apta_node*>> state_sequences;
-                logMessage("Extracting state sequence from traces");
-                for (auto tr : traces) {
-                    state_sequences.push_back(stream_obj.get_state_sequence_from_trace(merger, tr));
-                }
-
                 if (fitness_only) {
                     logMessage("Computing fitnesses for the batch of traces.");
+                    std::vector<std::vector<apta_node*>> state_sequences;
+                    for (auto tr : traces) {
+                        state_sequences.push_back(stream_obj.get_state_sequence_from_trace(merger, tr));
+                    }
+
                     std::vector<double> fitnesses = EA_utils::compute_fitnesses(state_sequences, merger->get_aut()->get_root(), FITNESS_TYPE);
                     LOG_S(INFO) << "Writing fitnesses of test cases to file";
                     logMessage("Writing fitnesses of test cases to file");
@@ -375,26 +374,30 @@ void run() {
                 }
                 else {
                     stream_obj.stream_mode_batch(merger, traces, TRACE_BATCH_NR);
+                    // Write state sequences to file for visualization
+                    std::string state_sequence_out_file_name = OUTPUT_DIRECTORY + "ff_state_sequence_" + out_name_format + ".txt";
+                    std::ofstream state_sequence_file(state_sequence_out_file_name);
+                    if (!state_sequence_file.is_open()) {
+                        LOG_S(ERROR) << "Error opening file! with error code: " + std::to_string(errno);
+                        exit(1);
+                    }
+
+                    std::vector<std::vector<apta_node*>> state_sequences;
+                    for (auto tr : traces) {
+                        state_sequences.push_back(stream_obj.get_state_sequence_from_trace(merger, tr));
+                    }
+
+                    for (auto state_sequence : state_sequences) {
+                        state_sequence_file << state_sequence[0]->get_number();
+                        for (int i = 1; i < state_sequence.size(); i++) {
+                            state_sequence_file << " " << state_sequence[i]->get_number();
+                        }
+                        state_sequence_file << std::endl;
+                    }
+                
+                    state_sequence_file.close();
                     TRACE_BATCH_NR++;
                 }
-
-                // Write state sequences to file for visualization
-                std::string state_sequence_out_file_name = OUTPUT_DIRECTORY + "ff_state_sequence_" + out_name_format + ".txt";
-                std::ofstream state_sequence_file(state_sequence_out_file_name);
-                if (!state_sequence_file.is_open()) {
-                    LOG_S(ERROR) << "Error opening file! with error code: " + std::to_string(errno);
-                    exit(1);
-                }
-
-                for (auto state_sequence : state_sequences) {
-                    state_sequence_file << state_sequence[0]->get_number();
-                    for (auto state : state_sequence) {
-                        state_sequence_file << " " << state->get_number();
-                    }
-                    state_sequence_file << std::endl;
-                }
-                
-                state_sequence_file.close();
 
                 STREAM_BATCH_INPUT_PATH.clear();
             }
