@@ -1,10 +1,9 @@
 """
-Connects to the models we trained on the MLRegTest dataset. Assumes that both the dataset metadata as well as the trained
-model are in the same directory.
+Like the binary state causal transformer connector, but also returns confidence of transformer as well.
 
 Documentation of CPython-API: https://docs.python.org/3/c-api/index.html
 
-Created by Robert Baumgartner, 27.5.24.
+Created by Robert Baumgartner, 10.9.24.
 """
 
 import os
@@ -16,6 +15,7 @@ import numpy as np
 
 import torch
 import torch.nn as nn
+from torch.nn.functional import softmax
 
 import transformers
 
@@ -98,6 +98,7 @@ def load_nn_model(path_to_model: str):
   print("Params")
   for param in model.parameters():
       param.requires_grad = False
+  print("Model successfully loaded")
 
 def make_tensor_causal_masks(words:torch.Tensor):
     masks = (words != PAD) # 1 : pass, 0 : blocked
@@ -159,22 +160,18 @@ def do_query(seq: list):
   logits = torch.squeeze(output.logits)
 
   preds = torch.argmax(logits[last_token_idx])
+  confidence = torch.max(softmax(logits[last_token_idx]))
   if(logits.size(-1) > PAD + 1):
       preds = preds - PAD - 1
   if preds < 0 or preds > 1:
-     print("Erroneous prediction: ", preds)
+     print("Erroneous prediction: ", preds) # what now?
+  
+  representations = get_representation(output, last_token_idx)
+  embedding_dim = int(len(representations) / len(seq))
 
-  res = get_representation(output, last_token_idx)
-  embedding_dim = int(len(res) / len(seq))
+  res = [confidence.item(), preds.item(), embedding_dim]
+  res.extend(representations)
 
-  res.insert(0, embedding_dim) # makes things easier
-  res.insert(0, preds.item())
-
-  #print("Sequence: ", seq)
-  #hreps = get_hidden_representation(res)
-  #for i in range(len(hreps)):
-  #   print("Index: {}, char: {}, hreps: {}\n".format(i, seq[i], hreps[i][:3]))
-  #print("\n")
   return res
 
 

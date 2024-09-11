@@ -104,6 +104,7 @@ void transformer_lsharp_algorithm::update_hidden_states(unique_ptr<state_merger>
     if (n == merger->get_aut()->get_root()) {
         auto* data = static_cast<membership_state_comparator_data*>(n->get_data());
         data->update_sums(hidden_states[0]);
+        //data->update_final_vec(hidden_states[1]);
     } else {
         tail* t = access_trace->get_head();
         int idx = 0;
@@ -120,6 +121,9 @@ void transformer_lsharp_algorithm::update_hidden_states(unique_ptr<state_merger>
             t = t->future(); // next()?
         }
     }
+
+    auto* data = static_cast<membership_state_comparator_data*>(n->get_data());
+    data->update_final_vec(hidden_states[hidden_states.size()-1]);
 
     completed_nodes.insert(n);
 }
@@ -196,8 +200,16 @@ list<refinement*> transformer_lsharp_algorithm::find_complete_base(unique_ptr<st
                 }
                 best_merge->doref(merger.get());
                 performed_refs.push_back(best_merge);
+
+                cout << "Merged " << best_merge->red->get_number() << " and " << static_cast<merge_refinement*>(best_merge)->blue->get_number() << endl;
             }
         }
+
+/*         {
+            static int model_nr = 0;
+            cout << "Printing model nr. " << model_nr << endl;
+            print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_ref");
+        } */
 
         if(termination_reached){
             cout << "Max number of states reached and counterexample strategy disabled. Printing the automaton with " << n_red_nodes << " states." << endl;
@@ -283,7 +295,10 @@ void transformer_lsharp_algorithm::run(inputdata& id) {
 
         {
             static int model_nr = 0;
-            print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".before_cex");
+            ++model_nr;               
+
+            PRINT_MODEL_PREFIX = "model." + to_string(model_nr) + ".before_cex";
+            print_current_automaton(merger.get(), "model.", to_string(model_nr) + ".before_cex");
         }
 
         // only merges performed, hence we can test our hypothesis
@@ -314,7 +329,15 @@ void transformer_lsharp_algorithm::run(inputdata& id) {
 
             {
                 static int model_nr = 0;
-                print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_cex");
+                ++model_nr;
+
+                PRINT_MODEL_PREFIX = "model." + to_string(model_nr) + ".after_cex";
+                print_current_automaton(merger.get(), "model.", to_string(model_nr) + ".after_cex");
+                
+                if(model_nr == 6){
+                    cout << "We have enough models. stop" << endl;
+                    exit(0);
+                }
             }
             break;
         }

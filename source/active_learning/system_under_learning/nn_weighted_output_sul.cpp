@@ -65,6 +65,34 @@ const int nn_weighted_output_sul::query_trace(const std::vector<int>& query_trac
 }
 
 /**
+ * @brief Gets the hidden representation from the parameters given. Saves duplicate code. 
+ * 
+ * @param p_result The result as returned by the network. p_results assumed to be a flattened out matrix, 
+ * i.e. a vector that we have to infer the shape from again via HIDDEN_STATE_SIZE.
+ * @param offset The initial offset where we find HIDDEN_STATE_SIZE.
+ * @return vector< vector<float> > The hidden representations, one per input symbol. Usually including <SOS> and <EOS>.
+ */
+vector< vector<float> > nn_weighted_output_sul::compile_hidden_rep(PyObject* p_result, const int offset) const {
+    
+    static const int HIDDEN_STATE_SIZE = static_cast<int>(PyLong_AsLong(PyList_GetItem(p_result, static_cast<Py_ssize_t>(offset)))); // get first list, then return its length 
+    const int n_sequences = static_cast<int>( (static_cast<int>(PyList_Size(p_result)) -2) / HIDDEN_STATE_SIZE);
+    vector< vector<float> > representations(n_sequences);
+    for (int i = 0; i < n_sequences; ++i) {
+        vector<float> hidden_rep(HIDDEN_STATE_SIZE);
+
+        for(int j=0; j<HIDDEN_STATE_SIZE; ++j){
+            int idx = i * HIDDEN_STATE_SIZE + j + offset + 1; // + offset + 1 because the first elements of p_result are predicted type, and eventually a confidence
+            PyObject* s = PyList_GET_ITEM(p_result, static_cast<Py_ssize_t>(idx));
+            hidden_rep[j] = static_cast<float>(PyFloat_AsDouble(s));
+        }
+
+        representations[i] = move(hidden_rep);
+    }
+
+    return representations;
+}
+
+/**
  * @brief Gets the type, assumed to be of Sigmoid output and a threshold of 0.5, along with 
  * a hidden representation of the network state.
  * 
@@ -74,7 +102,6 @@ const std::pair< int, std::vector< std::vector<float> > >
 nn_weighted_output_sul::get_type_and_states(const std::vector<int>& query_trace, inputdata& id) const {
     static PyObject* p_start_symbol = START_SYMBOL == -1 ? nullptr : PyLong_FromLong(START_SYMBOL);
     static PyObject* p_end_symbol = START_SYMBOL == -1 ? nullptr : PyLong_FromLong(END_SYMBOL);
-
 
     PyObject* p_list = p_start_symbol == nullptr ? PyList_New(query_trace.size())
                                                  : PyList_New(query_trace.size() + 2); // +2 for start and end symbol
@@ -95,7 +122,7 @@ nn_weighted_output_sul::get_type_and_states(const std::vector<int>& query_trace,
 
     PyObject* p_result = PyObject_CallOneArg(query_func, p_list);
     if (!PyList_Check(p_result))
-        throw std::runtime_error("Something went wrong, the Network did not return a dictionary. What happened?");
+        throw std::runtime_error("Something went wrong, the Network did not return a list. What happened?");
 
     // by convention, python script must return a list. list[0]=prediction, list[1]=embedding_dim, rest is hidden_representations 1D
     PyObject* p_type = PyList_GetItem(p_result, static_cast<Py_ssize_t>(0));
@@ -107,27 +134,71 @@ nn_weighted_output_sul::get_type_and_states(const std::vector<int>& query_trace,
         cerr << "Something weird happend here." << endl;
         throw exception();
     }
-    
-    static const int HIDDEN_STATE_SIZE = static_cast<int>(PyLong_AsLong(PyList_GetItem(p_result, static_cast<Py_ssize_t>(1)))); // get first list, then return its length 
-    
-    const int n_sequences = static_cast<int>( (static_cast<int>(PyList_Size(p_result)) -2) / HIDDEN_STATE_SIZE);
-    vector< vector<float> > representations(n_sequences);
-    for (int i = 0; i < n_sequences; ++i) {
-        vector<float> hidden_rep(HIDDEN_STATE_SIZE);
-
-        for(int j=0; j<HIDDEN_STATE_SIZE; ++j){
-            int idx = i * HIDDEN_STATE_SIZE + j + 2;
-            PyObject* s = PyList_GET_ITEM(p_result, static_cast<Py_ssize_t>(idx));
-            hidden_rep[j] = static_cast<float>(PyFloat_AsDouble(s));
-        }
-
-        representations[i] = move(hidden_rep);
-    }
 
     int type = static_cast<int>(PyLong_AsLong(p_type));
+    vector< vector<float> > representations = compile_hidden_rep(p_result, 1);
+
     return make_pair(type, representations);
 }
 
+/**
+ * @brief Gets the type and a confidence value along with a hidden representation of the network state.
+ * 
+ * @return const std::tuple< int, float, std::vector<float> > <the type, confidence, the hidden representations for each symbol of sequence>
+ */
+const std::tuple< int, float, std::vector< std::vector<float> > > 
+nn_weighted_output_sul::get_type_confidence_and_states(const std::vector<int>& query_trace, inputdata& id) const {
+    static PyObject* p_start_symbol = START_SYMBOL == -1 ? nullptr : PyLong_FromLong(START_SYMBOL);
+    static PyObject* p_end_symbol = START_SYMBOL == -1 ? nullptr : PyLong_FromLong(END_SYMBOL);
+
+    PyObject* p_list = p_start_symbol == nullptr ? PyList_New(query_trace.size())
+                                                 : PyList_New(query_trace.size() + 2); // +2 for start and end symbol
+    int i = p_start_symbol == nullptr ? 0 : 1;
+    for (const int flexfringe_symbol : query_trace) {
+        int mapped_symbol = stoi(id.get_symbol(flexfringe_symbol));
+        PyObject* p_symbol = PyLong_FromLong(mapped_symbol);
+        set_list_item(p_list, p_symbol, i);
+        ++i;
+    }
+
+    if (p_start_symbol != nullptr) {
+        Py_INCREF(p_start_symbol); // needed because PyList_SetItem hands ownership to p_list, see https://docs.python.org/3/extending/extending.html#ownership-rules
+        Py_INCREF(p_end_symbol);
+        set_list_item(p_list, p_start_symbol, 0);
+        set_list_item(p_list, p_end_symbol, query_trace.size() + 1);
+    }
+
+    PyObject* p_result = PyObject_CallOneArg(query_func, p_list);
+    if (!PyList_Check(p_result))
+        throw std::runtime_error("Something went wrong, the Network did not return a list. What happened?");
+
+    // by convention, python script must return a list. list[1]=prediction, list[0]=confidence_in_prediction, list[2]=embedding_dim, rest is hidden_representations 1D
+    PyObject* p_confidence = PyList_GetItem(p_result, static_cast<Py_ssize_t>(0));
+    if(!PyFloat_Check(p_confidence)){
+        cerr << "Problem with type as returned by Python script. Is it a proper float?" << endl;
+        throw exception(); // force the catch block
+    }
+    else if(!PyFloat_CheckExact(p_confidence)){
+        cerr << "Something weird happend here." << endl;
+        throw exception();
+    }
+    
+    PyObject* p_type = PyList_GetItem(p_result, static_cast<Py_ssize_t>(1));
+    if(!PyLong_Check(p_type)){
+        cerr << "Problem with type as returned by Python script. Is it a proper int?" << endl;
+        throw exception(); // force the catch block
+    }
+    else if(!PyLong_CheckExact(p_type)){
+        cerr << "Something weird happend here." << endl;
+        throw exception();
+    }
+
+    int type = static_cast<int>(PyLong_AsLong(p_type));
+    float confidence = static_cast<float>(PyFloat_AsDouble(p_confidence));
+    vector< vector<float> > representations = compile_hidden_rep(p_result, 2);
+
+    return make_tuple(type, confidence, representations);
+}
 
 /**
  * @brief Initialize the types to 0 and 1. Which is which depends on how the network was trained.

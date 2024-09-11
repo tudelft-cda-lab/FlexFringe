@@ -51,13 +51,13 @@ void nn_sul_base::pre(inputdata& id) {
     std::string PYTHON_MODULE_NAME;
     int pos;
 #if defined(_WIN32)
-    pos = static_cast<int>(INPUT_FILE.find_last_of("\\"));
+    pos = static_cast<int>(CONNECTOR_FILE.find_last_of("\\"));
 #else
-    pos = static_cast<int>(INPUT_FILE.find_last_of("/"));
+    pos = static_cast<int>(CONNECTOR_FILE.find_last_of("/"));
 #endif
-    PYTHON_SCRIPT_PATH = INPUT_FILE.substr(0, pos);
+    PYTHON_SCRIPT_PATH = CONNECTOR_FILE.substr(0, pos);
     PYTHON_MODULE_NAME =
-        INPUT_FILE.substr(pos + 1, INPUT_FILE.size() - pos - 4); // -pos-4 to get rid off the .py ending
+        CONNECTOR_FILE.substr(pos + 1, CONNECTOR_FILE.size() - pos - 4); // -pos-4 to get rid off the .py ending
 
     stringstream cmd;
     cmd << "sys.path.append( os.path.join(os.getcwd(), \"";

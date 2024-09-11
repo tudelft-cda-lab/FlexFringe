@@ -19,6 +19,7 @@
 #include "transformer_l_sharp.h"
 #include "transformer_weighted_lsharp.h"
 #include "weighted_lsharp.h"
+#include "paul.h"
 
 #include "active_sul_oracle.h"
 #include "dfa_sul.h"
@@ -43,6 +44,7 @@
 #include <cassert>
 #include <fstream>
 #include <stdexcept>
+#include <string>
 
 #define assertm(exp, msg) assert(((void)msg, exp))
 
@@ -91,8 +93,10 @@ shared_ptr<sul_base> active_learning_main_func::select_sul_class(const bool ACTI
         if (SQLDB) {
             return shared_ptr<sul_base>(new sqldb_sul(*my_sqldb));
         }
-        if (INPUT_FILE.compare(INPUT_FILE.length() - 3, INPUT_FILE.length(), ".py") == 0) {
-            return shared_ptr<sul_base>(new nn_weighted_output_sul());
+
+        string CONNECTOR_SCRIPT = APTA_FILE2.size() == 0 ? INPUT_FILE : APTA_FILE2;
+        if (CONNECTOR_SCRIPT.compare(CONNECTOR_SCRIPT.length() - 3, CONNECTOR_SCRIPT.length(), ".py") == 0) {
+            return shared_ptr<sul_base>(new nn_weighted_output_sul(CONNECTOR_SCRIPT));
         }
 
         return shared_ptr<sul_base>(new dfa_sul());
@@ -187,17 +191,20 @@ void active_learning_main_func::run_active_learning() {
     } else if (ACTIVE_LEARNING_ALGORITHM == "weighted_transformer_l_sharp") {
         STORE_ACCESS_STRINGS = true;
         algorithm = unique_ptr<algorithm_base>(new transformer_weighted_lsharp_algorithm(sul, teacher, oracle));
+    } else if (ACTIVE_LEARNING_ALGORITHM == "paul") {
+        STORE_ACCESS_STRINGS = true;
+        algorithm = unique_ptr<algorithm_base>(new paul_algorithm(sul, teacher, oracle));
     } else {
         throw logic_error("Fatal error: Unknown active_learning_algorithm flag used: " + ACTIVE_LEARNING_ALGORITHM);
     }
 
-    if (ACTIVE_SUL) {
+    if (ACTIVE_SUL && ACTIVE_LEARNING_ALGORITHM != "paul") {
         LOG_S(INFO) << "We do not want to run the input file, alphabet and input data must be inferred from SUL.";
 
         sul->pre(id);
         algorithm->run(id);
     } else {
-        LOG_S(INFO) << "We only want to read the inputdata when we learn passively or from sequences.";
+        LOG_S(INFO) << "Learning (partly) passively. Therefore read in input-data.";
         get_inputdata();
 
         sul->pre(id);

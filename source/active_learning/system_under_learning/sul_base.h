@@ -15,10 +15,13 @@
 #include "misc/sqldb.h"
 #include "source/input/inputdata.h"
 
-#include <fstream>
-#include <stdexcept>
-#include <vector>
 #include <utility>
+#include <stdexcept>
+#include <fstream>
+
+#include <vector>
+#include <tuple>
+
 
 class sul_base {
     friend class base_teacher;
@@ -32,6 +35,7 @@ class sul_base {
     virtual bool is_member(const std::vector<int>& query_trace) const = 0;
     virtual const int query_trace(const std::vector<int>& query_trace, inputdata& id) const = 0;
     virtual const std::pair< int, std::vector< std::vector<float> > > get_type_and_states(const std::vector<int>& query_trace, inputdata& id) const;
+    virtual const std::tuple< int, float, std::vector< std::vector<float> > > get_type_confidence_and_states(const std::vector<int>& query_trace, inputdata& id) const;
 
     // TODO: can we simplify all of those with some sort of template?
     virtual const double get_string_probability(const std::vector<int>& query_trace, inputdata& id) const;

@@ -30,19 +30,6 @@ class nn_sul_base : public sul_base {
     friend class eq_oracle_base;
 
   protected:
-    nn_sul_base() {
-        assert(((void*)"If <SOS> or <EOS> is set (!=-1), then the other one must be set, too.",
-                (START_SYMBOL == -1 && END_SYMBOL == -1) || (START_SYMBOL != -1 && END_SYMBOL != -1)));
-        /*       if(START_SYMBOL!=-1){
-                p_start_symbol = PyLong_FromLong(START_SYMBOL);
-                p_end_symbol = PyLong_FromLong(END_SYMBOL);
-              }
-              else{
-                p_start_symbol = nullptr;
-                p_end_symbol = nullptr;
-              } */
-    };
-
     PyObject* p_module;
     PyObject* query_func;
     PyObject* alphabet_func;
@@ -59,6 +46,21 @@ class nn_sul_base : public sul_base {
     void set_list_item(PyObject* pylist, PyObject* item, const int idx) const;
     virtual void
     init_types() const = 0; // we need to set the internal types of flexfringe according to the types we expect
+
+    const string CONNECTOR_FILE;
+
+    nn_sul_base(const string& cf) : CONNECTOR_FILE(cf) {
+        assert(((void*)"If <SOS> or <EOS> is set (!=-1), then the other one must be set, too.",
+                (START_SYMBOL == -1 && END_SYMBOL == -1) || (START_SYMBOL != -1 && END_SYMBOL != -1)));
+        /*       if(START_SYMBOL!=-1){
+                p_start_symbol = PyLong_FromLong(START_SYMBOL);
+                p_end_symbol = PyLong_FromLong(END_SYMBOL);
+              }
+              else{
+                p_start_symbol = nullptr;
+                p_end_symbol = nullptr;
+              } */
+    };
 
   public:
     virtual void pre(inputdata& id) override;

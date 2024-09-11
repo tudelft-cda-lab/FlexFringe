@@ -8,6 +8,7 @@ include_directories(
         "${CMAKE_CURRENT_SOURCE_DIR}/system_under_learning/benchmark_parsers"
         "${CMAKE_CURRENT_SOURCE_DIR}/counterexample_strategies"
         "${CMAKE_CURRENT_SOURCE_DIR}/equivalence_oracle"
+        "${CMAKE_CURRENT_SOURCE_DIR}/incomplete_information"
         "${CMAKE_CURRENT_SOURCE_DIR}/equivalence_oracle/cex_search_strategies"
         "${CMAKE_CURRENT_SOURCE_DIR}/equivalence_oracle/cex_conflict_search"
         "${CMAKE_CURRENT_SOURCE_DIR}/algorithms"
@@ -35,7 +36,9 @@ add_library(ActiveLearning STATIC
             algorithms/ldot.cpp
             algorithms/transformer_l_sharp.h
             algorithms/transformer_l_sharp.cpp
-            
+            algorithms/paul.h
+            algorithms/paul.cpp
+
             # PDFAs and WFAs
             algorithms/probabilistic_lsharp.h
             algorithms/probabilistic_lsharp.cpp
@@ -90,6 +93,12 @@ add_library(ActiveLearning STATIC
             equivalence_oracle/cex_conflict_search/linear_state_query_conflict_search.cpp
             equivalence_oracle/cex_conflict_search/binary_conflict_search.h
             equivalence_oracle/cex_conflict_search/binary_conflict_search.cpp
+
+            # Methods to deal with incomplete information
+            incomplete_information/ii_base.h
+            incomplete_information/ii_base.cpp
+            incomplete_information/overlap_fill.h
+            incomplete_information/overlap_fill.cpp
 
             # Everything related to memory and possible memoization techniques
             memory/observation_table.h

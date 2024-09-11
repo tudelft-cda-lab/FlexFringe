@@ -33,6 +33,8 @@ add_library(Evaluation STATIC
             overlap.cpp
             overlap4logs.h
             overlap4logs.cpp
+            paul_heuristic.h
+            paul_heuristic.cpp
             rti+.h
             rti+.cpp
             space-saving.h
