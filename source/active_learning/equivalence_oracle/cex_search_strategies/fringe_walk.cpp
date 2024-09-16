@@ -28,7 +28,7 @@ using namespace std;
  */
 unordered_set<apta_node*> fringe_walk::collect_fringe_nodes(){
     const static auto mu = MU;
-    const static auto max_length = MAX_CEX_LENGTH;
+    const static auto max_length = MAX_AL_SEARCH_DEPTH;
 
     unordered_set<apta_node*> res;
     //cout << "apta_iterator" << endl;
@@ -64,7 +64,7 @@ apta_node* fringe_walk::get_next_valid_node(const unordered_set<apta_node*>& fri
  */
 optional<vector<int>> fringe_walk::next(const inputdata& id) {
     static const auto samples_per_node = SAMPLES_PER_NODE;
-    const static auto max_length = MAX_CEX_LENGTH;
+    const static auto max_length = MAX_AL_SEARCH_DEPTH;
 
     if(current_node == nullptr){ // first node after last reset
         current_node = get_next_valid_node(fringe_nodes, tested_nodes);

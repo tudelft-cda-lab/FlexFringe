@@ -29,7 +29,7 @@ class string_probability_oracle : public eq_oracle_base {
 
   public:
     string_probability_oracle(std::shared_ptr<sul_base>& sul) : eq_oracle_base(sul) {
-        search_strategy = std::unique_ptr<search_base>(new random_string_search(MAX_CEX_LENGTH));
+        search_strategy = std::unique_ptr<search_base>(new random_string_search(MAX_AL_SEARCH_DEPTH));
         // search_strategy = std::unique_ptr<search_base>(new bfs_strategy(8)); // number here is maximum length of
         // sequence. Find a better way to set this
         assert(dynamic_cast<input_file_sul*>(sul.get()) == nullptr);

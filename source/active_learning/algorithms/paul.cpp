@@ -46,9 +46,11 @@ refinement* paul_algorithm::get_best_refinement(unique_ptr<state_merger>& merger
         bool mergeable = false;
         for(red_state_iterator r_it = red_state_iterator(the_apta->get_root()); *r_it != nullptr; ++r_it){
             auto red_node = *r_it;
-            ii_handler->complement_nodes(the_apta, teacher, red_node, blue_node, 0);
 
             refinement* ref = merger->test_merge(red_node, blue_node);
+            if(ref == nullptr) continue;
+
+            ii_handler->complement_nodes(the_apta, teacher, red_node, blue_node, 0);
             if (ref != nullptr){
                 rs->insert(ref);
                 mergeable = true;
@@ -108,11 +110,14 @@ void paul_algorithm::run(inputdata& id) {
         ss << std::setw(4) << std::setfill('0') << num;
         std::string s = ss.str();
 
-#ifndef NDEBUG
-        merger->print_dot("test" + ss.str() + ".dot");
-#endif
-
         best_ref->doref(merger.get());
+
+#ifndef NDEBUG
+        {
+            static int c = 0;
+            merger->print_dot("test_" + to_string(c++) + ".dot");
+        }
+#endif
 
         delete best_ref;
         best_ref = paul_algorithm::get_best_refinement(merger, the_apta, teacher);

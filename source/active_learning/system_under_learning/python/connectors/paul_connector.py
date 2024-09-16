@@ -160,7 +160,7 @@ def do_query(seq: list):
   logits = torch.squeeze(output.logits)
 
   preds = torch.argmax(logits[last_token_idx])
-  confidence = torch.max(softmax(logits[last_token_idx]))
+  confidence = torch.max(softmax(logits[last_token_idx], dim=0))
   if(logits.size(-1) > PAD + 1):
       preds = preds - PAD - 1
   if preds < 0 or preds > 1:
@@ -169,9 +169,11 @@ def do_query(seq: list):
   representations = get_representation(output, last_token_idx)
   embedding_dim = int(len(representations) / len(seq))
 
-  res = [confidence.item(), preds.item(), embedding_dim]
-  res.extend(representations)
-
+  #res = list()
+  #res.append(confidence.item())
+  #res.append(preds.item())
+  res = [confidence.item(), preds.item()]#, embedding_dim]
+  #res.extend(representations)
   return res
 
 

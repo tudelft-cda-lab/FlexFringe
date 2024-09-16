@@ -14,6 +14,7 @@
 
 #include "inputdatalocator.h"
 #include "common_functions.h"
+#include "parameters.h"
 
 #include <iostream>
 
@@ -78,17 +79,26 @@ void overlap_fill::add_child_node(std::unique_ptr<apta>& aut, apta_node* node, s
 
 
 /**
- * @brief Fills non-existent state pairs with active learning queries.
+ * @brief Fills non-existent state pairs with active learning queries. We need the seen_nodes set (or something similar) to 
+ * keep track of loops, else we will get trapped in infinite loops.
  * 
  * Invariant: left is red node, right is blue node.
  * 
  * Depth: We only want to walk until MAX_DEPTH starting from nodes to complete, therefore we give depth starting at nodes.
  * 
  */
-void overlap_fill::complement_nodes(std::unique_ptr<apta>& aut, std::unique_ptr<base_teacher>& teacher, apta_node* left, apta_node* right, const int depth){
-  if(MAX_DEPTH > 0 && depth == MAX_DEPTH)
+void overlap_fill::complement_nodes(std::unordered_set<apta_node*>& seen_nodes, std::unique_ptr<apta>& aut, std::unique_ptr<base_teacher>& teacher, apta_node* left, apta_node* right, const int depth){
+  const static int max_search_depth = MAX_AL_SEARCH_DEPTH;
+  if(max_search_depth > 0 && (left->get_depth() > max_search_depth || right->get_depth() > max_search_depth)) // making sure we don't bust the transformer
     return;
   
+  else if(MAX_DEPTH > 0 && depth == MAX_DEPTH)
+    return;
+  
+  else if(seen_nodes.contains(left))
+    return;
+    
+  seen_nodes.insert(left);
   auto r_data = dynamic_cast<paul_data*>(right->get_data());
   auto l_data = dynamic_cast<paul_data*>(left->get_data());
 
@@ -106,12 +116,13 @@ void overlap_fill::complement_nodes(std::unique_ptr<apta>& aut, std::unique_ptr<
   // first do the right side
   for(auto it = right->guards_start(); it != right->guards_end(); ++it){
     if(it->second->target == nullptr) continue; // no child with that guard
+
     int symbol = it->first;
     apta_guard* right_guard = it->second;
     apta_guard* left_guard = left->guard(symbol, right_guard);
       
     if(left_guard == nullptr || left_guard->target == nullptr){
-       add_child_node(aut, left, teacher, symbol);
+      add_child_node(aut, left, teacher, symbol);
     } 
     else {
       apta_node* left_target = left_guard->target;
@@ -121,20 +132,23 @@ void overlap_fill::complement_nodes(std::unique_ptr<apta>& aut, std::unique_ptr<
       apta_node* right_child = right_target->find();
       
       if(left_child != right_child){
-        complement_nodes(aut, teacher, left_child, right_child, depth+1);
-      } 
+        complement_nodes(seen_nodes, aut, teacher, left_child, right_child, depth+1);
+      }
     }
   }
 
   // left side
   for(auto it = left->guards_start(); it != left->guards_end(); ++it){
-    if(it->second->target == nullptr) continue; // no child with that guard
+    apta_node* target = it->second->target;
+    if(target == nullptr || target->source != left) // the source check enables a parsing through the tree -> no loops and symmetry to right nodes
+      continue;
+
     int symbol = it->first;
     apta_guard* left_guard = it->second;
-    apta_guard* right_guard = right->guard(symbol, right_guard);
+    apta_guard* right_guard = right->guard(symbol, left_guard);
       
     if(right_guard == nullptr || right_guard->target == nullptr){
-       add_child_node(aut, right, teacher, symbol);
+      add_child_node(aut, right, teacher, symbol);
     } 
     else {
       apta_node* left_target = left_guard->target;
@@ -144,8 +158,24 @@ void overlap_fill::complement_nodes(std::unique_ptr<apta>& aut, std::unique_ptr<
       apta_node* right_child = right_target->find();
       
       if(left_child != right_child){
-        complement_nodes(aut, teacher, left_child, right_child, depth+1);
+        complement_nodes(seen_nodes, aut, teacher, left_child, right_child, depth+1);
       } 
     }
   }
+}
+
+/**
+ * @brief Entry point to the overloaded function. Created a set of seen states and starts the main complement_nodes subroutine.
+ * 
+ * For a more detailed description see the overloaded function.
+ * 
+ * @param aut The apta. 
+ * @param teacher The teacher. 
+ * @param left Left node.
+ * @param right Rigth node.
+ * @param depth The depth to start at.
+ */
+void overlap_fill::complement_nodes(std::unique_ptr<apta>& aut, std::unique_ptr<base_teacher>& teacher, apta_node* left, apta_node* right, const int depth){
+  unordered_set<apta_node*> seen_nodes;
+  complement_nodes(seen_nodes, aut, teacher, left, right, depth);
 }

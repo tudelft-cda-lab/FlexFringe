@@ -195,9 +195,11 @@ nn_weighted_output_sul::get_type_confidence_and_states(const std::vector<int>& q
 
     int type = static_cast<int>(PyLong_AsLong(p_type));
     float confidence = static_cast<float>(PyFloat_AsDouble(p_confidence));
-    vector< vector<float> > representations = compile_hidden_rep(p_result, 2);
+    //vector< vector<float> > representations = compile_hidden_rep(p_result, 2);
 
-    return make_tuple(type, confidence, representations);
+    //Py_DECREF(p_result);
+    return make_tuple(type, confidence, vector<vector<float>>());
+    //return make_tuple(type, confidence, representations);
 }
 
 /**

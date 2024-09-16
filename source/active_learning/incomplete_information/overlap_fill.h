@@ -19,6 +19,7 @@
 #include "ii_base.h"
 
 #include <optional>
+#include <unordered_set>
 
 
 class overlap_fill : public ii_base {
@@ -34,6 +35,8 @@ class overlap_fill : public ii_base {
     overlap_fill(const int MAX_DEPTH=0) : MAX_DEPTH(MAX_DEPTH) {};
 
     void complement_nodes(std::unique_ptr<apta>& aut, std::unique_ptr<base_teacher>& teacher, apta_node* left, apta_node* right, const int depth) override;
+    void complement_nodes(std::unordered_set<apta_node*>& seen_nodes, std::unique_ptr<apta>& aut, std::unique_ptr<base_teacher>& teacher, apta_node* left, apta_node* right, const int depth);
+    
     void complete_node(apta_node* node, std::unique_ptr<apta>& aut, std::unique_ptr<base_teacher>& teacher) override;
 };
 
