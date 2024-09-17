@@ -43,8 +43,6 @@ class sul_base {
     virtual const std::pair< std::vector<float>, std::vector<float> > get_weights_and_state(const std::vector<int>& query_trace, inputdata& id) const;
   
   public:
-    sul_base() = default; // abstract anyway
-
     /**
      * @brief Initialize the sul class.
      */

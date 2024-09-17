@@ -38,6 +38,8 @@ PAD = None
 MAXLEN = None # max length of a sequence. Used for padding and set by get_alphabet() function
 ALPHABET_SIZE = None
 
+ALPH_MAPPING = dict()
+
 def make_dict(**kwargs):
     return kwargs
 
@@ -136,7 +138,7 @@ def get_representation(output, last_token_idx):
 
   return res
 
-def do_query(seq: list):
+def do_query(input_seq: list):
   """This is the main function, performed on a sequence.
   Returns what you want it to return, make sure it makes 
   sense in the employed SUL class. 
@@ -147,6 +149,8 @@ def do_query(seq: list):
   Args:
       seq (list): List of ints.
   """
+  seq = [SOS] +  [ALPH_MAPPING[s] for s in input_seq] + [EOS]
+  
   padding = [PAD] * (MAXLEN - len(seq) - 1)
   padded_seq = seq + padding
   last_token_idx = len(seq) - 1
@@ -165,15 +169,16 @@ def do_query(seq: list):
       preds = preds - PAD - 1
   if preds < 0 or preds > 1:
      print("Erroneous prediction: ", preds) # what now?
-  
+
   representations = get_representation(output, last_token_idx)
   embedding_dim = int(len(representations) / len(seq))
 
   #res = list()
   #res.append(confidence.item())
   #res.append(preds.item())
-  res = [confidence.item(), preds.item()]#, embedding_dim]
+  res = [confidence.item(), preds.item()] #, embedding_dim]
   #res.extend(representations)
+
   return res
 
 
@@ -189,6 +194,8 @@ def get_alphabet(path_to_model: str):
   Returns:
       alphabet: list(int): The possible inputs the network can take.
   """
+  global ALPH_MAPPING
+
   path_split = os.path.split(path_to_model)
   data_dir = os.path.join(*path_split[:-1])
   
@@ -201,7 +208,9 @@ def get_alphabet(path_to_model: str):
 
   print(dataset_dict)
 
-  alphabet = [int(v) for k, v in symbol_dict.items() if not k=="<SOS>" and not k=="<EOS>"]
+  alphabet = [k for k in symbol_dict.keys() if not k=="<SOS>" and not k=="<EOS>"]
+  ALPH_MAPPING = symbol_dict
+  
   assert(alphabet is not None)
   print("The alphabet: ", alphabet)
   return alphabet

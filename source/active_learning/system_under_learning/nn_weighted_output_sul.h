@@ -27,6 +27,8 @@ class nn_weighted_output_sul : public nn_sul_base {
     void reset() override {};
     void init_types() const override;
 
+    void string_to_pylist(PyObject* p_list_out, vector<string>& c_list) const;
+
     /* Learning from NN acceptors*/
     bool is_member(const std::vector<int>& query_trace) const;
     const int query_trace(const std::vector<int>& query_trace, inputdata& id) const override;

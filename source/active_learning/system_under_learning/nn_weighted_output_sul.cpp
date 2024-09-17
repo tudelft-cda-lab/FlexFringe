@@ -100,25 +100,11 @@ vector< vector<float> > nn_weighted_output_sul::compile_hidden_rep(PyObject* p_r
  */
 const std::pair< int, std::vector< std::vector<float> > > 
 nn_weighted_output_sul::get_type_and_states(const std::vector<int>& query_trace, inputdata& id) const {
-    static PyObject* p_start_symbol = START_SYMBOL == -1 ? nullptr : PyLong_FromLong(START_SYMBOL);
-    static PyObject* p_end_symbol = START_SYMBOL == -1 ? nullptr : PyLong_FromLong(END_SYMBOL);
+    //PyObject* p_input_string = PyList_New(query_trace.size());
+    //PyObject* p_lengths = PyList_New(query_trace.size());
+    PyObject* p_list = PyList_New(query_trace.size());
 
-    PyObject* p_list = p_start_symbol == nullptr ? PyList_New(query_trace.size())
-                                                 : PyList_New(query_trace.size() + 2); // +2 for start and end symbol
-    int i = p_start_symbol == nullptr ? 0 : 1;
-    for (const int flexfringe_symbol : query_trace) {
-        int mapped_symbol = stoi(id.get_symbol(flexfringe_symbol));
-        PyObject* p_symbol = PyLong_FromLong(mapped_symbol);
-        set_list_item(p_list, p_symbol, i);
-        ++i;
-    }
-
-    if (p_start_symbol != nullptr) {
-        Py_INCREF(p_start_symbol); // needed because PyList_SetItem hands ownership to p_list, see https://docs.python.org/3/extending/extending.html#ownership-rules
-        Py_INCREF(p_end_symbol);
-        set_list_item(p_list, p_start_symbol, 0);
-        set_list_item(p_list, p_end_symbol, query_trace.size() + 1);
-    }
+    input_sequence_to_pylist(p_list, query_trace);
 
     PyObject* p_result = PyObject_CallOneArg(query_func, p_list);
     if (!PyList_Check(p_result))
@@ -148,25 +134,8 @@ nn_weighted_output_sul::get_type_and_states(const std::vector<int>& query_trace,
  */
 const std::tuple< int, float, std::vector< std::vector<float> > > 
 nn_weighted_output_sul::get_type_confidence_and_states(const std::vector<int>& query_trace, inputdata& id) const {
-    static PyObject* p_start_symbol = START_SYMBOL == -1 ? nullptr : PyLong_FromLong(START_SYMBOL);
-    static PyObject* p_end_symbol = START_SYMBOL == -1 ? nullptr : PyLong_FromLong(END_SYMBOL);
-
-    PyObject* p_list = p_start_symbol == nullptr ? PyList_New(query_trace.size())
-                                                 : PyList_New(query_trace.size() + 2); // +2 for start and end symbol
-    int i = p_start_symbol == nullptr ? 0 : 1;
-    for (const int flexfringe_symbol : query_trace) {
-        int mapped_symbol = stoi(id.get_symbol(flexfringe_symbol));
-        PyObject* p_symbol = PyLong_FromLong(mapped_symbol);
-        set_list_item(p_list, p_symbol, i);
-        ++i;
-    }
-
-    if (p_start_symbol != nullptr) {
-        Py_INCREF(p_start_symbol); // needed because PyList_SetItem hands ownership to p_list, see https://docs.python.org/3/extending/extending.html#ownership-rules
-        Py_INCREF(p_end_symbol);
-        set_list_item(p_list, p_start_symbol, 0);
-        set_list_item(p_list, p_end_symbol, query_trace.size() + 1);
-    }
+    PyObject* p_list = PyList_New(query_trace.size());
+    input_sequence_to_pylist(p_list, query_trace);
 
     PyObject* p_result = PyObject_CallOneArg(query_func, p_list);
     if (!PyList_Check(p_result))
@@ -218,26 +187,8 @@ void nn_weighted_output_sul::init_types() const {
  * @return const double
  */
 const double nn_weighted_output_sul::get_sigmoid_output(const std::vector<int>& query_trace, inputdata& id) const {
-
-    static PyObject* p_start_symbol = START_SYMBOL == -1 ? nullptr : PyLong_FromLong(START_SYMBOL);
-    static PyObject* p_end_symbol = START_SYMBOL == -1 ? nullptr : PyLong_FromLong(END_SYMBOL);
-
-    PyObject* p_list = p_start_symbol == nullptr ? PyList_New(query_trace.size())
-                                                 : PyList_New(query_trace.size() + 2); // +2 for start and end symbol
-    int i = p_start_symbol == nullptr ? 0 : 1;
-    for (const int flexfringe_symbol : query_trace) {
-        int mapped_symbol = stoi(id.get_symbol(flexfringe_symbol));
-        PyObject* p_symbol = PyLong_FromLong(mapped_symbol);
-        set_list_item(p_list, p_symbol, i);
-        ++i;
-    }
-
-    if (p_start_symbol != nullptr) {
-        Py_INCREF(p_start_symbol); // needed because PyList_SetItem hands ownership to p_list, see https://docs.python.org/3/extending/extending.html#ownership-rules
-        Py_INCREF(p_end_symbol);
-        set_list_item(p_list, p_start_symbol, 0);
-        set_list_item(p_list, p_end_symbol, query_trace.size() + 1);
-    }
+    PyObject* p_list = PyList_New(query_trace.size());
+    input_sequence_to_pylist(p_list, query_trace);
 
     PyObject* p_query_result = PyObject_CallOneArg(query_func, p_list);
     return PyFloat_AsDouble(p_query_result);
@@ -253,22 +204,8 @@ const double nn_weighted_output_sul::get_sigmoid_output(const std::vector<int>& 
  */
 const std::vector<float> nn_weighted_output_sul::get_weight_distribution(const std::vector<int>& query_trace,
                                                                          inputdata& id) const {
-    static PyObject* p_start_symbol = START_SYMBOL == -1 ? nullptr : PyLong_FromLong(START_SYMBOL);
-    static PyObject* p_end_symbol = END_SYMBOL == -1 ? nullptr : PyLong_FromLong(END_SYMBOL);
-
-    PyObject* p_list = p_start_symbol == nullptr ? PyList_New(query_trace.size()) : PyList_New(query_trace.size() + 1);
-    int i = p_start_symbol == nullptr ? 0 : 1;
-    for (const int flexfringe_symbol : query_trace) {
-        int mapped_symbol = stoi(id.get_symbol(flexfringe_symbol));
-        PyObject* p_symbol = PyLong_FromLong(mapped_symbol);
-        PyList_SetItem(p_list, static_cast<Py_ssize_t>(i), p_symbol);
-        ++i;
-    }
-
-    if (p_start_symbol != nullptr) {
-        Py_INCREF(p_start_symbol); // needed because PyList_SetItem hands ownership to p_list, see https://docs.python.org/3/extending/extending.html#ownership-rules
-        PyList_SetItem(p_list, static_cast<Py_ssize_t>(0), p_start_symbol);
-    }
+    PyObject* p_list = PyList_New(query_trace.size());
+    input_sequence_to_pylist(p_list, query_trace);
 
     PyObject* p_weights = PyObject_CallOneArg(query_func, p_list);
     if (!PyList_CheckExact(p_weights))
@@ -296,22 +233,8 @@ const std::vector<float> nn_weighted_output_sul::get_weight_distribution(const s
  */
 const std::pair< std::vector<float>, std::vector<float> > 
 nn_weighted_output_sul::get_weights_and_state(const std::vector<int>& query_trace, inputdata& id) const {
-    static PyObject* p_start_symbol = START_SYMBOL == -1 ? nullptr : PyLong_FromLong(START_SYMBOL);
-    static PyObject* p_end_symbol = END_SYMBOL == -1 ? nullptr : PyLong_FromLong(END_SYMBOL);
-
-    PyObject* p_list = p_start_symbol == nullptr ? PyList_New(query_trace.size()) : PyList_New(query_trace.size() + 1);
-    int i = p_start_symbol == nullptr ? 0 : 1;
-    for (const int flexfringe_symbol : query_trace) {
-        int mapped_symbol = stoi(id.get_symbol(flexfringe_symbol));
-        PyObject* p_symbol = PyLong_FromLong(mapped_symbol);
-        PyList_SetItem(p_list, static_cast<Py_ssize_t>(i), p_symbol);
-        ++i;
-    }
-
-    if (p_start_symbol != nullptr) {
-        Py_INCREF(p_start_symbol); // needed because PyList_SetItem hands ownership to p_list, see https://docs.python.org/3/extending/extending.html#ownership-rules
-        PyList_SetItem(p_list, static_cast<Py_ssize_t>(0), p_start_symbol);
-    }
+    PyObject* p_list = PyList_New(query_trace.size());
+    input_sequence_to_pylist(p_list, query_trace);
 
     PyObject* p_result = PyObject_CallOneArg(query_func, p_list);
     if (!PyTuple_Check(p_result))
