@@ -16,10 +16,12 @@ private:
     static double compute_fitness_min(vector<apta_node*> state_sequence);
     static double compute_fitness_avg(vector<apta_node*> state_sequence);
     static double compute_fitness_geo_mean(vector<apta_node*> state_sequence, bool weighted);
-    static double compute_fitness_perplexity(vector<apta_node*> state_sequence, apta_node* root, bool weighted);
-    static double compute_sum_visits(apta_node* root);
-    static double compute_fitness_entropy(vector<apta_node*> state_sequence, apta_node* root, bool weighted);
-    static double calculate_information_entropy(vector<apta_node*> state_sequence,apta_node* root, bool weighted);
+    static double compute_fitness_state_size(vector<apta_node*> state_sequence, bool weighted);
+    static double compute_fitness_lower_median(vector<apta_node*> state_sequence);
+    static double compute_fitness_lower_median_overall(apta_node* root, vector<apta_node*> state_sequence);
+    static double compute_fitness_loop(vector<apta_node*> state_sequence);
+    static double compute_median(vector<double> state_sizes);
+    static vector<double> get_all_state_sizes(apta_node* root);
     static map<int, int> compute_state_visits_sequence(vector<apta_node*> state_sequence);
 };
 

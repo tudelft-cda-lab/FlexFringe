@@ -176,19 +176,11 @@ void stream_object::greedyrun_undo_merges(state_merger* merger){
       id->add_trace_to_apta(tr, merger->get_aut());
     }
 
-    if(RETRY_MERGES) {
-      logMessageStream("Running greedy algorithm with retries.");
-      greedyrun_retry_merges(merger);
-      logMessageStream("Finished running greedy algorithm with retries.");
-      logMessageStream("Printing the current automaton to file.");
-      print_current_automaton_stream(merger, "model_batch_nr_", to_string(trace_batch_nr));
-      logMessageStream("Running undo");
-      greedyrun_undo_merges(merger);
-    }
-    else {
-      greedyrun_no_undo(merger);
-    }    
-
+    logMessageStream("Running greedy algorithm with retries.");
+    greedyrun_retry_merges(merger);
+    logMessageStream("Finished running greedy algorithm with retries.");
+    logMessageStream("Printing the current automaton to file.");
+    print_current_automaton_stream(merger, "model_batch_nr_", to_string(trace_batch_nr));
     logMessageStream("Finished processing trace batch nr: " + to_string(trace_batch_nr));
 }
 
