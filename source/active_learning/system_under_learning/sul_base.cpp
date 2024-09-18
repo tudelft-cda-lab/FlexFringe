@@ -35,7 +35,7 @@ const pair<int, vector< vector<float> > > sul_base::get_type_and_states(const st
     Please change the program settings. Aborting program.");
 }
 
-const tuple<int, float, vector< vector<float> > > sul_base::get_type_confidence_and_states(const std::vector<int>& query_trace, inputdata& id) const {
+const tuple<std::string, float, vector< vector<float> > > sul_base::get_type_confidence_and_states(const std::vector<int>& query_trace, inputdata& id) const {
     throw logic_error("This SUL does not support type queries along with confidence and hidden state representation. \
     Please change the program settings. Aborting program.");
 }

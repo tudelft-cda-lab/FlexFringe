@@ -130,12 +130,9 @@ const std::string& inputdata::get_type(int a) {
  * internally.
  */
 void inputdata::add_type(const std::string& t) {
-    static unordered_set<std::string> seen_types;
-    if(!seen_types.contains(t)){
+    if(!r_types.contains(t)){
         types.push_back(t);
         r_types[t] = r_types.size();
-        
-        seen_types.insert(t);
     }
 }
 
@@ -178,15 +175,16 @@ int inputdata::get_reverse_type(std::string a) {
  * @param input_alphabet A vector with the possible strings the system under learning 
  * will expect.
  */
-void inputdata::set_alphabet(const vector<int>& input_alphabet){
-    this->r_alphabet.clear();
-    this->alphabet.clear();
+void inputdata::set_alphabet(vector<string>& input_alphabet){
+    r_alphabet.clear();
+    alphabet.clear();
     for(int i=0; i<input_alphabet.size(); ++i){
-        auto symbol_string = to_string(input_alphabet[i]);
-        this->r_alphabet[symbol_string] = this->alphabet.size();
-        this->alphabet.push_back(symbol_string);
+        auto& s_string = input_alphabet[i];
+        r_alphabet[s_string] = r_alphabet.size();
+        alphabet.push_back(move(s_string));
     }
 }
+
 void inputdata::set_alphabet(const std::map<std::string, int>& input_r_alphabet) {
     r_alphabet = input_r_alphabet; // copy-assignment
     alphabet.clear();

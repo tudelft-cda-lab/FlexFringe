@@ -19,6 +19,7 @@
 #include <memory>
 #include <vector>
 #include <utility>
+#include <string>
 
 class base_teacher {
   protected:
@@ -30,7 +31,7 @@ class base_teacher {
     const int ask_membership_query(const active_learning_namespace::pref_suf_t& prefix,
                                    const active_learning_namespace::pref_suf_t& suffix, inputdata& id);
     
-    const std::pair<int, float> ask_membership_confidence_query(const active_learning_namespace::pref_suf_t& query, inputdata& id);
+    const std::pair<std::string, float> ask_membership_confidence_query(const active_learning_namespace::pref_suf_t& query, inputdata& id);
 
     
     const std::pair< int, std::vector< std::vector<float> > > get_membership_state_pair(const active_learning_namespace::pref_suf_t& access_seq,

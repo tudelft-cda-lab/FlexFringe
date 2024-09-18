@@ -1,7 +1,7 @@
 /**
  * @file nn_weighted_output_sul.cpp
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
- * @brief
+ * @brief Documentation of CPython-API: https://docs.python.org/3/c-api/index.html
  * @version 0.1
  * @date 2023-07-24
  *
@@ -132,7 +132,7 @@ nn_weighted_output_sul::get_type_and_states(const std::vector<int>& query_trace,
  * 
  * @return const std::tuple< int, float, std::vector<float> > <the type, confidence, the hidden representations for each symbol of sequence>
  */
-const std::tuple< int, float, std::vector< std::vector<float> > > 
+const std::tuple< string, float, std::vector< std::vector<float> > > 
 nn_weighted_output_sul::get_type_confidence_and_states(const std::vector<int>& query_trace, inputdata& id) const {
     PyObject* p_list = PyList_New(query_trace.size());
     input_sequence_to_pylist(p_list, query_trace);
@@ -142,31 +142,24 @@ nn_weighted_output_sul::get_type_confidence_and_states(const std::vector<int>& q
         throw std::runtime_error("Something went wrong, the Network did not return a list. What happened?");
 
     // by convention, python script must return a list. list[1]=prediction, list[0]=confidence_in_prediction, list[2]=embedding_dim, rest is hidden_representations 1D
-    PyObject* p_confidence = PyList_GetItem(p_result, static_cast<Py_ssize_t>(0));
-    if(!PyFloat_Check(p_confidence)){
-        cerr << "Problem with type as returned by Python script. Is it a proper float?" << endl;
-        throw exception(); // force the catch block
-    }
-    else if(!PyFloat_CheckExact(p_confidence)){
-        cerr << "Something weird happend here." << endl;
-        throw exception();
-    }
-    
-    PyObject* p_type = PyList_GetItem(p_result, static_cast<Py_ssize_t>(1));
-    if(!PyLong_Check(p_type)){
+
+    PyObject* p_type = PyList_GetItem(p_result, static_cast<Py_ssize_t>(0));
+    if(!PyUnicode_CheckExact(p_type)){
         cerr << "Problem with type as returned by Python script. Is it a proper int?" << endl;
         throw exception(); // force the catch block
     }
-    else if(!PyLong_CheckExact(p_type)){
-        cerr << "Something weird happend here." << endl;
-        throw exception();
+
+    PyObject* p_confidence = PyList_GetItem(p_result, static_cast<Py_ssize_t>(1));
+    if(!PyFloat_CheckExact(p_confidence)){
+        cerr << "Problem with type as returned by Python script. Is it a proper float?" << endl;
+        throw exception(); // force the catch block
     }
 
-    int type = static_cast<int>(PyLong_AsLong(p_type));
+
+    string type(PyUnicode_AsUTF8(p_type));
     float confidence = static_cast<float>(PyFloat_AsDouble(p_confidence));
     //vector< vector<float> > representations = compile_hidden_rep(p_result, 2);
 
-    //Py_DECREF(p_result);
     return make_tuple(type, confidence, vector<vector<float>>());
     //return make_tuple(type, confidence, representations);
 }
