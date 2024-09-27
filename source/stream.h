@@ -46,7 +46,10 @@ public:
   void greedyrun_retry_merges(state_merger* merger); // for experiments
   void greedyrun_undo_merges(state_merger* merger); // for experiments
   std::vector<apta_node*> get_state_sequence_from_trace(state_merger* merger, trace* trace);
+  std::vector<std::vector<apta_node*>> get_state_sequences(std::list<trace*> traces, state_merger* merger);
   int get_batch_number();
+  refinement_list* get_current_run() {return this->currentrun;}
+
 
 };
 

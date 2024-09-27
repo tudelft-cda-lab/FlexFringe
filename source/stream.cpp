@@ -36,7 +36,7 @@ void signal_handler_stream(int signum) {
 
 void logMessageStream(const string& message) {
     std::ofstream log("/tmp/flexfringe_log.txt", std::ios::app);
-    log << message << std::endl;
+    log << message + "\n";
     log.close();
 }
 
@@ -168,19 +168,20 @@ void stream_object::greedyrun_undo_merges(state_merger* merger){
  * @param id Input-data wrapper object. 
  */
  void stream_object::stream_mode_batch(state_merger* merger, std::list<trace*> traces, int trace_batch_nr) {
-    bool last_sequence = false;
-    inputdata* id = merger->get_dat();
-
-    logMessageStream("Starting to process batch of traces.");
+    // inputdata* id = merger->get_dat();
+    // logMessageStream("Starting to process batch of traces.");
     for (auto tr: traces) {
-      id->add_trace_to_apta(tr, merger->get_aut());
+      merger->get_dat()->add_trace_to_apta(tr, merger->get_aut());
     }
 
-    logMessageStream("Running greedy algorithm with retries.");
+    // logMessageStream("Running greedy algorithm with retries.");
     greedyrun_retry_merges(merger);
-    logMessageStream("Finished running greedy algorithm with retries.");
-    logMessageStream("Printing the current automaton to file.");
-    print_current_automaton_stream(merger, "model_batch_nr_", to_string(trace_batch_nr));
+    // logMessageStream("Finished running greedy algorithm with retries.");
+    // logMessageStream("Printing the current automaton to file.");
+    // if (trace_batch_nr % 30 == 0) {
+    //   print_current_automaton_stream(merger, "model_batch_nr_", to_string(trace_batch_nr));
+    // }
+    greedyrun_undo_merges(merger);
     logMessageStream("Finished processing trace batch nr: " + to_string(trace_batch_nr));
 }
 
@@ -199,6 +200,28 @@ std::vector<apta_node*> stream_object::get_state_sequence_from_trace(state_merge
     return state_sequence;
 }
 
-int stream_object::get_batch_number(){
-    return this->batch_number;
+
+std::vector<std::vector<apta_node*>> stream_object::get_state_sequences(std::list<trace*> traces, state_merger* merger){
+    std::vector<std::vector<apta_node*>> state_sequences;
+    refinement_list* ref_list = get_current_run();
+
+    // first redo the refinements to get the correct state sequences
+    if (ref_list->size() > 0) {  
+      for (auto ref : *ref_list) {
+          ref->doref(merger);
+      }
+    }
+
+    for(auto tr : traces){
+        state_sequences.push_back(get_state_sequence_from_trace(merger, tr));
+    }
+
+    if (ref_list->size() > 0) {
+      // undo the refinements to reset the automaton for new data
+      for (auto ref = ref_list->rbegin(); ref != ref_list->rend(); ++ref) {
+        (*ref)->undo(merger);
+      }
+    }
+
+    return state_sequences;
 }

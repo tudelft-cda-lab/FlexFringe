@@ -5,6 +5,12 @@
 
 using namespace std;
 
+void logMessageID(const string &message) {
+    std::ofstream log("/tmp/flexfringe_log.txt", std::ios::app);
+    log << message + "\n";
+    log.close();
+}
+
 /**
  * Read symbols from a parser and construct inputdata from them.
  * @param input_parser the input parser to read from
@@ -213,6 +219,7 @@ void inputdata::add_traces_to_apta(apta *the_apta) {
 
 void inputdata::add_trace_to_apta(trace *tr, apta *the_apta) {
     int depth = 0;
+    // logMessageID("MISH --- Adding trace to APTA");
     apta_node *node = the_apta->root;
     /*if(node->access_trace == nullptr){
         node->access_trace = mem_store::create_trace();
@@ -225,6 +232,7 @@ void inputdata::add_trace_to_apta(trace *tr, apta *the_apta) {
     tail *t = tr->head;
 
     while (t != nullptr) {
+        // logMessageID("MISH ---- Moved to next symbol");
         node->size = node->size + 1;
 
         node->add_tail(t);
@@ -232,24 +240,32 @@ void inputdata::add_trace_to_apta(trace *tr, apta *the_apta) {
 
         depth++;
         if (t->is_final()) {
+            // logMessageID("MISH ---- Reached final");
             node->final = node->final + 1;
         } else {
             int symbol = t->get_symbol();
             if (node->child(symbol) == nullptr) {
+                // logMessageID("MISH ---- Creating new now");
                 if (node->size < PARENT_SIZE_THRESHOLD) {
+                    // logMessageID("MISH ---- LOWER THAN THRESHOLD");
                     break;
                 }
                 auto *next_node = mem_store::create_node(nullptr);
+                // logMessageID("MISH ---- Passed potential point of error related to memory allocation");
                 node->set_child(symbol, next_node);
+                // logMessageID("MISH --- set new node as child of current node");
                 next_node->source = node;
                 //next_node->access_trace = inputdata::access_trace(t);
                 next_node->depth = depth;
                 next_node->number = ++(this->node_number);
+                // logMessageID("MISH --- Finished setting all data for new node.");
             }
             node = node->child(symbol)->find();
+            // logMessageID("MISH ---- Moving to next node using the symbol");
         }
         t = t->future();
     }
+    // logMessageID("MISH --- Finished adding trace to APTA");
 }
 
 trace *inputdata::access_trace(tail *t) {

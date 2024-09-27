@@ -41,6 +41,7 @@ std::string COMMAND;
 std::string STREAM_BATCH_INPUT_PATH;
 
 int TRACE_BATCH_NR = 0;
+int UPDATE_NR = 0;
 
 bool debugging_enabled = false;
 
@@ -52,13 +53,40 @@ void signal_handler(int signum) {
     }
 }
 
+// int countOpenFileDescriptors() {
+//     struct rlimit limit;
+//     getrlimit(RLIMIT_NOFILE, &limit);  // Get max file descriptors
+
+//     int fdCount = 0;
+//     for (int fd = 0; fd < limit.rlim_cur; fd++) {
+//         // Try fcntl to check if the descriptor is valid
+//         if (fcntl(fd, F_GETFD) != -1) {
+//             fdCount++;
+//         }
+//     }
+//     return fdCount;
+// }
+
+// long getMaxFileDescriptors() {
+//     struct rlimit limit;
+    
+//     // Get the current file descriptor limits
+//     if (getrlimit(RLIMIT_NOFILE, &limit) == 0) {
+//         return limit.rlim_cur;  // Return the soft limit (current max FD allowed)
+//     } else {
+//         // In case of an error, output the error message and return -1
+//         std::cerr << "Error getting file descriptor limits: " << strerror(errno) << std::endl;
+//         return -1;
+//     }
+// }
+
 
 void listen_for_input(const std::string& fifo_path) {
-    LOG_S(INFO) << "Listening for input";
+    // LOG_S(INFO) << "Listening for input";
     while (!TERMINATED) {
         int fd = open(fifo_path.c_str(), O_RDONLY | O_NONBLOCK);
         if (fd == -1) {
-            LOG_S(ERROR) << "Error opening FIFO";
+            // LOG_S(ERROR) << "Error opening FIFO";
             std::cerr << "Error opening FIFO" << std::endl;
             continue;
         }
@@ -67,24 +95,26 @@ void listen_for_input(const std::string& fifo_path) {
         std::string input_file_path;
         if (std::getline(fifoStream, input_file_path)) {
             if (input_file_path.find(".csv") != std::string::npos) {
-                LOG_S(ERROR) << "CSV Files are not supported in streaming mode";
+                // LOG_S(ERROR) << "CSV Files are not supported in streaming mode";
                 std::cerr << "CSV Files are not supported in streaming mode" << std::endl;
+                close(fd);
                 continue;
             }
 
-            LOG_S(INFO) << "Received input file path: " << input_file_path;
+            // LOG_S(INFO) << "Received input file path: " << input_file_path;
             STREAM_BATCH_INPUT_PATH = input_file_path;
+            close(fd);
         }
         else {            
             fifoStream.close();
             close(fd);
-            std::this_thread::sleep_for(std::chrono::seconds(5));
+            std::this_thread::sleep_for(std::chrono::seconds(1));
         }
     }
 }
 
 void daemonize() {
-    LOG_S(INFO) << "Starting daemon of FlexFringe";
+    // LOG_S(INFO) << "Starting daemon of FlexFringe";
     pid_t pid = fork();
 
     if (pid < 0) {
@@ -117,7 +147,9 @@ void daemonize() {
     chdir(OUTPUT_DIRECTORY.c_str());
 
     for (long x = sysconf(_SC_OPEN_MAX); x >= 0; x--) {
-        close(x);
+        if (x != STDOUT_FILENO && x != STDERR_FILENO) {
+            close(x);
+        }
     }
 
     open("/dev/null", O_RDONLY);
@@ -128,19 +160,18 @@ void daemonize() {
 
 void logMessage(const std::string &message) {
     std::ofstream log("/tmp/flexfringe_log.txt", std::ios::app);
-    log << message << std::endl;
+    log << message + "\n";
     log.close();
 }
 
 std::list<trace*> read_traces_input_stream(state_merger* merger, ifstream& input_stream, parser* parser, reader_strategy* strategy) {
     unsigned int seq_nr = 0;
     std::list<trace*> traces;
-    inputdata* id = merger->get_dat();
 
-    while (!input_stream.eof()){
+    while (true){
         ++seq_nr;
-        std::optional<trace*> trace_opt = id->read_trace(*parser, *strategy);
-        if(!trace_opt){
+        std::optional<trace*> trace_opt = merger->get_dat()->read_trace(*parser, *strategy);
+        if(!trace_opt.has_value()){
             break;
         }
 
@@ -192,10 +223,10 @@ evaluation_function* get_evaluation(){
     }
     try {
         eval = (DerivedRegister<evaluation_function>::getMap())->at(HEURISTIC_NAME)();
-        std::cout << "Using heuristic " << HEURISTIC_NAME << std::endl;
-        LOG_S(INFO) <<  "Using heuristic " << HEURISTIC_NAME;
+        // std::cout << "Using heuristic " << HEURISTIC_NAME << std::endl;
+        // LOG_S(INFO) <<  "Using heuristic " << HEURISTIC_NAME;
     } catch(const std::out_of_range& oor ) {
-        LOG_S(WARNING) << "No named heuristic found, defaulting back on -h flag";
+        // LOG_S(WARNING) << "No named heuristic found, defaulting back on -h flag";
         std::cerr << "No named heuristic found, defaulting back on -h flag" << std::endl;
     }
     return eval;
@@ -261,7 +292,7 @@ void run() {
     the_apta->set_context(merger);
     eval->set_context(merger);
 
-    std::cout << "Creating apta " <<  "using evaluation class " << HEURISTIC_NAME << std::endl;
+    // std::cout << "Creating apta " <<  "using evaluation class " << HEURISTIC_NAME << std::endl;
 
     if(OPERATION_MODE == "batch" || OPERATION_MODE == "greedy") {
         std::cout << "batch mode selected" << std::endl;
@@ -300,16 +331,16 @@ void run() {
 
         while(!TERMINATED) {
             if (STREAM_BATCH_INPUT_PATH.empty()) {
-                std::cout << "No input file provided, waiting for input" << std::endl;
-                LOG_S(INFO) << "No input file provided, waiting for input";
-                logMessage("No input file provided, waiting for input");
-                std::this_thread::sleep_for(std::chrono::seconds(1));
+                // std::cout << "No input file provided, waiting for input" << std::endl;
+                // LOG_S(INFO) << "No input file provided, waiting for input";
+                // logMessage("No input file provided, waiting for input");
+                // std::this_thread::sleep_for(std::chrono::seconds(1));
                 continue;
             }
             else {
-                LOG_S(INFO) << "Reading input file: " + STREAM_BATCH_INPUT_PATH;
+                // LOG_S(INFO) << "Reading input file: " + STREAM_BATCH_INPUT_PATH;
                 logMessage("Reading input file: " + STREAM_BATCH_INPUT_PATH);
-
+                // logMessage("Used " + std::to_string(countOpenFileDescriptors()) + " file descriptors out of " + std::to_string(getMaxFileDescriptors()));
                 bool fitness_only = false;
                 std::string filePath;
                 std::string out_name_format;
@@ -317,15 +348,15 @@ void run() {
                 size_t file_arg_pos = STREAM_BATCH_INPUT_PATH.find("--out_name");
 
                 if (file_arg_pos == std::string::npos) {
-                    logMessage("No output file name provided. An output file name is required.");
+                    // logMessage("No output file name provided. An output file name is required.");
                     exit(1);
                 }
                 else if (fitness_arg_pos == std::string::npos) {
-                    logMessage("Updating model");
+                    // logMessage("Updating model");
                     filePath = STREAM_BATCH_INPUT_PATH.substr(0, file_arg_pos);
                 }
                 else {
-                    logMessage("Only computing fitness");
+                    // logMessage("Only computing fitness");
                     filePath = STREAM_BATCH_INPUT_PATH.substr(0, fitness_arg_pos);
                     fitness_only = true;
                 }
@@ -335,7 +366,7 @@ void run() {
                 std::ifstream input_stream(filePath);
                 
                 if (!input_stream) {
-                    logMessage("Input file not found. No actions will be executed.");
+                    // logMessage("Input file not found. No actions will be executed.");
                     STREAM_BATCH_INPUT_PATH.clear();
                     continue;
                 }
@@ -343,59 +374,87 @@ void run() {
                 auto parser = abbadingoparser(input_stream, false);
                 std::list<trace*> traces = read_traces_input_stream(merger, input_stream, &parser, strategy);
 
-                logMessage("Finished reading batch of traces from input file.");
+                input_stream.close(); // close the input_stream after parsing the traces.
+                
+                // logMessage("Finished reading batch of traces from input file.");
 
                 if (fitness_only) {
-                    logMessage("Computing fitnesses for the batch of traces.");
-                    std::vector<std::vector<apta_node*>> state_sequences;
-                    for (auto tr : traces) {
-                        state_sequences.push_back(stream_obj.get_state_sequence_from_trace(merger, tr));
-                    }
+                    // logMessage("Computing fitnesses for the batch of traces.");
+                    std::vector<std::vector<apta_node*>> state_sequences = stream_obj.get_state_sequences(traces, merger);
 
                     std::vector<double> fitnesses = EA_utils::compute_fitnesses(state_sequences, merger->get_aut()->get_root(), FITNESS_TYPE);
-                    LOG_S(INFO) << "Writing fitnesses of test cases to file";
-                    logMessage("Writing fitnesses of test cases to file");
+                    // LOG_S(INFO) << "Writing fitnesses of test cases to file";
+                    // logMessage("Writing fitnesses of test cases to file");
                     std::string fitness_out_file_name = OUTPUT_DIRECTORY + "ff_fitness_" + out_name_format + ".txt"; 
                     std::ofstream fitness_file(fitness_out_file_name);
                     if (!fitness_file.is_open()) {
-                        LOG_S(ERROR) << "Error opening file! with error code: " + std::to_string(errno);
+                        // LOG_S(ERROR) << "Error opening file! with error code: " + std::to_string(errno);
                         exit(1);
                     }   
 
                     for (double fitness : fitnesses) {
-                        fitness_file << fitness << std::endl;
+                        fitness_file << fitness << "\n";
                     }
 
                     fitness_file.close();
-                    std::cout << "Finished writing fitnesses of test cases to file" << std::endl;
-                    LOG_S(INFO) << "Finished writing fitnesses of batch, waiting for new batch";
-                    logMessage("Finished writing fitnesses of batch, waiting for new batch");
+                    // close the file descriptor for the fitness file.
+
+                    // std::cout << "Finished writing fitnesses of test cases to file" << std::endl;
+                    // LOG_S(INFO) << "Finished writing fitnesses of batch, waiting for new batch";
+                    // logMessage("Finished writing fitnesses of batch, waiting for new batch");
 
                 }
                 else {
+                    // Record training time
+                    // auto start = std::chrono::high_resolution_clock::now();
+                    // UPDATE_NR++;
                     stream_obj.stream_mode_batch(merger, traces, TRACE_BATCH_NR);
+                    // logMessage("Done learning: " + std::to_string(UPDATE_NR));
+                    std::ofstream learn_stat_file;
+                    learn_stat_file.open(OUTPUT_DIRECTORY + "ff_learn_stat.txt", std::ios::app);
+
+                    if (learn_stat_file.is_open()) {
+                        learn_stat_file << "Done\n";
+                        learn_stat_file.close();
+                    } else {
+                        std::cerr << "Error opening file.\n";
+                    }
+
+
+                    // auto end = std::chrono::high_resolution_clock::now();
+
                     // Write state sequences to file for visualization
-                    std::string state_sequence_out_file_name = OUTPUT_DIRECTORY + "ff_state_sequence_" + out_name_format + ".txt";
-                    std::ofstream state_sequence_file(state_sequence_out_file_name);
-                    if (!state_sequence_file.is_open()) {
-                        LOG_S(ERROR) << "Error opening file! with error code: " + std::to_string(errno);
-                        exit(1);
-                    }
+                    // logMessage("Writing state sequences to file for visualization");
+                    // std::string state_sequence_out_file_name = OUTPUT_DIRECTORY + "ff_state_sequence_" + out_name_format + ".txt";
+                    // std::ofstream state_sequence_file(state_sequence_out_file_name);
+                    // if (!state_sequence_file.is_open()) {
+                    //     LOG_S(ERROR) << "Error opening file! with error code: " + std::to_string(errno);
+                    //     exit(1);
+                    // }
 
-                    std::vector<std::vector<apta_node*>> state_sequences;
-                    for (auto tr : traces) {
-                        state_sequences.push_back(stream_obj.get_state_sequence_from_trace(merger, tr));
-                    }
+                    // std::vector<std::vector<apta_node*>> state_sequences = stream_obj.get_state_sequences(traces, merger);
 
-                    for (auto state_sequence : state_sequences) {
-                        state_sequence_file << state_sequence[0]->get_number();
-                        for (int i = 1; i < state_sequence.size(); i++) {
-                            state_sequence_file << " " << state_sequence[i]->get_number();
-                        }
-                        state_sequence_file << std::endl;
-                    }
-                
-                    state_sequence_file.close();
+                    // for (auto state_sequence : state_sequences) {
+                    //     state_sequence_file << state_sequence[0]->get_number();
+                    //     for (int i = 1; i < state_sequence.size(); i++) {
+                    //         state_sequence_file << " " << state_sequence[i]->get_number();
+                    //     }
+                    //     state_sequence_file << "\n";
+                    // }
+                    // state_sequence_file.close();
+                    
+                    // Append training time to file
+                    // logMessage("Writing training time to file");
+                    // std::string training_time_out_file_name = "./ff_training_time.txt";
+                    // std::ofstream training_time_file(training_time_out_file_name, std::ios_base::app);
+                    // std::chrono::duration<double> training_time = end - start;
+                    // if (!training_time_file.is_open()) {
+                    //     LOG_S(ERROR) << "Error opening file! with error code: " + std::to_string(errno);
+                    //     exit(1);
+                    // }
+
+                    // training_time_file << training_time.count() << std::endl;
+                    // training_time_file.close();
                     TRACE_BATCH_NR++;
                 }
 
@@ -406,7 +465,7 @@ void run() {
 
         if (TERMINATED) {
             std::cout << "TERMINATED, exiting" << std::endl;
-            LOG_S(INFO) << "Terminate signal received, exiting";
+            // LOG_S(INFO) << "Terminate signal received, exiting";
             inputThread.join();
             exit(0);
         }
