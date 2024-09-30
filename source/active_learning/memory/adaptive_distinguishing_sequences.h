@@ -13,16 +13,22 @@
 #ifndef _ADAPTIVE_DISTINGUISHING_SEQUENCES_H_
 #define _ADAPTIVE_DISTINGUISHING_SEQUENCES_H_
 
-#include <list>
+#include "distinguishing_sequences.h"
 
-class adaptive_distinguishing_sequences {
+#include <list>
+#include <iostream>
+
+class adaptive_distinguishing_sequences : public distinguishing_sequences {
     class ads_node {};
 
   private:
     ads_node root;
 
   public:
-    // TODO
+    adaptive_distinguishing_sequences(){
+      std::cerr << "adaptive_distinguishing_sequences not implemented yet. Terminating." << std::endl;
+      exit(1); // TODO: Implement
+    }
 };
 
 #endif

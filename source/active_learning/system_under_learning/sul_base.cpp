@@ -40,6 +40,11 @@ const tuple<std::string, float, vector< vector<float> > > sul_base::get_type_con
     Please change the program settings. Aborting program.");
 }
 
+const std::vector< std::pair<std::string, float> > sul_base::get_type_confidence_batch(const std::vector< std::vector<int> >& query_traces, inputdata& id) const {
+    throw logic_error("This SUL does not support type queries along with confidence and hidden state representation. \
+    Please change the program settings. Aborting program.");
+}
+
 const double sul_base::get_string_probability(const std::vector<int>& query_trace, inputdata& id) const {
     throw logic_error("The SUL tries to infer string probability, but this SUL does not support this. \
   Please change the program settings. Aborting program.");
@@ -56,3 +61,5 @@ const std::pair< std::vector<float>, std::vector<float> > sul_base::get_weights_
         "This SUL does not support inference of the weight distribution. Please change the program settings. \
   Aborting program.");  
 }
+
+

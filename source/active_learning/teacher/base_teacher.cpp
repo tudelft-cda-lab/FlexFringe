@@ -49,6 +49,12 @@ const pair<string, float> base_teacher::ask_membership_confidence_query(const pr
     return make_pair(get<0>(query_res), get<1>(query_res));
 }
 
+const std::vector< std::pair<std::string, float> > 
+base_teacher::ask_type_confidence_batch(const std::vector< std::vector<int> >& query_traces, inputdata& id) const {
+    return sul->get_type_confidence_batch(query_traces, id);
+}
+
+
 /**
  * @brief 
  * 

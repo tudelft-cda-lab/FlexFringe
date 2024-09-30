@@ -1,5 +1,5 @@
 /**
- * @file distinguishing_sequences_tree.cpp
+ * @file classification_tree.cpp
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
  * @brief 
  * @version 0.1
@@ -9,5 +9,5 @@
  * 
  */
 
-#include "distinguishing_sequences_tree.h"
+#include "classification_tree.h"
 

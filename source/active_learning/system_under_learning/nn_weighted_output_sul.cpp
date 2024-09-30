@@ -164,6 +164,42 @@ nn_weighted_output_sul::get_type_confidence_and_states(const std::vector<int>& q
     //return make_tuple(type, confidence, representations);
 }
 
+const vector< pair<string, float> >
+nn_weighted_output_sul::get_type_confidence_batch(const vector< vector<int> >& query_traces, inputdata& id) const {
+    PyObject* p_list = PyList_New(query_traces.size());
+    for(int i=0; i<query_traces.size(); i++){
+        PyObject* p_tmp = PyList_New(query_traces[i].size());
+        input_sequence_to_pylist(p_tmp, query_traces[i]);
+        PyList_SetItem(p_list, i, p_tmp);
+        //Py_INCREF(p_tmp); // making sure p_tmp does not get deleted after loop
+    }
+
+    PyObject* p_result = PyObject_CallOneArg(query_func, p_list);
+    if (!PyList_Check(p_result))
+        throw std::runtime_error("Something went wrong, the Network did not return a list. What happened?");
+
+    vector< pair<string, float> > res;
+    for(int i=0; i<query_traces.size(); i++){
+        
+        PyObject* p_type = PyList_GetItem(p_result, static_cast<Py_ssize_t>(i*2));
+        if(!PyUnicode_CheckExact(p_type)){
+            cerr << "Problem with type as returned by Python script. Is it a proper int?" << endl;
+            throw exception(); // force the catch block
+        }
+
+        PyObject* p_confidence = PyList_GetItem(p_result, static_cast<Py_ssize_t>(i*2 + 1));
+        if(!PyFloat_CheckExact(p_confidence)){
+            cerr << "Problem with type as returned by Python script. Is it a proper float?" << endl;
+            throw exception(); // force the catch block
+        }
+
+        res.emplace_back(PyUnicode_AsUTF8(p_type), static_cast<float>(PyFloat_AsDouble(p_confidence)));
+    }
+
+    return res;
+}
+
+
 /**
  * @brief Initialize the types to 0 and 1. Which is which depends on how the network was trained.
  *

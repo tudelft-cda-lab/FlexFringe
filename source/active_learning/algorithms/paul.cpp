@@ -50,8 +50,13 @@ refinement* paul_algorithm::get_best_refinement(unique_ptr<state_merger>& merger
             refinement* ref = merger->test_merge(red_node, blue_node);
             if(ref == nullptr) continue;
 
-            ii_handler->complement_nodes(the_apta, teacher, red_node, blue_node, 0);
-            if (ref != nullptr){
+            ii_handler->pre_compute(the_apta, teacher, red_node, blue_node);
+            cout << "Pre computed" << endl;
+            ii_handler->complement_nodes(the_apta, teacher, red_node, blue_node);
+            cout << "Complemented nodes" << endl;
+
+            ref = merger->test_merge(red_node, blue_node);
+            if (ref != nullptr && ref->score > 0){
                 rs->insert(ref);
                 mergeable = true;
             }
@@ -110,14 +115,23 @@ void paul_algorithm::run(inputdata& id) {
         ss << std::setw(4) << std::setfill('0') << num;
         std::string s = ss.str();
 
-        best_ref->doref(merger.get());
-
-#ifndef NDEBUG
-        {
+/*         {
             static int c = 0;
-            merger->print_dot("test_" + to_string(c++) + ".dot");
-        }
-#endif
+            merger->print_dot("before_" + to_string(c++) + ".dot");
+        } */
+
+        best_ref->doref(merger.get());
+/*         if(dynamic_cast<merge_refinement*>(best_ref) != nullptr){
+            auto c_ref = dynamic_cast<merge_refinement*>(best_ref);
+            cout << "Merge of " << c_ref->red->get_number() << " and " << c_ref->blue->get_number() << endl;
+        } */
+
+//#ifndef NDEBUG
+/*         {
+            static int c = 0;
+            merger->print_dot("after_" + to_string(c++) + ".dot");
+        } */
+//#endif
 
         delete best_ref;
         best_ref = paul_algorithm::get_best_refinement(merger, the_apta, teacher);

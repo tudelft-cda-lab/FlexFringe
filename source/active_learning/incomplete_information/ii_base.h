@@ -26,11 +26,25 @@ class ii_base {
   protected:
 
   public:
+
+    /**
+     * @brief Pre-computation before we complement the two nodes. For example relevant in distinguishing sequence approach, where we 
+     * first collect a few distinguishing sequences before starting.
+     * 
+     * @param aut The apta.
+     * @param teacher The teacher.
+     * @param left The left node.
+     * @param right The right node.
+     */
+    virtual void pre_compute(std::unique_ptr<apta>& aut, std::unique_ptr<base_teacher>& teacher, apta_node* left, apta_node* right){
+      return;
+    }
+
     /**
      * @brief This function is meant to complement nodes when attempting to merge. Missing information that is needed to do a better merge will be 
      * determined e.g. by the teacher.
      */
-    virtual void complement_nodes(std::unique_ptr<apta>& aut, std::unique_ptr<base_teacher>& teacher, apta_node* left, apta_node* right, const int depth) = 0;
+    virtual void complement_nodes(std::unique_ptr<apta>& aut, std::unique_ptr<base_teacher>& teacher, apta_node* left, apta_node* right=nullptr) = 0;
     
     /**
      * @brief This function completes a single node with the teacher.
@@ -41,7 +55,9 @@ class ii_base {
      * @param node The node. 
      * @param teacher The teacher.
      */
-    virtual void complete_node(apta_node* node, std::unique_ptr<apta>& aut, std::unique_ptr<base_teacher>& teacher) = 0;
+    virtual void complete_node(apta_node* node, std::unique_ptr<apta>& aut, std::unique_ptr<base_teacher>& teacher);
+
+
 };
 
 #endif

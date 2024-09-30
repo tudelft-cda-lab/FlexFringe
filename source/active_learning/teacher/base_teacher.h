@@ -32,6 +32,7 @@ class base_teacher {
                                    const active_learning_namespace::pref_suf_t& suffix, inputdata& id);
     
     const std::pair<std::string, float> ask_membership_confidence_query(const active_learning_namespace::pref_suf_t& query, inputdata& id);
+    const std::vector< std::pair<std::string, float> > ask_type_confidence_batch(const std::vector< std::vector<int> >& query_traces, inputdata& id) const;
 
     
     const std::pair< int, std::vector< std::vector<float> > > get_membership_state_pair(const active_learning_namespace::pref_suf_t& access_seq,

@@ -21,7 +21,10 @@
 #include "state_merger.h"
 #include "tail.h"
 #include "trace.h"
+
 #include "overlap_fill.h"
+#include "overlap_fill_batch_wise.h"
+#include "distinguishing_sequence_fill.h"
 
 #include <list>
 #include <memory>
@@ -36,7 +39,7 @@ class paul_algorithm : public algorithm_base {
                      std::unique_ptr<eq_oracle_base>& oracle)
         : algorithm_base(sul, teacher, oracle){
           
-          ii_handler = std::make_unique<overlap_fill>();
+          ii_handler = std::make_unique<distinguishing_sequence_fill>();
         };
 
     void run(inputdata& id) override;

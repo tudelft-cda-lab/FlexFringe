@@ -99,14 +99,22 @@ add_library(ActiveLearning STATIC
             incomplete_information/ii_base.cpp
             incomplete_information/overlap_fill.h
             incomplete_information/overlap_fill.cpp
+            incomplete_information/overlap_fill_batch_wise.h
+            incomplete_information/overlap_fill_batch_wise.cpp
+            incomplete_information/distinguishing_sequence_fill.h
+            incomplete_information/distinguishing_sequence_fill.cpp
 
             # Everything related to memory and possible memoization techniques
             memory/observation_table.h
             memory/observation_table.cpp
-            memory/distinguishing_sequences_tree.h
-            memory/distinguishing_sequences_tree.cpp
+            memory/distinguishing_sequences.h
+            memory/distinguishing_sequences.cpp
             memory/adaptive_distinguishing_sequences.h
             memory/adaptive_distinguishing_sequences.cpp
+            memory/classification_tree.h
+            memory/classification_tree.cpp
+            memory/suffix_tree.h
+            memory/suffix_tree.cpp
 
             system_under_learning/sul_base.h
             system_under_learning/sul_base.cpp
