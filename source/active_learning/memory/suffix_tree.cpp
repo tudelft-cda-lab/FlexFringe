@@ -11,7 +11,6 @@
 
 #include "suffix_tree.h"
 
-#include <stack>
 #include <unordered_set>
 
 using namespace std;
@@ -24,9 +23,12 @@ using namespace std;
 void suffix_tree::add_suffix(const list<int>& suffix){
   sf_tree_node* node = root;
 
+  int depth = 0;
   for(auto symbol: suffix){
+    ++depth;
+
     if(!node->has_child(symbol)){
-      node_store.push_back(sf_tree_node());
+      node_store.push_back(sf_tree_node(depth));
       sf_tree_node& child = node_store.back();
 
       node->add_child(symbol, child);
@@ -55,52 +57,56 @@ bool suffix_tree::contains(const list<int>& suffix){
 }
 
 /**
- * @brief We do a DFS search* here , looking for the next sequence to return. If the
+ * @brief We do a DFS search* here, looking for the next sequence to return. If the
  * search is exhausted, then the function returns a nullopt and resets to the beginning.
  * 
  * *(DFS because like this we can maintain the suffix string better)
  * 
- * @return optional< vector<int> > The 
+ * @return optional< vector<int> > The next suffix.
  */
-optional< vector<int> > suffix_tree::next() const noexcept {
-  static vector<int> search_suffix;
-  static sf_tree_node* current_node = root;
-  static stack< pair<sf_tree_node*, int> > search_stack;
-  static unordered_set<sf_tree_node*> seen_nodes;
+optional< vector<int> > suffix_tree::next() noexcept {
 
   // note: the empty string is not considered a distinguishing sequence
   if(current_node==root){
     for(auto& n_s_pair: current_node->get_children()){
-      search_stack.push(make_pair(n_s_pair.first, n_s_pair.second));
+      search_stack.emplace(n_s_pair.first, n_s_pair.second);
     }
-    seen_nodes.insert(root);
+    //seen_nodes.insert(root);
+    last_depth = 0;
   }
 
   while(!search_stack.empty()){
     pair<sf_tree_node*, int> curr_pair = move(search_stack.top()); // TODO: can this move-cast lead to problems?
     search_stack.pop();
     
-    sf_tree_node* node = curr_pair.first;
-    search_suffix.push_back(curr_pair.second);
-    seen_nodes.insert(node);
+    current_node = curr_pair.first;
+    //seen_nodes.insert(current_node);
 
-    auto children = node->get_children();
+    // adjust the suffix
+    int depth = current_node->get_depth();
+    for(int i=0; i<last_depth-depth+1; ++i)
+      search_suffix.pop_back();
+    search_suffix.push_back(curr_pair.second);
+    last_depth = depth;
+
+    auto children = current_node->get_children();
     for(auto& n_s_pair: children){
-      if(!seen_nodes.contains(n_s_pair.first))
+      //if(!seen_nodes.contains(n_s_pair.first))
         search_stack.emplace(n_s_pair.first, n_s_pair.second);
     }
 
-    if(node->is_final()){
+    if(current_node->is_final()){
       return make_optional(search_suffix);
     }
 
-    if(children.empty())
-      search_suffix.pop_back();
+    //if(children.empty())
+    //  search_suffix.pop_back();
   }
 
   // reset the search to the beginning
   current_node = root;
   search_suffix.clear();
+  //seen_nodes.clear();
   return nullopt;
 }
 

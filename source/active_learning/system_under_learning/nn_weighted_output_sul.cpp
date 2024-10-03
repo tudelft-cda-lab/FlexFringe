@@ -122,6 +122,10 @@ nn_weighted_output_sul::get_type_and_states(const std::vector<int>& query_trace,
     }
 
     int type = static_cast<int>(PyLong_AsLong(p_type));
+    if(type > id.get_alphabet_size()){
+        id.add_type(PyUnicode_AsUTF8(p_type));
+    }
+
     vector< vector<float> > representations = compile_hidden_rep(p_result, 1);
 
     return make_pair(type, representations);
@@ -132,7 +136,7 @@ nn_weighted_output_sul::get_type_and_states(const std::vector<int>& query_trace,
  * 
  * @return const std::tuple< int, float, std::vector<float> > <the type, confidence, the hidden representations for each symbol of sequence>
  */
-const std::tuple< string, float, std::vector< std::vector<float> > > 
+const std::tuple< int, float, std::vector< std::vector<float> > > 
 nn_weighted_output_sul::get_type_confidence_and_states(const std::vector<int>& query_trace, inputdata& id) const {
     PyObject* p_list = PyList_New(query_trace.size());
     input_sequence_to_pylist(p_list, query_trace);
@@ -156,7 +160,11 @@ nn_weighted_output_sul::get_type_confidence_and_states(const std::vector<int>& q
     }
 
 
-    string type(PyUnicode_AsUTF8(p_type));
+    int type = id.get_reverse_type(PyUnicode_AsUTF8(p_type));
+    if(type > id.get_alphabet_size()){
+        id.add_type(PyUnicode_AsUTF8(p_type));
+    }
+
     float confidence = static_cast<float>(PyFloat_AsDouble(p_confidence));
     //vector< vector<float> > representations = compile_hidden_rep(p_result, 2);
 
@@ -164,7 +172,7 @@ nn_weighted_output_sul::get_type_confidence_and_states(const std::vector<int>& q
     //return make_tuple(type, confidence, representations);
 }
 
-const vector< pair<string, float> >
+const vector< pair<int, float> >
 nn_weighted_output_sul::get_type_confidence_batch(const vector< vector<int> >& query_traces, inputdata& id) const {
     PyObject* p_list = PyList_New(query_traces.size());
     for(int i=0; i<query_traces.size(); i++){
@@ -178,7 +186,7 @@ nn_weighted_output_sul::get_type_confidence_batch(const vector< vector<int> >& q
     if (!PyList_Check(p_result))
         throw std::runtime_error("Something went wrong, the Network did not return a list. What happened?");
 
-    vector< pair<string, float> > res;
+    vector< pair<int, float> > res;
     for(int i=0; i<query_traces.size(); i++){
         
         PyObject* p_type = PyList_GetItem(p_result, static_cast<Py_ssize_t>(i*2));
@@ -193,7 +201,12 @@ nn_weighted_output_sul::get_type_confidence_batch(const vector< vector<int> >& q
             throw exception(); // force the catch block
         }
 
-        res.emplace_back(PyUnicode_AsUTF8(p_type), static_cast<float>(PyFloat_AsDouble(p_confidence)));
+        int type = id.get_reverse_type(PyUnicode_AsUTF8(p_type));
+        if(type > id.get_alphabet_size()){
+            id.add_type(PyUnicode_AsUTF8(p_type));
+        }
+
+        res.emplace_back(type, static_cast<float>(PyFloat_AsDouble(p_confidence)));
     }
 
     return res;

@@ -29,11 +29,46 @@
 #include <list>
 #include <memory>
 
+#include <future>
+#include <mutex>
+
+/**
+ * @brief Helper class for us to achieve concurency.
+ * 
+ * 
+ */
+class search_instance{
+  private:
+    // make sure that our underlying structures like the suffix trees do not collide
+    std::unique_ptr<ii_base> ii_handler;
+    std::unique_ptr<distinguishing_sequences> ds_ptr = std::make_unique<distinguishing_sequences>();
+    inline static std::mutex m_mutex;
+    const int MIN_BATCH_SIZE = 512;
+    const int MAX_LEN = 30;
+    
+  public:
+    search_instance(){
+      ii_handler = std::make_unique<distinguishing_sequence_fill>();
+    }
+
+    void operator()(std::promise<bool>&& out, std::unique_ptr<state_merger>& merger, std::unique_ptr<apta>& the_apta, std::unique_ptr<base_teacher>& teacher, apta_node* red_node, apta_node* blue_node);
+};
+
 class paul_algorithm : public algorithm_base {
   protected:
     std::unique_ptr<ii_base> ii_handler;
     refinement* get_best_refinement(unique_ptr<state_merger>& merger, unique_ptr<apta>& the_apta, unique_ptr<base_teacher>& teacher);
 
+    /**
+     * Relevant for parallelization.
+     */
+    static bool merge_check(std::unique_ptr<ii_base>& ii_handler, std::unique_ptr<state_merger>& merger, std::unique_ptr<apta>& the_apta, std::unique_ptr<base_teacher>& teacher, apta_node* red_node, apta_node* blue_node);
+
+    std::list<refinement*> retry_merges(std::list<refinement*>& previous_refs, std::unique_ptr<state_merger>& merger, std::unique_ptr<apta>& the_apta);
+    std::list<refinement*> find_hypothesis(std::list<refinement*>& previous_refs, std::unique_ptr<state_merger>& merger, std::unique_ptr<apta>& the_apta, std::unique_ptr<base_teacher>& teacher);
+    void proc_counterex(const unique_ptr<base_teacher>& teacher, inputdata& id,
+                                      unique_ptr<apta>& the_apta, const vector<int>& counterex,
+                                      unique_ptr<state_merger>& merger, const refinement_list refs) const;
   public:
     paul_algorithm(std::shared_ptr<sul_base>& sul, std::unique_ptr<base_teacher>& teacher,
                      std::unique_ptr<eq_oracle_base>& oracle)

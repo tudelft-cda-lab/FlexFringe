@@ -34,24 +34,28 @@ void ii_base::complete_node(apta_node* node, std::unique_ptr<apta>& aut, std::un
   vector< vector<int> > query;
   query.push_back(move(seq));
 
-  vector< pair<string, float> > res = teacher->ask_type_confidence_batch(query, id);
+  vector< pair<int, float> > res = teacher->ask_type_confidence_batch(query, id);
   if(res.size() > 1)
     cerr << "Something weird happened in complete_node method of overlap_fill_batch_wise-class" << endl;
   
-  string& type = res[0].first;
+  int reverse_type = res[0].first;
   float confidence = res[0].second;
-  
-  if(confidence < 0.9){
-    return;
-  }
-
-  id.add_type(type);
-  int reverse_type = id.get_reverse_type(type);
 
   trace* new_trace = active_learning_namespace::vector_to_trace(seq, id, reverse_type);
   id.add_trace_to_apta(new_trace, aut.get(), false);
 
+  // TODO: make this one more generic. Too much on PAUL data at the moment
   paul_data* data;
   data = dynamic_cast<paul_data*>(node->get_data());
   data->set_confidence(confidence);
+}
+
+bool ii_base::check_consistency(std::unique_ptr<apta>& aut, std::unique_ptr<base_teacher>& teacher, apta_node* left, apta_node* right){
+  static bool init = false;
+  if(!init){
+    init = true;
+    std::cerr << "WARNING: This method does not support check_consistency() yet. Either change input parameters or implement this method." << std::endl;
+  }
+
+  return true;
 }

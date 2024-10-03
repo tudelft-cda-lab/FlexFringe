@@ -49,6 +49,7 @@ void distinguishing_sequence_fill::pre_compute(list<int>& suffix, unordered_set<
   }
 
   if(l_data->predict_type(nullptr) != r_data->predict_type(nullptr)){
+    //if(!ds_ptr->contains(suffix)) // TODO: We can use a bloom filter here for example...
     ds_ptr->add_sequence(suffix);
   }
 
@@ -127,11 +128,8 @@ vector<int> distinguishing_sequence_fill::concat_prefsuf(const vector<int>& pref
   return res;
 }
 
-void distinguishing_sequence_fill::add_data_to_tree(std::unique_ptr<apta>& aut, const vector<int>& seq, const string& answer, const float confidence){
+void distinguishing_sequence_fill::add_data_to_tree(std::unique_ptr<apta>& aut, const vector<int>& seq, const int reverse_type, const float confidence){
   static inputdata& id = *(inputdata_locator::get());
-
-  id.add_type(answer);
-  int reverse_type = id.get_reverse_type(answer);
 
   trace* new_trace = active_learning_namespace::vector_to_trace(seq, id, reverse_type);
   id.add_trace_to_apta(new_trace, aut.get(), false);
@@ -149,15 +147,157 @@ void distinguishing_sequence_fill::add_data_to_tree(std::unique_ptr<apta>& aut, 
 }
 
 /**
+ * @brief Prerequisite to check_consistency. We already compute the distribution for the red node.
+ */
+void distinguishing_sequence_fill::pre_compute(std::unique_ptr<apta>& aut, std::unique_ptr<base_teacher>& teacher, apta_node* node) {
+  static inputdata& id = *inputdata_locator::get(); 
+
+  auto right_access_trace = node->get_access_trace();
+  const active_learning_namespace::pref_suf_t right_prefix = right_access_trace->get_input_sequence(true, false);
+  
+  vector< vector<int> > queries;
+  unordered_set<int> no_pred_idxs;
+  optional< vector<int> > suffix = ds_ptr->next();
+  
+  memoized_predictions.clear();
+  while(suffix){
+    auto right_sequence = concat_prefsuf(right_prefix, suffix.value());
+    if(right_sequence.size() > MAX_LEN){
+      suffix = ds_ptr->next();
+      no_pred_idxs.insert(queries.size()+no_pred_idxs.size()); // invalid prediction
+      continue;
+    }
+
+    queries.push_back(move(right_sequence));
+    if(queries.size() >= MIN_BATCH_SIZE){ // if min-batch size % 2 != 0 will be larger
+      vector< pair<int, float> > answers = teacher->ask_type_confidence_batch(queries, *(inputdata_locator::get()));
+      int answers_idx = 0;
+
+      for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
+        if(no_pred_idxs.contains(i)){
+          memoized_predictions.push_back(-1);
+          continue;
+        }
+        auto& pred = answers[answers_idx];
+        memoized_predictions.push_back(pred.first);
+        ++answers_idx;
+      }
+        
+      queries.clear();
+      no_pred_idxs.clear();
+    }
+
+    suffix = ds_ptr->next();
+  }
+
+  if(queries.size() > 0){
+    vector< pair<int, float> > answers = teacher->ask_type_confidence_batch(queries, *(inputdata_locator::get()));
+    int answers_idx = 0;
+
+    for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
+      if(no_pred_idxs.contains(i)){
+        memoized_predictions.push_back(-1);
+        continue;
+      }
+      auto& pred = answers[answers_idx];
+      memoized_predictions.push_back(pred.first);
+      ++answers_idx;
+    }
+  }
+}
+
+/**
+ * @brief Throw in all the distinguishing sequences, and see how many disagreements you do have on that.
+ * @return true If consistent.
+ * @return false If not consistent.
+ */
+bool distinguishing_sequence_fill::check_consistency(std::unique_ptr<apta>& aut, std::unique_ptr<base_teacher>& teacher, apta_node* left, apta_node* right){
+  static inputdata& id = *inputdata_locator::get(); 
+
+  auto left_access_trace = left->get_access_trace();
+  const active_learning_namespace::pref_suf_t left_prefix = left_access_trace->get_input_sequence(true, false);
+  
+  vector< vector<int> > queries;
+  optional< vector<int> > suffix = ds_ptr->next();
+  vector<int> predictions;
+  
+  unordered_set<int> no_pred_idxs;
+
+  while(suffix){
+    auto left_sequence = concat_prefsuf(left_prefix, suffix.value());
+    if(left_sequence.size() > MAX_LEN){
+      no_pred_idxs.insert(queries.size()+no_pred_idxs.size());
+      suffix = ds_ptr->next();
+      continue;
+    }
+      
+    queries.push_back(move(left_sequence));
+    if(queries.size() >= MIN_BATCH_SIZE){
+      vector< pair<int, float> > answers = teacher->ask_type_confidence_batch(queries, *(inputdata_locator::get()));
+      int answers_idx = 0;
+
+      for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
+        if(no_pred_idxs.contains(i)){
+          predictions.push_back(-1);
+          continue;
+        }
+        auto& pred = answers[answers_idx];
+        predictions.push_back(pred.first);
+        ++answers_idx;
+      }
+
+      queries.clear();
+      no_pred_idxs.clear();
+    }
+
+    suffix = ds_ptr->next();
+  }
+
+  if(queries.size() > 0){
+    //m_mutex.lock();
+    vector< pair<int, float> > answers = teacher->ask_type_confidence_batch(queries, *(inputdata_locator::get()));
+    //m_mutex.unlock();
+    int answers_idx = 0;
+
+    for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
+      if(no_pred_idxs.contains(i)){
+        predictions.push_back(-1);
+        continue;
+      }
+      auto& pred = answers[answers_idx];
+      predictions.push_back(pred.first);
+      ++answers_idx;
+    }
+  }
+
+  if(memoized_predictions.size() != predictions.size()){
+    cerr << "Something weird happened." << endl;
+  }
+
+  int agreed = 0;
+  int disagreed = 0;
+  for(int i=0; i<predictions.size(); ++i){
+    if(memoized_predictions[i]==-1 || predictions[i]==-1)
+      continue;
+    else if(memoized_predictions[i] == predictions[i])
+      ++agreed;
+    else
+      ++disagreed;
+  }
+
+  float ratio = static_cast<float>(disagreed) / (static_cast<float>(disagreed) + static_cast<float>(agreed));
+  if(ratio > 0.01){
+    //cout << "Disagreed: " << disagreed << " | agreed: " << agreed << " | ratio: " << ratio << endl;
+    return false;
+  }
+  return true;
+}
+
+/**
  * @brief Take all the distinguishing sequences you currently have, add them to the two nodes, and ask the transformer to fill those two out.
  * Afterwards, reset the distinguishing sequences back to their original state.
  */
 void distinguishing_sequence_fill::complement_nodes(std::unique_ptr<apta>& aut, std::unique_ptr<base_teacher>& teacher, apta_node* left, apta_node* right) {
-  const static int MIN_BATCH_SIZE = 128;
-  const static int MAX_LEN = 30;
-
-  cout << "Complementing. Size of distinguished sequences: " << ds_ptr->size() << endl;
-
   auto left_access_trace = left->get_access_trace();
   auto right_access_trace = right->get_access_trace();
   
@@ -177,7 +317,7 @@ void distinguishing_sequence_fill::complement_nodes(std::unique_ptr<apta>& aut, 
       queries.push_back(move(full_sequence));
 
     if(queries.size() >= MIN_BATCH_SIZE){ // MIN_BATCH_SIZE might be violated by plus one, hence min
-      vector< pair<string, float> > answers = teacher->ask_type_confidence_batch(queries, *(inputdata_locator::get()));
+      vector< pair<int, float> > answers = teacher->ask_type_confidence_batch(queries, *(inputdata_locator::get()));
 
       for(int i=0; i < queries.size(); ++i){
         add_data_to_tree(aut, queries[i], answers[i].first, answers[i].second);
@@ -192,7 +332,7 @@ void distinguishing_sequence_fill::complement_nodes(std::unique_ptr<apta>& aut, 
   if(queries.size() == 0)
     return;
 
-  vector< pair<string, float> > answers = teacher->ask_type_confidence_batch(queries, *(inputdata_locator::get()));
+  vector< pair<int, float> > answers = teacher->ask_type_confidence_batch(queries, *(inputdata_locator::get()));
   for(int i=0; i < queries.size(); ++i){
     add_data_to_tree(aut, queries[i], answers[i].first, answers[i].second);
   }

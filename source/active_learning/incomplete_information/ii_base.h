@@ -28,15 +28,18 @@ class ii_base {
   public:
 
     /**
-     * @brief Pre-computation before we complement the two nodes. For example relevant in distinguishing sequence approach, where we 
+     * @brief Pre-computation on a node pair. For example relevant in distinguishing sequence approach, where we 
      * first collect a few distinguishing sequences before starting.
-     * 
-     * @param aut The apta.
-     * @param teacher The teacher.
-     * @param left The left node.
-     * @param right The right node.
      */
     virtual void pre_compute(std::unique_ptr<apta>& aut, std::unique_ptr<base_teacher>& teacher, apta_node* left, apta_node* right){
+      return;
+    }
+
+    /**
+     * @brief Pre-computation on single node. For example relevant in distinguishing sequence approach, where we 
+     * use this to memoize partial results to speed up computation.
+     */
+    virtual void pre_compute(std::unique_ptr<apta>& aut, std::unique_ptr<base_teacher>& teacher, apta_node* node){
       return;
     }
 
@@ -46,6 +49,11 @@ class ii_base {
      */
     virtual void complement_nodes(std::unique_ptr<apta>& aut, std::unique_ptr<base_teacher>& teacher, apta_node* left, apta_node* right=nullptr) = 0;
     
+    /**
+     * @brief We use this function similar to complement_nodes. The difference is that 
+     */
+    virtual bool check_consistency(std::unique_ptr<apta>& aut, std::unique_ptr<base_teacher>& teacher, apta_node* left, apta_node* right);
+
     /**
      * @brief This function completes a single node with the teacher.
      * 
@@ -57,6 +65,10 @@ class ii_base {
      */
     virtual void complete_node(apta_node* node, std::unique_ptr<apta>& aut, std::unique_ptr<base_teacher>& teacher);
 
+    /**
+     * @brief Size relevant for some optimizations.
+     */
+    virtual int size() const {return -1;}
 
 };
 

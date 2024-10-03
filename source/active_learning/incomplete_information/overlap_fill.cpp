@@ -30,17 +30,14 @@
 void overlap_fill::add_data_to_tree(std::unique_ptr<apta>& aut, active_learning_namespace::pref_suf_t& seq, unique_ptr<base_teacher>& teacher, apta_node* node, optional<int> s_opt){
   static inputdata& id = *(inputdata_locator::get());
 
-  pair<string, float> res = teacher->ask_membership_confidence_query(seq, id);
-  string& type = res.first;
+  pair<int, float> res = teacher->ask_membership_confidence_query(seq, id);
+  int reverse_type = res.first;
   float confidence = res.second;
   
   if(confidence < 0.9){
     //cout << "Skipping node" << endl;
     return;
   }
-
-  id.add_type(type);
-  int reverse_type = id.get_reverse_type(type);
 
   trace* new_trace = active_learning_namespace::vector_to_trace(seq, id, reverse_type);
   id.add_trace_to_apta(new_trace, aut.get(), false);

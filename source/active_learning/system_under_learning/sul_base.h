@@ -35,8 +35,8 @@ class sul_base {
     virtual bool is_member(const std::vector<int>& query_trace) const = 0;
     virtual const int query_trace(const std::vector<int>& query_trace, inputdata& id) const = 0;
     virtual const std::pair< int, std::vector< std::vector<float> > > get_type_and_states(const std::vector<int>& query_trace, inputdata& id) const;
-    virtual const std::tuple< std::string, float, std::vector< std::vector<float> > > get_type_confidence_and_states(const std::vector<int>& query_trace, inputdata& id) const;
-    virtual const std::vector< std::pair<std::string, float> > get_type_confidence_batch(const std::vector< std::vector<int> >& query_traces, inputdata& id) const;
+    virtual const std::tuple< int, float, std::vector< std::vector<float> > > get_type_confidence_and_states(const std::vector<int>& query_trace, inputdata& id) const;
+    virtual const std::vector< std::pair<int, float> > get_type_confidence_batch(const std::vector< std::vector<int> >& query_traces, inputdata& id) const;
 
     // TODO: can we simplify all of those with some sort of template?
     virtual const double get_string_probability(const std::vector<int>& query_trace, inputdata& id) const;

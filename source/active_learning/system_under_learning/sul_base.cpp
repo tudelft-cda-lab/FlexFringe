@@ -35,12 +35,12 @@ const pair<int, vector< vector<float> > > sul_base::get_type_and_states(const st
     Please change the program settings. Aborting program.");
 }
 
-const tuple<std::string, float, vector< vector<float> > > sul_base::get_type_confidence_and_states(const std::vector<int>& query_trace, inputdata& id) const {
+const tuple<int, float, vector< vector<float> > > sul_base::get_type_confidence_and_states(const std::vector<int>& query_trace, inputdata& id) const {
     throw logic_error("This SUL does not support type queries along with confidence and hidden state representation. \
     Please change the program settings. Aborting program.");
 }
 
-const std::vector< std::pair<std::string, float> > sul_base::get_type_confidence_batch(const std::vector< std::vector<int> >& query_traces, inputdata& id) const {
+const std::vector< std::pair<int, float> > sul_base::get_type_confidence_batch(const std::vector< std::vector<int> >& query_traces, inputdata& id) const {
     throw logic_error("This SUL does not support type queries along with confidence and hidden state representation. \
     Please change the program settings. Aborting program.");
 }

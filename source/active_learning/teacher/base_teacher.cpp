@@ -44,12 +44,12 @@ const int base_teacher::ask_membership_query(const pref_suf_t& query, inputdata&
  *
  * @return Integer in pair like overloaded function. Float represents confidence of oracle (e.g. transformer) that output is correct. 
  */
-const pair<string, float> base_teacher::ask_membership_confidence_query(const pref_suf_t& query, inputdata& id) {
-    tuple<string, float, vector< vector<float> >> query_res = sul->get_type_confidence_and_states(query, id);
+const pair<int, float> base_teacher::ask_membership_confidence_query(const pref_suf_t& query, inputdata& id) {
+    tuple<int, float, vector< vector<float> >> query_res = sul->get_type_confidence_and_states(query, id);
     return make_pair(get<0>(query_res), get<1>(query_res));
 }
 
-const std::vector< std::pair<std::string, float> > 
+const std::vector< std::pair<int, float> > 
 base_teacher::ask_type_confidence_batch(const std::vector< std::vector<int> >& query_traces, inputdata& id) const {
     return sul->get_type_confidence_batch(query_traces, id);
 }

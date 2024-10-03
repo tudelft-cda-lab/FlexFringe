@@ -31,6 +31,7 @@ class distinguishing_sequences {
       return seq_store.next();
     }
 
+    virtual bool contains(const std::list<int>& s){return seq_store.contains(s);}
     virtual int size() const noexcept { return seq_store.size(); }
 };
 

@@ -69,6 +69,8 @@ add_library(ActiveLearning STATIC
             equivalence_oracle/sqldb_sul_regex_oracle.cpp
             equivalence_oracle/sqldb_sul_random_oracle.h
             equivalence_oracle/sqldb_sul_random_oracle.cpp
+            equivalence_oracle/paul_oracle.h
+            equivalence_oracle/paul_oracle.cpp
 
             # Counterexample search strategies
             equivalence_oracle/cex_search_strategies/search_base.h

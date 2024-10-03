@@ -27,15 +27,12 @@
  * @param seq The sequence of the node to add data to.
  * @param s_opt: If provided the child of n with edge is updated, else if nullopt then n itself is updated.
  */
-void overlap_fill_batch_wise::add_data_to_tree(std::unique_ptr<apta>& aut, const vector<int>& seq, string& type, float confidence, apta_node* node, const int symbol){
+void overlap_fill_batch_wise::add_data_to_tree(std::unique_ptr<apta>& aut, const vector<int>& seq, const int reverse_type, float confidence, apta_node* node, const int symbol){
   static inputdata& id = *(inputdata_locator::get());
   
   if(confidence < 0.9){ // TODO: does this make sense?
     return;
   }
-
-  id.add_type(type);
-  int reverse_type = id.get_reverse_type(type);
 
   trace* new_trace = active_learning_namespace::vector_to_trace(seq, id, reverse_type);
   id.add_trace_to_apta(new_trace, aut.get(), false);
@@ -121,7 +118,7 @@ void overlap_fill_batch_wise::complement_nodes(vector< vector<int> >& query_trac
       query_node_symbol_pairs.emplace_back(left, symbol);
 
       if(query_traces.size() == BATCH_SIZE){
-        vector< pair<string, float> > answers = teacher->ask_type_confidence_batch(query_traces, *(inputdata_locator::get()));
+        vector< pair<int, float> > answers = teacher->ask_type_confidence_batch(query_traces, *(inputdata_locator::get()));
 
         for(int i=0; i < query_traces.size(); ++i){
           add_data_to_tree(aut, query_traces[i], answers[i].first, answers[i].second, query_node_symbol_pairs[i].first, query_node_symbol_pairs[i].second);
@@ -163,7 +160,7 @@ void overlap_fill_batch_wise::complement_nodes(vector< vector<int> >& query_trac
       query_node_symbol_pairs.emplace_back(right, symbol);
 
       if(query_traces.size() == BATCH_SIZE){
-        vector< pair<string, float> > answers = teacher->ask_type_confidence_batch(query_traces, *(inputdata_locator::get()));
+        vector< pair<int, float> > answers = teacher->ask_type_confidence_batch(query_traces, *(inputdata_locator::get()));
 
         for(int i=0; i < query_traces.size(); ++i){
           add_data_to_tree(aut, query_traces[i], answers[i].first, answers[i].second, query_node_symbol_pairs[i].first, query_node_symbol_pairs[i].second);
@@ -209,7 +206,7 @@ void overlap_fill_batch_wise::complement_nodes(std::unique_ptr<apta>& aut, std::
     return;
 
   // doing the remaining queries
-  vector< pair<string, float> > answers = teacher->ask_type_confidence_batch(query_traces, *(inputdata_locator::get()));
+  vector< pair<int, float> > answers = teacher->ask_type_confidence_batch(query_traces, *(inputdata_locator::get()));
   for(int i=0; i < query_traces.size(); ++i){
     add_data_to_tree(aut, query_traces[i], answers[i].first, answers[i].second, query_node_symbol_pairs[i].first, query_node_symbol_pairs[i].second);
   }
