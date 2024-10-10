@@ -54,33 +54,11 @@ void signal_handler(int signum) {
     }
 }
 
-// int countOpenFileDescriptors() {
-//     struct rlimit limit;
-//     getrlimit(RLIMIT_NOFILE, &limit);  // Get max file descriptors
-
-//     int fdCount = 0;
-//     for (int fd = 0; fd < limit.rlim_cur; fd++) {
-//         // Try fcntl to check if the descriptor is valid
-//         if (fcntl(fd, F_GETFD) != -1) {
-//             fdCount++;
-//         }
-//     }
-//     return fdCount;
-// }
-
-// long getMaxFileDescriptors() {
-//     struct rlimit limit;
-    
-//     // Get the current file descriptor limits
-//     if (getrlimit(RLIMIT_NOFILE, &limit) == 0) {
-//         return limit.rlim_cur;  // Return the soft limit (current max FD allowed)
-//     } else {
-//         // In case of an error, output the error message and return -1
-//         std::cerr << "Error getting file descriptor limits: " << strerror(errno) << std::endl;
-//         return -1;
-//     }
-// }
-
+void logMessage(const std::string &message) {
+    std::ofstream log("/tmp/flexfringe_log.txt", std::ios::app);
+    log << message + "\n";
+    log.close();
+}
 
 void listen_for_input(const std::string& fifo_path) {
     // LOG_S(INFO) << "Listening for input";
@@ -116,6 +94,7 @@ void listen_for_input(const std::string& fifo_path) {
 
 void daemonize() {
     // LOG_S(INFO) << "Starting daemon of FlexFringe";
+    logMessage("Starting Daemon...");
     pid_t pid = fork();
 
     if (pid < 0) {
@@ -156,13 +135,6 @@ void daemonize() {
     open("/dev/null", O_RDONLY);
     open("/dev/null", O_RDWR);
     open("/dev/null", O_RDWR);
-}
-
-
-void logMessage(const std::string &message) {
-    std::ofstream log("/tmp/flexfringe_log.txt", std::ios::app);
-    log << message + "\n";
-    log.close();
 }
 
 std::list<trace*> read_traces_input_stream(state_merger* merger, ifstream& input_stream, parser* parser, reader_strategy* strategy) {
@@ -334,14 +306,13 @@ void run() {
             if (STREAM_BATCH_INPUT_PATH.empty()) {
                 // std::cout << "No input file provided, waiting for input" << std::endl;
                 // LOG_S(INFO) << "No input file provided, waiting for input";
-                // logMessage("No input file provided, waiting for input");
-                // std::this_thread::sleep_for(std::chrono::seconds(1));
+                logMessage("No input file provided, waiting for input");
+                std::this_thread::sleep_for(std::chrono::seconds(1));
                 continue;
             }
             else {
                 // LOG_S(INFO) << "Reading input file: " + STREAM_BATCH_INPUT_PATH;
                 logMessage("Reading input file: " + STREAM_BATCH_INPUT_PATH);
-                // logMessage("Used " + std::to_string(countOpenFileDescriptors()) + " file descriptors out of " + std::to_string(getMaxFileDescriptors()));
                 bool fitness_only = false;
                 std::string filePath;
                 std::string out_name_format;
