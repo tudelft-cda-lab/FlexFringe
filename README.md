@@ -1,4 +1,4 @@
-# Flexfringe # [![Codacy Badge](https://api.codacy.com/project/badge/Grade/ae975ed72f9c4e1bb19b18dc44aacf1f)](https://app.codacy.com/gh/tudelft-cda-lab/FlexFringe?utm_source=github.com&utm_medium=referral&utm_content=tudelft-cda-lab/FlexFringe&utm_campaign=Badge_Grade_Settings)
+# Flexfringe [![Codacy Badge](https://api.codacy.com/project/badge/Grade/ae975ed72f9c4e1bb19b18dc44aacf1f)](https://app.codacy.com/gh/tudelft-cda-lab/FlexFringe?utm_source=github.com&utm_medium=referral&utm_content=tudelft-cda-lab/FlexFringe&utm_campaign=Badge_Grade_Settings)
 
 
 Flexfringe, formerly DFASAT, is a flexible state-merging framework written in C++. It consists of a core state merging framework, several different merging routines, a predict module, and an active learning module.
