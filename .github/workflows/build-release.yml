@@ -6,10 +6,8 @@ on:
 
 jobs:
   build-and-test:
-<<<<<<< HEAD
     uses: tudelft-cda-lab/FlexFringe/.github/workflows/build-test-all.yml@main
     secrets: inherit
-=======
     name: ${{ matrix.os }}-build-release
     runs-on: ${{ matrix.os }}
     strategy:
@@ -81,7 +79,6 @@ jobs:
         with:
           name: 'flexfringe-${{ matrix.triplet }}'
           path: '${{ runner.workspace }}/FlexFringe/build/flexfringe-${{ matrix.triplet }}${{ matrix.extension}}'
->>>>>>> origin/Publications/learnaut24
 
   release-nightly:
     name: "Nightly release"
@@ -94,7 +91,7 @@ jobs:
       - name: "Rename"
         run: |
           ls -lah
-          mv flexfringe-x64-windows flexfringe-x64-windows.exe 
+          mv flexfringe-x64-windows flexfringe-x64-windows.exe
 
       - name: "Publish"
         uses: "marvinpinto/action-automatic-releases@latest"

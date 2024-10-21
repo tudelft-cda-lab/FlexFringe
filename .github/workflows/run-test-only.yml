@@ -3,10 +3,8 @@ on: [pull_request]
 
 jobs:
   build-and-test:
-<<<<<<< HEAD
     uses: ./.github/workflows/build-test-all.yml
     secrets: inherit
-=======
     name: build-test-linux
     runs-on: ubuntu-latest
 
@@ -33,4 +31,3 @@ jobs:
         with:
           check_name: "Unit Test Results"
           files: "testresults.xml"
->>>>>>> origin/Publications/learnaut24
