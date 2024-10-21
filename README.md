@@ -112,7 +112,9 @@ Most notable, we use
 TODO:
 The documentation of this project can be build using the
 
+```
 COMPILE_DOCS=ON
+``````
 
 flag along with the cmake command. We are using Doxygen and Sphinx. Requirements for compiling the documentation
 are
@@ -125,19 +127,10 @@ They can be installed on Linux using the commands
 
 ```shell
 apt-get install doxygen
-```
-,
-
-```shell
 pip install sphinx_rtd_theme
-```
-
-, and
-
-```shell
 pip install breathe
 ```
-.
+
 
 IMPORTANT: In case new classes, functions, structs etc. have been added, and they shall show up in the documentation,
 they have to be added at the bottom of the docs/index.rst file. For further information and a small quickstart-guide,
