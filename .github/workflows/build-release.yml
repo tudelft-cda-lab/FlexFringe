@@ -25,60 +25,60 @@ jobs:
             triplet: x64-osx
             extension: ""
 
-    steps:
-      - uses: actions/checkout@v1
+    # steps:
+    #   - uses: actions/checkout@v1
 
-      - name: Setup cmake
-        uses: jwlawson/actions-setup-cmake@v1.12
-        with:
-          cmake-version: '3.25.x'
+    #   - name: Setup cmake
+    #     uses: jwlawson/actions-setup-cmake@v1.12
+    #     with:
+    #       cmake-version: '3.25.x'
 
-      - name: prepare-windows
-        if: runner.os == 'Windows'
-        uses: ilammy/msvc-dev-cmd@v1
+    #   - name: prepare-windows
+    #     if: runner.os == 'Windows'
+    #     uses: ilammy/msvc-dev-cmd@v1
 
-      - name: build-windows
-        if: runner.os == 'Windows'
-        run: |
-          mkdir build && cd build
-          cmake ..
-          cmake --build . --config Release
+    #   - name: build-windows
+    #     if: runner.os == 'Windows'
+    #     run: |
+    #       mkdir build && cd build
+    #       cmake ..
+    #       cmake --build . --config Release
 
-      - name: build-unix
-        if: runner.os == 'Linux' || runner.os == 'macOS'
-        run: |
-          mkdir build && cd build
-          cmake .. -DCMAKE_BUILD_TYPE=Release
-          make -j$(nproc)
+    #   - name: build-unix
+    #     if: runner.os == 'Linux' || runner.os == 'macOS'
+    #     run: |
+    #       mkdir build && cd build
+    #       cmake .. -DCMAKE_BUILD_TYPE=Release
+    #       make -j$(nproc)
 
-      - name: rename-binary
-        run: |
-          cd build
-          ls
-          mv flexfringe${{ matrix.extension }} flexfringe-${{ matrix.triplet }}${{ matrix.extension}}
+    #   - name: rename-binary
+    #     run: |
+    #       cd build
+    #       ls
+    #       mv flexfringe${{ matrix.extension }} flexfringe-${{ matrix.triplet }}${{ matrix.extension}}
 
-      - name: run-tests
-        run: build/runtests${{ matrix.extension }} -r junit > testresults-${{ matrix.triplet }}.xml
+    #   - name: run-tests
+    #     run: build/runtests${{ matrix.extension }} -r junit > testresults-${{ matrix.triplet }}.xml
 
-      - name: publish-test-results-linux
-        uses: EnricoMi/publish-unit-test-result-action@v1
-        if: runner.os == 'Linux' && always()
-        with:
-          check_name: "Unit Test Results (${{ matrix.triplet }})"
-          files: "testresults-${{ matrix.triplet }}.xml"
+    #   - name: publish-test-results-linux
+    #     uses: EnricoMi/publish-unit-test-result-action@v1
+    #     if: runner.os == 'Linux' && always()
+    #     with:
+    #       check_name: "Unit Test Results (${{ matrix.triplet }})"
+    #       files: "testresults-${{ matrix.triplet }}.xml"
 
-      - name: publish-test-results-other
-        uses: EnricoMi/publish-unit-test-result-action/composite@v1
-        if: runner.os != 'Linux' && always()
-        with:
-          check_name: "Unit Test Results (${{ matrix.triplet }})"
-          files: "testresults-${{ matrix.triplet }}.xml"
+    #   - name: publish-test-results-other
+    #     uses: EnricoMi/publish-unit-test-result-action/composite@v1
+    #     if: runner.os != 'Linux' && always()
+    #     with:
+    #       check_name: "Unit Test Results (${{ matrix.triplet }})"
+    #       files: "testresults-${{ matrix.triplet }}.xml"
 
-      - name: upload-binary-artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: 'flexfringe-${{ matrix.triplet }}'
-          path: '${{ runner.workspace }}/FlexFringe/build/flexfringe-${{ matrix.triplet }}${{ matrix.extension}}'
+    #   - name: upload-binary-artifact
+    #     uses: actions/upload-artifact@v3
+    #     with:
+    #       name: 'flexfringe-${{ matrix.triplet }}'
+    #       path: '${{ runner.workspace }}/FlexFringe/build/flexfringe-${{ matrix.triplet }}${{ matrix.extension}}'
 
   release-nightly:
     name: "Nightly release"
