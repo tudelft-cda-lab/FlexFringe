@@ -1,4 +1,5 @@
-# Flexfringe #
+# Flexfringe # [![Codacy Badge](https://api.codacy.com/project/badge/Grade/ae975ed72f9c4e1bb19b18dc44aacf1f)](https://app.codacy.com/gh/tudelft-cda-lab/FlexFringe?utm_source=github.com&utm_medium=referral&utm_content=tudelft-cda-lab/FlexFringe&utm_campaign=Badge_Grade_Settings)
+
 
 Flexfringe, formerly DFASAT, is a flexible state-merging framework written in C++. It consists of a core state merging framework, several different merging routines, a predict module, and an active learning module.
 
@@ -92,9 +93,6 @@ Former contributors include:
 *   Tom Catshoek (scientific programmer and maintainer, wrote the Lexy-based parser)
 *   Sofia Tsoni (formerly scientific programmer and maintainer)
 
-## Badges ##
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/ae975ed72f9c4e1bb19b18dc44aacf1f)](https://app.codacy.com/gh/tudelft-cda-lab/FlexFringe?utm_source=github.com&utm_medium=referral&utm_content=tudelft-cda-lab/FlexFringe&utm_campaign=Badge_Grade_Settings)
-
 ## Credits and Licences ##
 
 *flexfinge* relies on a number of open source packages and libraries. You can find the respective LICENCE files in the source/utility subdirectory.
@@ -130,7 +128,6 @@ apt-get install doxygen
 pip install sphinx_rtd_theme
 pip install breathe
 ```
-
 
 IMPORTANT: In case new classes, functions, structs etc. have been added, and they shall show up in the documentation,
 they have to be added at the bottom of the docs/index.rst file. For further information and a small quickstart-guide,
