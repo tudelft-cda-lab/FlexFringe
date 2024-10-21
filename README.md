@@ -42,9 +42,9 @@ label length sym1 sym2 ... symN
 .
 .
 ```
-for each symbol, additional data can be attached via /, i.e. `label length sym1/data1 sym2/data2 ... symN/dataN`. These can represent outputs (e.g. for Mealy or Moore machines), or any other information needed by a custom evaluation function.
+for each symbol, additional data can be attached via `/`, i.e. `label length sym1/data1 sym2/data2 ... symN/dataN`. These can represent outputs (e.g. for Mealy or Moore machines), or any other information needed by a custom evaluation function.
 
-Real-valued attributes, e.g. for real-time automata, can be attached via :, i.e. `label length sym1:real1,real2,realn ...`. The number of attributes has to be specified in the header after the alphabet size, i.e. `num_samples alphabet_size:num_attributes`.
+Real-valued attributes, e.g. for real-time automata, can be attached via `:`, i.e. `label length sym1:real1,real2,realn ...`. The number of attributes has to be specified in the header after the alphabet size, i.e. `num_samples alphabet_size:num_attributes`.
 
 ### Output files ###
 
