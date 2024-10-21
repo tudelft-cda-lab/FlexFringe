@@ -38,8 +38,32 @@ TEST_CASE("AbbadingoReader: smoke test", "[parsing]") {
         REQUIRE_THAT(actual, Equals(expected));
         expected_traces.pop_front();
     }
-}
 
+    inputdata_locator::provide(&input_data);
+
+    SECTION("Testing read method") {
+        std::istringstream input_stream(input);
+        auto parser = abbadingoparser(input_stream);
+        input_data.read(&parser);
+        for (auto* trace: input_data) {
+            auto expected = expected_traces.front();
+            auto actual = trace->to_string();
+            REQUIRE_THAT(actual, Equals(expected));
+            expected_traces.pop_front();
+        }
+    }        
+    SECTION("Testing iteration method") {
+        std::istringstream input_stream(input);
+        auto parser = abbadingoparser(input_stream);
+        auto strategy = in_order();
+        for (auto* trace : input_data.trace_iterator(parser, strategy)) {
+            auto expected = expected_traces.front();
+            auto actual = trace->to_string();
+            REQUIRE_THAT(actual, Equals(expected));
+            expected_traces.pop_front();
+        }
+    }
+}
 
 TEST_CASE("CSVReader: smoke test", "[parsing]") {
     // This tests makes sure that having spaces in front of the column names in the header
@@ -105,6 +129,8 @@ TEST_CASE("CSVReader: Special characters", "[parsing]") {
 }
 
 TEST_CASE("CSVReader: Sliding window csv", "[parsing]") {
+    // check if we can parse csv files with the abbadingo delimiter symbols
+
     std::string input_whitespace = "id, symb\n"
                                    "1, a\n"
                                    "1, b\n"
@@ -134,6 +160,8 @@ TEST_CASE("CSVReader: Sliding window csv", "[parsing]") {
 }
 
 TEST_CASE("CSVReader: Sliding window abbadingo", "[parsing]") {
+    // check if we can parse csv files with the abbadingo delimiter symbols
+
     std::string input_whitespace = "1 4\n"
                                    "0 4 a b c d";
     std::istringstream input(input_whitespace);

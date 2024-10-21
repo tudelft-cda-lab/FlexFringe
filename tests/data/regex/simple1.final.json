@@ -1,0 +1,122 @@
+{
+	"types" : [
+"1",
+"0"
+	],
+	"alphabet" : [
+"1",
+"0"
+	],
+	"nodes" : [
+		{
+			"id" : 0,
+			"source" :  -1,
+			"label" : "fin: 0:0 , 1:0 ,  path: 0:438 , 1:42 , ",
+			"size" : 480,
+			"level" : 0,
+			"style" : "",
+			"isred" :  1,
+			"issink" :  0,
+			"isblue" :  0,
+			"trace" :  "0 0",
+			"data" :  {"final_counts":{"0":0,"1":0},"path_counts":{"0":438,"1":42},"total_final":0,"total_paths":480}
+		},
+		{
+			"id" : 1,
+			"source" :  0,
+			"label" : "fin: 0:0 , 1:21 ,  path: 0:382 , 1:56 , ",
+			"size" : 459,
+			"level" : 2,
+			"style" : "",
+			"isred" :  1,
+			"issink" :  0,
+			"isblue" :  0,
+			"trace" :  "1 1 1",
+			"data" :  {"final_counts":{"0":0,"1":21},"path_counts":{"0":382,"1":56},"total_final":21,"total_paths":438}
+		},
+		{
+			"id" : 2,
+			"source" :  0,
+			"label" : "fin: 0:0 , 1:21 ,  path: 0:382 , 1:56 , ",
+			"size" : 459,
+			"level" : 1,
+			"style" : "",
+			"isred" :  1,
+			"issink" :  0,
+			"isblue" :  0,
+			"trace" :  "0 1 0",
+			"data" :  {"final_counts":{"0":0,"1":21},"path_counts":{"0":382,"1":56},"total_final":21,"total_paths":438}
+		},
+		{
+			"id" : 3,
+			"source" :  1,
+			"label" : "fin: 0:438 , 1:0 ,  path: 0:1212 , ",
+			"size" : 1650,
+			"level" : 3,
+			"style" : "",
+			"isred" :  1,
+			"issink" :  0,
+			"isblue" :  0,
+			"trace" :  "1 2 1 1",
+			"data" :  {"final_counts":{"0":438,"1":0},"path_counts":{"0":1212},"total_final":438,"total_paths":1212}
+		}
+	],
+	"edges" : [
+		{
+			"id" : "0_1",
+			"source" : "0",
+			"target" : "1",
+			"name": "1",
+			"appearances": ""}
+,
+		{
+			"id" : "0_2",
+			"source" : "0",
+			"target" : "2",
+			"name": "0",
+			"appearances": ""}
+,
+		{
+			"id" : "1_3",
+			"source" : "1",
+			"target" : "3",
+			"name": "1",
+			"appearances": ""}
+,
+		{
+			"id" : "1_2",
+			"source" : "1",
+			"target" : "2",
+			"name": "0",
+			"appearances": ""}
+,
+		{
+			"id" : "2_1",
+			"source" : "2",
+			"target" : "1",
+			"name": "1",
+			"appearances": ""}
+,
+		{
+			"id" : "2_3",
+			"source" : "2",
+			"target" : "3",
+			"name": "0",
+			"appearances": ""}
+,
+		{
+			"id" : "3_3",
+			"source" : "3",
+			"target" : "3",
+			"name": "1",
+			"appearances": ""}
+,
+		{
+			"id" : "3_3",
+			"source" : "3",
+			"target" : "3",
+			"name": "0",
+			"appearances": ""}
+
+	]
+}

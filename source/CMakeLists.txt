@@ -1,5 +1,9 @@
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/evaluation"
         "${CMAKE_CURRENT_SOURCE_DIR}/utility"
+        "${CMAKE_CURRENT_SOURCE_DIR}/input"
+        "${CMAKE_CURRENT_SOURCE_DIR}/input/parsers"
+        "${CMAKE_CURRENT_SOURCE_DIR}/input/parsers/grammar"
+        "${CMAKE_CURRENT_SOURCE_DIR}/active_learning"
         )
 
 ## create the gitversion.cpp
@@ -55,6 +59,9 @@ add_library(Source STATIC
         differencing.cpp differencing.h
         ensemble.cpp ensemble.h
         dfa_properties.cpp dfa_properties.h
+        refinement_selection_strategies.h refinement_selection_strategies.cpp
+        regex_builder.h regex_builder.cpp
+
         input/trace.cpp
         input/trace.h
         input/inputdatalocator.cpp
@@ -83,7 +90,18 @@ add_library(Source STATIC
         input/streaming.cpp
         input/streaming.h
         input/parsers/reader_strategy.cpp
-        input/parsers/reader_strategy.h)
+        input/parsers/reader_strategy.h
+
+        main_helpers.h # TODO: do we need these two?
+        main_helpers.cpp
+
+        misc/printutil.h
+        misc/utils.h
+        misc/trim.h
+        misc/zip.h
+        misc/sqldb.h
+        misc/sqldb.cpp
+        )
 
 ## create CMakeLists.txt in evaluation directory
 set(cmakelists_eval "evaluation/CMakeLists.txt")
@@ -99,3 +117,8 @@ file(APPEND "${cmakelists_eval}" ")")
 
 add_subdirectory(evaluation)
 add_subdirectory(utility)
+add_subdirectory(active_learning)
+
+# Please note that pqxx should be linked to every module that depends on it.
+# include_directories does not work.
+target_link_libraries(Source libpqxx::pqxx)

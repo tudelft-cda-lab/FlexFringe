@@ -193,7 +193,6 @@ namespace {
         };
 
         struct abbadingo_trace {
-
             static constexpr auto rule = [] {
                 auto trace_info_part = dsl::p<trace_label> + ws + dsl::p<trace_specifier>;
                 auto symbol_list_part = ws + dsl::p<symbol_list>;

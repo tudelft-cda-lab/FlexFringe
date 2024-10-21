@@ -27,7 +27,7 @@ public:
   static int EVAL_TYPE;
 
   virtual bool data_consistent(alergia94_data* l, alergia94_data* r);
-  virtual bool consistent(state_merger *merger, apta_node* left, apta_node* right);
+  virtual bool consistent(state_merger *merger, apta_node* left, apta_node* right, int depth);
 };
 
 #endif

@@ -5,10 +5,10 @@ add_library(Evaluation STATIC
             alergia.cpp
             alergia94.h
             alergia94.cpp
-            cms.h
-            cms.cpp
             count_types.h
             count_types.cpp
+            css.h
+            css.cpp
             edsm.h
             edsm.cpp
             evaluate.h
@@ -17,8 +17,12 @@ add_library(Evaluation STATIC
             gini.cpp
             kldistance.h
             kldistance.cpp
+            l_star_evaluation.h
+            l_star_evaluation.cpp
             likelihood.h
             likelihood.cpp
+            lsharp_eval.h
+            lsharp_eval.cpp
             mealy.h
             mealy.cpp
             mse_error.h
@@ -28,4 +32,16 @@ add_library(Evaluation STATIC
             overlap4logs.h
             overlap4logs.cpp
             rti+.h
-            rti+.cpp)
+            rti+.cpp
+            space-saving.h
+            space-saving.cpp
+            string_probability_estimator.h
+            string_probability_estimator.cpp
+            string_probability_estimator_v2.h
+            string_probability_estimator_v2.cpp
+            types_state_comparator.h
+            types_state_comparator.cpp
+            weight_comparator.h
+            weight_comparator.cpp
+            weight_state_comparator.h
+            weight_state_comparator.cpp)

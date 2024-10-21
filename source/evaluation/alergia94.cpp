@@ -82,8 +82,8 @@ bool alergia94::data_consistent(alergia94_data* l, alergia94_data* r){
 };
 
 /* ALERGIA, consistency based on Hoeffding bound */
-bool alergia94::consistent(state_merger *merger, apta_node* left, apta_node* right){
-    if(!count_driven::consistent(merger, left, right)){ inconsistency_found = true; return false; }
+bool alergia94::consistent(state_merger *merger, apta_node* left, apta_node* right, int depth){
+    if(!count_driven::consistent(merger, left, right, depth)){ inconsistency_found = true; return false; }
     auto* l = dynamic_cast<alergia94_data*>(left->get_data());
     auto* r = dynamic_cast<alergia94_data*>(right->get_data());
     

@@ -10,6 +10,7 @@
 #include "parameters.h"
 #include "evaluation_factory.h"
 #include "evaluate.h"
+#include "misc/printutil.h"
 #include "utility/loguru.hpp"
 #include "input/abbadingoreader.h"
 #include "input/inputdatalocator.h"
@@ -36,16 +37,33 @@ apta::apta(){
 
     LOG_S(INFO) << "Creating APTA data structure";
     root = new apta_node();
+    root->access_trace = mem_store::create_trace();
     root->red = true;
     merger = nullptr;
 }
 
-void apta::print_dot(iostream& output){
+void apta::print_dot(iostream& output, state_set* saved_states, unordered_set<apta_guard*>* traversed_guards){
+    // needed for the correct printing of intermediate models after undoing merges
+    // Hielke: Fix numbering of states properly with suggestion in #23.
+    merger->renumber_states();
+
     output << "digraph DFA {\n";
     output << "\t" << root->find()->number << " [label=\"root\" shape=box];\n";
     output << "\t\tI -> " << root->find()->number << ";\n";
-    for(APTA_iterator Ait = APTA_iterator(root); *Ait != 0; ++Ait){
-        apta_node *n = *Ait;
+
+    state_set iterables;
+    if (saved_states==nullptr){
+        for(APTA_iterator Ait = APTA_iterator(root); *Ait != 0; ++Ait){
+            apta_node *n = *Ait;
+            iterables.insert(n);
+        }
+    }
+    else{
+        iterables = *saved_states;
+    }
+
+    for(apta_node *n: iterables){
+        //apta_node *n = *Ait;
         if(!DEBUGGING && n->rep() != nullptr) continue;
 
         if (!n->data->print_state_true()) {
@@ -73,18 +91,25 @@ void apta::print_dot(iostream& output){
         n->data->print_state_style(output);
         output << "\" ";
 
-        if (n->is_red()) output << ", style=filled, fillcolor=\"firebrick1\"";
-        else if (n->is_blue()) output << ", style=filled, fillcolor=\"dodgerblue1\"";
-        else if (n->is_white()) output << ", style=filled, fillcolor=\"ghostwhite\"";
-        output << ", width=" << log(1 + log(1 + n->size));
-        output << ", height=" << log(1 + log(1 + n->size));
-        output << ", penwidth=" << log(1 + n->size);
+        // As a more readable alternative for the block below.
+        // Maybe put behind a DOT_STYLE flag?
+        if (!n->red) output << " style=dotted";
+
+        // if (n->is_red()) output << ", style=filled, fillcolor=\"firebrick1\"";
+        // else if (n->is_blue()) output << ", style=filled, fillcolor=\"dodgerblue1\"";
+        // else if (n->is_white()) output << ", style=filled, fillcolor=\"ghostwhite\"";
+        // output << ", width=" << log(1 + log(1 + n->size));
+        // output << ", height=" << log(1 + log(1 + n->size));
+
+        output << ", penwidth=" << 1; // log(1 + n->size);
         output << "];\n";
 
         for(auto it = n->guards.begin(); it != n->guards.end(); ++it){
             if(it->second->target == nullptr) continue;
 
             apta_guard* g = it->second;
+            if(traversed_guards != nullptr && !traversed_guards->contains(g))
+                continue;
             apta_node* child = it->second->target->find();
             if(DEBUGGING) child = it->second->target;
 
@@ -108,14 +133,14 @@ void apta::print_dot(iostream& output){
                 output << "\\n" << inputdata_locator::get()->get_attribute(max_attribute_value.first) << " < " << max_attribute_value.second;
             }
             output << "\" ";
-            output << ", penwidth=" << log(1 + n->size);
+            output << ", penwidth=" << 1;//log(1 + n->size);
             output << " ];\n";
         }
     }
     output << "}\n";
 }
 
-void apta_node::print_json(iostream& output){
+void apta_node::print_json(iostream& output){    
     output << "\t\t{\n";
     output << "\t\t\t\"id\" : " << number << ",\n";
     //output << "\t\t\t\"access\" : " << get_trace_from_state()->to_string() << ",\n";
@@ -163,8 +188,10 @@ void apta_node::print_json_transitions(iostream& output){
 
 void apta::print_json(iostream& output){
     set_json_depths();
-    int count = 0;
     root->depth = 0;
+    // needed for the correct printing of intermediate models after undoing merges
+    // Hielke: Fix numbering of states properly with suggestion in #23.
+    merger->renumber_states();
 
     output << "{\n";
     output << "\t\"types\" : [\n";
@@ -303,7 +330,7 @@ void apta::read_json(istream& input_stream){
         states[n["id"]] = node;
         int r = n["isred"];
         node->red = r;
-        if (n["id"] == 0) {
+        if (n["id"] == -1) {
             root = node;
         }
         node->number = n["id"];
@@ -324,7 +351,7 @@ void apta::read_json(istream& input_stream){
     for (int i = 1; i < read_apta["nodes"].size(); ++i) {
         json n = read_apta["nodes"][i];
         apta_node *node = states[n["id"]];
-        if(n["source"] != -1)
+        if(n["id"] != -1)
             node->source = states[n["source"]];
         else
             node->source = nullptr;
@@ -450,6 +477,10 @@ void apta_node::initialize(apta_node* n){
     if(performed_splits != nullptr) performed_splits->clear();
 }
 
+void apta_node::reset_data() noexcept {
+    data->initialize();
+}
+
 apta_node* apta_node::child(tail* t){
         int symbol = t->get_symbol();
         for(auto it = guards.lower_bound(symbol); it != guards.upper_bound(symbol); ++it){
@@ -546,6 +577,37 @@ set<apta_node*>* apta_node::get_sources(){
         }
     }
     return sources;
+}
+
+/**
+ * @brief Sifts the apta from a given trace on, returns the corresponding state after parsing.
+ * Can be used to e.g. find a state using its access trace. 
+ * 
+ * @param tr The trace.
+ * @return apta_node* The node.
+ */
+apta_node* apta::sift(trace* tr) const {
+    apta_node* n = this->root;
+    tail* t = tr->head;
+    if(t == nullptr){
+        return n;
+    }
+
+    const int trace_length = tr->get_length();
+    int c = 0;
+    while( t->future() != nullptr/*  && !(t->future()->is_final()) */ ){
+        n = n->child(t->get_symbol()); // TODO: what to do if access trace does not exist?
+        t = t->future();
+
+        if(n==nullptr) {
+            return nullptr;
+        }
+        ++c;
+    }
+
+    if(c < trace_length) return nullptr; // not siftable, state does not exist
+    
+    return n;
 }
 
 /* iterators for the APTA and merged APTA */

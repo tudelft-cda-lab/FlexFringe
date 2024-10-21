@@ -161,6 +161,13 @@ tail* evaluation_data::sample_tail() {
     return mem_store::create_tail(nullptr);
 }
 
+const float evaluation_data::get_weight(const int symbol) const {
+    std::cerr << "WARNING: get_weight() method not implemented for the heuristic you are using. Perhaps you"
+    "chose the wrong counterexample search strategy?" << std::endl;
+    throw std::exception();
+}
+
+
 /* defa */ 
 evaluation_function::evaluation_function() {
     compute_before_merge = false;
@@ -205,7 +212,7 @@ bool evaluation_function::pre_consistent(state_merger *merger, apta_node* left, 
     return true;
 };
 
-bool evaluation_function::consistent(state_merger *merger, apta_node* left, apta_node* right){
+bool evaluation_function::consistent(state_merger *merger, apta_node* left, apta_node* right, int depth){
   if(inconsistency_found) return false;
   
   if(left->get_data()->node_type != -1 && right->get_data()->node_type != -1 && left->get_data()->node_type != right->get_data()->node_type){
@@ -246,7 +253,7 @@ void evaluation_function::split_update_score_after(state_merger *merger, apta_no
     if(left->get_size() == 0) num_merges -= 1;
 
     inconsistency_found = false;
-    consistent(merger, left, right);
+    consistent(merger, left, right, 0); // TODO: how to set depth here?
     if(inconsistency_found){
         r->undo_consistent = true;
         num_inconsistencies += 1;
@@ -333,3 +340,4 @@ double evaluation_function::compute_partial_score(state_merger* merger) {
 void evaluation_function::set_context(state_merger* m){
     merger = m;
 }
+

@@ -9,7 +9,10 @@
 #include <list>
 #include <map>
 #include <unordered_map>
+#include <unordered_set>
 #include <string>
+#include <optional>
+#include <memory>
 
 class state_merger;
 
@@ -18,8 +21,11 @@ class state_merger;
 #include "refinement.h"
 #include "mem_store.h"
 
+
+typedef std::unordered_map< apta_node*, std::unordered_set<refinement*> > node_to_refinement_map_T;
+
 /**
- * @brief The state merger. Whereas the 
+ * @brief The state merger. Contains the prefix and performs the merges, undoes them etc.
  * 
  */
 class state_merger{
@@ -67,7 +73,7 @@ public:
     }
 
     /* performing red-blue merges */
-    void perform_merge(apta_node*, apta_node*); // merge function already above
+    void perform_merge(apta_node*, apta_node*); 
     void undo_perform_merge(apta_node*, apta_node*);
     void perform_split(apta_node*, tail*, int);
     void undo_perform_split(apta_node*, tail*, int);
@@ -77,8 +83,9 @@ public:
     void undo_extend(apta_node* blue);
 
     /* find refinements */
-    refinement_set* get_possible_refinements();
+    refinement_set* get_possible_refinements(std::shared_ptr<node_to_refinement_map_T> node_to_ref_map_opt = nullptr);
     refinement* get_best_refinement();
+    void insert_ref_into_map(refinement* ref, node_to_refinement_map_T& node_to_ref_map) const noexcept;
 
     refinement* test_splits(apta_node* blue);
     refinement* test_merge(apta_node*,apta_node*);
@@ -138,6 +145,8 @@ public:
     bool early_stop_merge(apta_node *left, apta_node *right, int depth, bool &val);
 
     void undo_split_single(apta_node *new_node, apta_node *old_node, tail *t);
+
+    void renumber_states();
 };
 
 #endif /* _STATE_MERGER_H_ */
