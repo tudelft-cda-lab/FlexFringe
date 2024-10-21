@@ -1,44 +1,38 @@
 # README #
 
-flexfringe (formerly DFASAT), a flexible state-merging framework written in C++.
+Flexfringe, formerly DFASAT, is a flexible state-merging framework written in C++. It consists of a core state merging framework, several different merging routines, a predict module, and an active learning module.
 
-## What this repositor contains ##
+## Install ##
 
-This repository contains the latest release version of flexfringe.
+Flexfringe uses CMake as a build tool.
 
-## How to get set up ##
-
-flexfringe compiles without external dependencies. It currently supports build chains using make and cmake.
-
-For expert users: In case you want to use the reduction to SAT and automatically invoke the SAT solver, you need to provide the path to the solver binary. flexfringe has been tested with lingeling (which you can get from http://fmv.jku.at/lingeling/ and run its build.sh).
-**PLEASE NOTE:** SAT solving only works for learning plain DFAs. The current implementation is not verified to be correct. Use an older commit if you rely on SAT-solving.
-
-You can build and compile the flexfringe project by running
-
-`$ make clean all`
-
-or alternatively, using CMake
+On Linux and MacOS, you can build and compile the flexfringe project by running
 
 `$ mkdir build && cd build && cmake ..`
 `$ make`
 
-in the main directory to build the executable named *flexfringe*. There is also a CMakelists.txt for building with cmake. We tested the toolchains on Linux (Ubuntu 16+), MacOS (10.14), and Windows 10. For the latter, be built using CMake shipped with CLion.
+in the main directory to build the executable named *flexfringe*. We tested the toolchains on Linux (Ubuntu 16+), MacOS (10.14), and Windows 10. For the latter, built using CMake shipped with CLion.
 
-## How to run it ##
+## SAT Solver
 
-Run ./flexfringe --help to get help.
+For expert users: In case you want to use the reduction to SAT and automatically invoke the SAT solver, you need to provide the path to the solver binary. flexfringe has been tested with lingeling (which you can get from http://fmv.jku.at/lingeling/ and run its build.sh).
+**PLEASE NOTE:** SAT solving only works for learning plain DFAs. The current implementation is not verified to be correct. Use an older commit if you rely on SAT-solving.
 
-We provide several .ini files as a shortcut to storing commonly used settings.
+## Usage ##
+
+Run `./flexfringe --help` to get help.
+
+We provide several `.ini` files as a shortcut to storing commonly used settings.
 
 Example:
 
 `$ ./flexfringe --ini ini/batch-overlap.ini data/staminadata/1_training.txt.dat`
 
-See the .ini files for more information, and the --help flag for a short description of the options.
+See the `.ini` files for more information, and the `--help` flag for a short description of the options.
 
 ### Input files ###
 
-The default input is formated following the Abadingo formating:
+The default input is formated following the Abbadingo formating:
 
 ```
 num_samples alphabet_size
@@ -82,16 +76,17 @@ To use the generated models for language acceptance testing or as a distribution
 Unit tests are incomplete. *flexfringe* uses the Catch2 framework (see the [https://github.com/catchorg/Catch2/blob/master/docs/tutorial.md](Tutorial) and the *tests* folder for some examples.
 
 ### Logging ###
-Logging is incomplete. *flexfringe* uses the loguru framework (see the [https://github.com/emilk/loguru/blob/master/README.md](Loguru documentation)). *flexfringe* uses the stream-version. Please log using the `LOG_S(LEVEL) << "messge"` syntax to implement logging.
+Logging is incomplete. *flexfringe* uses the loguru framework (see the [https://github.com/emilk/loguru/blob/master/README.md](Loguru documentation)). *flexfringe* uses the stream-version. Please log using the `LOG_S(LEVEL) << "message"` syntax to implement logging.
 
 ## Who to talk to ##
 
-*   Tom Catshoek (scientific programmer and maintainer)
 *   Christian Hammerschmidt (author of the online/streaming mode, interactive mode, and the flexible evaluation function mechanism)
 *   Sicco Verwer (original author; best to reach out to for questions on batch mode, RTI+ implementation, and SAT reduction)
-*   Robert Baumgartner
+*   Robert Baumgartner (Former PhD student, author of the streaming mode and the active learning module)
+*   Hielke Walinga (Former Master student, author of the database connector)
 
 Former contributors include:
+*   Tom Catshoek (scientific programmer and maintainer, wrote the Lexy-based parser)
 *   Sofia Tsoni (formerly scientific programmer and maintainer)
 
 ## Badges ##
@@ -106,9 +101,12 @@ Most notable, we use
 *   Catch for unit testing
 *   StatsLib C++ and GCE-Math C++ library by Keith O'Hara (Apache Version 2.0)
 *   JSON for Modern C++ (version 3.1.2) by Niels Lohmann <http://nlohmann.me> from https://github.com/nlohmann/json
+*   Lexy for formal parsing (https://lexy.foonathan.net/)
+*   Libpqxx for the database connecting (https://lexy.foonathan.net/)
 
 ## Building Doxygen Documentation
 
+TODO:
 The documentation of this project can be build using the
 
 COMPILE_DOCS=ON
@@ -144,3 +142,21 @@ please look at e.g.
 
 https://breathe.readthedocs.io/en/latest/quickstart.html
 https://breathe.readthedocs.io/en/latest/directives.html
+
+# Cite
+
+## Core
+* https://ieeexplore.ieee.org/abstract/document/8094471
+* https://arxiv.org/abs/2203.16331
+
+## Streaming
+* https://arxiv.org/abs/2207.01516
+* https://proceedings.mlr.press/v217/baumgartner23a.html
+
+## Active Learning
+* https://arxiv.org/abs/2406.18328
+* https://link.springer.com/chapter/10.1007/978-3-031-71112-1_4
+
+## Databases
+* https://arxiv.org/abs/2406.07208
+* https://repository.tudelft.nl/record/uuid:40a1cb17-a46e-421e-a916-396ebaf3d7b1
