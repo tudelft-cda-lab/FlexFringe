@@ -1,4 +1,4 @@
-# README #
+# Flexfringe #
 
 Flexfringe, formerly DFASAT, is a flexible state-merging framework written in C++. It consists of a core state merging framework, several different merging routines, a predict module, and an active learning module.
 
@@ -9,11 +9,12 @@ Flexfringe uses CMake as a build tool.
 On Linux and MacOS, you can build and compile the flexfringe project by running
 
 `$ mkdir build && cd build && cmake ..`
+
 `$ make`
 
 in the main directory to build the executable named *flexfringe*. We tested the toolchains on Linux (Ubuntu 16+), MacOS (10.14), and Windows 10. For the latter, built using CMake shipped with CLion.
 
-## SAT Solver
+### SAT Solver
 
 For expert users: In case you want to use the reduction to SAT and automatically invoke the SAT solver, you need to provide the path to the solver binary. flexfringe has been tested with lingeling (which you can get from http://fmv.jku.at/lingeling/ and run its build.sh).
 **PLEASE NOTE:** SAT solving only works for learning plain DFAs. The current implementation is not verified to be correct. Use an older commit if you rely on SAT-solving.
@@ -49,14 +50,16 @@ Real-valued attributes, e.g. for real-time automata, can be attached via :, i.e.
 
 flexfringe will generate several .dot files into the specified output directory (./ by default):
 
-*  pre\:\*.dot are intermediary dot files created during the merges/search process.
-*  dfafinal.dot is the end result as a dot file
-*  dfafinal.dot.json is the end result
+*  ``pre:*.dot`` are intermediary dot files created during the merges/search process.
+*  `dfafinal.dot` is the end result as a dot file
+*  `dfafinal.dot.json` is the end result
 
 You can plot the dot files via
 
 `$ dot -Tpdf file.dot -o outfile.pdf`
+
 or
+
 `$ ./show.sh final.dot`
 
 after installing dot from graphviz.
