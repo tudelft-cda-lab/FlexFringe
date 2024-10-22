@@ -13,7 +13,9 @@ OUTDIR ?= .
 
 .PHONY: all clean test
 
-all: regen source/gitversion.cpp flexfringe
+all: 
+	@echo "This Makefile is deprecated, use cmake."
+# all: regen source/gitversion.cpp flexfringe
 
 regen:
 	sh collector.sh
