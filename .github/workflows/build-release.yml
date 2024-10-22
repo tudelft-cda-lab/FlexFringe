@@ -8,22 +8,22 @@ jobs:
   build-and-test:
     uses: tudelft-cda-lab/FlexFringe/.github/workflows/build-test-all.yml@main
     secrets: inherit
-    name: ${{ matrix.os }}-build-release
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        include:
-          - os: windows-latest
-            triplet: x64-windows
-            extension: ".exe"
-          - os: ubuntu-latest
-            triplet: x64-linux
-            extension: ""
-          - os: macos-latest
-            triplet: x64-osx
-            extension: ""
+    # name: ${{ matrix.os }}-build-release
+    # runs-on: ${{ matrix.os }}
+    # strategy:
+    #   fail-fast: false
+    #   matrix:
+    #     os: [ubuntu-latest, macos-latest, windows-latest]
+    #     include:
+    #       - os: windows-latest
+    #         triplet: x64-windows
+    #         extension: ".exe"
+    #       - os: ubuntu-latest
+    #         triplet: x64-linux
+    #         extension: ""
+    #       - os: macos-latest
+    #         triplet: x64-osx
+    #         extension: ""
 
     # steps:
     #   - uses: actions/checkout@v1

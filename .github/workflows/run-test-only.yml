@@ -5,8 +5,8 @@ jobs:
   build-and-test:
     uses: ./.github/workflows/build-test-all.yml
     secrets: inherit
-    name: build-test-linux
-    runs-on: ubuntu-latest
+    # name: build-test-linux
+    # runs-on: ubuntu-latest
 
     # steps:
     #   - uses: actions/checkout@v1
