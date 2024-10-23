@@ -9,6 +9,7 @@
 
 #include <sstream>
 #include <stack>
+#include <tuple>
 
 /**
  * @brief Class to realize the streaming mode, when observing a stream of data, e.g. network data.
@@ -45,8 +46,8 @@ public:
   void greedyrun_no_undo(state_merger* merger);
   void greedyrun_retry_merges(state_merger* merger); // for experiments
   void greedyrun_undo_merges(state_merger* merger); // for experiments
-  std::vector<apta_node*> get_state_sequence_from_trace(state_merger* merger, trace* trace);
-  std::vector<std::vector<apta_node*>> get_state_sequences(std::list<trace*> traces, state_merger* merger);
+  std::vector<std::tuple<int, int>> get_state_sequence_from_trace(state_merger* merger, trace* trace);
+  std::vector<std::vector<std::tuple<int, int>>> get_state_sequences(std::list<trace*> traces, state_merger* merger);
   int get_batch_number();
   refinement_list* get_current_run() {return this->currentrun;}
 

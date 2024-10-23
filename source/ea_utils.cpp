@@ -1,11 +1,12 @@
 #include "ea_utils.h"
 
-double EA_utils::compute_fitness_min(vector<apta_node*> state_sequence) {
+double EA_utils::compute_fitness_min(vector<tuple<int, int>> state_sequence) {
     double num_states_visited = 0.0;
     double min_state_size = 100000000.0;
     for (int i = 1; i < state_sequence.size(); i++) {
         num_states_visited++;
-        double weighted_state_size = state_sequence[i]->get_size() * (double) i;
+        tuple<int, int> t = state_sequence[i];
+        double weighted_state_size = static_cast<double>(get<1>(t)) * static_cast<double>(i);
         if (weighted_state_size < min_state_size) {
             min_state_size = weighted_state_size;
         }
@@ -14,12 +15,13 @@ double EA_utils::compute_fitness_min(vector<apta_node*> state_sequence) {
     return 1.0 / min_state_size;
 }
 
-double EA_utils::compute_fitness_avg(vector<apta_node*> state_sequence) {
+double EA_utils::compute_fitness_avg(vector<tuple<int, int>> state_sequence) {
     double num_states_visited = 0.0;
     double sum_state_sizes = 0.0;
     for (int i = 1; i < state_sequence.size(); i++) {
         num_states_visited++;
-        sum_state_sizes += state_sequence[i]->get_size();
+        tuple<int, int> t = state_sequence[i];
+        sum_state_sizes += static_cast<double>(get<1>(t));
     }
     
     if (sum_state_sizes == 0.0 || num_states_visited == 0.0) {
@@ -30,7 +32,7 @@ double EA_utils::compute_fitness_avg(vector<apta_node*> state_sequence) {
 
 }
 
-double EA_utils::compute_fitness_geo_mean(vector<apta_node*> state_sequence, bool weighted) {
+double EA_utils::compute_fitness_geo_mean(vector<tuple<int, int>> state_sequence, bool weighted) {
     double prod = 1.0;
     map<int, int> sequence_state_visits;
     if (weighted) {
@@ -38,22 +40,23 @@ double EA_utils::compute_fitness_geo_mean(vector<apta_node*> state_sequence, boo
     }
 
     for (int i = 1; i < state_sequence.size(); i++) {
-        double state_visits = state_sequence[i]->get_size();
+        tuple<int, int> t = state_sequence[i];
+        double state_visits = static_cast<double>(get<1>(t));
         if (weighted) {
-            prod *= ((1.0/ (double) sequence_state_visits[state_sequence[i]->get_number()]) * (double) (1.0 / state_visits));
+            prod *= ((1.0/ static_cast<double>(sequence_state_visits[get<0>(t)])) * static_cast<double>(1.0 / state_visits));
         }
         else {
-            prod *= (double) (1.0 / state_visits);
+            prod *= static_cast<double>(1.0 / state_visits);
         
         }
     }
     
-    double ret = (double) pow(prod, (double) 1/ (double) (state_sequence.size() - 1));
+    double ret = static_cast<double>(pow(prod, 1.0 / static_cast<double>(state_sequence.size() - 1)));
 
-    return ret / ((double) state_sequence.size()-1);
+    return ret / static_cast<double>(state_sequence.size()-1);
 }
 
-vector<double> EA_utils::compute_fitnesses(vector<vector<apta_node*>> state_sequences, apta_node* root, string type) {
+vector<double> EA_utils::compute_fitness_values(vector<vector<tuple<int, int>>> state_sequences, apta_node* root, string type) {
     vector<double> fitnesses;
     for (auto sequence : state_sequences) {
         if (type == "min") {
@@ -69,11 +72,11 @@ vector<double> EA_utils::compute_fitnesses(vector<vector<apta_node*>> state_sequ
         } else if (type == "lower_median") {
             fitnesses.push_back(EA_utils::compute_fitness_lower_median(sequence));
         } else if (type == "lower_median_overall") {
-            fitnesses.push_back(EA_utils::compute_fitness_lower_median_overall(root, sequence));
+            fitnesses.push_back(EA_utils::compute_fitness_lower_median_overall(state_sequences, sequence));
         } else if (type == "loop") {
             fitnesses.push_back(EA_utils::compute_fitness_loop(sequence));
         } else if (type == "weighted_size") {
-            fitnesses.push_back(EA_utils::compute_fitness_state_size(sequence, true));
+            fitnesses.push_back(EA_utils::compute_fitness_weighted_size(sequence, true));
         }
     }
 
@@ -82,67 +85,72 @@ vector<double> EA_utils::compute_fitnesses(vector<vector<apta_node*>> state_sequ
 
 
 
-double EA_utils::compute_fitness_state_size(vector<apta_node*> state_sequence, bool weighted) {
+double EA_utils::compute_fitness_weighted_size(vector<tuple<int, int>> state_sequence, bool weighted) {
     double denom = 0.0;
     vector<double> state_sizes;
     for (int i = 1; i < state_sequence.size(); i++) {
-        state_sizes.push_back(state_sequence[i]->get_size());
+        tuple<int, int> t = state_sequence[i];
+        state_sizes.push_back(static_cast<double>(get<1>(t))); 
     }
 
     sort(state_sizes.begin(), state_sizes.end());
-
+    
     for (int i = 0; i < state_sizes.size(); i++) {
-        if (weighted) {
-            denom += ((double) (i + 1) * state_sizes[i]);
-        } else {
-            denom += state_sizes[i];
-        }
+        double weighted_size = static_cast<double>(i + 1) * state_sizes[i];
+        denom += weighted_size;
     }
-
+    
     return 1.0 / denom;
 }
 
 
 
-double EA_utils::compute_fitness_lower_median(vector<apta_node*> state_sequence) {
+double EA_utils::compute_fitness_lower_median(vector<tuple<int, int>> state_sequence) {
     double num_states_lower_than_median = 0.0;
 
+    if (state_sequence.size() < 2) {
+        return 0.0;
+    }
+
     if (state_sequence.size() == 2) {
-        return 1 / (double) state_sequence[1]->get_size();
+        int state_size = get<1>(state_sequence[1]);
+        return 1.0 / static_cast<double>(state_size);
     }
 
     vector<double> state_sizes;
     for (int i = 1; i < state_sequence.size(); i++) {
-        state_sizes.push_back(state_sequence[i]->get_size());
+        double state_size = static_cast<double>(get<1>(state_sequence[i]));
+        state_sizes.push_back(state_size);
     }
-
 
     sort(state_sizes.begin(), state_sizes.end());
     double median = compute_median(state_sizes);
 
-    for (int i = 0; i < state_sizes.size(); i++) {
-        if (state_sizes[i] < median) {
+    for (int j = 0; j < state_sizes.size(); j++) {
+        if (state_sizes[j] < median) {
             num_states_lower_than_median += 1.0;
         }
         else {
             break;
         }
     }
-    
-    return num_states_lower_than_median / (double) state_sequence.size();
+
+    return num_states_lower_than_median / static_cast<double>(state_sizes.size());
 }
 
 
-double EA_utils::compute_fitness_lower_median_overall(apta_node* root, vector<apta_node*> state_sequence) {
+double EA_utils::compute_fitness_lower_median_overall(vector<vector<tuple<int, int>>> state_sequences, vector<tuple<int, int>> state_sequence) {
     double num_states_lower_than_median = 0.0;
     vector<double> sequence_state_sizes;
     for (int i = 1; i < state_sequence.size(); i++) {
-        sequence_state_sizes.push_back(state_sequence[i]->get_size());
+        tuple t = state_sequence[i];
+        int state_size = get<1>(t);
+        sequence_state_sizes.push_back(static_cast<double>(state_size));
     }
 
     sort(sequence_state_sizes.begin(), sequence_state_sizes.end());
 
-    double overall_median = compute_median(get_all_state_sizes(root));
+    double overall_median = compute_median(get_all_state_sizes(state_sequences));
 
     for (int i = 0; i < sequence_state_sizes.size(); i++) {
         if (sequence_state_sizes[i] < overall_median) {
@@ -153,54 +161,64 @@ double EA_utils::compute_fitness_lower_median_overall(apta_node* root, vector<ap
         }
     }
 
-    return num_states_lower_than_median / (double) state_sequence.size();
+    return num_states_lower_than_median / static_cast<double>(sequence_state_sizes.size());
 }
 
 
-double EA_utils::compute_fitness_loop(vector<apta_node*> state_sequence) {
+double EA_utils::compute_fitness_loop(vector<tuple<int, int>> state_sequence) {
     double num_loops = 0.0;
     set<int> visited_states;
     for (int i = 1; i < state_sequence.size(); i++) {
-        if (visited_states.contains(state_sequence[i]->get_number())) {
+        tuple t = state_sequence[i];
+        int state = get<0>(t);
+        if (visited_states.contains(state)) {
             num_loops++;
         }
-        visited_states.insert(state_sequence[i]->get_number());
+        visited_states.insert(state);
     }
 
-    return num_loops / (double) state_sequence.size();
+    return num_loops / static_cast<double>(state_sequence.size() - 1);
 }
 
-map<int, int> EA_utils::compute_state_visits_sequence(vector<apta_node*> state_sequence) {
+map<int, int> EA_utils::compute_state_visits_sequence(vector<tuple<int, int>> state_sequence) {
     map<int, int> state_visits;
+    // first element is root, so we skip it
     for (int i = 1; i < state_sequence.size(); i++) {
-        if (state_visits.find(state_sequence[i]->get_number()) == state_visits.end()) {
-            state_visits[state_sequence[i]->get_number()] = 1;
+        tuple<int, int> t = state_sequence[i];
+        int state = get<0>(t);
+        if (state_visits.find(state) == state_visits.end()) {
+            state_visits[state] = 1;
         } else {
-            state_visits[state_sequence[i]->get_number()]++;
+            state_visits[state]++;
         }
     }
     return state_visits;
 }
 
-vector<double> EA_utils::get_all_state_sizes(apta_node* root) {
+vector<double> EA_utils::get_all_state_sizes(vector<vector<tuple<int, int>>> state_sequences) {
     vector<double> state_sizes;
-    for(merged_APTA_iterator Ait = merged_APTA_iterator(root); *Ait != nullptr; ++Ait) {
-          apta_node *n = *Ait;
-          if (n->get_number() == -1) {
-                continue; // skip the root
-          }
-          state_sizes.push_back(n->get_size());
+    set<int> processed_states;
+    for (int i = 0; i < state_sequences.size(); i++) {
+        // Skip the first element in the sequence as it is the root
+        for (int j = 1; j < state_sequences[i].size(); j++) {
+            tuple<int, int> t = state_sequences[i][j];
+            int state = get<0>(t);
+            int size = get<1>(t);
+            if (processed_states.contains(state)) {
+                continue;
+            }
+            state_sizes.push_back(static_cast<double>(size));
+        }
     }
 
     return state_sizes;
 }
 
 double EA_utils::compute_median(vector<double> state_sizes) {
-    sort(state_sizes.begin(), state_sizes.end());
     if (state_sizes.size() % 2 == 0) {
-        return (state_sizes[(int) (state_sizes.size() / 2)] + state_sizes[(int) (state_sizes.size()/ 2) - 1]) / 2.0;
+        return static_cast<double>(state_sizes[static_cast<int>(state_sizes.size() / 2)] + state_sizes[static_cast<int>(state_sizes.size()/ 2) - 1]) / 2.0;
     } else {
-        return state_sizes[(int) (state_sizes.size() / 2)];
+        return static_cast<double>(state_sizes[static_cast<int>(state_sizes.size() / 2)]);
     }
 }
 

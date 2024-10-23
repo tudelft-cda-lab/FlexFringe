@@ -179,30 +179,30 @@ void stream_object::greedyrun_undo_merges(state_merger* merger){
     // logMessageStream("Finished running greedy algorithm with retries.");
     // logMessageStream("Printing the current automaton to file.");
     // if (trace_batch_nr % 30 == 0) {
-    //   print_current_automaton_stream(merger, "model_batch_nr_", to_string(trace_batch_nr));
+    print_current_automaton_stream(merger, "model_batch_nr_", to_string(trace_batch_nr));
     // }
     greedyrun_undo_merges(merger);
     logMessageStream("Finished processing trace batch nr: " + to_string(trace_batch_nr));
 }
 
 
-std::vector<apta_node*> stream_object::get_state_sequence_from_trace(state_merger* merger, trace* trace){
-    std::vector<apta_node*> state_sequence;
+std::vector<std::tuple<int,int>> stream_object::get_state_sequence_from_trace(state_merger* merger, trace* trace){
+    std::vector<std::tuple<int,int>> state_sequence;
     apta_node* current_state = merger->get_aut()->get_root();
-    state_sequence.push_back(current_state);
+    state_sequence.push_back(make_tuple(current_state->get_number(), current_state->get_size()));
     tail* t = trace->head;
     while(!t->is_final()){
         // state_sequence.push_back(current_state->guard(t->get_symbol())->get_target());
         current_state = current_state->get_child(t->get_symbol());
-        state_sequence.push_back(current_state);
+        state_sequence.push_back(make_tuple(current_state->get_number(), current_state->get_size()));
         t = t->future();
     }
     return state_sequence;
 }
 
 
-std::vector<std::vector<apta_node*>> stream_object::get_state_sequences(std::list<trace*> traces, state_merger* merger){
-    std::vector<std::vector<apta_node*>> state_sequences;
+std::vector<std::vector<std::tuple<int, int>>> stream_object::get_state_sequences(std::list<trace*> traces, state_merger* merger){
+    std::vector<std::vector<std::tuple<int,int>>> state_sequences;
     refinement_list* ref_list = get_current_run();
 
     // first redo the refinements to get the correct state sequences
