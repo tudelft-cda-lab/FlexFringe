@@ -14,12 +14,18 @@
 
 #include "nn_sul_base.h"
 
+#if defined(_MSC_VER) 
+#  define FLEXFRINGE_ALWAYS_INLINE inline
+#else
+#  define FLEXFRINGE_ALWAYS_INLINE inline __attribute__((always_inline))
+#endif
+
 class nn_weighted_output_sul : public nn_sul_base {
     friend class base_teacher;
     friend class eq_oracle_base;
 
   private:
-    __attribute__((always_inline)) inline const double get_sigmoid_output(const std::vector<int>& query_trace,
+    FLEXFRINGE_ALWAYS_INLINE const double get_sigmoid_output(const std::vector<int>& query_trace,
                                                                           inputdata& id) const;
 
   protected:

@@ -15,4 +15,4 @@ using namespace std;
 using namespace best_refinement_strategy;
 
 refinement* best_refinement_strategy::get_refinement(refinement_set* possible_refinements,
-                                                     node_to_refinement_map_T& node_to_refs_map) {}
+                                                     node_to_refinement_map_T& node_to_refs_map) {return nullptr;}

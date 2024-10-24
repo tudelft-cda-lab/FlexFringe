@@ -87,7 +87,11 @@ trace::~trace(){
     delete head;
 }
 
+#if defined(_MSC_VER) 
+void trace::erase(){
+#else
 void __attribute__((optimize("O0"))) trace::erase(){
+#endif
     --refs;
     if(refs == 0) mem_store::delete_trace(this);
 }

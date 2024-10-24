@@ -13,6 +13,12 @@
 #include <unordered_set>
 #include <memory>
 
+#if defined(_MSC_VER) 
+#  define FLEXFRINGE_ALWAYS_INLINE inline
+#else
+#  define FLEXFRINGE_ALWAYS_INLINE inline __attribute__((always_inline))
+#endif
+
 /**
  * @brief Class to realize the streaming mode, when observing a stream of data, e.g. network data.
  *
@@ -27,17 +33,13 @@ private:
   std::unordered_set<int> states_to_append_to; // keeping track of states that we can append to with ease
   reader_strategy* parser_strategy;
 
-  __attribute__((always_inline))
-  inline void greedyrun_no_undo(state_merger* merger, const int seq_nr, const bool last_sequence, const int n_runs);
+  FLEXFRINGE_ALWAYS_INLINE void greedyrun_no_undo(state_merger* merger, const int seq_nr, const bool last_sequence, const int n_runs);
 
-  __attribute__((always_inline))
-  inline void greedyrun_retry_merges(state_merger* merger, const int seq_nr, const bool last_sequence, const int n_runs); // for experiments
+  FLEXFRINGE_ALWAYS_INLINE void greedyrun_retry_merges(state_merger* merger, const int seq_nr, const bool last_sequence, const int n_runs); // for experiments
 
-  __attribute__((always_inline))
-  inline refinement* determine_next_refinement(state_merger* merger);
+  FLEXFRINGE_ALWAYS_INLINE refinement* determine_next_refinement(state_merger* merger);
 
-  __attribute__((always_inline))
-  inline void remember_state(refinement* ref);
+  FLEXFRINGE_ALWAYS_INLINE void remember_state(refinement* ref);
 
 public:
   stream_object(){

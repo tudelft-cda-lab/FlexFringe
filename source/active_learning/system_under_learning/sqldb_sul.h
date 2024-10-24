@@ -23,7 +23,7 @@ class sqldb_sul : public sul_base {
     psql::db& my_sqldb;
 
     void reset() override{};
-    const double get_string_probability(const std::vector<int>& query_trace, inputdata& id) const override{};
+    const double get_string_probability(const std::vector<int>& query_trace, inputdata& id) const override{return 0.0;};
 
     bool is_member(const std::vector<int>& query_trace) const override;
 

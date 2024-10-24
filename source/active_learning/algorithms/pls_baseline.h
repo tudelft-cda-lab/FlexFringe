@@ -29,6 +29,12 @@
 #include <memory>
 #include <unordered_map>
 
+#if defined(_MSC_VER) 
+#  define FLEXFRINGE_ALWAYS_INLINE inline
+#else
+#  define FLEXFRINGE_ALWAYS_INLINE inline __attribute__((always_inline))
+#endif
+
 class pls_baseline : public lsharp_algorithm {
   protected:
     inline void proc_counterex(const std::unique_ptr<base_teacher>& teacher, inputdata& id,
@@ -36,16 +42,16 @@ class pls_baseline : public lsharp_algorithm {
                                std::unique_ptr<state_merger>& merger, const refinement_list refs,
                                const vector<int>& alphabet) const;
 
-    __attribute__((always_inline)) inline std::unordered_set<apta_node*>
+    FLEXFRINGE_ALWAYS_INLINE std::unordered_set<apta_node*>
     extend_fringe(std::unique_ptr<state_merger>& merger, apta_node* n, std::unique_ptr<apta>& the_apta, inputdata& id,
                   const vector<int>& alphabet) const;
     inline void add_statistics(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id,
                                const std::vector<int>& alphabet,
                                std::optional<active_learning_namespace::pref_suf_t> seq_opt) const;
 
-    __attribute__((always_inline)) inline void update_tree_recursively(apta_node* n, apta* the_apta,
+    FLEXFRINGE_ALWAYS_INLINE void update_tree_recursively(apta_node* n, apta* the_apta,
                                                                        const std::vector<int>& alphabet) const;
-    __attribute__((always_inline)) inline void update_tree_dfs(apta* the_apta, const std::vector<int>& alphabet) const;
+    FLEXFRINGE_ALWAYS_INLINE void update_tree_dfs(apta* the_apta, const std::vector<int>& alphabet) const;
     void test_dfs(apta* the_apta, const vector<int>& alphabet, unique_ptr<base_teacher>& teacher, inputdata& id) const;
 
     inline void init_final_prob(apta_node* n, apta* the_apta, inputdata& id) const;

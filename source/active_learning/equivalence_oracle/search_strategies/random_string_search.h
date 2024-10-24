@@ -18,6 +18,12 @@
 #include <random>
 #include <vector>
 
+#if defined(_MSC_VER) 
+#  define FLEXFRINGE_ALWAYS_INLINE inline
+#else
+#  define FLEXFRINGE_ALWAYS_INLINE inline __attribute__((always_inline))
+#endif
+
 class random_string_search : public search_base {
   private:
     int samples_drawn;
@@ -44,7 +50,7 @@ class random_string_search : public search_base {
 
     virtual std::optional<std::vector<int>> next(const inputdata& id) override;
 
-    __attribute__((always_inline)) inline std::optional<std::vector<int>> next(const inputdata& id,
+    FLEXFRINGE_ALWAYS_INLINE std::optional<std::vector<int>> next(const inputdata& id,
                                                                                const int lower_bound);
 
     virtual void reset() noexcept override { delay_counter = 0; }

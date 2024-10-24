@@ -29,22 +29,28 @@
 #include <memory>
 #include <unordered_map>
 
+#if defined(_MSC_VER) 
+#  define FLEXFRINGE_ALWAYS_INLINE inline
+#else
+#  define FLEXFRINGE_ALWAYS_INLINE inline __attribute__((always_inline))
+#endif
+
 class probabilistic_lsharp_algorithm : public lsharp_algorithm {
   private:
     bool MAX_DEPTH_REACHED = false;
     // bool underestimated_dist = false; // helper flag. If we see final prob larger than 1 in one node, we continue
     // extending the fringe.
 
-    __attribute__((always_inline)) inline /* bool */ void update_tree_dfs(apta* the_apta,
+    FLEXFRINGE_ALWAYS_INLINE /* bool */ void update_tree_dfs(apta* the_apta,
                                                                           const std::vector<int>& alphabet) const;
-    __attribute__((always_inline)) inline void update_access_path(apta_node* n, apta* the_apta,
+    FLEXFRINGE_ALWAYS_INLINE void update_access_path(apta_node* n, apta* the_apta,
                                                                   const std::vector<int>& alphabet) const;
 
     inline void add_statistics(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id,
                                const std::vector<int>& alphabet,
                                std::optional<active_learning_namespace::pref_suf_t> seq_opt) const;
 
-    __attribute__((always_inline)) inline std::unordered_set<apta_node*>
+    FLEXFRINGE_ALWAYS_INLINE std::unordered_set<apta_node*>
     extend_fringe(std::unique_ptr<state_merger>& merger, apta_node* n, std::unique_ptr<apta>& the_apta, inputdata& id,
                   const std::vector<int>& alphabet) const;
 
