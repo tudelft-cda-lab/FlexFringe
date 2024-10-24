@@ -15,8 +15,10 @@
 #include <vector>
 #include <set>
 #include <iostream>
+#include <optional>
 #include <fmt/format.h>
 #include <fmt/ostream.h>
+#include <fmt/ranges.h>
 
 
 struct abbadingo_symbol_info {
