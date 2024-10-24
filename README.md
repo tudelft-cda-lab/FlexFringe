@@ -3,13 +3,13 @@
 
 Flexfringe, formerly DFASAT, is a flexible state-merging framework written in C++. It consists of a core state merging framework, several different merging routines, a predict module, and an active learning module.
 
-## Install ##
+# Install
 
 Flexfringe uses CMake as a build tool.
 
 We tested the toolchains on Linux (Ubuntu 16+), MacOS (10.14), and Windows 10.
 
-### Linux and MacOS
+## Linux and MacOS
 
 You can build and compile the flexfringe project by running in the main directory:
 
@@ -19,9 +19,9 @@ You can build and compile the flexfringe project by running in the main director
 
 This builds the executable named *flexfringe*.
 
-### Windows
+## Windows
 
-#### MSYS2 with CLion
+### MSYS2 with CLion
 
 1. Install MSYS2 https://www.msys2.org/docs/installer/
 
@@ -39,7 +39,7 @@ and optionally a debugger
 
 Reference: https://www.jetbrains.com/help/clion/quick-tutorial-on-configuring-clion-on-windows.html#setup-clang
 
-#### Windows Visual Studio
+### Windows Visual Studio
 
 1. Install Windows Visual Studio (NOT Visual Studio Code) and include CMake during install: https://learn.microsoft.com/nl-nl/cpp/build/cmake-projects-in-visual-studio?view=msvc-170&viewFallbackFrom=vs-2019
 
@@ -57,20 +57,20 @@ The executable is now available in `build\Debug\flexfringe.exe`.
 
 This should also be possible to be done/configured from an IDE such as Visual Studio itself, CLion, or VS Code, etc.
 
-### Additionally features
+## Additionally features
 
-#### Database
+### Database
 
 Database: https://stackoverflow.com/a/10364240
 
-#### Deep Learning
+### Deep Learning
 
-#### SAT Solver
+### SAT Solver
 
 For expert users: In case you want to use the reduction to SAT and automatically invoke the SAT solver, you need to provide the path to the solver binary. flexfringe has been tested with lingeling (which you can get from http://fmv.jku.at/lingeling/ and run its build.sh).
 **PLEASE NOTE:** SAT solving only works for learning plain DFAs. The current implementation is not verified to be correct. Use an older commit if you rely on SAT-solving.
 
-## Usage ##
+# Usage
 
 Run `./flexfringe --help` to get help.
 
@@ -86,7 +86,7 @@ See the `.ini` files for more information, and the `--help` flag for a short des
 
 Use Docker from:
 
-### Input files ###
+## Input files
 
 The default input is formated following the Abbadingo formating:
 
@@ -101,7 +101,7 @@ for each symbol, additional data can be attached via `/`, i.e. `label length sym
 
 Real-valued attributes, e.g. for real-time automata, can be attached via `:`, i.e. `label length sym1:real1,real2,realn ...`. The number of attributes has to be specified in the header after the alphabet size, i.e. `num_samples alphabet_size:num_attributes`.
 
-### Output files ###
+## Output files
 
 flexfringe will generate several .dot files into the specified output directory (./ by default):
 
@@ -124,19 +124,19 @@ To use the generated models for language acceptance testing or as a distribution
 
 *flexfringe* has partial Doxygen-style documentation included in the *./doc* directory. It can be regenerated using the settings in Doxygen file.
 
-## Contribution guidelines ##
+# Contribute
 
 *  Fork and implement, request pulls.
 *  You can find sample evaluation files in ./source/evaluation. Make sure to REGISTER your own file to be able to access it via the -h and --heuristic-name flag.
 
-### Writing tests ###
+## Writing tests
 
 Unit tests are incomplete. *flexfringe* uses the Catch2 framework (see the [https://github.com/catchorg/Catch2/blob/master/docs/tutorial.md](Tutorial) and the *tests* folder for some examples.
 
-### Logging ###
+## Logging
 Logging is incomplete. *flexfringe* uses the loguru framework (see the [https://github.com/emilk/loguru/blob/master/README.md](Loguru documentation)). *flexfringe* uses the stream-version. Please log using the `LOG_S(LEVEL) << "message"` syntax to implement logging.
 
-## Who to talk to ##
+## Who to talk to
 
 *   Christian Hammerschmidt (author of the online/streaming mode, interactive mode, and the flexible evaluation function mechanism)
 *   Sicco Verwer (original author; best to reach out to for questions on batch mode, RTI+ implementation, and SAT reduction)
@@ -147,7 +147,7 @@ Former contributors include:
 *   Tom Catshoek (scientific programmer and maintainer, wrote the Lexy-based parser)
 *   Sofia Tsoni (formerly scientific programmer and maintainer)
 
-## Credits and Licences ##
+# Credits and Licences
 
 *flexfinge* relies on a number of open source packages and libraries. You can find the respective LICENCE files in the source/utility subdirectory.
 Most notable, we use
@@ -160,7 +160,7 @@ Most notable, we use
 *   Libpqxx for the database connecting (https://lexy.foonathan.net/)
 *   Fmt from https://github.com/fmtlib/fmt
 
-## Building Doxygen Documentation
+# Building Doxygen Documentation
 
 TODO:
 The documentation of this project can be build using the
