@@ -54,6 +54,8 @@ std::optional<psql::record> sqldb_sul_regex_oracle::equivalence_query_db(state_m
                 errors[i] = true;
                 continue;
             }
+/* When pqxx is used, it needs to be guarded out since we want to compile on platforms without libpq and pqxx still. */
+#ifdef __FLEXFRINGE_DATABASE
             try {
                 std::optional<psql::record> cex = my_sqldb_sul->regex_equivalence(regex, type);
                 if (cex) {
@@ -72,6 +74,7 @@ std::optional<psql::record> sqldb_sul_regex_oracle::equivalence_query_db(state_m
                     throw std::runtime_error("Something wrong with regex to database: " + exc);
                 }
             }
+#endif /* __FLEXFRINGE_DATABASE */
         }
         if (errors[i]) {
             if (parts == nodes) {

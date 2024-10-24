@@ -10,9 +10,12 @@
 #include <fmt/format.h>
 #include <iostream>
 #include <optional>
-#include <pqxx/pqxx>
 #include <sstream>
 #include <utility>
+#include <functional>
+
+#ifdef __FLEXFRINGE_DATABASE
+#include <pqxx/pqxx>
 
 namespace psql {
 
@@ -373,3 +376,123 @@ int db::max_trace_pk() {
 }
 
 } // namespace psql
+
+/* Compile a dummy psql::db when disabled to allow compiling on platforms without psql and pqxx */
+#else
+
+namespace psql {
+
+db::db() : connection_string(""), table_name("benching_sample") {
+    throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
+}
+
+db::db(const std::string& table_name, const std::string& connection_string)
+    : connection_string(connection_string), table_name(table_name) {
+    throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
+}
+
+void db::reset() {
+    throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
+}
+
+void db::check_connection() {
+    throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
+}
+
+void db::create_table(bool drop) {
+    throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
+}
+void db::create_meta_table(bool drop) {
+    throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
+}
+
+std::vector<std::string> db::get_vec_from_map(const std::map<std::string, int>& mapping) {
+    throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
+}
+
+std::string db::get_sqlarr_from_vec(const std::vector<std::string>& vec) {
+    throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
+}
+
+char db::num2str(int num) {
+    throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
+}
+
+int db::str2num(char str) {
+    throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
+}
+
+std::string db::vec2str(const std::vector<int>& vec) {
+    throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
+}
+std::vector<int> db::str2vec(const std::string& str) {
+    throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
+}
+
+std::vector<std::string> db::get_alphabet() {
+    throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
+}
+
+std::vector<std::string> db::get_types() {
+    throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
+}
+
+void db::load_traces(abbadingo_inputdata& id, std::ifstream& input_stream) {
+    throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
+}
+
+void db::copy_data(const std::string& file_name, char delimiter) {
+    throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
+}
+
+void db::prefix_query(const std::string& prefix, const std::function<bool(record)>& func) {
+    throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
+}
+
+void db::stream_traces(const std::function<bool(record)>& func) {
+    throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
+}
+
+record db::distinguish_query(const std::string& trace1, const std::string& trace2) {
+    throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
+}
+
+std::vector<record> db::prefix_query(const std::string& prefix, int k) {
+    throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
+}
+
+void db::add_row(const std::string& trace, int type) {
+    throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
+}
+
+int db::query_trace(const std::string& trace) {
+    throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
+}
+
+int db::query_trace_maybe(const std::string& trace) {
+    throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
+}
+
+std::optional<record> db::query_trace_opt(const std::string& trace) {
+    throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
+}
+
+bool db::is_member(const std::string& trace) {
+    throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
+}
+
+std::optional<record> db::regex_equivalence(const std::string& regex, int type) {
+    throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
+}
+
+std::optional<record> db::select_by_pk(int pk) {
+    throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
+}
+
+int db::max_trace_pk() {
+    throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
+}
+
+} // namespace psql
+
+#endif /* __FLEXFRINGE_DATABASE */

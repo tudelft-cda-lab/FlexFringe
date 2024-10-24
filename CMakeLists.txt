@@ -19,7 +19,7 @@ endif()
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 option(COMPILE_DOCS "This is settable from the command line" OFF)
-option(ENABLE_DATABASE "Set this for the database connector to work" ON)
+option(ENABLE_DATABASE "Set this for the database connector to work" OFF)
 option(ENABLE_PYTHON "Set this for python connector to work" OFF)
 
 if (ENABLE_DATABASE)
@@ -110,8 +110,10 @@ add_subdirectory(source/utility/lexy)
 add_subdirectory(source/utility/fmt-11.0.2)
 
 # needed for the Neural Network, to call Python scripts
-find_package(PythonLibs REQUIRED)
-include_directories(${PYTHON_INCLUDE_DIRS})
+if (ENABLE_PYTHON)
+  find_package(PythonLibs REQUIRED)
+  include_directories(${PYTHON_INCLUDE_DIRS})
+endif()
 
 include_directories("${PROJECT_SOURCE_DIR}"
                     "${PROJECT_SOURCE_DIR}/source"

@@ -22,6 +22,8 @@
 #include <string>
 #include <unordered_map>
 
+#ifdef __FLEXFRINGE_PYTHON
+
 #define PY_SSIZE_T_CLEAN // recommended, see https://docs.python.org/3/extending/extending.html#a-simple-example
 #include <Python.h>
 
@@ -63,5 +65,29 @@ class nn_sul_base : public sul_base {
   public:
     virtual void pre(inputdata& id) override;
 };
+
+/* Dummy implementation when Python disabled to get it to compile on platforms without Python Dev Headers. */
+#else
+
+class nn_sul_base : public sul_base {
+    friend class base_teacher;
+    friend class eq_oracle_base;
+
+  protected:
+    nn_sul_base() {
+        assert(((void*)"If <SOS> or <EOS> is set (!=-1), then the other one must be set, too.",
+                (START_SYMBOL == -1 && END_SYMBOL == -1) || (START_SYMBOL != -1 && END_SYMBOL != -1)));
+    };
+
+    virtual void reset() = 0;
+    virtual bool is_member(const std::vector<int>& query_trace) const = 0;
+    virtual const int query_trace(const std::vector<int>& query_trace, inputdata& id) const = 0;
+    virtual void init_types() const = 0; // we need to set the internal types of flexfringe according to the types we expect
+
+  public:
+    virtual void pre(inputdata& id) override;
+};
+
+#endif /* __FLEXFRINGE_PYTHON */
 
 #endif

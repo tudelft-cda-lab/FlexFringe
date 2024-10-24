@@ -20,6 +20,9 @@
 
 using namespace std;
 
+#ifdef __FLEXFRINGE_PYTHON
+
+
 bool nn_weighted_output_sul::is_member(const std::vector<int>& query_trace) const { return true; }
 
 /**
@@ -273,3 +276,49 @@ nn_weighted_output_sul::get_weights_and_state(const std::vector<int>& query_trac
  *
  */
 nn_weighted_output_sul::~nn_weighted_output_sul() { Py_Finalize(); }
+
+/* Compile a dummy nn_weighted_output_sul when disabled to allow compiling on platforms without Python Dev Headers */
+#else
+
+bool nn_weighted_output_sul::is_member(const std::vector<int>& query_trace) const { return true; }
+const double nn_weighted_output_sul::get_string_probability(const std::vector<int>& query_trace, inputdata& id) const {
+    throw std::runtime_error("Enable this feature with -DENABLE_PYTHON=ON on cmake.");
+}
+
+const int nn_weighted_output_sul::query_trace(const std::vector<int>& query_trace, inputdata& id) const {
+    throw std::runtime_error("Enable this feature with -DENABLE_PYTHON=ON on cmake.");
+}
+
+const std::pair< int, std::vector<float> > 
+nn_weighted_output_sul::get_type_and_state(const std::vector<int>& query_trace, inputdata& id) const {
+    throw std::runtime_error("Enable this feature with -DENABLE_PYTHON=ON on cmake.");
+}
+
+
+void nn_weighted_output_sul::init_types() const {
+    throw std::runtime_error("Enable this feature with -DENABLE_PYTHON=ON on cmake.");
+}
+
+const double nn_weighted_output_sul::get_sigmoid_output(const std::vector<int>& query_trace, inputdata& id) const {
+    throw std::runtime_error("Enable this feature with -DENABLE_PYTHON=ON on cmake.");
+}
+
+const std::vector<float> nn_weighted_output_sul::get_weight_distribution(const std::vector<int>& query_trace,
+                                                                         inputdata& id) const {
+    throw std::runtime_error("Enable this feature with -DENABLE_PYTHON=ON on cmake.");
+}
+
+const std::pair< std::vector<float>, std::vector<float> > 
+nn_weighted_output_sul::get_weights_and_state(const std::vector<int>& query_trace, inputdata& id) const {
+    throw std::runtime_error("Enable this feature with -DENABLE_PYTHON=ON on cmake.");
+}
+
+/**
+ * @brief Destroy the nn sigmoid sul::nn sigmoid sul object
+ *
+ */
+nn_weighted_output_sul::~nn_weighted_output_sul() { 
+    throw std::runtime_error("Enable this feature with -DENABLE_PYTHON=ON on cmake.");
+}
+
+#endif

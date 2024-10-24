@@ -18,7 +18,10 @@
 #include <stdexcept>
 #include <string>
 
+
 using namespace std;
+
+#ifdef __FLEXFRINGE_PYTHON
 
 /**
  * @brief Inserts element into vector, raises exception if it didn't work.
@@ -199,3 +202,12 @@ see what happens."
     cout << "Python module " << INPUT_FILE << " loaded and initialized successfully." << endl;
     init_types();
 }
+
+/* Dummy implementation when Python disabled to get it to compile on platforms without Python Dev Headers. */
+#else
+
+void nn_sul_base::pre(inputdata& id) {
+    throw std::runtime_error("Enable this feature with -DENABLE_PYTHON=ON on cmake.");
+}
+
+#endif /* __FLEXFRINGE_PYTHON */

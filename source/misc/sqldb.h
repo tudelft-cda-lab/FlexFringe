@@ -15,9 +15,12 @@
 #include "input/abbadingoreader.h"
 #include "input/inputdata.h"
 #include <memory>
-#include <pqxx/pqxx>
 #include <string>
 #include <vector>
+#include <functional>
+
+#ifdef __FLEXFRINGE_DATABASE
+#endif /* __FLEXFRINGE_DATABASE */
 
 // Short for postgresql
 namespace psql {
@@ -30,11 +33,20 @@ struct record {
     record(int i, std::vector<int> t, int o) : trace(std::move(t)), type(o), pk(i) {}
 };
 
+/* Compile a dummy psql::db when disabled to allow compiling on platforms without psql and pqxx */
+#ifdef __FLEXFRINGE_DATABASE
+#include <pqxx/pqxx>
 class db {
   private:
-    const std::string connection_string;
     pqxx::connection conn;
+    pqxx::connection& get_connection() { return conn; }
 
+#else
+class db {
+  private:
+#endif /* __FLEXFRINGE_DATABASE */
+
+    const std::string connection_string;
     std::vector<std::string> get_vec_from_map(const std::map<std::string, int>& mapping);
     std::string get_sqlarr_from_vec(const std::vector<std::string>& vec);
     const std::string table_name;
@@ -44,8 +56,6 @@ class db {
   public:
     db();
     explicit db(const std::string& table_name, const std::string& connection_string = "");
-
-    pqxx::connection& get_connection() { return conn; }
 
     std::string TRACE_NAME = "trace";
     std::string TYPE_NAME = "type";
@@ -121,4 +131,5 @@ class db {
 
 } // namespace psql
 
-#endif
+
+#endif /* _SQLDB_H_ */

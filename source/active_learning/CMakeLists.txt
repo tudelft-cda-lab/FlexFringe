@@ -111,4 +111,10 @@ add_library(ActiveLearning STATIC
             teacher/teacher_imat.cpp
 )
 
-target_link_libraries(ActiveLearning ${PYTHON_LIBRARIES} libpqxx::pqxx)
+
+if (ENABLE_PYTHON)
+  target_link_libraries(ActiveLearning ${PYTHON_LIBRARIES})
+endif()
+if (ENABLE_DATABASE)
+  target_link_libraries(ActiveLearning libpqxx::pqxx)
+endif()
