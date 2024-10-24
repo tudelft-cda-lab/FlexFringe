@@ -62,21 +62,21 @@ jobs:
           mv flexfringe${{ matrix.extension }} flexfringe-${{ matrix.triplet }}${{ matrix.extension}}
 
       - name: run-tests
-        run: runtests${{ matrix.extension }} -r junit > testresults-${{ matrix.triplet }}.xml
+        run: ./runtests${{ matrix.extension }} -r junit > testresults-${{ matrix.triplet }}.xml
 
       - name: publish-test-results-linux
-        uses: EnricoMi/publish-unit-test-result-action@v1
+        uses: EnricoMi/publish-unit-test-result-action@v2.14.0
         if: runner.os == 'Linux' && always()
         with:
           check_name: "Unit Test Results (${{ matrix.triplet }})"
-          files: "testresults-${{ matrix.triplet }}.xml"
+          junit_files: "testresults-${{ matrix.triplet }}.xml"
 
       - name: publish-test-results-other
-        uses: EnricoMi/publish-unit-test-result-action/composite@v1
+        uses: EnricoMi/publish-unit-test-result-action/composite@v2.14.0
         if: runner.os != 'Linux' && always()
         with:
           check_name: "Unit Test Results (${{ matrix.triplet }})"
-          files: "testresults-${{ matrix.triplet }}.xml"
+          junit_files: "testresults-${{ matrix.triplet }}.xml"
 
       - name: upload-binary-artifact
         uses: actions/upload-artifact@v3
