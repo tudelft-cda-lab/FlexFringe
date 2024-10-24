@@ -5,7 +5,6 @@
 #include "reader_strategy.h"
 #include "mem_store.h"
 
-
 std::optional<trace *> read_all::read(parser &input_parser, inputdata &idata) {
     if (!has_read) {
         consume_all(input_parser, idata);

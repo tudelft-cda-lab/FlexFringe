@@ -10,6 +10,13 @@
 #include "input/parsers/i_parser.h"
 #include "input/inputdata.h"
 #include "input/trace.h"
+
+#if defined(_MSC_VER)
+#include <BaseTsd.h>
+typedef SSIZE_T ssize_t;
+#endif
+
+
 class parser;
 
 class reader_strategy {
