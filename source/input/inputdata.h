@@ -12,6 +12,11 @@
 #include "input/parsers/i_parser.h"
 #include "input/parsers/reader_strategy.h"
 
+#if defined(_MSC_VER)
+#include <BaseTsd.h>
+typedef SSIZE_T ssize_t;
+#endif
+
 class apta;
 class csv_parser;
 class parser;

@@ -9,6 +9,9 @@ if(MINGW)
     set(CMAKE_EXE_LINKER_FLAGS "-static -static-libgcc")
 endif()
 
+add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
+add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
+
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
@@ -40,6 +43,8 @@ add_subdirectory(source)
 
 add_executable(flexfringe source/main.cpp)
 
+
+# Need this so the plugin registration does not get stripped out
 if(MSVC)
     target_link_libraries(flexfringe
             Evaluation)
@@ -51,19 +56,18 @@ elseif(APPLE)
 	target_link_libraries(flexfringe
             "-Wl,-force_load" Evaluation
             "-Wl")
-
 else()
-    # Need this so the plugin registration does not get stripped out
     target_link_libraries(flexfringe
             "-Wl,--whole-archive" Evaluation
             "-Wl,--no-whole-archive")
 endif()
 
+
 target_link_libraries(flexfringe
         Source
         Util
-        foonathan::lexy
-        fmt::fmt)
+        lexy
+        fmt)
 
 
 find_package(Threads)
@@ -89,8 +93,11 @@ if(NOT SKIP_TESTS)
             tests/testcsvheaderparser.cpp
             tests/testcsvparser.cpp
             tests/testabbadingoparser.cpp
-            source/main.cpp tests/testinputdata.cpp)
+            source/main.cpp 
+            tests/testinputdata.cpp)
 
+
+    # Need this so the plugin registration does not get stripped out
     if(MSVC)
         target_link_libraries(runtests
                 Evaluation)
@@ -106,12 +113,13 @@ if(NOT SKIP_TESTS)
                 "-Wl,--no-whole-archive")
     endif()
 
+    
     target_link_libraries(runtests
             Catch2::Catch2
             Source
             Util
-            foonathan::lexy
-            fmt::fmt
+            lexy
+            fmt
             ${CMAKE_THREAD_LIBS_INIT})
 
     if(NOT WIN32)
@@ -122,10 +130,14 @@ if(NOT SKIP_TESTS)
             UNIT_TESTING)
 endif()
 
+# FROM Hielke 2024 Oktoboer
+# I got:
+# fmtd.lib(format.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MDd_DynamicDebug' doesn't match value 'MTd_StaticDebug' in main.obj [C:\Users\Administrator\repos\FlexFringe\bu ild\flexfringe.vcxproj]
+# when this is does not contain all libraries added.
 if(MSVC)
     # Statically link msvc runtime so we don't need the redistributable
-    set_property(TARGET flexfringe Evaluation Source Util runtests PROPERTY
-            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    set_property(TARGET flexfringe Evaluation Source Util runtests fmt lexy PROPERTY
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
 # XCode 15 currently has known issues with LTO:
