@@ -19,6 +19,16 @@ endif()
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 option(COMPILE_DOCS "This is settable from the command line" OFF)
+option(ENABLE_DATABASE "Set this for the database connector to work" ON)
+option(ENABLE_PYTHON "Set this for python connector to work" OFF)
+
+if (ENABLE_DATABASE)
+  add_definitions(-D__FLEXFRINGE_DATABASE)
+endif()
+if (ENABLE_PYTHON)
+  add_definitions(-D__FLEXFRINGE_PYTHON)
+endif()
+
 #set(CMAKE_MESSAGE_LOG_LEVEL WARNING)
 
 # Default compiler flags:
@@ -51,16 +61,6 @@ endif()
 add_compile_definitions(LOGURU_WITH_STREAMS=1)
 #add_compile_definitions(CATCH_CONFIG_EXPERIMENTAL_REDIRECT=1)
 
-# On Windows we generally recommend building libpqxx as a shared
-# library.  On other platforms, we recommend a static library.
-# You can usually skip building the libpqxx tests.
-set(SKIP_BUILD_TEST ON)
-IF (WIN32)
-    set(BUILD_SHARED_LIBS ON)
-ELSE()
-    set(BUILD_SHARED_LIBS OFF)
-ENDIF()
-
 include(FetchContent)
 function(CloneRepository repositoryURL gitTag projectName sourceDir)
   #Commands are left empty so that we only checkout the source and no not perform any kind of build
@@ -77,11 +77,23 @@ function(CloneRepository repositoryURL gitTag projectName sourceDir)
   FetchContent_MakeAvailable(${projectName})
 endfunction(CloneRepository)
 
-# Please note that libpqxx requires pre-building its library
-# you cannot rely on including header files globally
-# you must link with target_link_libraries(.. lipqxx::pqxx) in EVERY module that requires it.
-# git tag from version 7.9.0.
-CloneRepository("https://github.com/jtv/libpqxx" "2ffb711" "libpqxx" "build-pqxx")
+if (ENABLE_DATABASE)
+  # On Windows we generally recommend building libpqxx as a shared
+  # library.  On other platforms, we recommend a static library.
+  # You can usually skip building the libpqxx tests.
+  set(SKIP_BUILD_TEST ON)
+  IF (WIN32)
+      set(BUILD_SHARED_LIBS ON)
+  ELSE()
+      set(BUILD_SHARED_LIBS OFF)
+  ENDIF()
+
+  # Please note that libpqxx requires pre-building its library
+  # you cannot rely on including header files globally
+  # you must link with target_link_libraries(.. lipqxx::pqxx) in EVERY module that requires it.
+  # git tag from version 7.9.0.
+  CloneRepository("https://github.com/jtv/libpqxx" "2ffb711" "libpqxx" "build-pqxx")
+endif()
 
 # Boost is really nice library. Much better than std::regex and as many more nice components.
 # set(BOOST_INCLUDE_LIBRARIES asio regex algorithm)
@@ -95,7 +107,7 @@ CloneRepository("https://github.com/jtv/libpqxx" "2ffb711" "libpqxx" "build-pqxx
 
 
 add_subdirectory(source/utility/lexy)
-add_subdirectory(source/utility/fmt-9.1.0)
+add_subdirectory(source/utility/fmt-11.0.2)
 
 # needed for the Neural Network, to call Python scripts
 find_package(PythonLibs REQUIRED)
@@ -141,8 +153,10 @@ target_link_libraries(flexfringe
         Util
         lexy
         fmt
-        libpqxx::pqxx
         )
+if (ENABLE_DATABASE)
+  target_link_libraries(flexfringe libpqxx::pqxx)
+endif()
 
 
 find_package(Threads)
@@ -213,9 +227,11 @@ if(NOT SKIP_TESTS)
             Util
             lexy
             fmt
-            libpqxx::pqxx
             ${CMAKE_THREAD_LIBS_INIT}
             )
+    if (ENABLE_DATABASE)
+      target_link_libraries(runtests libpqxx::pqxx)
+    endif()
 
     if(NOT WIN32)
         target_link_libraries(runtests dl) # For ldl
@@ -225,7 +241,7 @@ if(NOT SKIP_TESTS)
             UNIT_TESTING)
 endif()
 
-# FROM Hielke 2024 Oktoboer
+# FROM Hielke 2024 October
 # I got:
 # fmtd.lib(format.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MDd_DynamicDebug' doesn't match value 'MTd_StaticDebug' in main.obj [C:\Users\Administrator\repos\FlexFringe\bu ild\flexfringe.vcxproj]
 # when this is does not contain all libraries added.
