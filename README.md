@@ -7,13 +7,57 @@ Flexfringe, formerly DFASAT, is a flexible state-merging framework written in C+
 
 Flexfringe uses CMake as a build tool.
 
-On Linux and MacOS, you can build and compile the flexfringe project by running
+#### Linux and MacOS 
+
+You can build and compile the flexfringe project by running in the main directory:
 
 `$ mkdir build && cd build && cmake ..`
 
 `$ make`
 
-in the main directory to build the executable named *flexfringe*. We tested the toolchains on Linux (Ubuntu 16+), MacOS (10.14), and Windows 10. For the latter, built using CMake shipped with CLion.
+This builds the executable named *flexfringe*. We tested the toolchains on Linux (Ubuntu 16+), MacOS (10.14), and Windows 10. For the latter, built using CMake shipped with CLion.
+
+#### Windows
+
+##### MSYS2 with CLion
+
+1. Install MSYS2 https://www.msys2.org/docs/installer/
+
+2. Install clang toolchain in the msys2 terminal.
+
+`$ pacman -S mingw-w64-clang-x86_64-toolchain`
+
+and optionally a debugger
+
+`$ pacman -S mingw-w64-clang-x86_64-gdb`
+
+3. Configure a MSYS2 CLion toolchain to use this in *Settings | Build, Execution, Deployment | Toolchains*
+
+4. Set the paths C:\msys64\clang64\bin\clang.exe to the C Compiler and C:\msys64\clang64\bin\clang++.exe to the C++ compiler.
+
+Reference: https://www.jetbrains.com/help/clion/quick-tutorial-on-configuring-clion-on-windows.html#setup-clang
+
+##### Windows Visual Studio (NOT WORKING ATM)
+
+1. Install Windows Visual Studio (NOT Visual Studio Code) and include CMake during install: https://learn.microsoft.com/nl-nl/cpp/build/cmake-projects-in-visual-studio?view=msvc-170&viewFallbackFrom=vs-2019
+
+2. Open the *Developer Command Prompt*
+
+3. Run the following:
+
+`$ mkdir build`
+
+`$ cmake -S . -B build`
+
+`$ cmake --build build --target flexfringe`
+
+The executable is now available in `build\Debug\flexfringe.exe`.
+
+This should also be possible to be done/configured from a IDE such as Visual Studio itself, CLion, or VS Code, etc.
+
+###
+
+Database: https://stackoverflow.com/a/10364240
 
 ### SAT Solver
 
