@@ -19,8 +19,6 @@ class stream_object{
 
 private:
   // TODO: remove global objects, make them local
-  //int STREAM_COUNT = 0;
-  int batch_number; // TODO: naming
   refinement_list* currentrun;
   refinement_list* nextrun;
   std::stack<refinement*> current_ref_stack;
@@ -29,11 +27,8 @@ private:
 
 public:
   stream_object(){
-    batch_number = 0;
-
     currentrun = new refinement_list();
     nextrun = new refinement_list();
-
   }
   
   ~stream_object(){
@@ -48,9 +43,7 @@ public:
   void greedyrun_undo_merges(state_merger* merger); // for experiments
   std::vector<std::tuple<int, int>> get_state_sequence_from_trace(state_merger* merger, trace* trace);
   std::vector<std::vector<std::tuple<int, int>>> get_state_sequences(std::list<trace*> traces, state_merger* merger);
-  int get_batch_number();
   refinement_list* get_current_run() {return this->currentrun;}
-
 
 };
 

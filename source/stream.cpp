@@ -25,7 +25,6 @@
 
 using namespace std;
 
-const bool RETRY_MERGES = true; // if true use new streaming scheme, else use the old one
 bool INTERRUPTED = false;
 
 void signal_handler_stream(int signum) {

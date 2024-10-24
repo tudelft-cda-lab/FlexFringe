@@ -43,7 +43,6 @@ std::string COMMAND;
 std::string STREAM_BATCH_INPUT_PATH;
 
 int TRACE_BATCH_NR = 0;
-int UPDATE_NR = 0;
 
 bool debugging_enabled = false;
 
@@ -239,6 +238,7 @@ void read_input_file(inputdata* id) {
     }
 }
 
+
 /**
  * @brief Main run method. Branches out based on the type of session to run.
  * 
@@ -335,6 +335,26 @@ void run() {
                 }
 
                 out_name_format = STREAM_BATCH_INPUT_PATH.substr(file_arg_pos + 11, std::string::npos);
+
+                // Check if flexfringe has been restarted due to unexpected crash
+                if (out_name_format != "tempParent") {
+                    int batch_nr = std::stoi(out_name_format);
+                    if (batch_nr > TRACE_BATCH_NR) {
+                        logMessage("Detected that FlexFringe has been restarted. Trying to load the last learned model.");
+                        TRACE_BATCH_NR = batch_nr;
+                        std::ifstream last_model_file(OUTPUT_DIRECTORY + "model_batch_nr_" + out_name_format + ".json");
+
+                        if (!last_model_file) {
+                            logMessage("Last learned model not found, starting from scratch.");
+                        } else {
+                            the_apta->read_json(last_model_file);
+                            merger = new state_merger(&id, eval, the_apta);
+                            logMessage("Successfully loaded the last learned model.");
+                        }
+                    }
+                }
+                
+
                 filePath.erase(filePath.find_last_not_of(" \n\r\t")+1); // trim trailing whitespace or other characters
                 std::ifstream input_stream(filePath);
                 
@@ -382,9 +402,7 @@ void run() {
                 else {
                     // Record training time
                     // auto start = std::chrono::high_resolution_clock::now();
-                    // UPDATE_NR++;
                     stream_obj.stream_mode_batch(merger, traces, TRACE_BATCH_NR);
-                    // logMessage("Done learning: " + std::to_string(UPDATE_NR));
                     std::ofstream learn_stat_file;
                     learn_stat_file.open(OUTPUT_DIRECTORY + "ff_learn_stat.txt", std::ios::app);
 
