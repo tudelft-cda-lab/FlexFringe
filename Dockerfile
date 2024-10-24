@@ -1,8 +1,8 @@
 # BUILD
-FROM alpine:latest
+FROM alpine:3.18
 RUN set -ex && \
 	apk --no-cache --update add \
-    cmake g++ gcc git linux-headers libpthread-stubs make 
+    cmake g++ gcc git linux-headers libpthread-stubs make libpq
 WORKDIR /flexfringe
 COPY . ./
 RUN mkdir build && \
@@ -12,7 +12,7 @@ RUN mkdir build && \
 RUN build/runtests
 
 # RUN
-FROM alpine:latest
+FROM alpine:3.18
 RUN set -ex && \
 	apk --no-cache --update add \
     libstdc++
