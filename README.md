@@ -32,6 +32,10 @@ Example:
 
 See the `.ini` files for more information, and the `--help` flag for a short description of the options.
 
+### Docker
+
+Use Docker from: 
+
 ### Input files ###
 
 The default input is formated following the Abbadingo formating:

@@ -1,8 +1,8 @@
 # BUILD
-FROM alpine:latest
+FROM alpine:3.18
 RUN set -ex && \
 	apk --no-cache --update add \
-    cmake g++ gcc git linux-headers libpthread-stubs make 
+    sudo libstdc++ cmake g++ gcc bash git linux-headers libpthread-stubs make libpq python3-dev
 WORKDIR /flexfringe
 COPY . ./
 RUN mkdir build && \
@@ -11,14 +11,28 @@ RUN mkdir build && \
     cmake --build . -j$(nproc)
 RUN build/runtests
 
-# RUN
-FROM alpine:latest
-RUN set -ex && \
-	apk --no-cache --update add \
-    libstdc++
-RUN addgroup -S flexfringe && adduser -S flexfringe -G flexfringe
-USER flexfringe
-WORKDIR /home/flexfringe
-COPY --from=0 /flexfringe/build/flexfringe .
-COPY ini ./ini
-ENTRYPOINT ["./flexfringe"]
+# Make this usefull
+ENV USER=flexfringe
+ENV GROUPNAME=$USER
+ENV UID=12345
+ENV GID=23456
+RUN addgroup \
+    --gid "$GID" \
+    "$GROUPNAME" \
+&&  adduser \
+    --disabled-password \
+    --gecos "" \
+    --home "$(pwd)" \
+    --shell bash \
+    --ingroup "$GROUPNAME" \
+    --no-create-home \
+    --uid "$UID" \
+    $USER
+RUN echo "$USER ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/$USER \
+    && chmod 0440 /etc/sudoers.d/$USER
+
+WORKDIR /home/$USER
+COPY . .
+RUN cp /flexfringe/build/flexfringe .
+USER $USER
+ENTRYPOINT ["bash"]

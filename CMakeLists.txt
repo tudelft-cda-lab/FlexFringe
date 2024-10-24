@@ -103,7 +103,7 @@ include_directories("${PROJECT_SOURCE_DIR}"
                     "${PROJECT_SOURCE_DIR}/source/evaluation"
                     "${PROJECT_SOURCE_DIR}/source/utility"
                     "${PROJECT_SOURCE_DIR}/source/utility/lexy/include"
-                    "${PROJECT_SOURCE_DIR}/source/utility/fmt-9.1.0/include")
+                    "${PROJECT_SOURCE_DIR}/source/utility/fmt-11.0.2/include")
 
 add_subdirectory(source)
 
