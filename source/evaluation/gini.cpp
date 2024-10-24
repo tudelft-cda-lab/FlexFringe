@@ -89,7 +89,7 @@ double gini::split_compute_score(state_merger *, apta_node* left, apta_node* rig
 
 
 /* GINI impurity based state merging, computes GINI improvement for merges and splits*/
-bool gini::consistent(state_merger *merger, apta_node* left, apta_node* right){
+bool gini::consistent(state_merger *merger, apta_node* left, apta_node* right, int depth){
     return true;
 }
 

@@ -57,12 +57,12 @@ jobs:
 
       - name: rename-binary
         run: |
-          cd build
+          # cd build
           ls
           mv flexfringe${{ matrix.extension }} flexfringe-${{ matrix.triplet }}${{ matrix.extension}}
 
       - name: run-tests
-        run: build/runtests${{ matrix.extension }} -r junit > testresults-${{ matrix.triplet }}.xml
+        run: ./runtests${{ matrix.extension }} -r junit > testresults-${{ matrix.triplet }}.xml
 
       - name: publish-test-results-linux
         uses: EnricoMi/publish-unit-test-result-action@v2.14.0

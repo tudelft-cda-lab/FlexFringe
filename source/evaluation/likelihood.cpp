@@ -25,11 +25,11 @@ void likelihood_data::initialize() {
     undo_extra_parameters = 0;
 }
 
-bool likelihoodratio::consistent(state_merger *merger, apta_node* left, apta_node* right){
+bool likelihoodratio::consistent(state_merger *merger, apta_node* left, apta_node* right, int depth){
     //likelihood_data* l = (likelihood_data*) left->get_data();
     //likelihood_data* r = (likelihood_data*) right->get_data();
 
-    return count_driven::consistent(merger, left, right);
+    return count_driven::consistent(merger, left, right, depth);
 };
 
 void likelihoodratio::update_likelihood(double left_count, double right_count, double left_divider, double right_divider){

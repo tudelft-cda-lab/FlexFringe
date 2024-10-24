@@ -2,6 +2,14 @@
 #include "apta.h"
 #include "stringutil.h"
 
+#include <unordered_map>
+#include <unordered_set>
+#include <algorithm>
+#include "misc/printutil.h"
+#include <sstream>
+
+//#include "inputdatalocator.h"
+
 using namespace std;
 
 /**
@@ -22,6 +30,7 @@ void inputdata::read(parser *input_parser) {
     traces.sort([](auto &left, auto &right) {
         return left->sequence < right->sequence;
     });
+    LOG_S(INFO) << "Conversions: r_alphabet: " << get_r_alphabet() << " r_types: " << get_r_types();
 }
 
 /**
@@ -108,12 +117,87 @@ int inputdata::get_reverse_symbol(string a) {
     return r_alphabet[a];
 }
 
-std::string &inputdata::get_type(int a) {
+std::string& inputdata::get_type(int a) {
     return types[a];
+}
+
+/**
+ * @brief Add an unknown type to the inputdata interface. Warning: 
+ * Make sure that it does not exist yet before inserting, elsewise
+ * behavior might become peculiar.
+ * 
+ * @param t The type-string to add. Will be used when printing and 
+ * internally.
+ */
+void inputdata::add_type(const std::string& t) {
+    static unordered_set<std::string> seen_types;
+    if(!seen_types.contains(t)){
+        types.push_back(t);
+        r_types[t] = r_types.size();
+        
+        seen_types.insert(t);
+    }
+}
+
+/**
+ * @brief S.e. 
+ * 
+ * @return const std::map<std::string, int>& Reference to r_types map, 
+ * mapping the external string to the internal integer representation.
+ */
+const std::map<std::string, int>& inputdata::get_r_types() const {
+    return this->r_types;
+}
+
+const vector<int> inputdata::get_types() const {
+    vector<int> res(r_types.size());
+    int idx = 0;
+    for(const auto& mapping: r_types){
+        res[idx] = mapping.second;
+        ++idx;
+    }
+    return res;
 }
 
 int inputdata::get_reverse_type(std::string a) {
     return r_types[a];
+}
+
+/**
+ * @brief Sets the r_alphabet and re-initializes the normal 
+ * alphabet with the values given by r_alphabet.
+ * 
+ * This function is up to now only used in active learning. It's purpose is to 
+ * connect the internal alphabet of flexfringe to the external alphabet of the 
+ * system under test, so that flexfringe can ask "the right questions". Hence 
+ * flexfringe will send a string to the system under test, and it is the 
+ * responsibility of the system under test (the SUL object) to make meaning of this. 
+ * The system under test will however tell flexfringe what inputs it will potentially 
+ * expect, and this is where this function comes in.
+ * 
+ * @param input_alphabet A vector with the possible strings the system under learning 
+ * will expect.
+ */
+void inputdata::set_alphabet(const vector<int>& input_alphabet){
+    this->r_alphabet.clear();
+    this->alphabet.clear();
+    for(int i=0; i<input_alphabet.size(); ++i){
+        auto symbol_string = to_string(input_alphabet[i]);
+        this->r_alphabet[symbol_string] = this->alphabet.size();
+        this->alphabet.push_back(symbol_string);
+    }
+}
+void inputdata::set_alphabet(const std::map<std::string, int>& input_r_alphabet) {
+    r_alphabet = input_r_alphabet; // copy-assignment
+    alphabet.clear();
+    alphabet.resize(input_r_alphabet.size());
+    for (auto const& [str, val] : input_r_alphabet) alphabet[val] = str;
+}
+void inputdata::set_types(const std::map<std::string, int>& input_r_types) {
+    r_types = input_r_types; // copy-assignment
+    types.clear();
+    types.resize(input_r_types.size());
+    for (auto const& [str, val] : input_r_types) types[val] = str;
 }
 
 attribute *inputdata::get_trace_attribute(int attr) {
@@ -177,6 +261,20 @@ int inputdata::get_alphabet_size() {
     return alphabet.size();
 }
 
+const std::map<std::string, int> inputdata::get_r_alphabet() const {
+    return this->r_alphabet;
+}
+
+const vector<int> inputdata::get_alphabet() const {
+    vector<int> res(r_alphabet.size());
+    int idx = 0;
+    for(const auto& mapping: r_alphabet){
+        res[idx] = mapping.second;
+        ++idx;
+    }
+    return res;
+}
+
 int inputdata::symbol_from_string(std::string symbol) {
     if (r_alphabet.find(symbol) == r_alphabet.end()) {
         r_alphabet[symbol] = alphabet.size();
@@ -203,45 +301,51 @@ std::string inputdata::string_from_type(int type) {
     return types[type];
 }
 
-void inputdata::add_traces_to_apta(apta *the_apta) {
+void inputdata::add_traces_to_apta(apta *the_apta, const bool use_thresholds) {
     for (auto *tr: traces) {
-        add_trace_to_apta(tr, the_apta);
+        add_trace_to_apta(tr, the_apta, use_thresholds);
         if (!ADD_TAILS) tr->erase();
     }
 }
 
-void inputdata::add_trace_to_apta(trace *tr, apta *the_apta) {
+void inputdata::add_trace_to_apta(trace* tr, apta* the_apta, const bool use_thresholds, unordered_set<int>* states_to_append_to){
     int depth = 0;
-    apta_node *node = the_apta->root;
-    /*if(node->access_trace == nullptr){
-        node->access_trace = mem_store::create_trace();
-    }*/
+    apta_node* node = the_apta->root;
 
-    if (REVERSE_TRACES) {
+    if(REVERSE_TRACES){
         tr->reverse();
     }
 
-    tail *t = tr->head;
+    tail* t = tr->head;
 
-    while (t != nullptr) {
+    while(t != nullptr){
         node->size = node->size + 1;
+
         node->add_tail(t);
         node->data->add_tail(t);
 
         depth++;
-        if (t->is_final()) {
+        if(t->is_final()){
             node->final = node->final + 1;
         } else {
             int symbol = t->get_symbol();
-            if (node->child(symbol) == nullptr) {
-                if (node->size < PARENT_SIZE_THRESHOLD) {
+            if(node->child(symbol) == nullptr){
+                if(use_thresholds && RED_BLUE_THRESHOLD==0 && node->size < PARENT_SIZE_THRESHOLD){
                     break;
                 }
-                auto *next_node = mem_store::create_node(nullptr);
+                // case 1 of the red-blue-threshold: Old streaming strategy. We already have a merged apta.
+                else if(use_thresholds && RED_BLUE_THRESHOLD!=0 && states_to_append_to != nullptr && !states_to_append_to->empty() && !node->is_red() && !node->is_blue()){
+                    break;
+                }
+                // case 2: we get an apta that is unmerged, yet we want to keep track of the states we append to
+                else if(use_thresholds && RED_BLUE_THRESHOLD!=0 && states_to_append_to != nullptr && !states_to_append_to->empty() && states_to_append_to->contains(node->get_number()) ){
+                    break;
+                } 
+                auto* next_node = mem_store::create_node(nullptr);
                 node->set_child(symbol, next_node);
                 next_node->source = node;
                 //next_node->access_trace = inputdata::access_trace(t);
-                next_node->depth = depth;
+                next_node->depth  = depth;
                 next_node->number = ++(this->node_number);
             }
             node = node->child(symbol)->find();
@@ -259,7 +363,7 @@ trace *inputdata::access_trace(tail *t) {
     for (int i = 0; i < this->get_num_trace_attributes(); ++i) {
         tr->trace_attr[i] = t->tr->trace_attr[i];
     }
-    if (STORE_ACCESS_STRINGS) {
+    if (true) { // used to be STORE_ACCESS_STRINGS
         tail *ti = t->tr->head->split_to_end();
         tail *tir = this->access_tail(ti);
         tr->head = tir;
@@ -294,6 +398,10 @@ tail *inputdata::access_tail(tail *t) {
     }
     res->td->data = t->td->data;
     return res;
+}
+
+void inputdata::add_trace(trace* tr) noexcept {
+    this->traces.push_back(tr);
 }
 
 int inputdata::get_num_sequences() {
@@ -390,13 +498,13 @@ void inputdata::process_symbol_attributes(symbol_info &symbolinfo, tail *t) {
  * @param strategy strategy to follow for trace building
  * @return an optional trace pointer. If it is nullopt, there were not enough symbols to build a trace.
  */
-std::optional<trace *> inputdata::read_trace(parser &input_parser, reader_strategy &strategy) {
+std::optional<trace *> inputdata::read_trace(parser &input_parser, reader_strategy &strategy, bool save) {
     auto tr_maybe = strategy.read(input_parser, *this);
 
     if (tr_maybe.has_value()) {
         auto tr = tr_maybe.value();
         tr->finalize();
-        traces.push_back(tr);
+        if (save) traces.push_back(tr);
     }
 
     return tr_maybe;
@@ -413,9 +521,6 @@ inputdata inputdata::with_alphabet_from(inputdata &other) {
     return new_inputdata;
 }
 
-
-
-
-
-
-
+TraceIterator inputdata::trace_iterator(parser &input_parser, reader_strategy &strategy) {
+    return {*this, input_parser, strategy};
+}

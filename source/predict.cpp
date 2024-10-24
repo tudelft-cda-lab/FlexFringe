@@ -4,8 +4,19 @@
 
 #include "predict.h"
 #include "dfa_properties.h"
+#include "input/inputdatalocator.h"
+#include "input/parsers/abbadingoparser.h"
+#include "input/parsers/reader_strategy.h"
+
+#include <optional>
 #include <queue>
 #include "input/inputdatalocator.h"
+#include <sstream>
+#include <map>
+#include "misc/trim.h"
+#include "misc/printutil.h"
+#include "utility/loguru.hpp"
+#include "misc/zip.h"
 
 struct tail_state_compare{ bool operator()(const std::pair<double, std::pair<apta_node*, tail*>> &a, const std::pair<double, std::pair<apta_node*, tail*>> &b) const{ return a.first < b.first; } };
 
@@ -251,6 +262,36 @@ double prob_single_parallel(tail* p, tail* t, apta_node* n, double prod_prob, bo
     return -100000;
 }
 
+void store_visited_states(apta_node* n, tail* t, state_set* states){
+    while(t != nullptr && n != nullptr){
+        states->insert(n);
+        apta_node* child = n->child(t);
+        while(child->rep() != nullptr){
+            child = child->rep();
+        }
+        n = child;
+        t = t->future();
+    }
+}
+
+std::pair<int,int> visited_node_sizes(apta_node* n, tail* t){
+    std::pair<int,int> size_num = std::pair<int,int>(0,0);
+    while(t != nullptr && n != nullptr){
+        size_num.first += n->get_size();
+        size_num.second += 1;
+
+        apta_node* child = n->child(t);
+        while(child->rep() != nullptr){
+            size_num.first += child->get_size();
+            size_num.second += 1;
+            child = child->rep();
+        }
+        n = child;
+        t = t->future();
+    }
+    return size_num;
+}
+
 apta_node* single_step(apta_node* n, tail* t, apta* a){
     apta_node* child = n->child(t);
     if(child == 0){
@@ -297,7 +338,8 @@ void predict_trace_update_sequences(state_merger* m, tail* t){
     apta_node* n = m->get_aut()->get_root();
     double score = 0.0;
 
-    for(int j = 0; j < t->get_length(); j++){
+    const int l = t == nullptr ? 0 : t->get_length();
+    for(int j = 0; j < l; j++){
         score = compute_score(n, t);
         score_sequence.push_back(score);
 
@@ -308,7 +350,7 @@ void predict_trace_update_sequences(state_merger* m, tail* t){
             break;
         }
 
-        t = t->future();
+        if(t->future() != nullptr) t = t->future();
         state_sequence.push_back(n->get_number());
         align_sequence.push_back(true);
     }
@@ -322,11 +364,12 @@ void predict_trace_update_sequences(state_merger* m, tail* t){
 
     ending_state = n;
     ending_tail = t;
-    if(ending_tail->is_final()) ending_tail = ending_tail->past();
+    if(ending_tail != nullptr && ending_tail->is_final()) 
+        ending_tail = ending_tail->past();
 }
 
 template <typename T>
-void write_list(std::list<T>& list_to_write, std::ofstream& output){
+void write_list(std::list<T>& list_to_write, std::ostream& output){
     if(list_to_write.empty()){
         output << "[]";
         return;
@@ -343,8 +386,10 @@ void write_list(std::list<T>& list_to_write, std::ofstream& output){
 }
 
 
-void predict_trace(state_merger* m, std::ofstream& output, trace* tr){
+void predict_trace(state_merger* m, std::ostream& output, trace* tr){
     if(REVERSE_TRACES) tr->reverse();
+
+    static int rownr = 1;
 
     state_sequence.clear();
     score_sequence.clear();
@@ -445,8 +490,11 @@ void predict_trace(state_merger* m, std::ofstream& output, trace* tr){
 
     if(ending_state != nullptr){
         if(PREDICT_TYPE){
-            output << "; " << inputdata_locator::get()->string_from_type(tr->get_type());
-            output << "; " << ending_state->get_data()->predict_type_score(tr->get_head());
+            int trace_type = tr->get_type();
+            output << "; " << inputdata_locator::get()->string_from_type(trace_type == -1 ? 0 : trace_type);
+
+            double type_score = tr->get_head() == nullptr ? 0.0 : ending_state->get_data()->predict_type_score(tr->get_head());
+            output << "; " << type_score;
 
             int type_predict = ending_state->get_data()->predict_type(ending_tail);
             output << "; " << inputdata_locator::get()->string_from_type(type_predict);
@@ -489,8 +537,7 @@ void predict_trace(state_merger* m, std::ofstream& output, trace* tr){
     output << std::endl;
 }
 
-
-void predict(state_merger* m, inputdata& idat, std::ofstream& output){
+void predict_header(std::ostream& output) {
     output << "row nr; abbadingo trace; state sequence; score sequence";
     if(SLIDING_WINDOW) output << "; score per sw tail; score first sw tail; root cause sw tail score; row nrs first sw tail";
     if(PREDICT_ALIGN) output << "; alignment; num misaligned";
@@ -498,22 +545,10 @@ void predict(state_merger* m, inputdata& idat, std::ofstream& output){
     if(PREDICT_TYPE) output << "; trace type; type probability; predicted trace type; predicted type probability";
     if(PREDICT_SYMBOL) output << "; next trace symbol; next symbol probability; predicted symbol; predicted symbol probability";
     output << std::endl;
-
-    for (auto trace: idat) {
-        predict_trace(m, output, trace);
-        add_visits(m, trace);
-    }
 }
 
-
 void predict_streaming(state_merger* m, parser& parser, reader_strategy& strategy, std::ofstream& output) {
-    output << "row nr; abbadingo trace; state sequence; score sequence";
-    if(SLIDING_WINDOW) output << "; score per sw tail; score first sw tail; root cause sw tail score; row nrs first sw tail";
-    if(PREDICT_ALIGN) output << "; alignment; num misaligned";
-    if(PREDICT_TRACE) output << "; sum scores; mean scores; min score";
-    if(PREDICT_TYPE) output << "; trace type; type probability; predicted trace type; predicted type probability";
-    if(PREDICT_SYMBOL) output << "; next trace symbol; next symbol probability; predicted symbol; predicted symbol probability";
-    output << std::endl;
+    predict_header(output);
 
     inputdata idat = inputdata::with_alphabet_from(*inputdata_locator::get());
 
@@ -530,4 +565,50 @@ void predict_streaming(state_merger* m, parser& parser, reader_strategy& strateg
         trace->erase();
         trace_maybe = idat.read_trace(parser, strategy);
     }
+}
+
+void predict(state_merger* m, inputdata& idat, std::ostream& output, parser* input_parser){
+    predict_header(output);
+
+    auto strategy = in_order();
+    for (auto* tr : idat.trace_iterator(*input_parser, strategy)) {
+        predict_trace(m, output, tr);
+        add_visits(m, tr);
+        tr->erase();
+    }
+}
+
+// TODO: Refactor predict.cpp so that this is easier to do.
+std::unordered_map<std::string, std::string> get_prediction_mapping(state_merger* m, trace* tr) {
+    std::stringstream ss;
+    predict_header(ss);
+
+    predict_trace(m, ss, tr);
+
+    std::string line;
+    std::stringstream line_ss;
+    std::string x;
+
+    std::vector<std::string> header;
+    std::getline(ss, line, '\n');
+    line_ss << line;
+    while(std::getline(line_ss, x, ';')) {
+        trim(x);
+        header.push_back(x);
+    }
+
+    std::vector<std::string> values;
+    std::getline(ss, line, '\n');
+    std::stringstream().swap(line_ss);
+    line_ss << line;
+    while(std::getline(line_ss, x, ';')) {
+        trim(x);
+        values.push_back(x);
+    }
+
+    std::unordered_map<std::string, std::string> data;
+    for (auto && [k, v] : utils::zip(header, values)) {
+        data.insert(std::make_pair(k, v));
+    }
+    return data;
 }

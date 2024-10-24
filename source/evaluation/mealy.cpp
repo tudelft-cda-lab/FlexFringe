@@ -54,7 +54,7 @@ void mealy_data::undo(evaluation_data* right){
 };
 
 /* default evaluation, count number of performed merges */
-bool mealy::consistent(state_merger *merger, apta_node* left, apta_node* right){
+bool mealy::consistent(state_merger *merger, apta_node* left, apta_node* right, int depth){
     if(inconsistency_found) return false;
   
     mealy_data* l = reinterpret_cast<mealy_data*>(left->get_data());
