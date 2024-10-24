@@ -5,6 +5,18 @@ Flexfringe, formerly DFASAT, is a flexible state-merging framework written in C+
 
 # Install
 
+## Docker
+
+For a cross-platform solution you can use FlexFringe with Docker:
+
+```
+docker run -it ghcr.io/tudelft-cda-lab/flexfringe:main
+```
+
+This provides a shell inside a docker container at the source repository with the binary included in the source folder. All dependencies to build FlexFringe are included in the container as well.
+
+## Compile
+
 Flexfringe uses CMake as a build tool.
 
 We tested the toolchains on Linux (Ubuntu 16+), MacOS (10.14), and Windows 10.
@@ -81,10 +93,6 @@ Example:
 `$ ./flexfringe --ini ini/batch-overlap.ini data/staminadata/1_training.txt.dat`
 
 See the `.ini` files for more information, and the `--help` flag for a short description of the options.
-
-### Docker
-
-Use Docker from:
 
 ## Input files
 
