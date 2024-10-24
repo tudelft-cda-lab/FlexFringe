@@ -38,7 +38,13 @@ See the .ini files for more information, and the --help flag for a short descrip
 
 ### Docker
 
-Use Docker from: 
+For a cross-platform solution you can use FlexFringe with Docker:
+
+```
+docker run -it ghcr.io/tudelft-cda-lab/flexfringe:main
+```
+
+This provides a shell inside a docker container at the source repository with the binary included in the source folder.
 
 ### Input files ###
 
