@@ -7,7 +7,9 @@ Flexfringe, formerly DFASAT, is a flexible state-merging framework written in C+
 
 Flexfringe uses CMake as a build tool.
 
-#### Linux and MacOS 
+We tested the toolchains on Linux (Ubuntu 16+), MacOS (10.14), and Windows 10.
+
+### Linux and MacOS
 
 You can build and compile the flexfringe project by running in the main directory:
 
@@ -15,11 +17,11 @@ You can build and compile the flexfringe project by running in the main director
 
 `$ make`
 
-This builds the executable named *flexfringe*. We tested the toolchains on Linux (Ubuntu 16+), MacOS (10.14), and Windows 10. For the latter, built using CMake shipped with CLion.
+This builds the executable named *flexfringe*.
 
-#### Windows
+### Windows
 
-##### MSYS2 with CLion
+#### MSYS2 with CLion
 
 1. Install MSYS2 https://www.msys2.org/docs/installer/
 
@@ -37,7 +39,7 @@ and optionally a debugger
 
 Reference: https://www.jetbrains.com/help/clion/quick-tutorial-on-configuring-clion-on-windows.html#setup-clang
 
-##### Windows Visual Studio (NOT WORKING ATM)
+#### Windows Visual Studio
 
 1. Install Windows Visual Studio (NOT Visual Studio Code) and include CMake during install: https://learn.microsoft.com/nl-nl/cpp/build/cmake-projects-in-visual-studio?view=msvc-170&viewFallbackFrom=vs-2019
 
@@ -53,13 +55,17 @@ Reference: https://www.jetbrains.com/help/clion/quick-tutorial-on-configuring-cl
 
 The executable is now available in `build\Debug\flexfringe.exe`.
 
-This should also be possible to be done/configured from a IDE such as Visual Studio itself, CLion, or VS Code, etc.
+This should also be possible to be done/configured from an IDE such as Visual Studio itself, CLion, or VS Code, etc.
 
-###
+### Additionally features
+
+#### Database
 
 Database: https://stackoverflow.com/a/10364240
 
-### SAT Solver
+#### Deep Learning
+
+#### SAT Solver
 
 For expert users: In case you want to use the reduction to SAT and automatically invoke the SAT solver, you need to provide the path to the solver binary. flexfringe has been tested with lingeling (which you can get from http://fmv.jku.at/lingeling/ and run its build.sh).
 **PLEASE NOTE:** SAT solving only works for learning plain DFAs. The current implementation is not verified to be correct. Use an older commit if you rely on SAT-solving.
@@ -78,7 +84,7 @@ See the `.ini` files for more information, and the `--help` flag for a short des
 
 ### Docker
 
-Use Docker from: 
+Use Docker from:
 
 ### Input files ###
 
@@ -152,6 +158,7 @@ Most notable, we use
 *   JSON for Modern C++ (version 3.1.2) by Niels Lohmann <http://nlohmann.me> from https://github.com/nlohmann/json
 *   Lexy for formal parsing (https://lexy.foonathan.net/)
 *   Libpqxx for the database connecting (https://lexy.foonathan.net/)
+*   Fmt from https://github.com/fmtlib/fmt
 
 ## Building Doxygen Documentation
 
