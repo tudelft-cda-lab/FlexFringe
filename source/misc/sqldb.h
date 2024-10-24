@@ -18,8 +18,8 @@
 #include <string>
 #include <vector>
 #include <functional>
-
 #ifdef __FLEXFRINGE_DATABASE
+#include <pqxx/pqxx>
 #endif /* __FLEXFRINGE_DATABASE */
 
 // Short for postgresql
@@ -35,12 +35,10 @@ struct record {
 
 /* Compile a dummy psql::db when disabled to allow compiling on platforms without psql and pqxx */
 #ifdef __FLEXFRINGE_DATABASE
-#include <pqxx/pqxx>
 class db {
   private:
     pqxx::connection conn;
     pqxx::connection& get_connection() { return conn; }
-
 #else
 class db {
   private:
