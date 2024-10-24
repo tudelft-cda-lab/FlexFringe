@@ -16,7 +16,7 @@ endif()
 option(COMPILE_DOCS "This is settable from the command line" OFF)
 
 add_subdirectory(source/utility/lexy)
-add_subdirectory(source/utility/fmt-9.1.0)
+add_subdirectory(source/utility/fmt-11.0.2)
 
 if (MSVC)
     add_compile_options("/W4" "$<$<CONFIG:RELEASE>:/O2>")
@@ -34,7 +34,7 @@ include_directories("${PROJECT_SOURCE_DIR}"
                     "${PROJECT_SOURCE_DIR}/source/evaluation"
                     "${PROJECT_SOURCE_DIR}/source/utility"
                     "${PROJECT_SOURCE_DIR}/source/utility/lexy/include"
-                    "${PROJECT_SOURCE_DIR}/source/utility/fmt-9.1.0/include")
+                    "${PROJECT_SOURCE_DIR}/source/utility/fmt-11.0.2/include")
 
 add_subdirectory(source)
 
