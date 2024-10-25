@@ -16,54 +16,9 @@
 
 #ifdef __FLEXFRINGE_DATABASE
 #include <pqxx/pqxx>
+#endif /*  __FLEXFRINGE_DATABASE */
 
 namespace psql {
-
-db::db() : connection_string(""), table_name("benching_sample"), conn("") {
-    check_connection();
-    create_table(POSTGRESQL_DROPTBLS);
-    create_meta_table(POSTGRESQL_DROPTBLS);
-}
-
-db::db(const std::string& table_name, const std::string& connection_string)
-    : connection_string(connection_string), table_name(table_name), conn(connection_string) {
-    check_connection();
-    create_table(POSTGRESQL_DROPTBLS);
-    create_meta_table(POSTGRESQL_DROPTBLS);
-}
-
-void db::reset() {
-    conn = pqxx::connection(connection_string);
-    check_connection();
-}
-
-void db::check_connection() {
-    if (!conn.is_open()) {
-        const auto* err = "Failed to connect to PostgreSQL.";
-        std::cerr << err << std::endl;
-        throw pqxx::failure(err);
-    }
-    LOG_S(INFO) << "Connected to PostgreSQL successfully!";
-}
-
-void db::create_table(bool drop) {
-    pqxx::work tx{conn};
-    if (drop)
-        tx.exec0(fmt::format("DROP TABLE IF EXISTS {0};", table_name));
-    tx.exec0(fmt::format(
-        "CREATE TABLE IF NOT EXISTS {0} (pk serial primary key, {1} text UNIQUE NOT NULL, {2} integer NOT NULL);"
-        "CREATE INDEX IF NOT EXISTS {0}_{1}_spgist ON {0} USING spgist ({1} text_ops);",
-        table_name, TRACE_NAME, TYPE_NAME));
-    tx.commit();
-}
-void db::create_meta_table(bool drop) {
-    pqxx::work tx{conn};
-    if (drop)
-        tx.exec0(fmt::format("DROP TABLE IF EXISTS {0};", table_name + "_meta"));
-    tx.exec0(fmt::format("CREATE TABLE IF NOT EXISTS {0} ({1} text UNIQUE NOT NULL, {2} text[] NOT NULL);",
-                         table_name + "_meta", "name", "value"));
-    tx.commit();
-}
 
 std::vector<std::string> db::get_vec_from_map(const std::map<std::string, int>& mapping) {
     std::vector<std::string> res(mapping.size());
@@ -114,12 +69,61 @@ std::string db::vec2str(const std::vector<int>& vec) {
     }
     return ss.str();
 }
+
 std::vector<int> db::str2vec(const std::string& str) {
     std::vector<int> vec;
     for (char c : str) {
         vec.push_back(str2num(c));
     }
     return vec;
+}
+
+#ifdef __FLEXFRINGE_DATABASE
+
+db::db() : connection_string(""), table_name("benching_sample"), conn("") {
+    check_connection();
+    create_table(POSTGRESQL_DROPTBLS);
+    create_meta_table(POSTGRESQL_DROPTBLS);
+}
+
+db::db(const std::string& table_name, const std::string& connection_string)
+    : connection_string(connection_string), table_name(table_name), conn(connection_string) {
+    check_connection();
+    create_table(POSTGRESQL_DROPTBLS);
+    create_meta_table(POSTGRESQL_DROPTBLS);
+}
+
+void db::reset() {
+    conn = pqxx::connection(connection_string);
+    check_connection();
+}
+
+void db::check_connection() {
+    if (!conn.is_open()) {
+        const auto* err = "Failed to connect to PostgreSQL.";
+        std::cerr << err << std::endl;
+        throw pqxx::failure(err);
+    }
+    LOG_S(INFO) << "Connected to PostgreSQL successfully!";
+}
+
+void db::create_table(bool drop) {
+    pqxx::work tx{conn};
+    if (drop)
+        tx.exec0(fmt::format("DROP TABLE IF EXISTS {0};", table_name));
+    tx.exec0(fmt::format(
+        "CREATE TABLE IF NOT EXISTS {0} (pk serial primary key, {1} text UNIQUE NOT NULL, {2} integer NOT NULL);"
+        "CREATE INDEX IF NOT EXISTS {0}_{1}_spgist ON {0} USING spgist ({1} text_ops);",
+        table_name, TRACE_NAME, TYPE_NAME));
+    tx.commit();
+}
+void db::create_meta_table(bool drop) {
+    pqxx::work tx{conn};
+    if (drop)
+        tx.exec0(fmt::format("DROP TABLE IF EXISTS {0};", table_name + "_meta"));
+    tx.exec0(fmt::format("CREATE TABLE IF NOT EXISTS {0} ({1} text UNIQUE NOT NULL, {2} text[] NOT NULL);",
+                         table_name + "_meta", "name", "value"));
+    tx.commit();
 }
 
 std::vector<std::string> db::get_alphabet() {
@@ -380,8 +384,6 @@ int db::max_trace_pk() {
 /* Compile a dummy psql::db when disabled to allow compiling on platforms without psql and pqxx */
 #else
 
-namespace psql {
-
 db::db() : connection_string(""), table_name("benching_sample") {
     throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
 }
@@ -403,29 +405,6 @@ void db::create_table(bool drop) {
     throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
 }
 void db::create_meta_table(bool drop) {
-    throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
-}
-
-std::vector<std::string> db::get_vec_from_map(const std::map<std::string, int>& mapping) {
-    throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
-}
-
-std::string db::get_sqlarr_from_vec(const std::vector<std::string>& vec) {
-    throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
-}
-
-char db::num2str(int num) {
-    throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
-}
-
-int db::str2num(char str) {
-    throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
-}
-
-std::string db::vec2str(const std::vector<int>& vec) {
-    throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
-}
-std::vector<int> db::str2vec(const std::string& str) {
     throw std::runtime_error("Enable this feature with -DENABLE_DATABASE=ON on cmake.");
 }
 
