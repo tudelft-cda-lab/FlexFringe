@@ -47,7 +47,7 @@ endif()
 # -UDEBUG Removes #ifdef DEBUG SOME_DEBUG_CODE #endif for your own debug code.
 if (MSVC)
     add_compile_options("/W4" "$<$<CONFIG:RELEASE>:/O2>")
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options(
       "$<$<CONFIG:RELEASE>:-g;-UDEBUG>"
       "$<$<CONFIG:DEBUG>:-ggdb3;-D_GLIBCXX_DEBUG>")
