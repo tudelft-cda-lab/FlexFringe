@@ -336,8 +336,9 @@ void run() {
 
                 out_name_format = STREAM_BATCH_INPUT_PATH.substr(file_arg_pos + 11, std::string::npos);
 
-                // Check if flexfringe has been restarted due to unexpected crash
-                if (out_name_format != "tempParent") {
+                // Check if flexfringe has been restarted due to unexpected termination
+                // We only try to reload the last learned model if the model of each batch is saved with a batch number. 
+                if (out_name_format != "tempParent" && out_name_format != "new") {
                     int batch_nr = std::stoi(out_name_format);
                     if (batch_nr > TRACE_BATCH_NR) {
                         logMessage("Detected that FlexFringe has been restarted. Trying to load the last learned model.");
