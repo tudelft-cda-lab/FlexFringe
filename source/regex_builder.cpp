@@ -288,7 +288,7 @@ std::string regex_builder::to_regex(std::vector<apta_node*> final_nodes) {
             my_transitions[source].erase(remove);
             min_connected.push(std::make_pair(source, r_transitions[source].size() + transitions[source].size()));
         }
-        for (auto target : utils::map_keys(my_transitions[remove])) {
+        for (auto target : std::views::keys(my_transitions[remove])) {
             my_r_transitions[target].erase(remove);
             min_connected.push(std::make_pair(target, r_transitions[target].size() + transitions[target].size()));
         }
