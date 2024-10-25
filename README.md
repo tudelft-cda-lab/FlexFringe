@@ -19,7 +19,7 @@ This provides a shell inside a docker container at the source repository with th
 
 Flexfringe uses CMake as a build tool.
 
-We tested the toolchains on Linux (Ubuntu 16+), MacOS (10.14), and Windows 10.
+We tested the toolchains on Linux (Debian 12+), MacOS (10.14), and Windows 10.
 
 ## Linux and MacOS
 
@@ -30,6 +30,8 @@ You can build and compile the flexfringe project by running in the main director
 `$ make`
 
 This builds the executable named *flexfringe*.
+
+Only run the last command in the build folder during development when you change the code.
 
 ## Windows
 
@@ -67,15 +69,33 @@ Reference: https://www.jetbrains.com/help/clion/quick-tutorial-on-configuring-cl
 
 The executable is now available in `build\Debug\flexfringe.exe`.
 
+Only run the last command during development when you change the code.
+
 This should also be possible to be done/configured from an IDE such as Visual Studio itself, CLion, or VS Code, etc.
 
 ## Additionally features
 
 ### Database
 
-Database: https://stackoverflow.com/a/10364240
+Database support is available behind the feature flag `ENABLE_DATABASE`. Enable during cmake configuration with `-DENABLE_DATABASE`.
+
+On Debian-based systems install dependencies with `sudo apt-get install libpq-dev` and `sudo apt-get install postgres` if you also want to actually use the database.
+
+On MacOS install with Homebrew using `brew install libpq` and `brew install postgres` for the full database package. Alternatively install with MacPorts using `port install postgresxx` where xx is the version number of the postgresql version you want. 
+
+On Windows install from: https://www.postgresql.org/download/
 
 ### Deep Learning
+
+Deep learning is done with python integration. This support is available behind the feature flag `ENABLE_PYTHON`. Enable during cmake configuration with `-DENABLE_PYTHON`.
+
+On Debian-based systems install dependencies with `sudo apt-get install python3-dev`.
+
+On MacOS install with Homebrew using `brew install python3` or MacPorts using `brew install python3xx` where xx is again the desired version number.
+
+On Windows install from: https://www.python.org/downloads/
+
+NB. On Windows the Python extension could not be successfully linked with the MSVC toolchain the last time this was checked. Use the MSYS2 toolchain in CLion instead.
 
 ### SAT Solver
 
