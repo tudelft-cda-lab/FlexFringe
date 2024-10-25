@@ -75,7 +75,7 @@ This should also be possible to be done/configured from an IDE such as Visual St
 
 ## Additionally features
 
-### Database
+### Database (Active Learning)
 
 Database support is available behind the feature flag `ENABLE_DATABASE`. Enable during cmake configuration with `-DENABLE_DATABASE`.
 
@@ -85,7 +85,7 @@ On MacOS install with Homebrew using `brew install libpq` and `brew install post
 
 On Windows install from: https://www.postgresql.org/download/
 
-### Deep Learning
+### Deep Learning (Active Learning)
 
 Deep learning is done with python integration. This support is available behind the feature flag `ENABLE_PYTHON`. Enable during cmake configuration with `-DENABLE_PYTHON`.
 
@@ -97,7 +97,7 @@ On Windows install from: https://www.python.org/downloads/
 
 NB. On Windows the Python extension could not be successfully linked with the MSVC toolchain the last time this was checked. Use the MSYS2 toolchain in CLion instead.
 
-### SAT Solver
+### SAT Solver (Passive Learning)
 
 For expert users: In case you want to use the reduction to SAT and automatically invoke the SAT solver, you need to provide the path to the solver binary. flexfringe has been tested with lingeling (which you can get from http://fmv.jku.at/lingeling/ and run its build.sh).
 **PLEASE NOTE:** SAT solving only works for learning plain DFAs. The current implementation is not verified to be correct. Use an older commit if you rely on SAT-solving.
