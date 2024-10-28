@@ -298,6 +298,7 @@ int inputdata::type_from_string(std::string type) {
 }
 
 std::string inputdata::string_from_type(int type) {
+    if (type >= types.size()) return "UNKNOWN";
     return types[type];
 }
 
