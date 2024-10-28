@@ -24,6 +24,7 @@
 
 class ii_base {
   protected:
+    inline static bool memoized = false; // set to true when memoize
 
   public:
 
@@ -68,8 +69,18 @@ class ii_base {
     /**
      * @brief Size relevant for some optimizations.
      */
-    virtual int size() const {return -1;}
+    virtual const int size() const {return -1;}
 
+    /**
+     * @brief Self explainatory.
+     */
+    virtual bool has_memoized() const noexcept {return memoized;}
+
+    /**
+     * @brief Specializations are important.
+     * 
+     */
+    virtual void memoize() noexcept {memoized = true;}
 };
 
 #endif

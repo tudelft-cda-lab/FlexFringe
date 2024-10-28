@@ -174,15 +174,41 @@ nn_weighted_output_sul::get_type_confidence_and_states(const std::vector<int>& q
 
 const vector< pair<int, float> >
 nn_weighted_output_sul::get_type_confidence_batch(const vector< vector<int> >& query_traces, inputdata& id) const {
-    PyObject* p_list = PyList_New(query_traces.size());
+
+    vector<pair<int, float> > res;
+    res.reserve(query_traces.size());
+    for(int i = 0; i < query_traces.size(); ++i){
+        res.emplace(res.end(), 1, 0.8);
+    }
+    return res;
+
+/*     PyObject* p_list = PyList_New(query_traces.size());
     for(int i=0; i<query_traces.size(); i++){
         PyObject* p_tmp = PyList_New(query_traces[i].size());
         input_sequence_to_pylist(p_tmp, query_traces[i]);
         PyList_SetItem(p_list, i, p_tmp);
-        //Py_INCREF(p_tmp); // making sure p_tmp does not get deleted after loop
-    }
+        //Py_DECREF(p_tmp); // making sure p_tmp does not get deleted after loop
+    } */
 
-    PyObject* p_result = PyObject_CallOneArg(query_func, p_list);
+/*     cout << "refcount of p_list: " << Py_REFCNT(p_list) << endl;
+    cout << "refcount of query_func: " << Py_REFCNT(query_func) << endl;
+    cout << "size of p_list: " << PyList_Size(p_list) << endl;
+    cout << "refcount of p_list[0]: " << Py_REFCNT(PyList_GetItem(p_list, static_cast<Py_ssize_t>(0))) << endl;
+    cout << "size of p_list[0]: " << PyList_Size(PyList_GetItem(p_list, static_cast<Py_ssize_t>(0))) << endl;
+    if(query_traces[0].size() > 0)
+        cout << "refcount of p_list[0][0]: " << Py_REFCNT(PyList_GetItem(PyList_GetItem(p_list, static_cast<Py_ssize_t>(0)), 0)) << endl;
+
+    cout << "Is initialized: " << Py_IsInitialized() << endl; */
+
+/*     PyObject* p_result;
+    try{
+        p_result = PyObject_CallOneArg(query_func, p_list);
+    }
+    catch(...){
+        cout << "Running gc and trying again" << endl;
+        PyRun_SimpleString("gc.collect()");
+        p_result = PyObject_CallOneArg(query_func, p_list);
+    }
     if (!PyList_Check(p_result))
         throw std::runtime_error("Something went wrong, the Network did not return a list. What happened?");
 
@@ -207,9 +233,25 @@ nn_weighted_output_sul::get_type_confidence_batch(const vector< vector<int> >& q
         }
 
         res.emplace_back(type, static_cast<float>(PyFloat_AsDouble(p_confidence)));
+
+        //cout << "1: " << Py_REFCNT(p_type) << endl;
+        //cout << "2: " << Py_REFCNT(p_confidence) << endl;
+
+        //Py_DECREF(p_type);
+        //Py_DECREF(p_confidence);
     }
 
-    return res;
+/*     for(int i=0; i<query_traces.size(); i++){
+        for(int j=0; j<query_traces[i].size(); j++){
+            Py_DECREF(PyList_GetItem(PyList_GetItem(p_list, static_cast<Py_ssize_t>(i)), j));
+        }
+        Py_DECREF(PyList_GetItem(p_list, static_cast<Py_ssize_t>(i)));
+    } */
+    Py_DECREF(p_list);
+    Py_DECREF(p_result);
+
+    assert(res.size() == query_traces.size());
+    return res; */
 }
 
 

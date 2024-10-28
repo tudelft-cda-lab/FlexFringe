@@ -147,6 +147,20 @@ void distinguishing_sequence_fill::add_data_to_tree(std::unique_ptr<apta>& aut, 
 }
 
 /**
+ * @brief Memoizes the suffixes. Saves us recomputation at the expense of memory and possible accuracy.
+ * 
+ */
+void distinguishing_sequence_fill::memoize() noexcept {
+  optional< vector<int> > suffix_opt = ds_ptr->next();
+  while(suffix_opt){
+    m_suffixes.push_back(move(suffix_opt.value()));
+    suffix_opt = ds_ptr->next();
+  }
+
+  memoized = true;
+}
+
+/**
  * @brief Prerequisite to check_consistency. We already compute the distribution for the red node.
  */
 void distinguishing_sequence_fill::pre_compute(std::unique_ptr<apta>& aut, std::unique_ptr<base_teacher>& teacher, apta_node* node) {
@@ -157,37 +171,65 @@ void distinguishing_sequence_fill::pre_compute(std::unique_ptr<apta>& aut, std::
   
   vector< vector<int> > queries;
   unordered_set<int> no_pred_idxs;
-  optional< vector<int> > suffix = ds_ptr->next();
-  
   memoized_predictions.clear();
-  while(suffix){
-    auto right_sequence = concat_prefsuf(right_prefix, suffix.value());
-    if(right_sequence.size() > MAX_LEN){
-      suffix = ds_ptr->next();
-      no_pred_idxs.insert(queries.size()+no_pred_idxs.size()); // invalid prediction
-      continue;
-    }
 
-    queries.push_back(move(right_sequence));
-    if(queries.size() >= MIN_BATCH_SIZE){ // if min-batch size % 2 != 0 will be larger
-      vector< pair<int, float> > answers = teacher->ask_type_confidence_batch(queries, *(inputdata_locator::get()));
-      int answers_idx = 0;
-
-      for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
-        if(no_pred_idxs.contains(i)){
-          memoized_predictions.push_back(-1);
-          continue;
-        }
-        auto& pred = answers[answers_idx];
-        memoized_predictions.push_back(pred.first);
-        ++answers_idx;
+  if(!memoized){
+    optional< vector<int> > suffix = ds_ptr->next();
+    while(suffix){
+      if(right_prefix.size() + suffix.value().size() > MAX_LEN){
+        suffix = ds_ptr->next();
+        no_pred_idxs.insert(queries.size()+no_pred_idxs.size()); // invalid prediction
+        continue;
       }
-        
-      queries.clear();
-      no_pred_idxs.clear();
-    }
 
-    suffix = ds_ptr->next();
+      queries.push_back(concat_prefsuf(right_prefix, suffix.value()));
+      if(queries.size() >= MIN_BATCH_SIZE){ // if min-batch size % 2 != 0 will be larger
+        vector< pair<int, float> > answers = teacher->ask_type_confidence_batch(queries, *(inputdata_locator::get()));
+        int answers_idx = 0;
+
+        for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
+          if(no_pred_idxs.contains(i)){
+            memoized_predictions.push_back(-1);
+            continue;
+          }
+          auto& pred = answers[answers_idx];
+          memoized_predictions.push_back(pred.first);
+          ++answers_idx;
+        }
+          
+        queries.clear();
+        no_pred_idxs.clear();
+      }
+
+      suffix = ds_ptr->next();
+    }
+  }
+  else{
+    for(const auto& suffix: m_suffixes){
+      if(right_prefix.size() + suffix.size() > MAX_LEN){
+        no_pred_idxs.insert(queries.size()+no_pred_idxs.size()); // invalid prediction
+        continue;
+      }
+
+      queries.push_back(concat_prefsuf(right_prefix, suffix));
+      if(queries.size() >= MIN_BATCH_SIZE){ // if min-batch size % 2 != 0 will be larger
+        vector< pair<int, float> > answers = teacher->ask_type_confidence_batch(queries, *(inputdata_locator::get()));
+        int answers_idx = 0;
+
+        for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
+          if(no_pred_idxs.contains(i)){
+            memoized_predictions.push_back(-1);
+            continue;
+          }
+          auto& pred = answers[answers_idx];
+          memoized_predictions.push_back(pred.first);
+          ++answers_idx;
+        }
+          
+        queries.clear();
+        no_pred_idxs.clear();
+      }
+    }
   }
 
   if(queries.size() > 0){
@@ -218,39 +260,66 @@ bool distinguishing_sequence_fill::check_consistency(std::unique_ptr<apta>& aut,
   const active_learning_namespace::pref_suf_t left_prefix = left_access_trace->get_input_sequence(true, false);
   
   vector< vector<int> > queries;
-  optional< vector<int> > suffix = ds_ptr->next();
   vector<int> predictions;
-  
   unordered_set<int> no_pred_idxs;
 
-  while(suffix){
-    auto left_sequence = concat_prefsuf(left_prefix, suffix.value());
-    if(left_sequence.size() > MAX_LEN){
-      no_pred_idxs.insert(queries.size()+no_pred_idxs.size());
-      suffix = ds_ptr->next();
-      continue;
-    }
-      
-    queries.push_back(move(left_sequence));
-    if(queries.size() >= MIN_BATCH_SIZE){
-      vector< pair<int, float> > answers = teacher->ask_type_confidence_batch(queries, *(inputdata_locator::get()));
-      int answers_idx = 0;
-
-      for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
-        if(no_pred_idxs.contains(i)){
-          predictions.push_back(-1);
-          continue;
-        }
-        auto& pred = answers[answers_idx];
-        predictions.push_back(pred.first);
-        ++answers_idx;
+  if(!memoized){
+    optional< vector<int> > suffix = ds_ptr->next();
+    while(suffix){
+      if(left_prefix.size() + suffix.value().size() > MAX_LEN){
+        no_pred_idxs.insert(queries.size()+no_pred_idxs.size());
+        suffix = ds_ptr->next();
+        continue;
       }
 
-      queries.clear();
-      no_pred_idxs.clear();
-    }
+      queries.push_back(concat_prefsuf(left_prefix, suffix.value()));
+      if(queries.size() >= MIN_BATCH_SIZE){
+        vector< pair<int, float> > answers = teacher->ask_type_confidence_batch(queries, *(inputdata_locator::get()));
+        int answers_idx = 0;
 
-    suffix = ds_ptr->next();
+        for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
+          if(no_pred_idxs.contains(i)){
+            predictions.push_back(-1);
+            continue;
+          }
+          auto& pred = answers[answers_idx];
+          predictions.push_back(pred.first);
+          ++answers_idx;
+        }
+
+        queries.clear();
+        no_pred_idxs.clear();
+      }
+
+      suffix = ds_ptr->next();
+    }
+  }
+  else{
+    for(const auto& suffix: m_suffixes){
+      if(left_prefix.size() + suffix.size() > MAX_LEN){
+        no_pred_idxs.insert(queries.size()+no_pred_idxs.size());
+        continue;
+      }
+
+      queries.push_back(concat_prefsuf(left_prefix, suffix));
+      if(queries.size() >= MIN_BATCH_SIZE){
+        vector< pair<int, float> > answers = teacher->ask_type_confidence_batch(queries, *(inputdata_locator::get()));
+        int answers_idx = 0;
+
+        for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
+          if(no_pred_idxs.contains(i)){
+            predictions.push_back(-1);
+            continue;
+          }
+          auto& pred = answers[answers_idx];
+          predictions.push_back(pred.first);
+          ++answers_idx;
+        }
+
+        queries.clear();
+        no_pred_idxs.clear();
+      }
+    }
   }
 
   if(queries.size() > 0){

@@ -29,6 +29,7 @@ class distinguishing_sequence_fill : public ii_base {
     const int MIN_BATCH_SIZE = 512;
     const int MAX_LEN = 30;
 
+    inline static std::vector< std::vector<int> > m_suffixes;
     inline static std::vector<int> memoized_predictions; // static for multithreading
     std::unique_ptr<distinguishing_sequences> ds_ptr = std::make_unique<distinguishing_sequences>();
 
@@ -41,8 +42,11 @@ class distinguishing_sequence_fill : public ii_base {
     void complement_nodes(std::unique_ptr<apta>& aut, std::unique_ptr<base_teacher>& teacher, apta_node* left, apta_node* right) override;
     bool check_consistency(std::unique_ptr<apta>& aut, std::unique_ptr<base_teacher>& teacher, apta_node* left, apta_node* right) override;
 
+    void memoize() noexcept override;
+    const std::vector< std::vector<int> >& get_m_suffixes() noexcept {return m_suffixes;}
+
     const std::vector<int>& get_memoized_predictions(){return memoized_predictions;} // TODO: Make this one nicer
-    const int size() const override {return ds_ptr->size()};
+    const int size() const override {return ds_ptr->size();}
 };
 
 #endif

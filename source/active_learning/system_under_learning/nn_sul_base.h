@@ -39,7 +39,6 @@ class nn_sul_base : public sul_base {
     PyObject* load_model_func;
 
     void input_sequence_to_pylist(PyObject* p_list_out, const std::vector<int>& c_list) const;
-
     void reset() = 0;
 
     bool is_member(const std::vector<int>& query_trace) const = 0;
@@ -54,6 +53,7 @@ class nn_sul_base : public sul_base {
 
     nn_sul_base(const string& cf) : CONNECTOR_FILE(cf) {
     };
+    ~nn_sul_base();
 
   public:
     void pre(inputdata& id) override;

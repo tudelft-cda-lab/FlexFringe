@@ -42,50 +42,105 @@ using namespace active_learning_namespace;
  */
 void search_instance::operator()(promise<bool>&& out, std::unique_ptr<state_merger>& merger, std::unique_ptr<apta>& the_apta, std::unique_ptr<base_teacher>& teacher, apta_node* red_node, apta_node* blue_node){
     //out.set_value(ii_handler->check_consistency(the_apta, teacher, red_node, blue_node));
-
     static inputdata& id = *inputdata_locator::get(); 
+
+    vector< vector<int> > queries;
+    vector<int> predictions;
+    unordered_set<int> no_pred_idxs;
 
     auto left_access_trace = red_node->get_access_trace();
     const active_learning_namespace::pref_suf_t left_prefix = left_access_trace->get_input_sequence(true, false);
 
-/*     static bool ii_converged = false;
-    static vector< vector<int> > m_suffixes;
-
-    if(!ii_converged && ii_handler->get_size() > 400){
-        static mutex m;
-        lock_guard<mutex> lock(m);
-        if(m_suffixes.size()==0){
-            optional< vector<int> > suffix = ds_ptr->next();
-            while(suffix){
-                m_suffixes.push_back(move(suffix));
-                suffix = ds_ptr->next();
+    if(ii_handler->has_memoized()){
+        static const vector< vector<int> >& m_suffixes = dynamic_cast<distinguishing_sequence_fill*>(ii_handler.get())->get_m_suffixes(); 
+        for(const auto& suffix: m_suffixes){
+            if(left_prefix.size() + suffix.size() > MAX_LEN){
+                no_pred_idxs.insert(queries.size()+no_pred_idxs.size());
+                continue;
             }
-            ii_converged = true;
+
+            vector<int> left_sequence(left_prefix.size() + suffix.size()); 
+            left_sequence.insert(left_sequence.end(), left_prefix.begin(), left_prefix.end());
+            left_sequence.insert(left_sequence.end(), suffix.begin(), suffix.end());
+            
+            queries.push_back(move(left_sequence));
+            if(queries.size() >= MIN_BATCH_SIZE){
+                m_mutex.lock();
+                vector< pair<int, float> > answers = teacher->ask_type_confidence_batch(queries, *(inputdata_locator::get()));
+                m_mutex.unlock();
+
+                int answers_idx = 0;
+                for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
+                    if(no_pred_idxs.contains(i)){
+                        predictions.push_back(-1);
+                        continue;
+                    }
+                    auto& pred = answers[answers_idx];
+                    predictions.push_back(pred.first);
+                    ++answers_idx;
+                }
+
+                queries.clear();
+                no_pred_idxs.clear();
+            }
+        }
+
+        if(queries.size() > 0){
+            m_mutex.lock();
+            vector< pair<int, float> > answers = teacher->ask_type_confidence_batch(queries, *(inputdata_locator::get()));
+            m_mutex.unlock();
+
+            int answers_idx = 0;
+            for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
+                if(no_pred_idxs.contains(i)){
+                    predictions.push_back(-1);
+                    continue;
+                }
+                auto& pred = answers[answers_idx];
+                predictions.push_back(pred.first);
+                ++answers_idx;
+            }
         }
     }
+    else{
+        optional< vector<int> > suffix_opt = ds_ptr->next();
+        while(suffix_opt){
+            if(left_prefix.size() + suffix_opt.value().size() > MAX_LEN){
+                no_pred_idxs.insert(queries.size()+no_pred_idxs.size());
+                suffix_opt = ds_ptr->next();
+                continue;
+            }
 
-    if() */
-    
-    vector< vector<int> > queries;
-    optional< vector<int> > suffix = ds_ptr->next();
-    vector<int> predictions;
-    
-    unordered_set<int> no_pred_idxs;
+            const vector<int>& suffix = suffix_opt.value(); 
+            vector<int> left_sequence(left_prefix.size() + suffix.size()); 
+            left_sequence.insert(left_sequence.end(), left_prefix.begin(), left_prefix.end());
+            left_sequence.insert(left_sequence.end(), suffix.begin(), suffix.end());
+            
+            queries.push_back(move(left_sequence));
+            if(queries.size() >= MIN_BATCH_SIZE){
+                m_mutex.lock();
+                vector< pair<int, float> > answers = teacher->ask_type_confidence_batch(queries, *(inputdata_locator::get()));
+                m_mutex.unlock();
+                int answers_idx = 0;
 
-    while(suffix){
-        vector<int> left_sequence(left_prefix.size() + suffix.value().size()); 
-        left_sequence.insert(left_sequence.end(), left_prefix.begin(), left_prefix.end());
-        left_sequence.insert(left_sequence.end(), suffix.value().begin(), suffix.value().end());
-        
-        //auto left_sequence = concat_prefsuf(left_prefix, suffix.value());
-        if(left_sequence.size() > MAX_LEN){
-            no_pred_idxs.insert(queries.size()+no_pred_idxs.size());
-            suffix = ds_ptr->next();
-            continue;
+                for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
+                    if(no_pred_idxs.contains(i)){
+                        predictions.push_back(-1);
+                        continue;
+                    }
+                    auto& pred = answers[answers_idx];
+                    predictions.push_back(pred.first);
+                    ++answers_idx;
+                }
+
+                queries.clear();
+                no_pred_idxs.clear();
+            }
+
+            suffix_opt = ds_ptr->next();
         }
-        
-        queries.push_back(move(left_sequence));
-        if(queries.size() >= MIN_BATCH_SIZE){
+
+        if(queries.size() > 0){
             m_mutex.lock();
             vector< pair<int, float> > answers = teacher->ask_type_confidence_batch(queries, *(inputdata_locator::get()));
             m_mutex.unlock();
@@ -100,28 +155,6 @@ void search_instance::operator()(promise<bool>&& out, std::unique_ptr<state_merg
                 predictions.push_back(pred.first);
                 ++answers_idx;
             }
-
-            queries.clear();
-            no_pred_idxs.clear();
-        }
-
-        suffix = ds_ptr->next();
-    }
-
-    if(queries.size() > 0){
-        m_mutex.lock();
-        vector< pair<int, float> > answers = teacher->ask_type_confidence_batch(queries, *(inputdata_locator::get()));
-        m_mutex.unlock();
-        int answers_idx = 0;
-
-        for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
-        if(no_pred_idxs.contains(i)){
-            predictions.push_back(-1);
-            continue;
-        }
-        auto& pred = answers[answers_idx];
-        predictions.push_back(pred.first);
-        ++answers_idx;
         }
     }
 
@@ -163,9 +196,9 @@ bool paul_algorithm::merge_check(unique_ptr<ii_base>& ii_handler, unique_ptr<sta
 refinement* paul_algorithm::get_best_refinement(unique_ptr<state_merger>& merger, unique_ptr<apta>& the_apta, unique_ptr<base_teacher>& teacher){
     const static bool ADD_TRACES = false; // if true we add sequences to the tree, else we only test, see down the code
     const static bool MERGE_WITH_LARGEST = true;
-    const static int N_THREADS = 10;
+    const static int N_THREADS = 1;
     
-    unordered_set<apta_node*> blue_its; // = state_set();
+    unordered_set<apta_node*> blue_its; // = state_set(); // state-set is ordered, we don't need that
     state_set red_its = state_set();
     
     for (blue_state_iterator it = blue_state_iterator(the_apta->get_root()); *it != nullptr; ++it){
@@ -182,17 +215,19 @@ refinement* paul_algorithm::get_best_refinement(unique_ptr<state_merger>& merger
     for (auto blue_node: blue_its) {
         
         // pre-compute on all pairs to make pre_compute of blue node consistent with all the others
-        //if(ii_handler->size() > 400){
+        if(!ii_handler->has_memoized() && ii_handler->size() < 400){
             for(apta_node* red_node: red_its){
                 ii_handler->pre_compute(the_apta, teacher, red_node, blue_node);
             }
-        //}
-
+        }
+        else if(!ii_handler->has_memoized()){
+            ii_handler->memoize();
+        }
 
         bool mergeable = false;
         ii_handler->pre_compute(the_apta, teacher, blue_node);
 
-        if(/* N_THREADS == 1 */false){
+        if(N_THREADS == 1){
             for(apta_node* red_node: red_its){
                 refinement* ref = merger->test_merge(red_node, blue_node);
                 if(ref == nullptr) continue;
@@ -206,9 +241,12 @@ refinement* paul_algorithm::get_best_refinement(unique_ptr<state_merger>& merger
                     continue;
                 }
                 
-                if (ref != nullptr && ref->score > 0){
+                if(ref->score > 0){ // TODO: why does it need to be larger than 0?
                     rs.insert(ref); // TODO: should we erase the refs somewhere as well?
                     mergeable = true;
+                }
+                else{
+                    mem_store::delete_refinement(ref);
                 }
                 if(MERGE_WITH_LARGEST && mergeable)
                     break;
@@ -241,6 +279,9 @@ refinement* paul_algorithm::get_best_refinement(unique_ptr<state_merger>& merger
                         if(merge_consistent){
                             rs.insert(current_refs[i]);
                             mergeable = true;
+                        }
+                        else{
+                            mem_store::delete_refinement(current_refs[i]);
                         }
                     }
                     current_refs.clear();
@@ -339,10 +380,10 @@ list<refinement*> paul_algorithm::find_hypothesis(list<refinement*>& previous_re
         } */
 
 //#ifndef NDEBUG
-/*         {
+        {
             static int c = 0;
             merger->print_dot("after_" + to_string(c++) + ".dot");
-        } */
+        }
 //#endif
 
         //delete best_ref;
@@ -395,6 +436,9 @@ void paul_algorithm::proc_counterex(const unique_ptr<base_teacher>& teacher, inp
         n = n_child;
         mem_store::delete_trace(parse_trace);
     }
+    
+    cerr << "Killing program. Delete this line after profiling." << endl;
+    exit(0);
 }
 
 void paul_algorithm::run(inputdata& id) {
@@ -404,7 +448,7 @@ void paul_algorithm::run(inputdata& id) {
     LOG_S(INFO) << "Creating debug directory " << DEBUG_DIR;
     std::filesystem::create_directories(DEBUG_DIR);
 #endif
-    LOG_S(INFO) << "Running PAUL algorithm.";
+    cout << "Running PAUL algorithm." << endl;
 
     auto eval = unique_ptr<evaluation_function>(get_evaluation());
     eval->initialize_before_adding_traces();
@@ -425,6 +469,13 @@ void paul_algorithm::run(inputdata& id) {
     list<refinement*> performed_refs;
     while(ENSEMBLE_RUNS > 0 && n_runs <= ENSEMBLE_RUNS){
         performed_refs = find_hypothesis(performed_refs, merger, the_apta, teacher);
+        cout << "Found hypothesis. Now testing" << endl;
+
+        {
+            static int model_nr = 0;
+            cout << "printing model " << model_nr  << endl;
+            print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_refs");
+        }
 
         optional<pair<vector<int>, int>> query_result = oracle->equivalence_query(merger.get(), teacher);
         if (!query_result) {

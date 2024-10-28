@@ -167,7 +167,7 @@ def do_query(input_seq: list):
     input_seq[i] = padded_seq
 
   #if len(input_seq) > 1:
-  #  print("After ", len(padded_seq), ", and last token idxs: ", len(last_token_idxs))
+  #  print("Before: ", len(input_seq[-1]), len(input_seq))
   if len(input_seq) == 1:
     query_string = torch.reshape(torch.tensor(input_seq), (1, -1))
   else:
@@ -205,7 +205,7 @@ def do_query(input_seq: list):
     res.append(confidence.item())
   
   #if len(input_seq) > 1:
-  #  print("res: ", res)
+  #  print("res: ")
   #representations = get_representation(output, last_token_idx)
   #embedding_dim = int(len(representations) / len(seq))
 
@@ -267,7 +267,6 @@ def get_hidden_representation(res: list):
     print(len(reps[-1]))
   
   return reps
-    
 
 if __name__ == "__main__":
   # {'c': 0, 'b': 1, 'd': 2, 'a': 3}
@@ -275,12 +274,11 @@ if __name__ == "__main__":
   get_alphabet(model_path)
   load_nn_model(model_path)
   #seq = [4, 1, 1, 5]
-  seq = [4, 1, 3, 3, 1, 5]
-  res = do_query(seq)
-  print(type(res), len(res))
-  print("here come the hidden reps: ")
-  hreps = get_hidden_representation(res)
-  for i in range(len(hreps)):
-     print("Index: {}, char: {}, hreps: {}\n\n\n".format(i, seq[i], hreps[i][:3]))
+  i = 0
+  while True:
+    seq = [["c" for _ in range(20)] for _ in range(400)]
+    res = do_query(seq)
+    if i % 100000 == 0:
+      print(i)
 
   raise Exception("This is not a standalone script.")

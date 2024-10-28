@@ -43,11 +43,9 @@ void nn_sul_base::set_list_item(PyObject* p_list, PyObject* p_item, const int id
  * @param c_list The C++ vector of strings.
  */
 void nn_sul_base::strings_to_pylist(PyObject* p_list_out, const vector<string>& c_list) const {
-    int i = 0;
-    for (const string& c_symbol : c_list) {
-        PyObject* p_symbol = PyUnicode_FromString(c_symbol.c_str());
+    for (int i=0; i<c_list.size(); ++i) {
+        PyObject* p_symbol = PyUnicode_FromString(c_list[i].c_str());
         set_list_item(p_list_out, p_symbol, i);
-        ++i;
     }
 }
 
@@ -226,11 +224,12 @@ see what happens."
 
         // Note: SOS and EOS are not allowed to be returned back
         input_alphabet.push_back(std::move(item));
-        Py_DECREF(p_item);
+        Py_DECREF(p_item); // not necessary?
     }
 
     id.set_alphabet(input_alphabet);
 
+    // making sure that these still exist after this function exits. Necessary?
     Py_INCREF(p_name);
     Py_INCREF(p_module);
     Py_INCREF(query_func);
@@ -238,4 +237,8 @@ see what happens."
 
     cout << "Python module " << INPUT_FILE << " loaded and initialized successfully." << endl;
     init_types();
+}
+
+nn_sul_base::~nn_sul_base(){
+    Py_Finalize();
 }
