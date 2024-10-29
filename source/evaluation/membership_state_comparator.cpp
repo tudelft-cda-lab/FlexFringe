@@ -19,14 +19,41 @@
 #include <unordered_set>
 #include <cmath>
 
+const bool DEBUG_REPS = true;
+
 REGISTER_DEF_DATATYPE(membership_state_comparator_data);
 REGISTER_DEF_TYPE(membership_state_comparator);
 
 void membership_state_comparator_data::print_state_label(iostream& output){
+    if(DEBUG_REPS){
+        stringstream ss;
+        ofstream fh;
+        ss << PRINT_MODEL_PREFIX << "_node_" << node->get_number() << ".txt";
+        fh.open(ss.str());
+
+        for(const vector<float>& vec: traverse_vectors){
+            ss = stringstream();
+            for(const auto x: vec)
+                ss << x << " ";
+            ss << '\n';
+            fh << ss.str();
+        }
+
+        fh << "final\n";
+        for(const vector<float>& vec: final_vectors){
+            ss = stringstream();
+            for(const auto x: vec)
+                ss << x << " ";
+            ss << '\n';
+            fh << ss.str();
+        }
+
+        fh.close();
+    }
+    
     lsharp_data::print_state_label(output);
-    //for(auto x: LS){
-    //    output << x << "\n";
-    //}
+    return;
+
     compute_statistics();
 
     float mean = 0;
@@ -75,6 +102,15 @@ void membership_state_comparator_data::undo(evaluation_data* right){
  * 
  */
 void membership_state_comparator_data::update_sums(const std::vector<float>& internal_rep){
+    if(DEBUG_REPS && traverse_vectors.size()==0){ // TODO: can optimize this
+        traverse_vectors.push_back(internal_rep);
+    }
+
+    //cout << "Node: " << node->get_number() << "\n";
+    //for(int i=0; i<3; ++i)
+    //    cout << internal_rep[i] << " ";
+    //cout << endl;
+
     N += 1;
     if(LS.size()==0){
         //cout << "Size of internal representation: " << internal_rep.size() << endl;
@@ -99,6 +135,12 @@ void membership_state_comparator_data::update_sums(const std::vector<float>& int
         SS[i] += pow(internal_rep[i], 2);
     }
 }
+
+void membership_state_comparator_data::update_final_vec(const std::vector<float>& internal_rep){
+    if(final_vectors.size()==0) // TODO: can optimize this
+        final_vectors.push_back(internal_rep);
+}
+
 
 /**
  * @brief Triggers the computation of the statistics from LS to SS. We split up the 

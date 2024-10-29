@@ -123,7 +123,7 @@ void count_data::write_json(json& data){
 };
 
 void count_data::update(evaluation_data* right){
-    auto* other = reinterpret_cast<count_data*>(right);
+    auto* other = static_cast<count_data*>(right);
     for(auto & final_count : other->final_counts){
         int type = final_count.first;
         int count = final_count.second;
@@ -147,7 +147,7 @@ void count_data::update(evaluation_data* right){
 };
 
 void count_data::undo(evaluation_data* right){
-    auto* other = reinterpret_cast<count_data*>(right);
+    auto* other = static_cast<count_data*>(right);
 
     for(auto & final_count : other->final_counts){
         int type = final_count.first;

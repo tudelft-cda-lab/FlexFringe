@@ -26,9 +26,9 @@ class active_state_sul_oracle : public active_sul_oracle {
   public:
     active_state_sul_oracle(std::shared_ptr<sul_base>& sul) : active_sul_oracle(sul) {
         //search_strategy = std::unique_ptr<search_base>(
-            //new random_w_method(MAX_CEX_LENGTH)); // std::unique_ptr<search_base>(new bfs_strategy(8)); // number here is
+            //new random_w_method(MAX_AL_SEARCH_DEPTH)); // std::unique_ptr<search_base>(new bfs_strategy(8)); // number here is
                                            // maximum length of sequence. Find a better way to set this
-        search_strategy = std::unique_ptr<search_base>(new bfs_strategy(MAX_CEX_LENGTH));
+        search_strategy = std::unique_ptr<search_base>(new bfs_strategy(MAX_AL_SEARCH_DEPTH));
         assert(dynamic_cast<input_file_sul*>(sul.get()) == nullptr);
         conflict_searcher = std::unique_ptr<conflict_search_base>(new dfa_conflict_search_namespace::linear_state_query_conflict_search());
     };

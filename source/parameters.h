@@ -163,11 +163,14 @@ extern string REJECTING_LABEL;
 
 extern int START_SYMBOL;
 extern int END_SYMBOL;
-extern int MAX_CEX_LENGTH;
+extern int MAX_AL_SEARCH_DEPTH;
 extern int NUM_CEX_PARAM;
+extern bool IDENTIFY_STATE_COMPLETELY;
 
 extern string POSTGRESQL_CONNSTRING;
 extern string POSTGRESQL_TBLNAME;
 extern bool POSTGRESQL_DROPTBLS;
+
+extern string PRINT_MODEL_PREFIX; // TODO: delete this one
 
 #endif

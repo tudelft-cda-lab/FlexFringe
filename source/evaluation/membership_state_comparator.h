@@ -20,6 +20,8 @@
 class membership_state_comparator_data: public lsharp_data {
     friend class membership_state_comparator;
 protected:
+    std::vector< std::vector<float> > traverse_vectors; // for debugging
+    std::vector< std::vector<float> > final_vectors; // for debugging
 
     REGISTER_DEC_DATATYPE(membership_state_comparator_data);
 
@@ -31,6 +33,7 @@ protected:
     std::vector<float> std_devs;
 
 public:
+
     membership_state_comparator_data() : lsharp_data::lsharp_data(){     
         N = 0;   
     }
@@ -42,6 +45,7 @@ public:
     void undo(evaluation_data* right) override;
 
     void update_sums(const std::vector<float>& internal_rep);
+    void update_final_vec(const std::vector<float>& internal_rep);
     void compute_statistics();
 };
 

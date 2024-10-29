@@ -68,7 +68,6 @@ void run() {
         }
     }
 
-
     if(OPERATION_MODE == "active_learning"){
         cout << "Run in active learning mode." << endl;
         auto al = active_learning_main_func();
@@ -350,7 +349,7 @@ int main(int argc, char *argv[]){
     app.add_option("--logpath", LOG_PATH, "The path to write the flexfringe log file to. Defaults to \"flexfringe.log\"");
     app.add_option("--debugdir", DEBUG_DIR, "The dir to write any debug data.");
     app.set_config("--ini", default_file_name, "Read an ini file", false);
-    app.add_option("--mode", OPERATION_MODE, "batch (default), interactive, or stream depending on the mode of operation.");
+    app.add_option("--mode", OPERATION_MODE, "batch (default), interactive, predict, active_learning, or stream, depending on the mode of operation.");
     app.add_option("--heuristic-name,--heuristic_name", HEURISTIC_NAME, "Name of the merge heuristic to use; default count_driven. Use any heuristic in the evaluation directory. It is often beneficial to write your own, as heuristics are very application specific.")->required();
     app.add_option("--data-name,--data_name", DATA_NAME, "Name of the merge data class to use; default count_data. Use any heuristic in the evaluation directory.");
     app.add_option("--evalpar", EVALUATION_PARAMETERS, "string of key-value pairs for evaluation functions");
@@ -471,9 +470,11 @@ int main(int argc, char *argv[]){
     // active learning parameters
     app.add_option("--active_learning_algorithm", ACTIVE_LEARNING_ALGORITHM, "The basic algorithm that runs through. Current options are (l_star). DEFAULT: l_star");
     app.add_option("--use_active_learning", DO_ACTIVE_LEARNING, "Perform active learning on top of the normal learner. 1 for true, 0 for false. Default: 0");
-    app.add_option("--max_counterexample_length", MAX_CEX_LENGTH, "The maximum length a counterexample can reach. Critical in models where a maximum-string-length occurs, such as transformer-models. Default: 25");
+    app.add_option("--max_al_search_depth", MAX_AL_SEARCH_DEPTH, "The active learning search depth. Some uses can be disabled with a value <= 0. Critical in models where a maximum-string-length occurs, such as transformer-models. Default: 25");
     app.add_option("--num_cex_search", NUM_CEX_PARAM, "Samples parameter indicating a number in the counterexample search. For example, in the random w-method the number of strings per node,\\
                                                                 and in random string search it is the delay. Default: 5000");
+    app.add_option("--identify_state_completely", IDENTIFY_STATE_COMPLETELY, "If true, then we only merges states that cannot be merged with another. In other words, it reduces the heuristic nature. Can only be used only in select algorithms, for example L#. Default: True");
+
     // TODO: shall we delete the rejecting_label option?
     app.add_option("--rejecting_label", REJECTING_LABEL, "The label as a string that is used for rejecting (non-accepting) behavior. Only in active learning mode. DEFAULT: 0");
     app.add_option("--start_symbol", START_SYMBOL, "The <SOS> symbol (as per NLP convention) represented by an int value. A value of -1 means that it is unused. Only in active learning mode when querying networks. DEFAULT: -1");
@@ -492,7 +493,6 @@ int main(int argc, char *argv[]){
     app.add_option("--postgresql-droptbls", POSTGRESQL_DROPTBLS,
                    "With this option you can tell the program to drop the existing tables. Default=true");
     
-
     CLI11_PARSE(app, argc, argv)
 
     loguru::g_stderr_verbosity = loguru::Verbosity_OFF;
