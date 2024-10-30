@@ -79,6 +79,13 @@ class nn_sul_base : public sul_base {
     virtual const int query_trace(const std::vector<int>& query_trace, inputdata& id) const = 0;
     virtual void init_types() const = 0; // we need to set the internal types of flexfringe according to the types we expect
 
+    const std::string CONNECTOR_FILE;
+
+    nn_sul_base(const std::string& cf) : CONNECTOR_FILE(cf) {
+    };
+    ~nn_sul_base();
+
+
   public:
     virtual void pre(inputdata& id) override;
 };

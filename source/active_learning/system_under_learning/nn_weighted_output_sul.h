@@ -27,13 +27,17 @@ class nn_weighted_output_sul : public nn_sul_base {
   private:
     FLEXFRINGE_ALWAYS_INLINE const double get_sigmoid_output(const std::vector<int>& query_trace,
                                                                           inputdata& id) const;
+#ifdef __FLEXFRINGE_PYTHON
     inline std::vector< std::vector<float> > compile_hidden_rep(PyObject* p_result, const int offset) const;
+#endif /* __FLEXFRINGE_PYTHON */
 
   protected:
     void reset() override {};
     void init_types() const override;
 
+#ifdef __FLEXFRINGE_PYTHON
     void string_to_pylist(PyObject* p_list_out, std::vector<std::string>& c_list) const;
+#endif /* __FLEXFRINGE_PYTHON */
 
     /* Learning from NN acceptors*/
     bool is_member(const std::vector<int>& query_trace) const;

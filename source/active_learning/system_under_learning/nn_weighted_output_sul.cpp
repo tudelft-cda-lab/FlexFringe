@@ -22,7 +22,6 @@ using namespace std;
 
 #ifdef __FLEXFRINGE_PYTHON
 
-
 bool nn_weighted_output_sul::is_member(const std::vector<int>& query_trace) const { return true; }
 
 /**
@@ -60,7 +59,8 @@ const int nn_weighted_output_sul::query_trace(const std::vector<int>& query_trac
     const double nn_output = get_sigmoid_output(query_trace, id);
     if (nn_output < 0) {
         cerr << "Query trace: ";
-        for(auto s: query_trace) cerr << s << " ";
+        for (auto s : query_trace)
+            cerr << s << " ";
         cerr << "\nOutput: " << nn_output << endl;
         throw runtime_error("Error in Python script, please check your code there.");
     }
@@ -68,23 +68,25 @@ const int nn_weighted_output_sul::query_trace(const std::vector<int>& query_trac
 }
 
 /**
- * @brief Gets the hidden representation from the parameters given. Saves duplicate code. 
- * 
- * @param p_result The result as returned by the network. p_results assumed to be a flattened out matrix, 
+ * @brief Gets the hidden representation from the parameters given. Saves duplicate code.
+ *
+ * @param p_result The result as returned by the network. p_results assumed to be a flattened out matrix,
  * i.e. a vector that we have to infer the shape from again via HIDDEN_STATE_SIZE.
  * @param offset The initial offset where we find HIDDEN_STATE_SIZE.
  * @return vector< vector<float> > The hidden representations, one per input symbol. Usually including <SOS> and <EOS>.
  */
-vector< vector<float> > nn_weighted_output_sul::compile_hidden_rep(PyObject* p_result, const int offset) const {
-    
-    static const int HIDDEN_STATE_SIZE = static_cast<int>(PyLong_AsLong(PyList_GetItem(p_result, static_cast<Py_ssize_t>(offset)))); // get first list, then return its length 
-    const int n_sequences = static_cast<int>( (static_cast<int>(PyList_Size(p_result)) -2) / HIDDEN_STATE_SIZE);
-    vector< vector<float> > representations(n_sequences);
+vector<vector<float>> nn_weighted_output_sul::compile_hidden_rep(PyObject* p_result, const int offset) const {
+
+    static const int HIDDEN_STATE_SIZE = static_cast<int>(PyLong_AsLong(
+        PyList_GetItem(p_result, static_cast<Py_ssize_t>(offset)))); // get first list, then return its length
+    const int n_sequences = static_cast<int>((static_cast<int>(PyList_Size(p_result)) - 2) / HIDDEN_STATE_SIZE);
+    vector<vector<float>> representations(n_sequences);
     for (int i = 0; i < n_sequences; ++i) {
         vector<float> hidden_rep(HIDDEN_STATE_SIZE);
 
-        for(int j=0; j<HIDDEN_STATE_SIZE; ++j){
-            int idx = i * HIDDEN_STATE_SIZE + j + offset + 1; // + offset + 1 because the first elements of p_result are predicted type, and eventually a confidence
+        for (int j = 0; j < HIDDEN_STATE_SIZE; ++j) {
+            int idx = i * HIDDEN_STATE_SIZE + j + offset + 1; // + offset + 1 because the first elements of p_result are
+                                                              // predicted type, and eventually a confidence
             PyObject* s = PyList_GET_ITEM(p_result, static_cast<Py_ssize_t>(idx));
             hidden_rep[j] = static_cast<float>(PyFloat_AsDouble(s));
         }
@@ -96,15 +98,15 @@ vector< vector<float> > nn_weighted_output_sul::compile_hidden_rep(PyObject* p_r
 }
 
 /**
- * @brief Gets the type, assumed to be of Sigmoid output and a threshold of 0.5, along with 
+ * @brief Gets the type, assumed to be of Sigmoid output and a threshold of 0.5, along with
  * a hidden representation of the network state.
- * 
+ *
  * @return const std::pair< int, std::vector<float> > <the type, the hidden representations for each symbol of sequence>
  */
-const std::pair< int, std::vector< std::vector<float> > > 
+const std::pair<int, std::vector<std::vector<float>>>
 nn_weighted_output_sul::get_type_and_states(const std::vector<int>& query_trace, inputdata& id) const {
-    //PyObject* p_input_string = PyList_New(query_trace.size());
-    //PyObject* p_lengths = PyList_New(query_trace.size());
+    // PyObject* p_input_string = PyList_New(query_trace.size());
+    // PyObject* p_lengths = PyList_New(query_trace.size());
     PyObject* p_list = PyList_New(query_trace.size());
 
     input_sequence_to_pylist(p_list, query_trace);
@@ -113,33 +115,34 @@ nn_weighted_output_sul::get_type_and_states(const std::vector<int>& query_trace,
     if (!PyList_Check(p_result))
         throw std::runtime_error("Something went wrong, the Network did not return a list. What happened?");
 
-    // by convention, python script must return a list. list[0]=prediction, list[1]=embedding_dim, rest is hidden_representations 1D
+    // by convention, python script must return a list. list[0]=prediction, list[1]=embedding_dim, rest is
+    // hidden_representations 1D
     PyObject* p_type = PyList_GetItem(p_result, static_cast<Py_ssize_t>(0));
-    if(!PyLong_Check(p_type)){
+    if (!PyLong_Check(p_type)) {
         cerr << "Problem with type as returned by Python script. Is it a proper int?" << endl;
         throw exception(); // force the catch block
-    }
-    else if(!PyLong_CheckExact(p_type)){
+    } else if (!PyLong_CheckExact(p_type)) {
         cerr << "Something weird happend here." << endl;
         throw exception();
     }
 
     int type = static_cast<int>(PyLong_AsLong(p_type));
-    if(type > id.get_alphabet_size()){
+    if (type > id.get_alphabet_size()) {
         id.add_type(PyUnicode_AsUTF8(p_type));
     }
 
-    vector< vector<float> > representations = compile_hidden_rep(p_result, 1);
+    vector<vector<float>> representations = compile_hidden_rep(p_result, 1);
 
     return make_pair(type, representations);
 }
 
 /**
  * @brief Gets the type and a confidence value along with a hidden representation of the network state.
- * 
- * @return const std::tuple< int, float, std::vector<float> > <the type, confidence, the hidden representations for each symbol of sequence>
+ *
+ * @return const std::tuple< int, float, std::vector<float> > <the type, confidence, the hidden representations for each
+ * symbol of sequence>
  */
-const std::tuple< int, float, std::vector< std::vector<float> > > 
+const std::tuple<int, float, std::vector<std::vector<float>>>
 nn_weighted_output_sul::get_type_confidence_and_states(const std::vector<int>& query_trace, inputdata& id) const {
     PyObject* p_list = PyList_New(query_trace.size());
     input_sequence_to_pylist(p_list, query_trace);
@@ -148,115 +151,115 @@ nn_weighted_output_sul::get_type_confidence_and_states(const std::vector<int>& q
     if (!PyList_Check(p_result))
         throw std::runtime_error("Something went wrong, the Network did not return a list. What happened?");
 
-    // by convention, python script must return a list. list[1]=prediction, list[0]=confidence_in_prediction, list[2]=embedding_dim, rest is hidden_representations 1D
+    // by convention, python script must return a list. list[1]=prediction, list[0]=confidence_in_prediction,
+    // list[2]=embedding_dim, rest is hidden_representations 1D
 
     PyObject* p_type = PyList_GetItem(p_result, static_cast<Py_ssize_t>(0));
-    if(!PyUnicode_CheckExact(p_type)){
+    if (!PyUnicode_CheckExact(p_type)) {
         cerr << "Problem with type as returned by Python script. Is it a proper int?" << endl;
         throw exception(); // force the catch block
     }
 
     PyObject* p_confidence = PyList_GetItem(p_result, static_cast<Py_ssize_t>(1));
-    if(!PyFloat_CheckExact(p_confidence)){
+    if (!PyFloat_CheckExact(p_confidence)) {
         cerr << "Problem with type as returned by Python script. Is it a proper float?" << endl;
         throw exception(); // force the catch block
     }
 
-
     int type = id.get_reverse_type(PyUnicode_AsUTF8(p_type));
-    if(type > id.get_alphabet_size()){
+    if (type > id.get_alphabet_size()) {
         id.add_type(PyUnicode_AsUTF8(p_type));
     }
 
     float confidence = static_cast<float>(PyFloat_AsDouble(p_confidence));
-    //vector< vector<float> > representations = compile_hidden_rep(p_result, 2);
+    // vector< vector<float> > representations = compile_hidden_rep(p_result, 2);
 
     return make_tuple(type, confidence, vector<vector<float>>());
-    //return make_tuple(type, confidence, representations);
+    // return make_tuple(type, confidence, representations);
 }
 
-const vector< pair<int, float> >
-nn_weighted_output_sul::get_type_confidence_batch(const vector< vector<int> >& query_traces, inputdata& id) const {
+const vector<pair<int, float>>
+nn_weighted_output_sul::get_type_confidence_batch(const vector<vector<int>>& query_traces, inputdata& id) const {
 
-    vector<pair<int, float> > res;
+    vector<pair<int, float>> res;
     res.reserve(query_traces.size());
-    for(int i = 0; i < query_traces.size(); ++i){
+    for (int i = 0; i < query_traces.size(); ++i) {
         res.emplace(res.end(), 1, 0.8);
     }
     return res;
 
-/*     PyObject* p_list = PyList_New(query_traces.size());
-    for(int i=0; i<query_traces.size(); i++){
-        PyObject* p_tmp = PyList_New(query_traces[i].size());
-        input_sequence_to_pylist(p_tmp, query_traces[i]);
-        PyList_SetItem(p_list, i, p_tmp);
-        //Py_DECREF(p_tmp); // making sure p_tmp does not get deleted after loop
-    } */
+    /*     PyObject* p_list = PyList_New(query_traces.size());
+        for(int i=0; i<query_traces.size(); i++){
+            PyObject* p_tmp = PyList_New(query_traces[i].size());
+            input_sequence_to_pylist(p_tmp, query_traces[i]);
+            PyList_SetItem(p_list, i, p_tmp);
+            //Py_DECREF(p_tmp); // making sure p_tmp does not get deleted after loop
+        } */
 
-/*     cout << "refcount of p_list: " << Py_REFCNT(p_list) << endl;
-    cout << "refcount of query_func: " << Py_REFCNT(query_func) << endl;
-    cout << "size of p_list: " << PyList_Size(p_list) << endl;
-    cout << "refcount of p_list[0]: " << Py_REFCNT(PyList_GetItem(p_list, static_cast<Py_ssize_t>(0))) << endl;
-    cout << "size of p_list[0]: " << PyList_Size(PyList_GetItem(p_list, static_cast<Py_ssize_t>(0))) << endl;
-    if(query_traces[0].size() > 0)
-        cout << "refcount of p_list[0][0]: " << Py_REFCNT(PyList_GetItem(PyList_GetItem(p_list, static_cast<Py_ssize_t>(0)), 0)) << endl;
+    /*     cout << "refcount of p_list: " << Py_REFCNT(p_list) << endl;
+        cout << "refcount of query_func: " << Py_REFCNT(query_func) << endl;
+        cout << "size of p_list: " << PyList_Size(p_list) << endl;
+        cout << "refcount of p_list[0]: " << Py_REFCNT(PyList_GetItem(p_list, static_cast<Py_ssize_t>(0))) << endl;
+        cout << "size of p_list[0]: " << PyList_Size(PyList_GetItem(p_list, static_cast<Py_ssize_t>(0))) << endl;
+        if(query_traces[0].size() > 0)
+            cout << "refcount of p_list[0][0]: " << Py_REFCNT(PyList_GetItem(PyList_GetItem(p_list,
+       static_cast<Py_ssize_t>(0)), 0)) << endl;
 
-    cout << "Is initialized: " << Py_IsInitialized() << endl; */
+        cout << "Is initialized: " << Py_IsInitialized() << endl; */
 
-/*     PyObject* p_result;
-    try{
-        p_result = PyObject_CallOneArg(query_func, p_list);
-    }
-    catch(...){
-        cout << "Running gc and trying again" << endl;
-        PyRun_SimpleString("gc.collect()");
-        p_result = PyObject_CallOneArg(query_func, p_list);
-    }
-    if (!PyList_Check(p_result))
-        throw std::runtime_error("Something went wrong, the Network did not return a list. What happened?");
+    /*     PyObject* p_result;
+        try{
+            p_result = PyObject_CallOneArg(query_func, p_list);
+        }
+        catch(...){
+            cout << "Running gc and trying again" << endl;
+            PyRun_SimpleString("gc.collect()");
+            p_result = PyObject_CallOneArg(query_func, p_list);
+        }
+        if (!PyList_Check(p_result))
+            throw std::runtime_error("Something went wrong, the Network did not return a list. What happened?");
 
-    vector< pair<int, float> > res;
-    for(int i=0; i<query_traces.size(); i++){
-        
-        PyObject* p_type = PyList_GetItem(p_result, static_cast<Py_ssize_t>(i*2));
-        if(!PyUnicode_CheckExact(p_type)){
-            cerr << "Problem with type as returned by Python script. Is it a proper int?" << endl;
-            throw exception(); // force the catch block
+        vector< pair<int, float> > res;
+        for(int i=0; i<query_traces.size(); i++){
+
+            PyObject* p_type = PyList_GetItem(p_result, static_cast<Py_ssize_t>(i*2));
+            if(!PyUnicode_CheckExact(p_type)){
+                cerr << "Problem with type as returned by Python script. Is it a proper int?" << endl;
+                throw exception(); // force the catch block
+            }
+
+            PyObject* p_confidence = PyList_GetItem(p_result, static_cast<Py_ssize_t>(i*2 + 1));
+            if(!PyFloat_CheckExact(p_confidence)){
+                cerr << "Problem with type as returned by Python script. Is it a proper float?" << endl;
+                throw exception(); // force the catch block
+            }
+
+            int type = id.get_reverse_type(PyUnicode_AsUTF8(p_type));
+            if(type > id.get_alphabet_size()){
+                id.add_type(PyUnicode_AsUTF8(p_type));
+            }
+
+            res.emplace_back(type, static_cast<float>(PyFloat_AsDouble(p_confidence)));
+
+            //cout << "1: " << Py_REFCNT(p_type) << endl;
+            //cout << "2: " << Py_REFCNT(p_confidence) << endl;
+
+            //Py_DECREF(p_type);
+            //Py_DECREF(p_confidence);
         }
 
-        PyObject* p_confidence = PyList_GetItem(p_result, static_cast<Py_ssize_t>(i*2 + 1));
-        if(!PyFloat_CheckExact(p_confidence)){
-            cerr << "Problem with type as returned by Python script. Is it a proper float?" << endl;
-            throw exception(); // force the catch block
-        }
-
-        int type = id.get_reverse_type(PyUnicode_AsUTF8(p_type));
-        if(type > id.get_alphabet_size()){
-            id.add_type(PyUnicode_AsUTF8(p_type));
-        }
-
-        res.emplace_back(type, static_cast<float>(PyFloat_AsDouble(p_confidence)));
-
-        //cout << "1: " << Py_REFCNT(p_type) << endl;
-        //cout << "2: " << Py_REFCNT(p_confidence) << endl;
-
-        //Py_DECREF(p_type);
-        //Py_DECREF(p_confidence);
-    }
-
-/*     for(int i=0; i<query_traces.size(); i++){
-        for(int j=0; j<query_traces[i].size(); j++){
-            Py_DECREF(PyList_GetItem(PyList_GetItem(p_list, static_cast<Py_ssize_t>(i)), j));
-        }
-        Py_DECREF(PyList_GetItem(p_list, static_cast<Py_ssize_t>(i)));
-    } */
+    /*     for(int i=0; i<query_traces.size(); i++){
+            for(int j=0; j<query_traces[i].size(); j++){
+                Py_DECREF(PyList_GetItem(PyList_GetItem(p_list, static_cast<Py_ssize_t>(i)), j));
+            }
+            Py_DECREF(PyList_GetItem(p_list, static_cast<Py_ssize_t>(i)));
+        } */
     /* Py_DECREF(p_list);
     Py_DECREF(p_result);
 
     assert(res.size() == query_traces.size());
     return res; */
 }
-
 
 /**
  * @brief Initialize the types to 0 and 1. Which is which depends on how the network was trained.
@@ -313,12 +316,12 @@ const std::vector<float> nn_weighted_output_sul::get_weight_distribution(const s
 
 /**
  * @brief Gets a weight distribution along with a hidden representation of the network.
- * 
+ *
  * For information on the weight distribution see the get_weight_distribution() method.
- * 
+ *
  * @return const std::pair< std::vector<float>, std::vector<float> > <distribution, hidden state>
  */
-const std::pair< std::vector<float>, std::vector<float> > 
+const std::pair<std::vector<float>, std::vector<float>>
 nn_weighted_output_sul::get_weights_and_state(const std::vector<int>& query_trace, inputdata& id) const {
     PyObject* p_list = PyList_New(query_trace.size());
     input_sequence_to_pylist(p_list, query_trace);
@@ -331,14 +334,14 @@ nn_weighted_output_sul::get_weights_and_state(const std::vector<int>& query_trac
     PyObject* p_weights = PyTuple_GET_ITEM(p_result, static_cast<Py_ssize_t>(0));
     PyObject* p_state = PyTuple_GET_ITEM(p_result, static_cast<Py_ssize_t>(1));
 
-    static const int STATE_SIZE = static_cast<int>(PyList_Size(p_state));    
+    static const int STATE_SIZE = static_cast<int>(PyList_Size(p_state));
     vector<float> state(STATE_SIZE);
     for (int i = 0; i < STATE_SIZE; ++i) {
         PyObject* s = PyList_GET_ITEM(p_state, static_cast<Py_ssize_t>(i));
         state[i] = static_cast<float>(PyFloat_AsDouble(s));
     }
 
-    if(PyList_Check(p_weights)){
+    if (PyList_Check(p_weights)) {
         // in this branch we get a weight distribution back
         static const int RESPONSE_SIZE = static_cast<int>(PyList_Size(p_weights));
         vector<float> res(RESPONSE_SIZE);
@@ -347,14 +350,12 @@ nn_weighted_output_sul::get_weights_and_state(const std::vector<int>& query_trac
             res[i] = static_cast<float>(PyFloat_AsDouble(resp));
         }
         return make_pair(res, state);
-    }
-    else if(PyFloat_Check(p_weights)){
+    } else if (PyFloat_Check(p_weights)) {
         // binary acceptor model
         vector<float> res(1);
         res[0] = static_cast<float>(PyFloat_AsDouble(p_weights));
         return make_pair(res, state);
-    }
-    else{
+    } else {
         throw std::runtime_error("Something went wrong, the Network neither returned a float (binary acceptor model\
         , nor did it return a list (language model)). What happened?");
     }
@@ -378,11 +379,20 @@ const int nn_weighted_output_sul::query_trace(const std::vector<int>& query_trac
     throw std::runtime_error("Enable this feature with -DENABLE_PYTHON=ON on cmake.");
 }
 
-const std::pair< int, std::vector<float> > 
-nn_weighted_output_sul::get_type_and_state(const std::vector<int>& query_trace, inputdata& id) const {
+const std::pair<int, std::vector<std::vector<float>>>
+nn_weighted_output_sul::get_type_and_states(const std::vector<int>& query_trace, inputdata& id) const {
     throw std::runtime_error("Enable this feature with -DENABLE_PYTHON=ON on cmake.");
 }
 
+const std::tuple<int, float, std::vector<std::vector<float>>>
+nn_weighted_output_sul::get_type_confidence_and_states(const std::vector<int>& query_trace, inputdata& id) const {
+    throw std::runtime_error("Enable this feature with -DENABLE_PYTHON=ON on cmake.");
+}
+
+const vector<pair<int, float>>
+nn_weighted_output_sul::get_type_confidence_batch(const vector<vector<int>>& query_traces, inputdata& id) const {
+    throw std::runtime_error("Enable this feature with -DENABLE_PYTHON=ON on cmake.");
+}
 
 void nn_weighted_output_sul::init_types() const {
     throw std::runtime_error("Enable this feature with -DENABLE_PYTHON=ON on cmake.");
@@ -397,7 +407,7 @@ const std::vector<float> nn_weighted_output_sul::get_weight_distribution(const s
     throw std::runtime_error("Enable this feature with -DENABLE_PYTHON=ON on cmake.");
 }
 
-const std::pair< std::vector<float>, std::vector<float> > 
+const std::pair<std::vector<float>, std::vector<float>>
 nn_weighted_output_sul::get_weights_and_state(const std::vector<int>& query_trace, inputdata& id) const {
     throw std::runtime_error("Enable this feature with -DENABLE_PYTHON=ON on cmake.");
 }
@@ -406,7 +416,7 @@ nn_weighted_output_sul::get_weights_and_state(const std::vector<int>& query_trac
  * @brief Destroy the nn sigmoid sul::nn sigmoid sul object
  *
  */
-nn_weighted_output_sul::~nn_weighted_output_sul() { 
+nn_weighted_output_sul::~nn_weighted_output_sul() {
     throw std::runtime_error("Enable this feature with -DENABLE_PYTHON=ON on cmake.");
 }
 
