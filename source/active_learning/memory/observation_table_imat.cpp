@@ -311,7 +311,7 @@ void observation_table_imat::complete_rows(base_teacher* teacher, inputdata& id)
             if (has_record(current_row, current_column))
                 continue;
 
-            const int answer = teacher->ask_membership_query_lstar(current_row, current_column, id);
+            const int answer = teacher->ask_membership_query(current_row, current_column, id);
             insert_record(current_row, current_column, answer);
         }
         mark_row_complete(current_row);

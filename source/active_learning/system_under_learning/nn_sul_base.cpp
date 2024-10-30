@@ -11,6 +11,7 @@
 
 #include "nn_sul_base.h"
 #include "parameters.h"
+#include "inputdatalocator.h"
 
 #include <iostream>
 #include <map> // TODO: make this one and the one in r_alphabet unordered
@@ -39,6 +40,38 @@ void nn_sul_base::set_list_item(PyObject* p_list, PyObject* p_item, const int id
 }
 
 /**
+ * @brief Takes a list of c_strings, converts them into a python list of strings.
+ * 
+ * @param p_list_out The Python list to write into.
+ * @param c_list The C++ vector of strings.
+ */
+void nn_sul_base::strings_to_pylist(PyObject* p_list_out, const vector<string>& c_list) const {
+    for (int i=0; i<c_list.size(); ++i) {
+        PyObject* p_symbol = PyUnicode_FromString(c_list[i].c_str());
+        set_list_item(p_list_out, p_symbol, i);
+    }
+}
+
+/**
+ * @brief Like strings_to_pylist, but it first converts c_list into a vector 
+ * with string representations using the internal inputdata structure as a mapping.
+ * 
+ * @param p_list_out The Python list to write into.
+ * @param c_list The C++ vector of strings.
+ */
+void nn_sul_base::input_sequence_to_pylist(PyObject* p_list_out, const vector<int>& c_list) const {
+    static inputdata* id = inputdata_locator::get();
+
+    vector<string> mapped_list;
+    mapped_list.reserve(c_list.size());
+    for(int i = 0; i < c_list.size(); ++i){
+        mapped_list.emplace(mapped_list.end(), id->get_symbol(c_list[i]).c_str());
+    }
+
+    strings_to_pylist(p_list_out, mapped_list);
+}
+
+/**
  * @brief Initializes the python environment and
  * enables us to load the python module.
  *
@@ -54,13 +87,13 @@ void nn_sul_base::pre(inputdata& id) {
     std::string PYTHON_MODULE_NAME;
     int pos;
 #if defined(_WIN32)
-    pos = static_cast<int>(INPUT_FILE.find_last_of("\\"));
+    pos = static_cast<int>(CONNECTOR_FILE.find_last_of("\\"));
 #else
-    pos = static_cast<int>(INPUT_FILE.find_last_of("/"));
+    pos = static_cast<int>(CONNECTOR_FILE.find_last_of("/"));
 #endif
-    PYTHON_SCRIPT_PATH = INPUT_FILE.substr(0, pos);
+    PYTHON_SCRIPT_PATH = CONNECTOR_FILE.substr(0, pos);
     PYTHON_MODULE_NAME =
-        INPUT_FILE.substr(pos + 1, INPUT_FILE.size() - pos - 4); // -pos-4 to get rid off the .py ending
+        CONNECTOR_FILE.substr(pos + 1, CONNECTOR_FILE.size() - pos - 4); // -pos-4 to get rid off the .py ending
 
     stringstream cmd;
     cmd << "sys.path.append( os.path.join(os.getcwd(), \"";
@@ -160,20 +193,26 @@ see what happens."
     }
 
     cout << "Setting internal flexfringe alphabet, inferred from the network's training alphabet" << endl;
-    //vector<string> input_alphabet;
-    vector<int> input_alphabet;
+    vector<string> input_alphabet;
     const auto size = static_cast<int>(PyList_Size(p_alphabet));
-    const int start_symbol = START_SYMBOL;
-    const int end_symbol = END_SYMBOL;
     for (int i = 0; i < size; ++i) {
         PyObject* p_item = PyList_GetItem(p_alphabet, static_cast<Py_ssize_t>(i));
-
-        //string item;
-        int item;
+        if(!PyUnicode_Check(p_item)){
+            Py_DECREF(p_name);
+            Py_DECREF(p_module);
+            Py_DECREF(query_func);
+            Py_DECREF(alphabet_func);
+            Py_DECREF(load_model_func);
+            Py_DECREF(p_model_path);
+            Py_DECREF(p_item);
+            cerr << "Alphabet returned by Python script must be a vector of string values." << endl;
+            exit(1);
+        }
+        
+        string item;
         try {
-            //const char* s =  PyUnicode_AsUTF8(p_item);
-            //item = string(s); //PyLong_AsLong(p_item);
-            item = PyLong_AsLong(p_item);
+            const char* s =  PyUnicode_AsUTF8(p_item);
+            item = string(s);
         } catch (...) {
             Py_DECREF(p_name);
             Py_DECREF(p_module);
@@ -186,14 +225,14 @@ see what happens."
             exit(1);
         }
 
-        Py_DECREF(p_item);
-        if (item != start_symbol && item != end_symbol)
         // Note: SOS and EOS are not allowed to be returned back
-            input_alphabet.push_back(std::move(item));
+        input_alphabet.push_back(std::move(item));
+        Py_DECREF(p_item); // not necessary?
     }
 
     id.set_alphabet(input_alphabet);
 
+    // making sure that these still exist after this function exits. Necessary?
     Py_INCREF(p_name);
     Py_INCREF(p_module);
     Py_INCREF(query_func);
@@ -201,6 +240,10 @@ see what happens."
 
     cout << "Python module " << INPUT_FILE << " loaded and initialized successfully." << endl;
     init_types();
+}
+
+nn_sul_base::~nn_sul_base(){
+    Py_Finalize();
 }
 
 /* Dummy implementation when Python disabled to get it to compile on platforms without Python Dev Headers. */

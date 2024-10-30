@@ -25,12 +25,16 @@ add_library(Evaluation STATIC
             lsharp_eval.cpp
             mealy.h
             mealy.cpp
+            membership_state_comparator.h
+            membership_state_comparator.cpp
             mse_error.h
             mse_error.cpp
             overlap.h
             overlap.cpp
             overlap4logs.h
             overlap4logs.cpp
+            paul_heuristic.h
+            paul_heuristic.cpp
             rti+.h
             rti+.cpp
             space-saving.h

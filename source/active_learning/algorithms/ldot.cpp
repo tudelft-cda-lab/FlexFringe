@@ -345,7 +345,6 @@ void ldot_algorithm::run(inputdata& id) {
 
             /* if (blue_node->get_size() == 0) */
             /*     throw logic_error("This should never happen: TODO: Delete line"); */
-
             if (BLUE_NODE_COMPLETION)
                 maybe_list_for_completion(blue_node);
 

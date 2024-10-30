@@ -1,0 +1,83 @@
+/**
+ * @file paul.h
+ * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
+ * @brief 
+ * @version 0.1
+ * @date 2024-08-20
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
+
+#ifndef _PAUL_H_
+#define _PAUL_H_
+
+#include "algorithm_base.h"
+#include "base_teacher.h"
+#include "definitions.h"
+#include "eq_oracle_base.h"
+#include "inputdata.h"
+#include "refinement.h"
+#include "state_merger.h"
+#include "tail.h"
+#include "trace.h"
+
+#include "overlap_fill.h"
+#include "overlap_fill_batch_wise.h"
+#include "distinguishing_sequence_fill.h"
+
+#include <list>
+#include <memory>
+
+#include <future>
+#include <mutex>
+
+/**
+ * @brief Helper class for us to achieve concurency.
+ * 
+ * 
+ */
+class search_instance{
+  private:
+    // make sure that our underlying structures like the suffix trees do not collide
+    std::unique_ptr<ii_base> ii_handler;
+    std::unique_ptr<distinguishing_sequences> ds_ptr = std::make_unique<distinguishing_sequences>();
+    inline static std::mutex m_mutex;
+    const int MIN_BATCH_SIZE = 512;
+    const int MAX_LEN = 30;
+    
+  public:
+    search_instance(){
+      ii_handler = std::make_unique<distinguishing_sequence_fill>();
+    }
+
+    void operator()(std::promise<bool>&& out, std::unique_ptr<state_merger>& merger, std::unique_ptr<apta>& the_apta, std::unique_ptr<base_teacher>& teacher, apta_node* red_node, apta_node* blue_node);
+};
+
+class paul_algorithm : public algorithm_base {
+  protected:
+    std::unique_ptr<ii_base> ii_handler;
+    refinement* get_best_refinement(std::unique_ptr<state_merger>& merger, std::unique_ptr<apta>& the_apta, std::unique_ptr<base_teacher>& teacher);
+
+    /**
+     * Relevant for parallelization.
+     */
+    static bool merge_check(std::unique_ptr<ii_base>& ii_handler, std::unique_ptr<state_merger>& merger, std::unique_ptr<apta>& the_apta, std::unique_ptr<base_teacher>& teacher, apta_node* red_node, apta_node* blue_node);
+
+    std::list<refinement*> retry_merges(std::list<refinement*>& previous_refs, std::unique_ptr<state_merger>& merger, std::unique_ptr<apta>& the_apta);
+    std::list<refinement*> find_hypothesis(std::list<refinement*>& previous_refs, std::unique_ptr<state_merger>& merger, std::unique_ptr<apta>& the_apta, std::unique_ptr<base_teacher>& teacher);
+    void proc_counterex(const std::unique_ptr<base_teacher>& teacher, inputdata& id,
+                                      std::unique_ptr<apta>& the_apta, const std::vector<int>& counterex,
+                                      std::unique_ptr<state_merger>& merger, const refinement_list refs) const;
+  public:
+    paul_algorithm(std::shared_ptr<sul_base>& sul, std::unique_ptr<base_teacher>& teacher,
+                     std::unique_ptr<eq_oracle_base>& oracle)
+        : algorithm_base(sul, teacher, oracle){
+          
+          ii_handler = std::make_unique<distinguishing_sequence_fill>();
+        };
+
+    void run(inputdata& id) override;
+};
+
+#endif

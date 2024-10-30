@@ -69,7 +69,6 @@ std::string db::vec2str(const std::vector<int>& vec) {
     }
     return ss.str();
 }
-
 std::vector<int> db::str2vec(const std::string& str) {
     std::vector<int> vec;
     for (char c : str) {

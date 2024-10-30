@@ -109,7 +109,7 @@ void lstar_algorithm::run(inputdata& id) {
                 if (current_row.size() == 0 && current_column.size() == 0)
                     continue; // not sure what to do about the empty word
 
-                const int answer = teacher->ask_membership_query_lstar(current_row, current_column, id);
+                const int answer = teacher->ask_membership_query(current_row, current_column, id);
                 obs_table.insert_record(current_row, current_column, answer);
             }
             obs_table.mark_row_complete(current_row);
@@ -159,9 +159,7 @@ void lstar_algorithm::run(inputdata& id) {
         ++n_runs;
         if (ENSEMBLE_RUNS > 0 && n_runs == ENSEMBLE_RUNS) {
             cout << "Maximum of runs reached. Printing automaton." << endl;
-            for (auto top_ref : refs) {
-                top_ref->doref(merger.get());
-            }
+            for (auto top_ref : refs) { top_ref->doref(merger.get()); }
             print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
             return;
         }

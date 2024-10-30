@@ -17,26 +17,33 @@
 #include "sul_base.h"
 
 #include <memory>
-#include <utility>
 #include <vector>
+#include <utility>
 
 class base_teacher {
-  public:
+  protected:
     std::shared_ptr<sul_base> sul;
+
+  public:
     /* Learning acceptors */
     virtual const int ask_membership_query(const active_learning_namespace::pref_suf_t& query, inputdata& id);
-    const int ask_membership_query_lstar(const active_learning_namespace::pref_suf_t& prefix,
-                                         const active_learning_namespace::pref_suf_t& suffix, inputdata& id);
-    const std::pair<int, std::vector<float>>
-    get_membership_state_pair(const active_learning_namespace::pref_suf_t& access_seq, inputdata& id);
+    const int ask_membership_query(const active_learning_namespace::pref_suf_t& prefix,
+                                   const active_learning_namespace::pref_suf_t& suffix, inputdata& id);
+    
+    const std::pair<int, float> ask_membership_confidence_query(const active_learning_namespace::pref_suf_t& query, inputdata& id);
+    const std::vector< std::pair<int, float> > ask_type_confidence_batch(const std::vector< std::vector<int> >& query_traces, inputdata& id) const;
+
+    
+    const std::pair< int, std::vector< std::vector<float> > > get_membership_state_pair(const active_learning_namespace::pref_suf_t& access_seq,
+                                                     inputdata& id);
     /* For learning weighted automata or PDFA */
     const double get_string_probability(const active_learning_namespace::pref_suf_t& query, inputdata& id);
     // const float get_symbol_probability(const active_learning_namespace::pref_suf_t& access_seq, const int symbol,
     // inputdata& id);
     const std::vector<float> get_weigth_distribution(const active_learning_namespace::pref_suf_t& access_seq,
                                                      inputdata& id);
-    const std::pair<std::vector<float>, std::vector<float>>
-    get_weigth_state_pair(const active_learning_namespace::pref_suf_t& access_seq, inputdata& id);
+    const std::pair< std::vector<float>, std::vector<float> > get_weigth_state_pair(const active_learning_namespace::pref_suf_t& access_seq,
+                                                     inputdata& id);
 
     base_teacher(std::shared_ptr<sul_base>& sul) : sul(sul){};
 };

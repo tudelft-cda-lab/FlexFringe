@@ -36,7 +36,7 @@ using namespace active_learning_namespace;
  * This is the only function that creates new nodes (apart from the root node).
  *
  */
-unordered_set<apta_node*> probabilistic_lsharp_algorithm::extend_fringe(unique_ptr<state_merger>& merger, apta_node* n,
+unordered_set<apta_node*> probabilistic_lsharp_algorithm::extend_fringe_balanced(unique_ptr<state_merger>& merger, apta_node* n,
                                                                         unique_ptr<apta>& the_apta, inputdata& id,
                                                                         const vector<int>& alphabet) const {
     static unordered_set<apta_node*> extended_nodes; // TODO: we might not need this, since it is inherently backed in
@@ -282,7 +282,7 @@ void probabilistic_lsharp_algorithm::proc_counterex(const unique_ptr<base_teache
 
     while (n != nullptr) {
         add_statistics(merger, n, id, alphabet, nullopt);
-        // if(queried_traces) extend_fringe(merger, n, hypothesis, id, queried_traces.value());
+        // if(queried_traces) extend_fringe_balanced(merger, n, hypothesis, id, queried_traces.value());
 
         // auto* data = static_cast<string_probability_estimator_data*>(n->get_data());
         // product *= data->get_weight(t->get_symbol());
@@ -332,7 +332,7 @@ list<refinement*> probabilistic_lsharp_algorithm::find_complete_base(unique_ptr<
             performed_refs.clear();
 
             for (auto blue_node : fringe_nodes) {
-                auto cn = extend_fringe(merger, blue_node, the_apta, id, alphabet);
+                auto cn = extend_fringe_balanced(merger, blue_node, the_apta, id, alphabet);
             }
             fringe_nodes.clear();
             update_tree_dfs(the_apta.get(), alphabet);
@@ -427,7 +427,7 @@ void probabilistic_lsharp_algorithm::run(inputdata& id) {
         auto root_node = the_apta->get_root();
         pref_suf_t seq;
         add_statistics(merger, root_node, id, alphabet, seq);
-        extend_fringe(merger, root_node, the_apta, id, alphabet);
+        extend_fringe_balanced(merger, root_node, the_apta, id, alphabet);
         update_tree_dfs(the_apta.get(), alphabet);
         // test_dfs(the_apta.get(), alphabet, teacher, id);
     }

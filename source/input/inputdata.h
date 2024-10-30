@@ -89,9 +89,9 @@ public:
 
     std::string& get_symbol(int a);
     int get_reverse_symbol(std::string a);
-    std::string& get_type(int a);
+    const std::string& get_type(int a);
     int get_reverse_type(std::string a);
-    void set_alphabet(const std::vector<int>& input_alphabet);
+    void set_alphabet(const std::vector<std::string>& input_alphabet);
     void set_alphabet(const std::map<std::string, int>& input_r_alphabet);
     void set_types(const std::map<std::string, int>& input_r_types);
 

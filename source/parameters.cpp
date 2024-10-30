@@ -142,9 +142,13 @@ bool DO_ACTIVE_LEARNING = false;
 std::string REJECTING_LABEL = "0";
 int START_SYMBOL = -1;
 int END_SYMBOL = -1;
+int MAX_AL_SEARCH_DEPTH = 10;
 int MAX_CEX_LENGTH = 10;
 int NUM_CEX_PARAM = 5000;
+bool IDENTIFY_STATE_COMPLETELY = true;
 
 std::string POSTGRESQL_CONNSTRING = "";
 std::string POSTGRESQL_TBLNAME = "";
 bool POSTGRESQL_DROPTBLS = true;
+
+std::string PRINT_MODEL_PREFIX = ""; // TODO: delete this one

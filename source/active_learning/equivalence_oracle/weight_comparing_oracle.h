@@ -24,8 +24,6 @@ class weight_comparing_oracle : public eq_oracle_base {
     const bool use_sinks; 
 
   protected:
-    std::shared_ptr<sul_base> sul;
-    std::unique_ptr<search_base> search_strategy;
     state_merger* merger;
 
     virtual void reset_sul() override{};
@@ -35,9 +33,9 @@ class weight_comparing_oracle : public eq_oracle_base {
 
   public:
     weight_comparing_oracle(std::shared_ptr<sul_base>& sul) : eq_oracle_base(sul), use_sinks(USE_SINKS) {
-        search_strategy = std::unique_ptr<search_base>(new fringe_walk(MAX_CEX_LENGTH));
-        //search_strategy = std::unique_ptr<search_base>(new random_w_method(MAX_CEX_LENGTH));
-        //search_strategy = std::unique_ptr<search_base>(new targeted_bfs_walk(MAX_CEX_LENGTH));
+        //search_strategy = std::unique_ptr<search_base>(new fringe_walk(MAX_AL_SEARCH_DEPTH));
+        search_strategy = std::unique_ptr<search_base>(new random_w_method(MAX_AL_SEARCH_DEPTH));
+        //search_strategy = std::unique_ptr<search_base>(new targeted_bfs_walk(MAX_AL_SEARCH_DEPTH));
         // search_strategy = std::unique_ptr<search_base>(new bfs_strategy(8)); // number here is maximum length of
         // sequence. Find a better way to set this
         assert(dynamic_cast<input_file_sul*>(sul.get()) == nullptr);
@@ -47,8 +45,6 @@ class weight_comparing_oracle : public eq_oracle_base {
 
     std::optional<std::pair<std::vector<int>, int>>
     equivalence_query(state_merger* merger, [[maybe_unused]] const std::unique_ptr<base_teacher>& teacher);
-
-    void initialize(state_merger* merger) override;
 };
 
 #endif

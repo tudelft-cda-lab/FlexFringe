@@ -179,12 +179,3 @@ weight_comparing_oracle::equivalence_query(state_merger* merger, const unique_pt
 
     return nullopt;
 }
-
-/**
- * @brief Initializes the search strategy. Needed for e.g. W-method.
- * 
- * @param merger The merger.
- */
-void weight_comparing_oracle::initialize(state_merger* merger){
-    this->search_strategy->initialize(merger);
-}

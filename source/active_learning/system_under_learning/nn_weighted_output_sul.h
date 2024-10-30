@@ -27,25 +27,30 @@ class nn_weighted_output_sul : public nn_sul_base {
   private:
     FLEXFRINGE_ALWAYS_INLINE const double get_sigmoid_output(const std::vector<int>& query_trace,
                                                                           inputdata& id) const;
+    inline std::vector< std::vector<float> > compile_hidden_rep(PyObject* p_result, const int offset) const;
 
   protected:
-    virtual void reset(){};
-    virtual void init_types() const override;
+    void reset() override {};
+    void init_types() const override;
+
+    void string_to_pylist(PyObject* p_list_out, std::vector<std::string>& c_list) const;
 
     /* Learning from NN acceptors*/
-    virtual bool is_member(const std::vector<int>& query_trace) const;
-    virtual const int query_trace(const std::vector<int>& query_trace, inputdata& id) const override;
-    virtual const std::pair< int, std::vector<float> > get_type_and_state(const std::vector<int>& query_trace, inputdata& id) const override;
+    bool is_member(const std::vector<int>& query_trace) const;
+    const int query_trace(const std::vector<int>& query_trace, inputdata& id) const override;
+    const std::pair< int, std::vector< std::vector<float> > > get_type_and_states(const std::vector<int>& query_trace, inputdata& id) const override;
+    const std::tuple< int, float, std::vector< std::vector<float> > > get_type_confidence_and_states(const std::vector<int>& query_trace, inputdata& id) const override;
+    const std::vector< std::pair<int, float> > get_type_confidence_batch(const std::vector< std::vector<int> >& query_traces, inputdata& id) const override;
 
     /* Learning from Language Models */
-    virtual const double get_string_probability(const std::vector<int>& query_trace, inputdata& id) const override;
-    virtual const std::vector<float> get_weight_distribution(const std::vector<int>& query_trace,
+    const double get_string_probability(const std::vector<int>& query_trace, inputdata& id) const override;
+    const std::vector<float> get_weight_distribution(const std::vector<int>& query_trace,
                                                              inputdata& id) const override;
-    virtual const std::pair< std::vector<float>, std::vector<float> > get_weights_and_state(const std::vector<int>& query_trace, 
+    const std::pair< std::vector<float>, std::vector<float> > get_weights_and_state(const std::vector<int>& query_trace, 
                                                                                             inputdata& id) const override;
 
   public:
-    nn_weighted_output_sul() : nn_sul_base(){};
+    nn_weighted_output_sul(const std::string& cf) : nn_sul_base(cf) {};
     ~nn_weighted_output_sul();
 };
 

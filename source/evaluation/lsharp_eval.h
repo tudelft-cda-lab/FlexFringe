@@ -17,7 +17,8 @@ protected:
   REGISTER_DEC_TYPE(lsharp_eval);
 
 public:
-  virtual bool consistent(state_merger *merger, apta_node* left, apta_node* right, int depth);
+  bool consistent(state_merger *merger, apta_node* left, apta_node* right, int depth) override;
+  double compute_score(state_merger* merger, apta_node* left, apta_node* right) override;
 };
 
 #endif

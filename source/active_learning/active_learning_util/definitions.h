@@ -16,7 +16,7 @@
 #include <vector>
 
 namespace active_learning_namespace {
-typedef std::vector<int> pref_suf_t;
+  typedef std::vector<int> pref_suf_t;
 }
 
 #endif

@@ -32,7 +32,6 @@ jobs:
     #     uses: jwlawson/actions-setup-cmake@v1.12
     #     with:
     #       cmake-version: '3.25.x'
-
     #   - name: prepare-windows
     #     if: runner.os == 'Windows'
     #     uses: ilammy/msvc-dev-cmd@v1

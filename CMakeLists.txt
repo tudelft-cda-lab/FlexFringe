@@ -114,7 +114,6 @@ if (ENABLE_PYTHON)
   find_package(PythonLibs REQUIRED)
   include_directories(${PYTHON_INCLUDE_DIRS})
 endif()
-
 include_directories("${PROJECT_SOURCE_DIR}"
                     "${PROJECT_SOURCE_DIR}/source"
                     "${PROJECT_SOURCE_DIR}/source/evaluation"
@@ -202,7 +201,6 @@ if(NOT SKIP_TESTS)
             tests/testinputdata.cpp
             )
 
-
     # Need this so the plugin registration does not get stripped out
     if(MSVC)
         target_link_libraries(runtests
@@ -234,7 +232,6 @@ if(NOT SKIP_TESTS)
     if (ENABLE_DATABASE)
       target_link_libraries(runtests libpqxx::pqxx)
     endif()
-
     if(NOT WIN32)
         target_link_libraries(runtests dl) # For ldl
     endif()
@@ -259,3 +256,6 @@ if (NOT APPLE)
     set_property(TARGET flexfringe PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
     set_property(TARGET runtests PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
+
+set_property(TARGET flexfringe PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+set_property(TARGET runtests PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)

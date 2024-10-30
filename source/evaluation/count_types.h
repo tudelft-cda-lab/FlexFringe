@@ -33,15 +33,15 @@ public:
     virtual bool sink_consistent(int type);
     virtual int num_sink_types();
     
-    inline int num_paths(){
+    inline int num_paths() const {
         return total_paths;
     }
     
-    inline int num_final(){
+    inline int num_final() const {
         return total_final;
     }
 
-    inline int num_total(){
+    inline int num_total() const {
         return total_final + total_paths;
     }
 

@@ -149,7 +149,7 @@ bool string_probability_estimator_v2::consistent(state_merger *merger, apta_node
     }
     at_prob *= l->get_final_prob();
 
-    double diff = abs(at_prob - r->access_trace_prob);
+    double diff = std::abs(at_prob - r->access_trace_prob);
     if(diff > mu){
         inconsistency_found = true;
         return false;
@@ -220,7 +220,7 @@ double string_probability_estimator_v2::get_distance(apta* aut, apta_node* left_
     }
     at_prob *= l->get_final_prob();
 
-    double diff = abs(at_prob - r->access_trace_prob);
+    double diff = std::abs(at_prob - r->access_trace_prob);
 
     return diff;
 };

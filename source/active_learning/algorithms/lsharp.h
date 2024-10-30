@@ -28,11 +28,13 @@
 
 class lsharp_algorithm : public algorithm_base {
   protected:
-    void proc_counterex(const std::unique_ptr<base_teacher>& teacher, inputdata& id, std::unique_ptr<apta>& hypothesis,
+    //unordered_set< vector<int> > distinguishing_sequences;
+
+    virtual void proc_counterex(const std::unique_ptr<base_teacher>& teacher, inputdata& id, std::unique_ptr<apta>& hypothesis,
                         const std::vector<int>& counterex, std::unique_ptr<state_merger>& merger,
                         const refinement_list refs, const std::vector<int>& alphabet) const;
 
-    std::unordered_set<apta_node*> extend_fringe(std::unique_ptr<state_merger>& merger, apta_node* n,
+    virtual void extend_fringe(std::unique_ptr<state_merger>& merger, apta_node* n,
                                                  std::unique_ptr<apta>& the_apta, inputdata& id,
                                                  const std::vector<int>& alphabet) const;
 

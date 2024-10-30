@@ -33,12 +33,23 @@ ifstream sul_base::get_input_stream() const {
 const int sul_base::query_trace(const std::vector<int>& query_trace, inputdata& id) const {
     throw logic_error("query_trce not implemented. That is a programming error. Aborting program.");
 }
+
 const int sul_base::query_trace_maybe(const std::vector<int>& query_trace, inputdata& id) const {
     return sul_base::query_trace(query_trace, id);
 }
 
-const pair<int, vector<float>> sul_base::get_type_and_state(const std::vector<int>& query_trace, inputdata& id) const {
+const std::pair<int, std::vector< std::vector<float> > > sul_base::get_type_and_states(const std::vector<int>& query_trace, inputdata& id) const {
     throw logic_error("This SUL does not support type queries along with a hidden state representation. \
+    Please change the program settings. Aborting program.");
+}
+
+const tuple<int, float, vector< vector<float> > > sul_base::get_type_confidence_and_states(const std::vector<int>& query_trace, inputdata& id) const {
+    throw logic_error("This SUL does not support type queries along with confidence and hidden state representation. \
+    Please change the program settings. Aborting program.");
+}
+
+const std::vector< std::pair<int, float> > sul_base::get_type_confidence_batch(const std::vector< std::vector<int> >& query_traces, inputdata& id) const {
+    throw logic_error("This SUL does not support type queries along with confidence and hidden state representation. \
     Please change the program settings. Aborting program.");
 }
 
@@ -53,9 +64,8 @@ const vector<float> sul_base::get_weight_distribution(const std::vector<int>& qu
   Aborting program.");
 };
 
-const std::pair<std::vector<float>, std::vector<float>>
-sul_base::get_weights_and_state(const std::vector<int>& query_trace, inputdata& id) const {
+const std::pair< std::vector<float>, std::vector<float> > sul_base::get_weights_and_state(const std::vector<int>& query_trace, inputdata& id) const{
     throw logic_error(
         "This SUL does not support inference of the weight distribution. Please change the program settings. \
-  Aborting program.");
+  Aborting program.");  
 }

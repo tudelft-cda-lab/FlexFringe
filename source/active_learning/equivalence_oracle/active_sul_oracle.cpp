@@ -16,6 +16,15 @@ using namespace std;
 using namespace active_learning_namespace;
 
 /**
+ * @brief Avoids duplicate code in the active_state_sul_oracle.
+ * 
+ * @return int The response of the teacher.
+ */
+int active_sul_oracle::get_teacher_response(const vector<int>& query_string, const std::unique_ptr<base_teacher>& teacher, inputdata& id) const {
+    return teacher->ask_membership_query(query_string, id);
+}
+
+/**
  * @brief This function does what you think it does.
  *
  * @param merger The merger.
@@ -32,7 +41,7 @@ std::optional<pair<vector<int>, int>> active_sul_oracle::equivalence_query(state
     std::optional<vector<int>> query_string_opt = search_strategy->next(id);
     while (query_string_opt != nullopt) { // nullopt == search exhausted
         auto& query_string = query_string_opt.value();
-        int true_val = teacher->ask_membership_query(query_string, id);
+        int true_val = get_teacher_response(query_string, teacher, id);
 
         if (true_val < 0)
             return make_optional<pair<vector<int>, int>>(
@@ -42,7 +51,7 @@ std::optional<pair<vector<int>, int>> active_sul_oracle::equivalence_query(state
 
         apta_node* n = hypothesis.get_root();
         tail* t = test_tr->get_head();
-        for (int j = 0; j < t->get_length(); j++) {
+        for (int j = 0; j < test_tr->get_length(); j++) {
             n = active_learning_namespace::get_child_node(n, t);
 
             if (n == nullptr) {
@@ -55,10 +64,17 @@ std::optional<pair<vector<int>, int>> active_sul_oracle::equivalence_query(state
         }
         const int pred_val = n->get_data()->predict_type(t);
         if (true_val != pred_val) {
-            cout << "Predictions of the following counterexample: The true value: " << true_val
-                 << ", predicted: " << pred_val << endl;
-            //search_strategy->reset();
-            return make_optional<pair<vector<int>, int>>(make_pair(query_string, true_val));
+            cout << "Found counterexample. The true value: " << id.get_type(true_val)
+                 << ", predicted: " << id.get_type(pred_val) << endl;
+            cout << "String before conflict resolution: ";
+            for(auto x: query_string)
+                cout << id.get_symbol(x) << " ";
+            cout << endl;
+            
+            pair< vector<int>, optional<response_wrapper> > conflict_rep_pair = conflict_searcher->get_conflict_string(query_string, hypothesis, teacher, id);
+            if(conflict_rep_pair.second == nullopt)
+                return make_optional<pair<vector<int>, int>>(make_pair(query_string, true_val));
+            return make_optional<pair<vector<int>, int>>(make_pair(conflict_rep_pair.first, conflict_rep_pair.second.value().get_int_response()));
         }
 
         query_string_opt = search_strategy->next(id);

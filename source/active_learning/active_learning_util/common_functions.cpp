@@ -250,7 +250,7 @@ void active_learning_namespace::find_closed_automaton(list<refinement*>& perform
  * Side effect: Exhausts the refs-stack to zero.
  *
  * @param merger The state merger.
- * @param refs Stack with refinements.
+ * @param refs List with refinements (a list so we can parse in reverse).
  */
 void active_learning_namespace::reset_apta(state_merger* merger, const list<refinement*>& refs) {
     for (auto it = refs.rbegin(); it != refs.rend(); ++it) {
@@ -258,6 +258,23 @@ void active_learning_namespace::reset_apta(state_merger* merger, const list<refi
         top_ref->undo(merger);
     }
 }
+
+/**
+ * @brief Inverse operation to reset_apta. Does all the operations in refs in order again.
+ * 
+ * We need this sometimes, because some of the operations in flexfringe demand an unmerged apta, such as for example when 
+ * we add traces to the apta, i.e. when we create new states. Used for example in L# and its derivatives.
+ * 
+ * @param merger The state merger.
+ * @param refs List with refinements.
+ */
+void active_learning_namespace::do_operations(state_merger* merger, const std::list<refinement*>& refs){
+    for (auto it = refs.begin(); it != refs.end(); ++it) {
+        const auto top_ref = *it;
+        top_ref->doref(merger);
+    }
+}
+
 
 void active_learning_namespace::update_tail(tail* t, const int symbol) {
     static int num_tails = 0;

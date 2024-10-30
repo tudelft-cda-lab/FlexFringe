@@ -340,4 +340,3 @@ double evaluation_function::compute_partial_score(state_merger* merger) {
 void evaluation_function::set_context(state_merger* m){
     merger = m;
 }
-

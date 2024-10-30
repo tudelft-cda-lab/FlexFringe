@@ -146,6 +146,17 @@ void mem_store::erase(){
     }
 }
 
+void mem_store::delete_refinement(refinement* ref){
+    if(dynamic_cast<extend_refinement*>(ref) != nullptr)
+        delete_extend_refinement(static_cast<extend_refinement*>(ref));
+    else if(dynamic_cast<merge_refinement*>(ref) != nullptr)
+        delete_merge_refinement(static_cast<merge_refinement*>(ref));
+    else if(dynamic_cast<split_refinement*>(ref) != nullptr)
+        delete_split_refinement(static_cast<split_refinement*>(ref));
+    else
+        std::cerr << "WARNING: An unexpexted refinement encountered in mem_store::delete_refinement(). Please check!" << std::endl;
+}
+
 void mem_store::delete_trace(trace* trace) {
     assert(trace != nullptr);
     tail* t = trace->head;

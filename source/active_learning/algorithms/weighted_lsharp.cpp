@@ -217,7 +217,12 @@ list<refinement*> weighted_lsharp_algorithm::find_complete_base(unique_ptr<state
                 performed_refs.push_back(ref);
 
                 ++n_red_nodes;
+
+                // we need to add to an unmerged apta
+                reset_apta(merger.get(), performed_refs);
                 extend_fringe(merger, blue_node, the_apta, id, alphabet);
+                do_operations(merger.get(), performed_refs);
+
                 if(n_red_nodes == MAX_RED_NODES){
                     termination_reached = true;
                     break;

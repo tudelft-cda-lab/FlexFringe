@@ -21,6 +21,7 @@
 #include "mem_store.h"
 #include "parameters.h"
 #include "state_merger.h"
+#include "observation_table_imat.h"
 
 #include <iostream>
 #include <optional>

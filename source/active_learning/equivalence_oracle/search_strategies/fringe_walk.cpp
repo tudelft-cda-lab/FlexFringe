@@ -26,11 +26,11 @@ using namespace std;
  * 
  * @return unordered_set<apta_node*> Fringe nodes as set.
  */
-unordered_set<apta_node*> fringe_walk::collect_fringe_nodes(){
+std::unordered_set<apta_node*> fringe_walk::collect_fringe_nodes(){
     const static auto mu = MU;
     const static auto max_length = MAX_CEX_LENGTH;
 
-    unordered_set<apta_node*> res;
+    std::unordered_set<apta_node*> res;
     //cout << "apta_iterator" << endl;
     for (APTA_iterator a_it = APTA_iterator(hypothesis->get_root()); *a_it != nullptr; ++a_it){
         auto node = *a_it;
@@ -51,7 +51,7 @@ unordered_set<apta_node*> fringe_walk::collect_fringe_nodes(){
  * 
  * @return apta_node* The next node.
  */
-apta_node* fringe_walk::get_next_valid_node(const unordered_set<apta_node*>& fringe_nodes, const unordered_set<apta_node*>& tested_nodes) const {
+apta_node* fringe_walk::get_next_valid_node(const std::unordered_set<apta_node*>& fringe_nodes, const std::unordered_set<apta_node*>& tested_nodes) const {
     for(auto n: fringe_nodes){
         if(!tested_nodes.contains(n))
             return n;

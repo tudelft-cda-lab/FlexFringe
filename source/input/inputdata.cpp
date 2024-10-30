@@ -117,7 +117,7 @@ int inputdata::get_reverse_symbol(string a) {
     return r_alphabet[a];
 }
 
-std::string& inputdata::get_type(int a) {
+const std::string& inputdata::get_type(int a) {
     return types[a];
 }
 
@@ -178,15 +178,16 @@ int inputdata::get_reverse_type(std::string a) {
  * @param input_alphabet A vector with the possible strings the system under learning 
  * will expect.
  */
-void inputdata::set_alphabet(const vector<int>& input_alphabet){
+void inputdata::set_alphabet(const std::vector<std::string>& input_alphabet){
     this->r_alphabet.clear();
     this->alphabet.clear();
     for(int i=0; i<input_alphabet.size(); ++i){
-        auto symbol_string = to_string(input_alphabet[i]);
+        auto symbol_string = input_alphabet[i];
         this->r_alphabet[symbol_string] = this->alphabet.size();
-        this->alphabet.push_back(symbol_string);
+        this->alphabet.push_back(std::move(symbol_string));
     }
 }
+
 void inputdata::set_alphabet(const std::map<std::string, int>& input_r_alphabet) {
     r_alphabet = input_r_alphabet; // copy-assignment
     alphabet.clear();

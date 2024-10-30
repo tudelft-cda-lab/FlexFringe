@@ -263,5 +263,4 @@ public:
     virtual bool pre_consistent(state_merger *merger, apta_node *left, apta_node *right);
 };
 
-
 #endif /* _EVALUATE_H_ */

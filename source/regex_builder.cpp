@@ -122,7 +122,7 @@ void regex_builder::initialize(apta& the_apta, state_merger& merger, std::tuple<
         types_map[type].push_back(n);
     }
 #ifndef NDEBUG
-    std::stringstream ss;
+    stringstream ss;
     ss << "[";
     for (const auto& [type, nn] : types_map) {
         ss << "(" << type << ": ";

@@ -31,39 +31,34 @@ class nn_sul_base : public sul_base {
     friend class base_teacher;
     friend class eq_oracle_base;
 
-  protected:
-    nn_sul_base() {
-        assert(((void*)"If <SOS> or <EOS> is set (!=-1), then the other one must be set, too.",
-                (START_SYMBOL == -1 && END_SYMBOL == -1) || (START_SYMBOL != -1 && END_SYMBOL != -1)));
-        /*       if(START_SYMBOL!=-1){
-                p_start_symbol = PyLong_FromLong(START_SYMBOL);
-                p_end_symbol = PyLong_FromLong(END_SYMBOL);
-              }
-              else{
-                p_start_symbol = nullptr;
-                p_end_symbol = nullptr;
-              } */
-    };
+  private:
+    void strings_to_pylist(PyObject* p_list_out, const std::vector<std::string>& c_list) const;
 
+  protected:
     PyObject* p_module;
     PyObject* query_func;
     PyObject* alphabet_func;
     PyObject* load_model_func;
 
-    /* PyObject* p_start_symbol;
-    PyObject* p_end_symbol; */
+    void input_sequence_to_pylist(PyObject* p_list_out, const std::vector<int>& c_list) const;
+    void reset() = 0;
 
-    virtual void reset() = 0;
+    bool is_member(const std::vector<int>& query_trace) const = 0;
+    const int query_trace(const std::vector<int>& query_trace, inputdata& id) const = 0;
 
-    virtual bool is_member(const std::vector<int>& query_trace) const = 0;
-    virtual const int query_trace(const std::vector<int>& query_trace, inputdata& id) const = 0;
-
-    void set_list_item(PyObject* pylist, PyObject* item, const int idx) const;
+    inline void set_list_item(PyObject* pylist, PyObject* item, const int idx) const;
+    
     virtual void
     init_types() const = 0; // we need to set the internal types of flexfringe according to the types we expect
 
+    const std::string CONNECTOR_FILE;
+
+    nn_sul_base(const std::string& cf) : CONNECTOR_FILE(cf) {
+    };
+    ~nn_sul_base();
+
   public:
-    virtual void pre(inputdata& id) override;
+    void pre(inputdata& id) override;
 };
 
 /* Dummy implementation when Python disabled to get it to compile on platforms without Python Dev Headers. */
@@ -89,5 +84,4 @@ class nn_sul_base : public sul_base {
 };
 
 #endif /* __FLEXFRINGE_PYTHON */
-
 #endif

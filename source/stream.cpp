@@ -144,7 +144,7 @@ void stream_object::greedyrun_retry_merges(state_merger* merger, const int seq_n
         currentrun->pop_front();
     }
 
-    while(top_ref != 0){
+    while(top_ref != nullptr){
         if(top_ref->test_ref_structural(merger)){
           if(top_ref->test_ref_consistency(merger)){
             nextrun->push_back(top_ref);
@@ -157,7 +157,7 @@ void stream_object::greedyrun_retry_merges(state_merger* merger, const int seq_n
         }
 
         if(currentrun->empty()){
-            top_ref = 0;
+            top_ref = nullptr;
         }
         else{
             top_ref = currentrun->front();

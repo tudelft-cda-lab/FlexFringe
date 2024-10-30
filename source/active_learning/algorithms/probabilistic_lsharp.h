@@ -51,7 +51,7 @@ class probabilistic_lsharp_algorithm : public lsharp_algorithm {
                                std::optional<active_learning_namespace::pref_suf_t> seq_opt) const;
 
     FLEXFRINGE_ALWAYS_INLINE std::unordered_set<apta_node*>
-    extend_fringe(std::unique_ptr<state_merger>& merger, apta_node* n, std::unique_ptr<apta>& the_apta, inputdata& id,
+    extend_fringe_balanced(std::unique_ptr<state_merger>& merger, apta_node* n, std::unique_ptr<apta>& the_apta, inputdata& id,
                   const std::vector<int>& alphabet) const;
 
     inline void init_final_prob(apta_node* n, apta* the_apta, inputdata& id) const;

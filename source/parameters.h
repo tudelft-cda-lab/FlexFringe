@@ -133,6 +133,14 @@ extern int L;
 extern int R;
 extern int K;
 
+// space-saving specific
+extern double DELTA;
+extern double MU;
+extern double EPSILON;
+extern int L;
+extern int R;
+extern int K;
+
 extern std::string HEURISTIC_NAME;
 extern std::string DATA_NAME;
 extern std::string INPUT_FILE;
@@ -167,5 +175,11 @@ extern int NUM_CEX_PARAM;
 extern std::string POSTGRESQL_CONNSTRING;
 extern std::string POSTGRESQL_TBLNAME;
 extern bool POSTGRESQL_DROPTBLS;
+
+extern int MAX_AL_SEARCH_DEPTH;
+extern int NUM_CEX_PARAM;
+extern bool IDENTIFY_STATE_COMPLETELY;
+
+extern std::string PRINT_MODEL_PREFIX; // TODO: delete this one
 
 #endif

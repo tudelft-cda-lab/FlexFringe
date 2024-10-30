@@ -39,6 +39,41 @@ void lsharp_algorithm::update_state(std::unique_ptr<state_merger>& merger, apta_
 }
 
 /**
+ * @brief Take a node and complete it wrt to the alphabet.
+ *
+ * This is the only function that creates new nodes (apart from the root node).
+ *
+ */
+void lsharp_algorithm::extend_fringe(unique_ptr<state_merger>& merger, apta_node* n,
+                                                                   unique_ptr<apta>& the_apta, inputdata& id,
+                                                                   const vector<int>& alphabet) const {
+    static unordered_set<apta_node*> extended_nodes; // TODO: do we need this data structure here?
+    if (extended_nodes.contains(n))
+        return;
+
+    auto access_trace = n->get_access_trace();
+    pref_suf_t seq;
+    if (n->get_number() != -1 && n->get_number() != 0)
+        seq = access_trace->get_input_sequence(true, true);
+    else
+        seq.resize(1); // this is the root node
+
+    for (const int symbol : alphabet) {
+        seq[seq.size() - 1] = symbol;
+
+        const int answer = teacher->ask_membership_query(seq, id);
+        if(answer==-1)
+            continue;
+
+        trace* new_trace = vector_to_trace(seq, id, answer);
+        id.add_trace_to_apta(new_trace, merger->get_aut(), false);
+        assert(n->get_child(symbol) != nullptr);
+    }
+
+    extended_nodes.insert(n);
+}
+
+/**
  * @brief Processing the counterexample.
  *
  * Operations done directly on the APTA.
@@ -73,46 +108,12 @@ void lsharp_algorithm::proc_counterex(const unique_ptr<base_teacher>& teacher, i
     }
 }
 
-/**
- * @brief Take a node and complete it wrt to the alphabet.
- *
- * This is the only function that creates new nodes (apart from the root node).
- *
- */
-unordered_set<apta_node*> lsharp_algorithm::extend_fringe(unique_ptr<state_merger>& merger, apta_node* n,
-                                                                   unique_ptr<apta>& the_apta, inputdata& id,
-                                                                   const vector<int>& alphabet) const {
-    static unordered_set<apta_node*> extended_nodes; // TODO: do we need this data structure here?
-    if (extended_nodes.contains(n))
-        return unordered_set<apta_node*>();
 
-    unordered_set<apta_node*> new_nodes;
-    auto access_trace = n->get_access_trace();
-
-    pref_suf_t seq;
-    if (n->get_number() != -1 && n->get_number() != 0)
-        seq = access_trace->get_input_sequence(true, true);
-    else
-        seq.resize(1);
-
-    for (const int symbol : alphabet) {
-        seq[seq.size() - 1] = symbol;
-
-        const auto answer = teacher->ask_membership_query(seq, id);
-        if(answer==-1)
-            continue;
-
-        trace* new_trace = vector_to_trace(seq, id, answer);
-        id.add_trace_to_apta(new_trace, merger->get_aut(), false);
-        new_nodes.insert(n->get_child(symbol));
-    }
-
-    extended_nodes.insert(n);
-    return new_nodes;
-}
 
 /**
  * @brief Does what you think it does.
+ * 
+ * TODO: will be same as weighted L# and L# most likely
  *
  * @param merger
  * @param the_apta
@@ -149,9 +150,6 @@ list<refinement*> lsharp_algorithm::find_complete_base(unique_ptr<state_merger>&
         bool identified_red_node = false;
         for (auto blue_node : blue_nodes) {
             refinement_set possible_merges;
-
-            //extend_fringe(merger, blue_node, the_apta, id, alphabet);
-
             for(auto red_node: red_nodes){
                 refinement* ref = merger->test_merge(red_node, blue_node);
                 if (ref != nullptr)
@@ -165,11 +163,22 @@ list<refinement*> lsharp_algorithm::find_complete_base(unique_ptr<state_merger>&
                 performed_refs.push_back(ref);
 
                 ++n_red_nodes;
+
+                // we have to have the unmerged tree when creating new states. Else errors might occur
+                reset_apta(merger.get(), performed_refs);
                 extend_fringe(merger, blue_node, the_apta, id, alphabet);
+                do_operations(merger.get(), performed_refs);
+
                 if(n_red_nodes == MAX_RED_NODES){
                     termination_reached = true;
                     break;
                 }
+            /* } else if (IDENTIFY_STATE_COMPLETELY && possible_merges.size() > 1) {
+                // we need to find a distinguishing sequence. We can either use the set we have, or turn this one red
+                reset_apta(merger.get(), performed_refs);
+                extend_fringe(merger, blue_node, the_apta, id, alphabet);
+                do_operations(merger.get(), performed_refs); */
+
             } else {
                 // get the best merge from the heap
                 refinement* best_merge = *(possible_merges.begin());
@@ -221,6 +230,7 @@ void lsharp_algorithm::run(inputdata& id) {
 
     auto the_apta = unique_ptr<apta>(new apta());
     auto merger = unique_ptr<state_merger>(new state_merger(&id, eval.get(), the_apta.get()));
+    this->oracle->initialize(merger.get());
 
     const vector<int> alphabet = id.get_alphabet();
     cout << "Alphabet: ";
@@ -247,8 +257,7 @@ void lsharp_algorithm::run(inputdata& id) {
 
         {
             static int model_nr = 0;
-            cout << "printing model " << model_nr << endl;
-            print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".lsharp.before_cex");
+            print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".before_cex");
         }
 
         // only merges performed, hence we can test our hypothesis
@@ -279,19 +288,10 @@ void lsharp_algorithm::run(inputdata& id) {
 
             {
                 static int model_nr = 0;
-                cout << "printing model " << model_nr << endl;
-                print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".lsharp.after_cex");
+                print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_cex");
             }
 
             break;
         }
-
-        // TODO: this one might not hold
-        //++n_runs;
-        //if (ENSEMBLE_RUNS > 0 && n_runs == ENSEMBLE_RUNS) {
-        //    cout << "Maximum of runs reached. Printing automaton." << endl;
-        //    print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
-        //    return;
-        //}
     }
 }
