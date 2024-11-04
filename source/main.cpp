@@ -541,39 +541,6 @@ int main(int argc, char *argv[]){
     // active learning parameters
     app.add_option("--active_learning_algorithm", ACTIVE_LEARNING_ALGORITHM, "The basic algorithm that runs through. Current options are (l_star). DEFAULT: l_star");
     app.add_option("--use_active_learning", DO_ACTIVE_LEARNING, "Perform active learning on top of the normal learner. 1 for true, 0 for false. Default: 0");
-    app.add_option("--max_counterexample_length", MAX_CEX_LENGTH, "The maximum length a counterexample can reach. Critical in models where a maximum-string-length occurs, such as transformer-models. Default: 25");
-    app.add_option("--num_cex_search", NUM_CEX_PARAM, "Samples parameter indicating a number in the counterexample search. For example, in the random w-method the number of strings per node,"
-                                                                "and in random string search it is the delay. Default: 5000");
-    // TODO: shall we delete the rejecting_label option?
-    app.add_option("--rejecting_label", REJECTING_LABEL, "The label as a string that is used for rejecting (non-accepting) behavior. Only in active learning mode. DEFAULT: 0");
-    app.add_option("--start_symbol", START_SYMBOL, "The <SOS> symbol (as per NLP convention) represented by an int value. A value of -1 means that it is unused. Only in active learning mode when querying networks. DEFAULT: -1");
-    app.add_option("--end_symbol", END_SYMBOL, "The <SOS> symbol (as per NLP convention) represented by an int value. A value of -1 means that it is unused. Only in active learning mode when querying networks. DEFAULT: -1");
-    
-
-    app.add_option("--postgresql-connstring", POSTGRESQL_CONNSTRING,
-                   "The string that connects to a postgresql database. This is either a key value pairing or a URI. "
-                   "https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING-KEYWORD-VALUE You can omit this "
-                   "and use environment variables instead. https://www.postgresql.org/docs/current/libpq-envars.html Set the "
-                   "first positional argument to an empty string to learn from the SQL or provide a trace file to load the data.");
-    app.add_option("--postgresql-tblname", POSTGRESQL_TBLNAME,
-                   "The string that hold the name to the table with the traces. You must provide this to signal "
-                   "learning from an SQL database. The database PostgreSQL connects to must contain this table and the "
-                   "{POSTGRESQL_TBLNAME}_meta table.");
-    app.add_option("--postgresql-droptbls", POSTGRESQL_DROPTBLS,
-                   "With this option you can tell the program to drop the existing tables. Default=true");
-
-    app.add_option("--batchsize", BATCH_SIZE, "Batchsize for streaming. Default=500");
-
-    app.add_option("-e,--epsilon", EPSILON, "Epsilon parameter, determining approximation error.");
-    app.add_option("-D,--delta", DELTA, "Delta param, the error rate.");
-    app.add_option("--mu", MU, "Distinguishability parameter.");
-    app.add_option("--pref_L", L, "The expected length of prefixes.");
-    app.add_option("--pref_K", K, "Number of frequent items in sketches.");
-    app.add_option("--bootstrap_R", R, "The number of bootstrapped examples.");
-    
-    // active learning parameters
-    app.add_option("--active_learning_algorithm", ACTIVE_LEARNING_ALGORITHM, "The basic algorithm that runs through. Current options are (l_star). DEFAULT: l_star");
-    app.add_option("--use_active_learning", DO_ACTIVE_LEARNING, "Perform active learning on top of the normal learner. 1 for true, 0 for false. Default: 0");
     app.add_option("--max_al_search_depth", MAX_AL_SEARCH_DEPTH, "The active learning search depth. Some uses can be disabled with a value <= 0. Critical in models where a maximum-string-length occurs, such as transformer-models. Default: 25");
     app.add_option("--num_cex_search", NUM_CEX_PARAM, "Samples parameter indicating a number in the counterexample search. For example, in the random w-method the number of strings per node,\\
                                                                 and in random string search it is the delay. Default: 5000");
@@ -584,7 +551,6 @@ int main(int argc, char *argv[]){
     app.add_option("--start_symbol", START_SYMBOL, "The <SOS> symbol (as per NLP convention) represented by an int value. A value of -1 means that it is unused. Only in active learning mode when querying networks. DEFAULT: -1");
     app.add_option("--end_symbol", END_SYMBOL, "The <SOS> symbol (as per NLP convention) represented by an int value. A value of -1 means that it is unused. Only in active learning mode when querying networks. DEFAULT: -1");
     
-
     app.add_option("--postgresql-connstring", POSTGRESQL_CONNSTRING,
                    "The string that connects to a postgresql database. This is either a key value pairing or a URI. "
                    "https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING-KEYWORD-VALUE You can omit this "
