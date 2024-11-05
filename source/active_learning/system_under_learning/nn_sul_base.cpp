@@ -133,7 +133,7 @@ see what happens."
         exit(1);
     }
 
-    PyObject* p_model_path = PyUnicode_FromString(APTA_FILE.c_str());
+    p_model_path = PyUnicode_FromString(APTA_FILE.c_str());
     if (p_model_path == NULL) {
         Py_DECREF(p_name);
         Py_DECREF(p_module);
@@ -165,7 +165,7 @@ see what happens."
         exit(1);
     }
 
-    alphabet_func = PyObject_GetAttrString(p_module, "get_alphabet");
+    PyObject* alphabet_func = PyObject_GetAttrString(p_module, "get_alphabet");
     if (alphabet_func == NULL || !PyCallable_Check(alphabet_func)) {
         Py_DECREF(p_name);
         Py_DECREF(p_module);
@@ -227,22 +227,31 @@ see what happens."
 
         // Note: SOS and EOS are not allowed to be returned back
         input_alphabet.push_back(std::move(item));
-        Py_DECREF(p_item); // not necessary?
     }
 
     id.set_alphabet(input_alphabet);
 
-    // making sure that these still exist after this function exits. Necessary?
-    Py_INCREF(p_name);
-    Py_INCREF(p_module);
-    Py_INCREF(query_func);
-    Py_INCREF(alphabet_func);
+    Py_DECREF(p_name);
+    Py_DECREF(p_alphabet);
+    Py_DECREF(alphabet_func);
+    Py_DECREF(p_load_return);
 
     cout << "Python module " << INPUT_FILE << " loaded and initialized successfully." << endl;
     init_types();
 }
 
+/**
+ * @brief Destroy the nn sul base::nn sul base object
+ * 
+ * Free py-objects and close the python-interpreter.
+ * 
+ */
 nn_sul_base::~nn_sul_base(){
+    Py_DECREF(p_module);
+    Py_DECREF(p_model_path);
+    Py_DECREF(load_model_func);
+    Py_DECREF(query_func);
+
     Py_Finalize();
 }
 

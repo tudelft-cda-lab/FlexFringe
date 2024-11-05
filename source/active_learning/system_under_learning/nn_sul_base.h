@@ -15,17 +15,17 @@
 #ifndef _NN_SUL_BASE_H_
 #define _NN_SUL_BASE_H_
 
+#ifdef __FLEXFRINGE_PYTHON
+
+#define PY_SSIZE_T_CLEAN // recommended, see https://docs.python.org/3/extending/extending.html#a-simple-example
+#include <Python.h> // IMPORTANT: Python.h must be first import. See https://docs.python.org/3/extending/extending.html
+
 #include "parameters.h"
 #include "sul_base.h"
 
 #include <cassert>
 #include <string>
 #include <unordered_map>
-
-#ifdef __FLEXFRINGE_PYTHON
-
-#define PY_SSIZE_T_CLEAN // recommended, see https://docs.python.org/3/extending/extending.html#a-simple-example
-#include <Python.h>
 
 class nn_sul_base : public sul_base {
     friend class base_teacher;
@@ -36,8 +36,8 @@ class nn_sul_base : public sul_base {
 
   protected:
     PyObject* p_module;
+    PyObject* p_model_path;
     PyObject* query_func;
-    PyObject* alphabet_func;
     PyObject* load_model_func;
 
     void input_sequence_to_pylist(PyObject* p_list_out, const std::vector<int>& c_list) const;
