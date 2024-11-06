@@ -121,7 +121,8 @@ void distinguishing_sequence_fill::pre_compute(std::unique_ptr<apta>& aut, std::
  * @brief Concatenates prefix and suffix efficiently, returns a new vector with the result. 
  */
 std::vector<int> distinguishing_sequence_fill::concat_prefsuf(const std::vector<int>& pref, const std::vector<int>& suff) const {
-  std::vector<int> res(pref.size() + suff.size()); 
+  std::vector<int> res;
+  res.reserve(pref.size() + suff.size()); 
   res.insert(res.end(), pref.begin(), pref.end());
   res.insert(res.end(), suff.begin(), suff.end());
   

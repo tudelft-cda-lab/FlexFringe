@@ -25,36 +25,10 @@ using namespace std;
 #ifdef __FLEXFRINGE_PYTHON
 
 /**
- * @brief Inserts element into vector, raises exception if it didn't work.
- *
- * @param pylist The vector
- * @param item The item
- * @param idx The index
- */
-void nn_sul_base::set_list_item(PyObject* p_list, PyObject* p_item, const int idx) const {
-    int r = PyList_SetItem(p_list, idx, p_item);
-    if (r == -1) {
-        cerr << "Error when setting items in python-vector." << endl;
-        throw bad_alloc();
-    }
-}
-
-/**
- * @brief Takes a list of c_strings, converts them into a python list of strings.
- * 
- * @param p_list_out The Python list to write into.
- * @param c_list The C++ vector of strings.
- */
-void nn_sul_base::strings_to_pylist(PyObject* p_list_out, const vector<string>& c_list) const {
-    for (int i=0; i<c_list.size(); ++i) {
-        PyObject* p_symbol = PyUnicode_FromString(c_list[i].c_str());
-        set_list_item(p_list_out, p_symbol, i);
-    }
-}
-
-/**
  * @brief Like strings_to_pylist, but it first converts c_list into a vector 
  * with string representations using the internal inputdata structure as a mapping.
+ * 
+ * WARNING: If p_list_out already has elements, then we create a memory leak here.
  * 
  * @param p_list_out The Python list to write into.
  * @param c_list The C++ vector of strings.
@@ -62,13 +36,10 @@ void nn_sul_base::strings_to_pylist(PyObject* p_list_out, const vector<string>& 
 void nn_sul_base::input_sequence_to_pylist(PyObject* p_list_out, const vector<int>& c_list) const {
     static inputdata* id = inputdata_locator::get();
 
-    vector<string> mapped_list;
-    mapped_list.reserve(c_list.size());
     for(int i = 0; i < c_list.size(); ++i){
-        mapped_list.emplace(mapped_list.end(), id->get_symbol(c_list[i]).c_str());
+        PyObject* p_symbol = PyUnicode_FromString(id->get_symbol(c_list[i]).c_str());
+        PyList_SET_ITEM(p_list_out, i, p_symbol);
     }
-
-    strings_to_pylist(p_list_out, mapped_list);
 }
 
 /**

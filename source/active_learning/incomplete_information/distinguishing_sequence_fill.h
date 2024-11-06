@@ -26,7 +26,7 @@ class distinguishing_sequence_fill : public ii_base {
     inline void add_data_to_tree(std::unique_ptr<apta>& aut, const std::vector<int>& seq, const int reverse_type, const float confidence);
 
   protected:
-    const int MIN_BATCH_SIZE = 512;
+    const int MIN_BATCH_SIZE = 256;
     const int MAX_LEN = 30;
 
     inline static std::vector< std::vector<int> > m_suffixes;

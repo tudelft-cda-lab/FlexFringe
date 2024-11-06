@@ -29,6 +29,7 @@ class nn_weighted_output_sul : public nn_sul_base {
                                                                           inputdata& id) const;
 #ifdef __FLEXFRINGE_PYTHON
     inline std::vector< std::vector<float> > compile_hidden_rep(PyObject* p_result, const int offset) const;
+    inline void print_p_error() const;
 #endif /* __FLEXFRINGE_PYTHON */
 
   protected:

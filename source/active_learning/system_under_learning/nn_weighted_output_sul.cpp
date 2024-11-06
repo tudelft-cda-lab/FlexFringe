@@ -22,6 +22,16 @@ using namespace std;
 
 #ifdef __FLEXFRINGE_PYTHON
 
+/**
+ * @brief Generic function that prints an error when the output of the python script is not as expected.
+ * 
+ */
+void nn_weighted_output_sul::print_p_error() const {
+    std::cerr << "Something went wrong in the Python script, see line below. Terminating program" << std::endl;
+    PyErr_Print();
+    exit(EXIT_FAILURE);
+}
+
 bool nn_weighted_output_sul::is_member(const std::vector<int>& query_trace) const { return true; }
 
 /**
@@ -78,7 +88,7 @@ const int nn_weighted_output_sul::query_trace(const std::vector<int>& query_trac
 vector<vector<float>> nn_weighted_output_sul::compile_hidden_rep(PyObject* p_result, const int offset) const {
 
     static const int HIDDEN_STATE_SIZE = static_cast<int>(PyLong_AsLong(
-        PyList_GetItem(p_result, static_cast<Py_ssize_t>(offset)))); // get first list, then return its length
+        PyList_GET_ITEM(p_result, static_cast<Py_ssize_t>(offset)))); // get first list, then return its length
     const int n_sequences = static_cast<int>((static_cast<int>(PyList_Size(p_result)) - 2) / HIDDEN_STATE_SIZE);
     vector<vector<float>> representations(n_sequences);
     for (int i = 0; i < n_sequences; ++i) {
@@ -112,12 +122,12 @@ nn_weighted_output_sul::get_type_and_states(const std::vector<int>& query_trace,
     input_sequence_to_pylist(p_list, query_trace);
 
     PyObject* p_result = PyObject_CallOneArg(query_func, p_list);
-    if (!PyList_Check(p_result))
-        throw std::runtime_error("Something went wrong, the Network did not return a list. What happened?");
+    if (p_result==NULL || !PyList_Check(p_result))
+        print_p_error();
 
     // by convention, python script must return a list. list[0]=prediction, list[1]=embedding_dim, rest is
     // hidden_representations 1D
-    PyObject* p_type = PyList_GetItem(p_result, static_cast<Py_ssize_t>(0));
+    PyObject* p_type = PyList_GET_ITEM(p_result, static_cast<Py_ssize_t>(0));
     if (!PyLong_Check(p_type)) {
         cerr << "Problem with type as returned by Python script. Is it a proper int?" << endl;
         throw exception(); // force the catch block
@@ -130,9 +140,11 @@ nn_weighted_output_sul::get_type_and_states(const std::vector<int>& query_trace,
     if (type > id.get_alphabet_size()) {
         id.add_type(PyUnicode_AsUTF8(p_type));
     }
-
     vector<vector<float>> representations = compile_hidden_rep(p_result, 1);
-
+    
+    Py_DECREF(p_list);
+    Py_DECREF(p_result);
+    
     return make_pair(type, representations);
 }
 
@@ -148,19 +160,18 @@ nn_weighted_output_sul::get_type_confidence_and_states(const std::vector<int>& q
     input_sequence_to_pylist(p_list, query_trace);
 
     PyObject* p_result = PyObject_CallOneArg(query_func, p_list);
-    if (!PyList_Check(p_result))
-        throw std::runtime_error("Something went wrong, the Network did not return a list. What happened?");
+    if (p_result==NULL || !PyList_Check(p_result))
+        print_p_error();
 
     // by convention, python script must return a list. list[1]=prediction, list[0]=confidence_in_prediction,
     // list[2]=embedding_dim, rest is hidden_representations 1D
-
-    PyObject* p_type = PyList_GetItem(p_result, static_cast<Py_ssize_t>(0));
+    PyObject* p_type = PyList_GET_ITEM(p_result, static_cast<Py_ssize_t>(0));
     if (!PyUnicode_CheckExact(p_type)) {
         cerr << "Problem with type as returned by Python script. Is it a proper int?" << endl;
         throw exception(); // force the catch block
     }
 
-    PyObject* p_confidence = PyList_GetItem(p_result, static_cast<Py_ssize_t>(1));
+    PyObject* p_confidence = PyList_GET_ITEM(p_result, static_cast<Py_ssize_t>(1));
     if (!PyFloat_CheckExact(p_confidence)) {
         cerr << "Problem with type as returned by Python script. Is it a proper float?" << endl;
         throw exception(); // force the catch block
@@ -173,7 +184,10 @@ nn_weighted_output_sul::get_type_confidence_and_states(const std::vector<int>& q
 
     float confidence = static_cast<float>(PyFloat_AsDouble(p_confidence));
     // vector< vector<float> > representations = compile_hidden_rep(p_result, 2);
-
+    
+    Py_DECREF(p_list);
+    Py_DECREF(p_result);
+    
     return make_tuple(type, confidence, vector<vector<float>>());
     // return make_tuple(type, confidence, representations);
 }
@@ -181,84 +195,44 @@ nn_weighted_output_sul::get_type_confidence_and_states(const std::vector<int>& q
 const vector<pair<int, float>>
 nn_weighted_output_sul::get_type_confidence_batch(const vector<vector<int>>& query_traces, inputdata& id) const {
 
-    vector<pair<int, float>> res;
-    res.reserve(query_traces.size());
-    for (int i = 0; i < query_traces.size(); ++i) {
-        res.emplace(res.end(), 1, 0.8);
+    PyObject* p_list = PyList_New(query_traces.size());
+    for(int i=0; i<query_traces.size(); i++){
+        PyObject* p_tmp = PyList_New(query_traces[i].size());
+        input_sequence_to_pylist(p_tmp, query_traces[i]);
+        PyList_SET_ITEM(p_list, i, p_tmp);
     }
-    return res;
 
-    /*     PyObject* p_list = PyList_New(query_traces.size());
-        for(int i=0; i<query_traces.size(); i++){
-            PyObject* p_tmp = PyList_New(query_traces[i].size());
-            input_sequence_to_pylist(p_tmp, query_traces[i]);
-            PyList_SetItem(p_list, i, p_tmp);
-            //Py_DECREF(p_tmp); // making sure p_tmp does not get deleted after loop
-        } */
+    PyObject* p_result = PyObject_CallOneArg(query_func, p_list);
+    if (p_result == NULL || !PyList_Check(p_result))
+        print_p_error();
 
-    /*     cout << "refcount of p_list: " << Py_REFCNT(p_list) << endl;
-        cout << "refcount of query_func: " << Py_REFCNT(query_func) << endl;
-        cout << "size of p_list: " << PyList_Size(p_list) << endl;
-        cout << "refcount of p_list[0]: " << Py_REFCNT(PyList_GetItem(p_list, static_cast<Py_ssize_t>(0))) << endl;
-        cout << "size of p_list[0]: " << PyList_Size(PyList_GetItem(p_list, static_cast<Py_ssize_t>(0))) << endl;
-        if(query_traces[0].size() > 0)
-            cout << "refcount of p_list[0][0]: " << Py_REFCNT(PyList_GetItem(PyList_GetItem(p_list,
-       static_cast<Py_ssize_t>(0)), 0)) << endl;
+    vector< pair<int, float> > res;
+    for(int i=0; i<query_traces.size(); i++){
 
-        cout << "Is initialized: " << Py_IsInitialized() << endl; */
-
-    /*     PyObject* p_result;
-        try{
-            p_result = PyObject_CallOneArg(query_func, p_list);
-        }
-        catch(...){
-            cout << "Running gc and trying again" << endl;
-            PyRun_SimpleString("gc.collect()");
-            p_result = PyObject_CallOneArg(query_func, p_list);
-        }
-        if (!PyList_Check(p_result))
-            throw std::runtime_error("Something went wrong, the Network did not return a list. What happened?");
-
-        vector< pair<int, float> > res;
-        for(int i=0; i<query_traces.size(); i++){
-
-            PyObject* p_type = PyList_GetItem(p_result, static_cast<Py_ssize_t>(i*2));
-            if(!PyUnicode_CheckExact(p_type)){
-                cerr << "Problem with type as returned by Python script. Is it a proper int?" << endl;
-                throw exception(); // force the catch block
-            }
-
-            PyObject* p_confidence = PyList_GetItem(p_result, static_cast<Py_ssize_t>(i*2 + 1));
-            if(!PyFloat_CheckExact(p_confidence)){
-                cerr << "Problem with type as returned by Python script. Is it a proper float?" << endl;
-                throw exception(); // force the catch block
-            }
-
-            int type = id.get_reverse_type(PyUnicode_AsUTF8(p_type));
-            if(type > id.get_alphabet_size()){
-                id.add_type(PyUnicode_AsUTF8(p_type));
-            }
-
-            res.emplace_back(type, static_cast<float>(PyFloat_AsDouble(p_confidence)));
-
-            //cout << "1: " << Py_REFCNT(p_type) << endl;
-            //cout << "2: " << Py_REFCNT(p_confidence) << endl;
-
-            //Py_DECREF(p_type);
-            //Py_DECREF(p_confidence);
+        PyObject* p_type = PyList_GET_ITEM(p_result, static_cast<Py_ssize_t>(i*2));
+        if(!PyUnicode_CheckExact(p_type)){
+            cerr << "Problem with type as returned by Python script. Is it a proper int?" << endl;
+            throw exception(); // force the catch block
         }
 
-    /*     for(int i=0; i<query_traces.size(); i++){
-            for(int j=0; j<query_traces[i].size(); j++){
-                Py_DECREF(PyList_GetItem(PyList_GetItem(p_list, static_cast<Py_ssize_t>(i)), j));
-            }
-            Py_DECREF(PyList_GetItem(p_list, static_cast<Py_ssize_t>(i)));
-        } */
-    /* Py_DECREF(p_list);
+        PyObject* p_confidence = PyList_GET_ITEM(p_result, static_cast<Py_ssize_t>(i*2 + 1));
+        if(!PyFloat_CheckExact(p_confidence)){
+            cerr << "Problem with type as returned by Python script. Is it a proper float?" << endl;
+            throw exception(); // force the catch block
+        }
+
+        int type = id.get_reverse_type(PyUnicode_AsUTF8(p_type));
+        if(type > id.get_alphabet_size()){
+            id.add_type(PyUnicode_AsUTF8(p_type));
+        }
+        res.emplace_back(type, static_cast<float>(PyFloat_AsDouble(p_confidence)));
+    }
+
+    Py_DECREF(p_list);
     Py_DECREF(p_result);
 
     assert(res.size() == query_traces.size());
-    return res; */
+    return res;
 }
 
 /**
@@ -281,7 +255,12 @@ const double nn_weighted_output_sul::get_sigmoid_output(const std::vector<int>& 
     input_sequence_to_pylist(p_list, query_trace);
 
     PyObject* p_query_result = PyObject_CallOneArg(query_func, p_list);
-    return PyFloat_AsDouble(p_query_result);
+    double res = PyFloat_AsDouble(p_query_result);
+    
+    Py_DECREF(p_list);
+    Py_DECREF(p_query_result);
+    
+    return res;
 }
 
 /**
@@ -327,8 +306,9 @@ nn_weighted_output_sul::get_weights_and_state(const std::vector<int>& query_trac
     input_sequence_to_pylist(p_list, query_trace);
 
     PyObject* p_result = PyObject_CallOneArg(query_func, p_list);
-    if (!PyTuple_Check(p_result))
-        throw std::runtime_error("Something went wrong, the Network did not return a tuple. What happened?");
+    if (p_result==NULL || !PyTuple_Check(p_result))
+        print_p_error();
+
     assert(static_cast<int>(PyTuple_Size(p_result)) == 2);
 
     PyObject* p_weights = PyTuple_GET_ITEM(p_result, static_cast<Py_ssize_t>(0));
@@ -349,17 +329,28 @@ nn_weighted_output_sul::get_weights_and_state(const std::vector<int>& query_trac
             PyObject* resp = PyList_GET_ITEM(p_weights, static_cast<Py_ssize_t>(i));
             res[i] = static_cast<float>(PyFloat_AsDouble(resp));
         }
+
+        Py_DECREF(p_list);
+        Py_DECREF(p_result);
+
         return make_pair(res, state);
     } else if (PyFloat_Check(p_weights)) {
         // binary acceptor model
         vector<float> res(1);
         res[0] = static_cast<float>(PyFloat_AsDouble(p_weights));
+        
+        Py_DECREF(p_list);
+        Py_DECREF(p_result);
+
         return make_pair(res, state);
     } else {
+        Py_DECREF(p_list);
+        Py_DECREF(p_result);
+
         throw std::runtime_error("Something went wrong, the Network neither returned a float (binary acceptor model\
         , nor did it return a list (language model)). What happened?");
     }
-}
+ }
 
 /**
  * @brief Destroy the nn sigmoid sul::nn sigmoid sul object

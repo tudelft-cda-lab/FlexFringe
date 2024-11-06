@@ -15,24 +15,21 @@
 #ifndef _NN_SUL_BASE_H_
 #define _NN_SUL_BASE_H_
 
+#include "sul_base.h"
+#include "parameters.h"
+
+#include <string>
+#include <cassert>
+#include <unordered_map>
+
 #ifdef __FLEXFRINGE_PYTHON
 
 #define PY_SSIZE_T_CLEAN // recommended, see https://docs.python.org/3/extending/extending.html#a-simple-example
 #include <Python.h> // IMPORTANT: Python.h must be first import. See https://docs.python.org/3/extending/extending.html
 
-#include "parameters.h"
-#include "sul_base.h"
-
-#include <cassert>
-#include <string>
-#include <unordered_map>
-
 class nn_sul_base : public sul_base {
     friend class base_teacher;
     friend class eq_oracle_base;
-
-  private:
-    void strings_to_pylist(PyObject* p_list_out, const std::vector<std::string>& c_list) const;
 
   protected:
     PyObject* p_module;
@@ -45,8 +42,6 @@ class nn_sul_base : public sul_base {
 
     bool is_member(const std::vector<int>& query_trace) const = 0;
     const int query_trace(const std::vector<int>& query_trace, inputdata& id) const = 0;
-
-    inline void set_list_item(PyObject* pylist, PyObject* item, const int idx) const;
     
     virtual void
     init_types() const = 0; // we need to set the internal types of flexfringe according to the types we expect
