@@ -43,7 +43,7 @@ public:
   int num_matched;
   int num_unmatched;
 
-  virtual bool consistent(state_merger *merger, apta_node* left, apta_node* right);
+  virtual bool consistent(state_merger *merger, apta_node* left, apta_node* right, int depth);
   //virtual void print_dot(iostream&, state_merger *);
   virtual bool compute_consistency(state_merger *, apta_node* left, apta_node* right);
   virtual double  compute_score(state_merger*, apta_node* left, apta_node* right);

@@ -22,8 +22,10 @@ public:
   int num_neg;
 
   virtual void update_score(state_merger *merger, apta_node* left, apta_node* right);
-  virtual double  compute_score(state_merger*, apta_node* left, apta_node* right);
+  virtual double compute_score(state_merger*, apta_node* left, apta_node* right);
   virtual void reset(state_merger *merger);
+
+  static double get_score(apta* aut, apta_node* left, apta_node* right);
 };
 
 #endif

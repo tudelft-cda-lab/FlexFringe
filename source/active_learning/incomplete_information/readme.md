@@ -1,0 +1,3 @@
+Information about this module module. For lack of better terms we named it as is. It's purpose is to provide strategies for what happens when information in the apta is missing. 
+
+For example, when learning DFAs and using the PAUL heuristic, then as part of the algorithm the PAUL heuristic provides information about an incomplete prefix tree by asking the underlying neural network with information about those missing states. We encapsulate this in the **overlap_fill** module.

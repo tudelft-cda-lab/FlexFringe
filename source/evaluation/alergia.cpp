@@ -135,7 +135,7 @@ void alergia_data::read_json(json& data){
 void alergia_data::write_json(json& data){
     count_data::write_json(data);
 
-    data["symbol_counts"] = {};
+    //data["symbol_counts"] = {};
 
     for(auto & symbol_count : symbol_counts) {
         int symbol = symbol_count.first;
@@ -331,7 +331,7 @@ bool alergia::compute_tests(num_map& left_map, int left_total, int left_final,
 }
 
 /* ALERGIA, consistency based on Hoeffding bound, only uses positive (type=1) data, pools infrequent counts */
-bool alergia::consistent(state_merger *merger, apta_node* left, apta_node* right){
+bool alergia::consistent(state_merger *merger, apta_node* left, apta_node* right, int depth){
     //if(inconsistency_found) return false;
     auto* l = (alergia_data*) left->get_data();
     auto* r = (alergia_data*) right->get_data();

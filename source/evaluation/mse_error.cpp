@@ -49,8 +49,8 @@ std::string mse_data::predict_data(tail*){
     return std::to_string(mean);
 };
 
-bool mse_error::consistent(state_merger *merger, apta_node* left, apta_node* right){
-    if(evaluation_function::consistent(merger, left, right) == false){ inconsistency_found = true; return false; }
+bool mse_error::consistent(state_merger *merger, apta_node* left, apta_node* right, int depth){
+    if(evaluation_function::consistent(merger, left, right, depth) == false){ inconsistency_found = true; return false; }
     mse_data* l = (mse_data*) left->get_data();
     mse_data* r = (mse_data*) right->get_data();
 

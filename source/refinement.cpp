@@ -116,6 +116,18 @@ inline void refinement::undo(state_merger* m){
 };
 
 inline bool refinement::testref(state_merger* m){
+    if(this->test_ref_structural(m)){
+        return this->test_ref_consistency(m);
+    }
+
+    return false;
+};
+
+inline bool refinement::test_ref_structural(state_merger* m){
+    return true;
+};
+
+inline bool refinement::test_ref_consistency(state_merger* m){
     return true;
 };
 
@@ -126,11 +138,13 @@ inline void refinement::increfs(){
 inline void refinement::erase(){
 };
 
+
+
 inline void merge_refinement::print() const{
     if(STORE_ACCESS_STRINGS)
-        cout << "merge( " << score << " " << red_trace->to_string() << " " << blue_trace->to_string() << " )" << endl;
+        cout << "merge( " << score << ", " << red_trace->to_string() << ", " << blue_trace->to_string() << " )" << endl;
     else
-        cout << "merge( " << score << " " << red->get_number() << " " << blue->get_number() << " )" << endl;
+        cout << "merge( " << score << ", " << red->get_number() << ", " << blue->get_number() << " )" << endl;
 };
 	
 inline void merge_refinement::print_short() const{
@@ -159,6 +173,7 @@ inline void merge_refinement::doref(state_merger* m){
         right->set_red(true);
     }
     m->perform_merge(left, right);
+    //right->set_score(score);
 };
 	
 inline void merge_refinement::undo(state_merger* m){
@@ -176,16 +191,37 @@ inline void merge_refinement::undo(state_merger* m){
     }
 };
 
-inline bool merge_refinement::testref(state_merger* m){
+/* inline bool merge_refinement::testref(state_merger* m){
+    if(this->test_ref_structural(m)){
+        return this->test_ref_consistency(m);
+    }
+
+    return false;
+}; */
+
+inline bool merge_refinement::test_ref_structural(state_merger* m){
     apta_node* left = red;
     apta_node* right = blue;
     if(STORE_ACCESS_STRINGS){
         left = m->get_state_from_trace(red_trace);
         right = m->get_state_from_trace(blue_trace);
     }
+
     if(left == right) return false;
     if((!left->is_red() && !left->get_source()->find()->is_red()) || right->is_red() || !right->get_source()->find()->is_red()) return false;
     if(left->rep() != 0 || right->rep() != 0) return false;
+
+    return true;
+};
+
+inline bool merge_refinement::test_ref_consistency(state_merger* m){
+    apta_node* left = red;
+    apta_node* right = blue;
+    if(STORE_ACCESS_STRINGS){
+        left = m->get_state_from_trace(red_trace);
+        right = m->get_state_from_trace(blue_trace);
+    }
+
     refinement* ref = m->test_merge(left, right);
     if(ref != 0){
         score = ref->score;
@@ -254,6 +290,17 @@ inline bool split_refinement::testref(state_merger* m){
     return false;
 };
 
+// TODO: I am not sure if we want those two to be 
+inline bool split_refinement::test_ref_structural(state_merger* m){
+    throw runtime_error("test_ref_structural() not yet implemented for split_refinement. Aborting");
+    //return refinement::test_ref_structural(m);
+}
+
+inline bool split_refinement::test_ref_consistency(state_merger* m){
+    throw runtime_error("test_ref_consistency() not yet implemented for split_refinement. Aborting");
+    //return refinement::test_ref_consistency(m);
+}
+
 inline void split_refinement::erase(){
     refs -= 1;
     if(refs == 0) mem_store::delete_split_refinement(this);
@@ -304,6 +351,14 @@ inline bool extend_refinement::testref(state_merger* m){
     return true;
 };
 
+inline bool extend_refinement::test_ref_structural(state_merger* m){
+    return extend_refinement::testref(m);
+};
+
+inline bool extend_refinement::test_ref_consistency(state_merger* m){
+    return refinement::test_ref_consistency(m);
+};
+
 inline void extend_refinement::erase(){
     refs -= 1;
     if(refs == 0) mem_store::delete_extend_refinement(this);
@@ -323,17 +378,18 @@ void refinement::print_refinement_list_json(iostream& output, refinement_list* l
     output << "]\n";
 };
 
-int refinement::type(){
-    return 0;
+refinement_type refinement::type(){
+    throw runtime_error("type() function of refinement base class should not be called.");
+    return refinement_type::base_rf_type;
 }
-int split_refinement::type(){
-    return 1;
+refinement_type split_refinement::type(){
+    return refinement_type::split_rf_type;
 }
-int merge_refinement::type(){
-    return 2;
+refinement_type merge_refinement::type(){
+    return refinement_type::merge_rf_type;
 }
-int extend_refinement::type(){
-    return 3;
+refinement_type extend_refinement::type(){
+    return refinement_type::extend_rf_type;
 }
 
 inline int refinement::get_time(){

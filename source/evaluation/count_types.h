@@ -33,15 +33,15 @@ public:
     virtual bool sink_consistent(int type);
     virtual int num_sink_types();
     
-    inline int num_paths(){
+    inline int num_paths() const {
         return total_paths;
     }
     
-    inline int num_final(){
+    inline int num_final() const {
         return total_final;
     }
 
-    inline int num_total(){
+    inline int num_total() const {
         return total_final + total_paths;
     }
 
@@ -123,7 +123,7 @@ public:
   virtual void update_score(state_merger *merger, apta_node* left, apta_node* right);
   virtual double  compute_score(state_merger*, apta_node* left, apta_node* right);
   virtual void reset(state_merger *merger);
-  virtual bool consistent(state_merger *merger, apta_node* left, apta_node* right);
+  virtual bool consistent(state_merger *merger, apta_node* left, apta_node* right, int depth);
 };
 
 #endif

@@ -1,11 +1,13 @@
 #include "state_merger.h"
 #include "evaluate.h"
 #include "evaluation_factory.h"
-#include <map>
-#include <set>
 #include "parameters.h"
 #include "count_types.h"
 #include "input/inputdatalocator.h"
+
+#include <map>
+#include <set>
+#include <unordered_set>
 
 REGISTER_DEF_TYPE(count_driven);
 REGISTER_DEF_DATATYPE(count_data);
@@ -43,11 +45,11 @@ void count_data::print_transition_label_json(std::iostream& output, int symbol){
 void count_data::print_state_label_json(std::iostream& output){
     output << "fin: ";
     for(auto & final_count : final_counts){
-        output << final_count.first << ":" << final_count.second << " , ";
+        output << inputdata_locator::get()->string_from_type(final_count.first) << ":" << final_count.second << " , ";
     }
     output << " path: ";
     for(auto & path_count : path_counts){
-        output << path_count.first << ":" << path_count.second << " , ";
+        output << inputdata_locator::get()->string_from_type(path_count.first) << ":" << path_count.second << " , ";
     }
 };
 
@@ -121,7 +123,7 @@ void count_data::write_json(json& data){
 };
 
 void count_data::update(evaluation_data* right){
-    auto* other = reinterpret_cast<count_data*>(right);
+    auto* other = static_cast<count_data*>(right);
     for(auto & final_count : other->final_counts){
         int type = final_count.first;
         int count = final_count.second;
@@ -145,7 +147,7 @@ void count_data::update(evaluation_data* right){
 };
 
 void count_data::undo(evaluation_data* right){
-    auto* other = reinterpret_cast<count_data*>(right);
+    auto* other = static_cast<count_data*>(right);
 
     for(auto & final_count : other->final_counts){
         int type = final_count.first;
@@ -179,7 +181,7 @@ double count_data::predict_type_score(int t){
 int count_data::predict_type(tail*){
     int t = 0;
     double max_count = -1;
-    for(int i = 0; i < inputdata_locator::get()->get_types_size(); ++i){
+    for(int i = 0; i < inputdata_locator::get()->get_types_size(); ++i){ // -1 is the unknown type
         double prob = predict_type_score(i);
         if(max_count == -1 || max_count < prob){
             max_count = prob;
@@ -190,14 +192,11 @@ int count_data::predict_type(tail*){
 };
 
 /* default evaluation, count number of performed merges */
-bool count_driven::consistent(state_merger *merger, apta_node* left, apta_node* right){
-    if(inconsistency_found) return false;
-
-    if(!TYPE_CONSISTENT) return true;
-  
+bool count_driven::consistent(state_merger *merger, apta_node* left, apta_node* right, int depth){
+    if(inconsistency_found) return false;    
+    if(!TYPE_CONSISTENT) return true;    
     auto* l = (count_data*)left->get_data();
-    auto* r = (count_data*)right->get_data();
-
+    auto* r = (count_data*)right->get_data();    
     for(auto & final_count : l->final_counts){
         int type = final_count.first;
         int count = final_count.second;
@@ -212,7 +211,20 @@ bool count_driven::consistent(state_merger *merger, apta_node* left, apta_node* 
             }
         }
     }
-    
+
+    //if(l->total_paths < STATE_COUNT) return true;
+    //if(r->total_paths < STATE_COUNT) return true;
+    //for(auto & path_count : l->path_counts){
+    //    int type = path_count.first;
+    //    int count = path_count.second;
+    //    if(count != 0){
+    //        int count2 = r->path_counts[type];
+    //        if(count2 == 0){
+    //            inconsistency_found = true;
+    //            return false;
+    //        }
+    //    }
+    //} 
     return true;
 };
 

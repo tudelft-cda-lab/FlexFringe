@@ -32,6 +32,9 @@ public:
 //    static void delete_tail(tail*);
 //    static tail* create_tail(tail* other_tail);
 
+    static void delete_refinement(refinement* ref);
+    static void erase();
+
     static void delete_merge_refinement(merge_refinement*);
     static merge_refinement* create_merge_refinement(state_merger* m, double s, apta_node* l, apta_node* r);
 
@@ -41,13 +44,12 @@ public:
     static void delete_extend_refinement(extend_refinement*);
     static extend_refinement* create_extend_refinement(state_merger* m, apta_node* r);
 
-    static void erase();
 
 //    static void delete_trace(trace*);
 //    static trace* create_trace();
 
     static void delete_trace(trace*);
-    static trace* create_trace(inputdata* = nullptr);
+    static trace* create_trace(inputdata* = nullptr, trace* = nullptr);
 
     static void delete_tail(tail*);
     static tail* create_tail(tail* other_tail);
