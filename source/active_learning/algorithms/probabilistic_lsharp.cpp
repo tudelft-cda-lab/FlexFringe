@@ -10,7 +10,6 @@
  */
 
 #include "probabilistic_lsharp.h"
-#include "base_teacher.h"
 #include "common_functions.h"
 #include "input_file_oracle.h"
 #include "input_file_sul.h"
@@ -80,7 +79,7 @@ void probabilistic_lsharp_algorithm::init_final_prob(apta_node* n, apta* the_apt
     }
 
     trace* new_trace = vector_to_trace(seq, id);
-    const double new_prob = teacher->get_string_probability(seq, id);
+    const double new_prob = oracle->ask_sul(seq, id).GET_FLOAT();
     static_cast<string_probability_estimator_data*>(n->get_data())->init_access_probability(new_prob);
 }
 
@@ -114,8 +113,7 @@ void probabilistic_lsharp_algorithm::add_statistics(unique_ptr<state_merger>& me
         trace* new_trace = vector_to_trace(seq, id);
         id.add_trace(new_trace);
 
-        const double new_prob = teacher->get_string_probability(
-            seq, id); // get_probability_of_last_symbol(new_trace, id, teacher, merger->get_aut());
+        const double new_prob = oracle->ask_sul(seq, id).GET_FLOAT();
         if (std::isnan(new_prob))
             throw runtime_error("Error: NaN value has occurred."); // debugging
 
@@ -240,7 +238,7 @@ void probabilistic_lsharp_algorithm::update_tree_dfs(apta* the_apta, const vecto
  * @param aut The merged APTA.
  * @param counterex The counterexample.
  */
-void probabilistic_lsharp_algorithm::proc_counterex(const unique_ptr<base_teacher>& teacher, inputdata& id,
+void probabilistic_lsharp_algorithm::proc_counterex(inputdata& id,
                                                     unique_ptr<apta>& hypothesis, const vector<int>& counterex,
                                                     unique_ptr<state_merger>& merger, const refinement_list refs,
                                                     const vector<int>& alphabet) const {
@@ -251,8 +249,8 @@ void probabilistic_lsharp_algorithm::proc_counterex(const unique_ptr<base_teache
     apta_node* n = hypothesis->get_root();
     for (auto s : counterex) {
         if (n == nullptr) {
-            const auto queried_type = teacher->ask_membership_query(substring, id); // TODO: necessary here?
-            trace* new_trace = vector_to_trace(substring, id, queried_type);
+            //const auto queried_type = oracle->ask_membership_query(substring, id); // TODO: necessary here?
+            trace* new_trace = vector_to_trace(substring, id, 0);
             id.add_trace_to_apta(new_trace, hypothesis.get(), false);
             id.add_trace(new_trace);
             substring.push_back(s);
@@ -268,8 +266,8 @@ void probabilistic_lsharp_algorithm::proc_counterex(const unique_ptr<base_teache
 
     // for the last element, too
     if(n==nullptr){
-        const auto queried_type = teacher->ask_membership_query(substring, id); // TODO: necessary here?
-        trace* new_trace = vector_to_trace(substring, id, queried_type);
+        //const auto queried_type = oracle->ask_membership_query(substring, id); // TODO: necessary here?
+        trace* new_trace = vector_to_trace(substring, id, 0);
         id.add_trace_to_apta(new_trace, hypothesis.get(), false);
         id.add_trace(new_trace);
     }
@@ -429,7 +427,6 @@ void probabilistic_lsharp_algorithm::run(inputdata& id) {
         add_statistics(merger, root_node, id, alphabet, seq);
         extend_fringe_balanced(merger, root_node, the_apta, id, alphabet);
         update_tree_dfs(the_apta.get(), alphabet);
-        // test_dfs(the_apta.get(), alphabet, teacher, id);
     }
 
     while (ENSEMBLE_RUNS > 0 && n_runs <= ENSEMBLE_RUNS) {
@@ -446,7 +443,7 @@ void probabilistic_lsharp_algorithm::run(inputdata& id) {
             we ask cannot be parsed in automaton. We ignore those cases, as they lead to extra states in hypothesis.
             This puts a burden on the equivalence oracle to make sure no query is asked twice, else we end
             up in infinite loop.*/
-            optional<pair<vector<int>, int>> query_result = oracle->equivalence_query(merger.get(), teacher);
+            optional<pair<vector<int>, int>> query_result = oracle->equivalence_query(merger.get());
             if (!query_result) {
                 cout << "Found consistent automaton => Print." << endl;
                 print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
@@ -463,9 +460,8 @@ void probabilistic_lsharp_algorithm::run(inputdata& id) {
                 cout << id.get_symbol(s) << " ";
             cout << endl;            
             
-            proc_counterex(teacher, id, the_apta, cex, merger, refs, alphabet);
-            /* underestimated_dist =  */ update_tree_dfs(the_apta.get(),
-                                                         alphabet); // TODO: this can be a more efficient update
+            proc_counterex(id, the_apta, cex, merger, refs, alphabet);
+            update_tree_dfs(the_apta.get(), alphabet); // TODO: make this function more efficient
 
             break;
         }

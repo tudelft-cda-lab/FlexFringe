@@ -10,7 +10,7 @@
  */
 
 #include "observation_table_imat.h"
-#include "base_teacher.h"
+#include "oracle_base.h"
 #include "common_functions.h"
 #include "definitions.h"
 #include "inputdata.h"
@@ -170,7 +170,7 @@ void observation_table_imat::insert_record_in_selected_table(table_type& selecte
 }
 
 /**
- * @brief Inserts a record with the known answer into the table. The answer has been obtained by the teacher.
+ * @brief Inserts a record with the known answer into the table. The answer has been obtained by the oracle.
  *
  * @param raw_row The row/prefix.
  * @param col The column/suffix.
@@ -300,7 +300,7 @@ void observation_table_imat::mark_row_complete(const pref_suf_t& row) {
     incomplete_rows.erase(position_it);
 }
 
-void observation_table_imat::complete_rows(base_teacher* teacher, inputdata& id) {
+void observation_table_imat::complete_rows(const unique_ptr<oracle_base>& oracle, inputdata& id) {
     DLOG_S(INFO) << "COMPLETE" << endl;
     const auto& rows_to_close =
         list<pref_suf_t>(get_incomplete_rows()); // need a copy, since we're modifying structure in mark_row_complete().
@@ -311,7 +311,7 @@ void observation_table_imat::complete_rows(base_teacher* teacher, inputdata& id)
             if (has_record(current_row, current_column))
                 continue;
 
-            const int answer = teacher->ask_membership_query(current_row, current_column, id);
+            const int answer = oracle->ask_sul(current_row, current_column, id).GET_INT();
             insert_record(current_row, current_column, answer);
         }
         mark_row_complete(current_row);

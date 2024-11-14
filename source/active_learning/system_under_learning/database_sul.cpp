@@ -15,15 +15,6 @@ using namespace std;
 
 void database_sul::pre(inputdata& id) {}
 
-bool database_sul::is_member(const std::vector<int>& query_trace) const { return database->is_member(query_trace); }
-
-/**
- * @brief We don't need this function in here at the moment.
- *
- * @param query_trace
- * @param id
- * @return const int
- */
-const int database_sul::query_trace(const std::vector<int>& query_trace, inputdata& id) const {
-    return true; // return database->query_trace(query_trace, id);
+const sul_response database_sul::do_query(const vector<int>& query_trace, inputdata& id) const { 
+    return database->is_member(query_trace) ? sul_response(true) : sul_response(false); 
 }

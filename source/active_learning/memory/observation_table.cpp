@@ -163,7 +163,7 @@ void observation_table::insert_record_in_selected_table(table_type& selected_tab
 }
 
 /**
- * @brief Inserts a record with the known answer into the table. The answer has been obtained by the teacher.
+ * @brief Inserts a record with the known answer into the table. The answer has been obtained by the oracle.
  *
  * @param raw_row The row/prefix.
  * @param col The column/suffix.

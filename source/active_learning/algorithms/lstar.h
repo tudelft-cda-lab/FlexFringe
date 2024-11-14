@@ -31,9 +31,8 @@ class lstar_algorithm : public algorithm_base {
                                                                 inputdata& id) const;
 
   public:
-    lstar_algorithm(std::shared_ptr<sul_base>& sul, std::unique_ptr<base_teacher>& teacher,
-                    std::unique_ptr<eq_oracle_base>& oracle)
-        : algorithm_base(sul, teacher, oracle){};
+    lstar_algorithm(std::unique_ptr<oracle_base>&& oracle)
+        : algorithm_base(std::move(oracle)){};
     void run(inputdata& id) override;
 };
 

@@ -10,7 +10,6 @@
  */
 
 #include "lstar.h"
-#include "base_teacher.h"
 #include "common_functions.h"
 #include "input_file_oracle.h"
 #include "input_file_sul.h"
@@ -109,7 +108,7 @@ void lstar_algorithm::run(inputdata& id) {
                 if (current_row.size() == 0 && current_column.size() == 0)
                     continue; // not sure what to do about the empty word
 
-                const int answer = teacher->ask_membership_query(current_row, current_column, id);
+                const int answer = oracle->ask_sul(current_row, current_column, id).GET_INT();
                 obs_table.insert_record(current_row, current_column, answer);
             }
             obs_table.mark_row_complete(current_row);
@@ -130,7 +129,7 @@ void lstar_algorithm::run(inputdata& id) {
                 string we ask cannot be parsed in automaton. We ignore those cases, as they lead to extra states in
                 hypothesis. This puts a burden on the equivalence oracle to make sure no query is asked twice, else we
                 end up in infinite loop.*/
-                optional<pair<vector<int>, int>> query_result = oracle->equivalence_query(merger.get(), teacher);
+                optional<pair<vector<int>, int>> query_result = oracle->equivalence_query(merger.get());
                 if (!query_result) {
                     cout << "Found consistent automaton => Print." << endl;
                     print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time

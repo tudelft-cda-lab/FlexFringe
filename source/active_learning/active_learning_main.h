@@ -12,24 +12,23 @@
 #ifndef _ACTIVE_LEARNING_MAIN_H_
 #define _ACTIVE_LEARNING_MAIN_H_
 
-#include "base_teacher.h"
-#include "eq_oracle_base.h"
+#include "oracle_base.h"
 #include "misc/sqldb.h"
 #include "source/input/inputdata.h"
 #include "sul_base.h"
 
 #include <memory>
+
 class active_learning_main_func {
   private:
     inputdata* get_inputdata() const;
     std::ifstream get_inputstream() const;
     std::unique_ptr<parser> get_parser(std::ifstream& input_stream) const;
     std::unique_ptr<psql::db> my_sqldb;
-    bool SQLDB = false;
 
-    std::shared_ptr<sul_base> select_sul_class(const bool ACTIVE_SUL) const;
-    std::unique_ptr<base_teacher> select_teacher_class(std::shared_ptr<sul_base>& sul, const bool ACTIVE_SUL) const;
-    std::unique_ptr<eq_oracle_base> select_oracle_class(std::shared_ptr<sul_base>& sul, const bool ACTIVE_SUL) const;
+
+    std::unique_ptr<sul_base> select_sul_class(const bool ACTIVE_SUL) const;
+    std::unique_ptr<oracle_base> select_oracle_class(std::unique_ptr<sul_base>&& sul, const bool ACTIVE_SUL) const;
 
   public:
     active_learning_main_func() = default;

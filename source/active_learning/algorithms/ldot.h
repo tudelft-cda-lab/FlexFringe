@@ -14,8 +14,8 @@
 
 #include "algorithm_base.h"
 #include "apta.h"
-#include "base_teacher.h"
-#include "eq_oracle_base.h"
+#include "oracle_base.h"
+#include "oracle_base.h"
 #include "input/trace.h"
 #include "inputdata.h"
 #include "refinement.h"
@@ -133,9 +133,8 @@ class ldot_algorithm : public algorithm_base {
     std::vector<apta_node*> represented_by(apta_node* n);
 
   public:
-    ldot_algorithm(std::shared_ptr<sul_base>& sul, std::unique_ptr<base_teacher>& teacher,
-                   std::unique_ptr<eq_oracle_base>& oracle)
-        : algorithm_base(sul, teacher, oracle){};
+    ldot_algorithm(std::unique_ptr<oracle_base>&& oracle)
+        : algorithm_base(std::move(oracle)){};
 
     /**
      * @brief Call to run algorithm.

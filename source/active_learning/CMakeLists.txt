@@ -3,8 +3,8 @@ include_directories(
         "${CMAKE_CURRENT_SOURCE_DIR}/databases"
         "${CMAKE_CURRENT_SOURCE_DIR}/active_learning_util"
         "${CMAKE_CURRENT_SOURCE_DIR}/memory"
-        "${CMAKE_CURRENT_SOURCE_DIR}/teacher"
         "${CMAKE_CURRENT_SOURCE_DIR}/system_under_learning"
+        "${CMAKE_CURRENT_SOURCE_DIR}/system_under_learning/neural_network_suls"
         "${CMAKE_CURRENT_SOURCE_DIR}/system_under_learning/benchmark_parsers"
         "${CMAKE_CURRENT_SOURCE_DIR}/counterexample_strategies"
         "${CMAKE_CURRENT_SOURCE_DIR}/equivalence_oracle"
@@ -14,6 +14,7 @@ include_directories(
         "${CMAKE_CURRENT_SOURCE_DIR}/algorithms"
         )
 
+
 add_library(ActiveLearning STATIC
             active_learning_main.h
             active_learning_main.cpp
@@ -22,10 +23,10 @@ add_library(ActiveLearning STATIC
             active_learning_util/definitions.cpp
             active_learning_util/common_functions.h
             active_learning_util/common_functions.cpp
-            active_learning_util/best_refinement_strategies.h
-            active_learning_util/best_refinement_strategies.cpp
             active_learning_util/random_int_generator.h
             active_learning_util/random_int_generator.cpp
+            active_learning_util/factories.h
+            active_learning_util/factories.cpp
 
             # DFAs
             algorithms/lstar.h
@@ -34,10 +35,8 @@ add_library(ActiveLearning STATIC
             algorithms/lstar_imat.cpp
             algorithms/lsharp.h
             algorithms/lsharp.cpp
-            algorithms/ldot.h
-            algorithms/ldot.cpp
-            algorithms/transformer_l_sharp.h
-            algorithms/transformer_l_sharp.cpp
+            #algorithms/ldot.h
+            #algorithms/ldot.cpp
             algorithms/paul.h
             algorithms/paul.cpp
 
@@ -49,14 +48,15 @@ add_library(ActiveLearning STATIC
             algorithms/transformer_weighted_lsharp.h
             algorithms/transformer_weighted_lsharp.cpp
 
+            # databases
             databases/database_base.h
             databases/database_headers.h
             databases/prefix_tree_database.h
             databases/prefix_tree_database.cpp
 
             # Equivalence oracles
-            equivalence_oracle/eq_oracle_base.h
-            equivalence_oracle/eq_oracle_base.cpp
+            equivalence_oracle/oracle_base.h
+            equivalence_oracle/oracle_base.cpp
             equivalence_oracle/input_file_oracle.h
             equivalence_oracle/input_file_oracle.cpp
             equivalence_oracle/active_sul_oracle.h
@@ -67,14 +67,16 @@ add_library(ActiveLearning STATIC
             equivalence_oracle/string_probability_oracle.cpp
             equivalence_oracle/weight_comparing_oracle.h
             equivalence_oracle/weight_comparing_oracle.cpp
-            equivalence_oracle/sqldb_sul_regex_oracle.h
-            equivalence_oracle/sqldb_sul_regex_oracle.cpp
-            equivalence_oracle/sqldb_sul_random_oracle.h
-            equivalence_oracle/sqldb_sul_random_oracle.cpp
+            #equivalence_oracle/sqldb_sul_regex_oracle.h
+            #equivalence_oracle/sqldb_sul_regex_oracle.cpp
+            #equivalence_oracle/sqldb_sul_random_oracle.h
+            #equivalence_oracle/sqldb_sul_random_oracle.cpp
             equivalence_oracle/paul_oracle.h
             equivalence_oracle/paul_oracle.cpp
 
             # Counterexample search strategies
+            equivalence_oracle/cex_search_strategies/cex_search_strategy_factory.h
+            equivalence_oracle/cex_search_strategies/cex_search_strategy_factory.cpp
             equivalence_oracle/cex_search_strategies/search_base.h
             equivalence_oracle/cex_search_strategies/search_base.cpp
             equivalence_oracle/cex_search_strategies/breadth_first_search.h
@@ -91,12 +93,12 @@ add_library(ActiveLearning STATIC
             # Conflict search strategies
             equivalence_oracle/cex_conflict_search/dfa_conflict_search_base.h
             equivalence_oracle/cex_conflict_search/dfa_conflict_search_base.cpp
-            equivalence_oracle/cex_conflict_search/linear_conflict_search.h
-            equivalence_oracle/cex_conflict_search/linear_conflict_search.cpp
+            equivalence_oracle/cex_conflict_search/linear_conflict_search_base.h
+            equivalence_oracle/cex_conflict_search/linear_conflict_search_base.cpp
             equivalence_oracle/cex_conflict_search/linear_state_query_conflict_search.h
             equivalence_oracle/cex_conflict_search/linear_state_query_conflict_search.cpp
-            equivalence_oracle/cex_conflict_search/binary_conflict_search.h
-            equivalence_oracle/cex_conflict_search/binary_conflict_search.cpp
+            equivalence_oracle/cex_conflict_search/binary_conflict_search_base.h
+            equivalence_oracle/cex_conflict_search/binary_conflict_search_base.cpp
 
             # Methods to deal with incomplete information
             incomplete_information/ii_base.h
@@ -122,6 +124,7 @@ add_library(ActiveLearning STATIC
             memory/suffix_tree.h
             memory/suffix_tree.cpp
 
+            # The SULs: Interfaces connecting Flexfringe with the system under learning 
             system_under_learning/sul_base.h
             system_under_learning/sul_base.cpp
             system_under_learning/input_file_sul.h
@@ -130,23 +133,30 @@ add_library(ActiveLearning STATIC
             system_under_learning/dfa_sul.cpp
             system_under_learning/database_sul.h
             system_under_learning/database_sul.cpp
-            system_under_learning/sqldb_sul.h
-            system_under_learning/sqldb_sul.cpp
+            #system_under_learning/sqldb_sul.h
+            #system_under_learning/sqldb_sul.cpp
 
-            system_under_learning/nn_sul_base.h
-            system_under_learning/nn_sul_base.cpp
-            system_under_learning/nn_weighted_output_sul.h
-            system_under_learning/nn_weighted_output_sul.cpp
+            # The SULs dedicated to capturing the output of neural networks (or Python scripts having similar outputs)
+            system_under_learning/neural_network_suls/nn_sul_base.h
+            system_under_learning/neural_network_suls/nn_sul_base.cpp
+            system_under_learning/neural_network_suls/nn_binary_output_sul.h
+            system_under_learning/neural_network_suls/nn_binary_output_sul.cpp
+            system_under_learning/neural_network_suls/nn_discrete_and_float_output_sul.h
+            system_under_learning/neural_network_suls/nn_discrete_and_float_output_sul.cpp
+            system_under_learning/neural_network_suls/nn_discrete_output_and_hidden_reps_sul.h
+            system_under_learning/neural_network_suls/nn_discrete_output_and_hidden_reps_sul.cpp
+            system_under_learning/neural_network_suls/nn_discrete_output_sul.h
+            system_under_learning/neural_network_suls/nn_discrete_output_sul.cpp
+            system_under_learning/neural_network_suls/nn_float_output_sul.h
+            system_under_learning/neural_network_suls/nn_float_output_sul.cpp
+            system_under_learning/neural_network_suls/nn_float_vector_output_sul.h
+            system_under_learning/neural_network_suls/nn_float_vector_output_sul.cpp
 
+            # other functions, such as the parsers for some specific files
             system_under_learning/benchmark_parsers/benchmarkparser_base.h
             system_under_learning/benchmark_parsers/benchmarkparser_base.cpp
             system_under_learning/benchmark_parsers/benchmark_dfaparser.h
             system_under_learning/benchmark_parsers/benchmark_dfaparser.cpp
-
-            teacher/base_teacher.h
-            teacher/base_teacher.cpp
-            teacher/teacher_imat.h
-            teacher/teacher_imat.cpp
 )
 
 

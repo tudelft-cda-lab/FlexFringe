@@ -11,7 +11,6 @@
  */
 
 #include "lsharp.h"
-#include "base_teacher.h"
 #include "common_functions.h"
 #include "input_file_oracle.h"
 #include "input_file_sul.h"
@@ -61,7 +60,7 @@ void lsharp_algorithm::extend_fringe(unique_ptr<state_merger>& merger, apta_node
     for (const int symbol : alphabet) {
         seq[seq.size() - 1] = symbol;
 
-        const int answer = teacher->ask_membership_query(seq, id);
+        const int answer = oracle->ask_sul(seq, id).GET_INT();
         if(answer==-1)
             continue;
 
@@ -75,13 +74,15 @@ void lsharp_algorithm::extend_fringe(unique_ptr<state_merger>& merger, apta_node
 
 /**
  * @brief Processing the counterexample.
+ * 
+ * TODO: Make this one better.
  *
  * Operations done directly on the APTA.
  *
  * @param aut The merged APTA.
  * @param counterex The counterexample.
  */
-void lsharp_algorithm::proc_counterex(const unique_ptr<base_teacher>& teacher, inputdata& id,
+void lsharp_algorithm::proc_counterex(inputdata& id,
                                       unique_ptr<apta>& hypothesis, const vector<int>& counterex,
                                       unique_ptr<state_merger>& merger, const refinement_list refs,
                                       const vector<int>& alphabet) const {
@@ -267,7 +268,7 @@ void lsharp_algorithm::run(inputdata& id) {
             This puts a burden on the equivalence oracle to make sure no query is asked twice, else we end
             up in infinite loop.*/
 
-            optional<pair<vector<int>, int>> query_result = oracle->equivalence_query(merger.get(), teacher);
+            optional<pair<vector<int>, int>> query_result = oracle->equivalence_query(merger.get());
             if (!query_result) {
                 cout << "Found consistent automaton => Print." << endl;
                 print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
@@ -284,7 +285,7 @@ void lsharp_algorithm::run(inputdata& id) {
                 cout << id.get_symbol(s) << " ";
             cout << endl;        
             
-            proc_counterex(teacher, id, the_apta, cex, merger, refs, alphabet);
+            proc_counterex(id, the_apta, cex, merger, refs, alphabet);
 
             {
                 static int model_nr = 0;

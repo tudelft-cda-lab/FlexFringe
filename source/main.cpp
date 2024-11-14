@@ -544,7 +544,11 @@ int main(int argc, char *argv[]){
     app.add_option("--max_al_search_depth", MAX_AL_SEARCH_DEPTH, "The active learning search depth. Some uses can be disabled with a value <= 0. Critical in models where a maximum-string-length occurs, such as transformer-models. Default: 25");
     app.add_option("--num_cex_search", NUM_CEX_PARAM, "Samples parameter indicating a number in the counterexample search. For example, in the random w-method the number of strings per node,\\
                                                                 and in random string search it is the delay. Default: 5000");
-    app.add_option("--identify_state_completely", IDENTIFY_STATE_COMPLETELY, "If true, then we only merges states that cannot be merged with another. In other words, it reduces the heuristic nature. Can only be used only in select algorithms, for example L#. Default: True");
+    app.add_option("--oracle", ORACLE, "The oracle that we're using. Has to be specified!");
+    app.add_option("--oracle2", ORACLE_2, "In case we are using a second oracle.");
+    app.add_option("--system_under_learning", SYSTEM_UNDER_LEARNING, "The system under learning. Has to be specified!");
+    app.add_option("--system_under_learning_2", SYSTEM_UNDER_LEARNING_2, "The second system under learning. Used if more than one type of oracle queries have  to be used, see e.g. Ldot/DAALDer.");
+    app.add_option("--cex_search_strategy", CEX_SEARCH_STRATEGY, "The strategy to search for counterexamples. Normally the random w-method will do, but depending on your case you might want to choose. Default: random_w_method.");
 
     // TODO: shall we delete the rejecting_label option?
     app.add_option("--rejecting_label", REJECTING_LABEL, "The label as a string that is used for rejecting (non-accepting) behavior. Only in active learning mode. DEFAULT: 0");

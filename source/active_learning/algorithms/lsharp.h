@@ -14,9 +14,8 @@
 #define _L_SHARP_H_
 
 #include "algorithm_base.h"
-#include "base_teacher.h"
 #include "definitions.h"
-#include "eq_oracle_base.h"
+#include "oracle_base.h"
 #include "inputdata.h"
 #include "refinement.h"
 #include "state_merger.h"
@@ -30,7 +29,7 @@ class lsharp_algorithm : public algorithm_base {
   protected:
     //unordered_set< vector<int> > distinguishing_sequences;
 
-    virtual void proc_counterex(const std::unique_ptr<base_teacher>& teacher, inputdata& id, std::unique_ptr<apta>& hypothesis,
+    virtual void proc_counterex(inputdata& id, std::unique_ptr<apta>& hypothesis,
                         const std::vector<int>& counterex, std::unique_ptr<state_merger>& merger,
                         const refinement_list refs, const std::vector<int>& alphabet) const;
 
@@ -45,9 +44,8 @@ class lsharp_algorithm : public algorithm_base {
                                          const std::vector<int>& alphabet);
 
   public:
-    lsharp_algorithm(std::shared_ptr<sul_base>& sul, std::unique_ptr<base_teacher>& teacher,
-                     std::unique_ptr<eq_oracle_base>& oracle)
-        : algorithm_base(sul, teacher, oracle){};
+    lsharp_algorithm(std::unique_ptr<oracle_base>&& oracle)
+        : algorithm_base(std::move(oracle)){};
 
     virtual void run(inputdata& id) override;
 };

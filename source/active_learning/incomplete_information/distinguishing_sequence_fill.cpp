@@ -17,11 +17,13 @@
 
 #include <optional>
 
+using namespace std;
+
 /**
  * @brief Takes the two nodes, walks through their subtrees, and stores all the suffixes for which the two subtree disagree. 
  * If a suffix in not in the set of distinguishing sequences at the moment, then it will be added 
  */
-void distinguishing_sequence_fill::pre_compute(std::list<int>& suffix, std::unordered_set<apta_node*>& seen_nodes, std::unique_ptr<apta>& aut, std::unique_ptr<base_teacher>& teacher, apta_node* left, apta_node* right, const int depth){
+void distinguishing_sequence_fill::pre_compute(list<int>& suffix, unordered_set<apta_node*>& seen_nodes, unique_ptr<apta>& aut, unique_ptr<oracle_base>& oracle, apta_node* left, apta_node* right, const int depth){
   const static int max_search_depth = MAX_AL_SEARCH_DEPTH;
   if(max_search_depth > 0 && (left->get_depth() > max_search_depth || right->get_depth() > max_search_depth)) // making sure we don't bust the transformer
     return;
@@ -42,10 +44,10 @@ void distinguishing_sequence_fill::pre_compute(std::list<int>& suffix, std::unor
   
   // in these two following if-clauses the side effect happens (see description)
   if(!r_data->has_type()){
-    complete_node(right, aut, teacher);
+    complete_node(right, aut, oracle);
   }
   if(!l_data->has_type()){
-    complete_node(left, aut, teacher);
+    complete_node(left, aut, oracle);
   }
 
   if(l_data->predict_type(nullptr) != r_data->predict_type(nullptr)){
@@ -73,7 +75,7 @@ void distinguishing_sequence_fill::pre_compute(std::list<int>& suffix, std::unor
       
       if(left_child != right_child){
         suffix.push_back(symbol);
-        pre_compute(suffix, seen_nodes, aut, teacher, left_child, right_child, depth+1);
+        pre_compute(suffix, seen_nodes, aut, oracle, left_child, right_child, depth+1);
         suffix.pop_back();
       }
     }
@@ -101,7 +103,7 @@ void distinguishing_sequence_fill::pre_compute(std::list<int>& suffix, std::unor
       
       if(left_child != right_child){
         suffix.push_back(symbol);
-        pre_compute(suffix, seen_nodes, aut, teacher, left_child, right_child, depth+1);
+        pre_compute(suffix, seen_nodes, aut, oracle, left_child, right_child, depth+1);
         suffix.pop_back();
       } 
     }
@@ -111,17 +113,17 @@ void distinguishing_sequence_fill::pre_compute(std::list<int>& suffix, std::unor
 /**
  * @brief Collect all sequences that distinguish the two states.
  */
-void distinguishing_sequence_fill::pre_compute(std::unique_ptr<apta>& aut, std::unique_ptr<base_teacher>& teacher, apta_node* left, apta_node* right){
-  std::list<int> suffix;
-  std::unordered_set<apta_node*> seen_nodes;
-  pre_compute(suffix, seen_nodes, aut, teacher, left, right, 0);
+void distinguishing_sequence_fill::pre_compute(unique_ptr<apta>& aut, unique_ptr<oracle_base>& oracle, apta_node* left, apta_node* right){
+  list<int> suffix;
+  unordered_set<apta_node*> seen_nodes;
+  pre_compute(suffix, seen_nodes, aut, oracle, left, right, 0);
 }
 
 /**
  * @brief Concatenates prefix and suffix efficiently, returns a new vector with the result. 
  */
-std::vector<int> distinguishing_sequence_fill::concat_prefsuf(const std::vector<int>& pref, const std::vector<int>& suff) const {
-  std::vector<int> res;
+vector<int> distinguishing_sequence_fill::concat_prefsuf(const vector<int>& pref, const vector<int>& suff) const {
+  vector<int> res;
   res.reserve(pref.size() + suff.size()); 
   res.insert(res.end(), pref.begin(), pref.end());
   res.insert(res.end(), suff.begin(), suff.end());
@@ -129,7 +131,7 @@ std::vector<int> distinguishing_sequence_fill::concat_prefsuf(const std::vector<
   return res;
 }
 
-void distinguishing_sequence_fill::add_data_to_tree(std::unique_ptr<apta>& aut, const std::vector<int>& seq, const int reverse_type, const float confidence){
+void distinguishing_sequence_fill::add_data_to_tree(unique_ptr<apta>& aut, const vector<int>& seq, const int reverse_type, const float confidence){
   static inputdata& id = *(inputdata_locator::get());
 
   trace* new_trace = active_learning_namespace::vector_to_trace(seq, id, reverse_type);
@@ -152,7 +154,7 @@ void distinguishing_sequence_fill::add_data_to_tree(std::unique_ptr<apta>& aut, 
  * 
  */
 void distinguishing_sequence_fill::memoize() noexcept {
-  std::optional< std::vector<int> > suffix_opt = ds_ptr->next();
+  optional< vector<int> > suffix_opt = ds_ptr->next();
   while(suffix_opt){
     m_suffixes.push_back(move(suffix_opt.value()));
     suffix_opt = ds_ptr->next();
@@ -164,18 +166,18 @@ void distinguishing_sequence_fill::memoize() noexcept {
 /**
  * @brief Prerequisite to check_consistency. We already compute the distribution for the red node.
  */
-void distinguishing_sequence_fill::pre_compute(std::unique_ptr<apta>& aut, std::unique_ptr<base_teacher>& teacher, apta_node* node) {
+void distinguishing_sequence_fill::pre_compute(unique_ptr<apta>& aut, unique_ptr<oracle_base>& oracle, apta_node* node) {
   static inputdata& id = *inputdata_locator::get(); 
 
   auto right_access_trace = node->get_access_trace();
   const active_learning_namespace::pref_suf_t right_prefix = right_access_trace->get_input_sequence(true, false);
   
-  std::vector< std::vector<int> > queries;
-  std::unordered_set<int> no_pred_idxs;
+  vector< vector<int> > queries;
+  unordered_set<int> no_pred_idxs;
   memoized_predictions.clear();
 
   if(!memoized){
-    std::optional< std::vector<int> > suffix = ds_ptr->next();
+    optional< vector<int> > suffix = ds_ptr->next();
     while(suffix){
       if(right_prefix.size() + suffix.value().size() > MAX_LEN){
         suffix = ds_ptr->next();
@@ -185,16 +187,16 @@ void distinguishing_sequence_fill::pre_compute(std::unique_ptr<apta>& aut, std::
 
       queries.push_back(concat_prefsuf(right_prefix, suffix.value()));
       if(queries.size() >= MIN_BATCH_SIZE){ // if min-batch size % 2 != 0 will be larger
-        std::vector< std::pair<int, float> > answers = teacher->ask_type_confidence_batch(queries, *(inputdata_locator::get()));
-        int answers_idx = 0;
+        const sul_response response = oracle->ask_sul(queries, *(inputdata_locator::get()));
 
+        int answers_idx = 0;
+        const vector<int>& answers = response.GET_INT_VEC();
         for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
           if(no_pred_idxs.contains(i)){
             memoized_predictions.push_back(-1);
             continue;
           }
-          auto& pred = answers[answers_idx];
-          memoized_predictions.push_back(pred.first);
+          memoized_predictions.push_back(answers[answers_idx]);
           ++answers_idx;
         }
           
@@ -214,16 +216,16 @@ void distinguishing_sequence_fill::pre_compute(std::unique_ptr<apta>& aut, std::
 
       queries.push_back(concat_prefsuf(right_prefix, suffix));
       if(queries.size() >= MIN_BATCH_SIZE){ // if min-batch size % 2 != 0 will be larger
-        std::vector< std::pair<int, float> > answers = teacher->ask_type_confidence_batch(queries, *(inputdata_locator::get()));
+        const sul_response response = oracle->ask_sul(queries, *(inputdata_locator::get()));
+        
         int answers_idx = 0;
-
+        const vector<int>& answers = response.GET_IT_VEC();
         for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
           if(no_pred_idxs.contains(i)){
             memoized_predictions.push_back(-1);
             continue;
           }
-          auto& pred = answers[answers_idx];
-          memoized_predictions.push_back(pred.first);
+          memoized_predictions.push_back(answers[answers_idx]);
           ++answers_idx;
         }
           
@@ -234,16 +236,16 @@ void distinguishing_sequence_fill::pre_compute(std::unique_ptr<apta>& aut, std::
   }
 
   if(queries.size() > 0){
-    std::vector< std::pair<int, float> > answers = teacher->ask_type_confidence_batch(queries, *(inputdata_locator::get()));
+    const sul_response response = oracle->ask_sul(queries, *(inputdata_locator::get()));
+    
     int answers_idx = 0;
-
+    const vector<int>& answers = response.GET_INT_VEC();
     for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
       if(no_pred_idxs.contains(i)){
         memoized_predictions.push_back(-1);
         continue;
       }
-      auto& pred = answers[answers_idx];
-      memoized_predictions.push_back(pred.first);
+      memoized_predictions.push_back(answers[answers_idx]);
       ++answers_idx;
     }
   }
@@ -254,18 +256,18 @@ void distinguishing_sequence_fill::pre_compute(std::unique_ptr<apta>& aut, std::
  * @return true If consistent.
  * @return false If not consistent.
  */
-bool distinguishing_sequence_fill::check_consistency(std::unique_ptr<apta>& aut, std::unique_ptr<base_teacher>& teacher, apta_node* left, apta_node* right){
+bool distinguishing_sequence_fill::check_consistency(unique_ptr<apta>& aut, unique_ptr<oracle_base>& oracle, apta_node* left, apta_node* right){
   static inputdata& id = *inputdata_locator::get(); 
 
   auto left_access_trace = left->get_access_trace();
   const active_learning_namespace::pref_suf_t left_prefix = left_access_trace->get_input_sequence(true, false);
   
-  std::vector< std::vector<int> > queries;
-  std::vector<int> predictions;
-  std::unordered_set<int> no_pred_idxs;
+  vector< vector<int> > queries;
+  vector<int> predictions;
+  unordered_set<int> no_pred_idxs;
 
   if(!memoized){
-    std::optional< std::vector<int> > suffix = ds_ptr->next();
+    optional< vector<int> > suffix = ds_ptr->next();
     while(suffix){
       if(left_prefix.size() + suffix.value().size() > MAX_LEN){
         no_pred_idxs.insert(queries.size()+no_pred_idxs.size());
@@ -275,16 +277,16 @@ bool distinguishing_sequence_fill::check_consistency(std::unique_ptr<apta>& aut,
 
       queries.push_back(concat_prefsuf(left_prefix, suffix.value()));
       if(queries.size() >= MIN_BATCH_SIZE){
-        std::vector< std::pair<int, float> > answers = teacher->ask_type_confidence_batch(queries, *(inputdata_locator::get()));
+        const sul_response response = oracle->ask_sul(queries, *(inputdata_locator::get()));
+        
         int answers_idx = 0;
-
+        const vector<int>& answers = response.GET_INT_VEC();
         for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
           if(no_pred_idxs.contains(i)){
             predictions.push_back(-1);
             continue;
           }
-          auto& pred = answers[answers_idx];
-          predictions.push_back(pred.first);
+          predictions.push_back(answers[answers_idx]);
           ++answers_idx;
         }
 
@@ -304,16 +306,16 @@ bool distinguishing_sequence_fill::check_consistency(std::unique_ptr<apta>& aut,
 
       queries.push_back(concat_prefsuf(left_prefix, suffix));
       if(queries.size() >= MIN_BATCH_SIZE){
-        std::vector< std::pair<int, float> > answers = teacher->ask_type_confidence_batch(queries, *(inputdata_locator::get()));
-        int answers_idx = 0;
+        const sul_response response = oracle->ask_sul(queries, *(inputdata_locator::get()));
 
+        int answers_idx = 0;
+        const vector<int>& answers = response.GET_INT_VEC();
         for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
           if(no_pred_idxs.contains(i)){
             predictions.push_back(-1);
             continue;
           }
-          auto& pred = answers[answers_idx];
-          predictions.push_back(pred.first);
+          predictions.push_back(answers[answers_idx]);
           ++answers_idx;
         }
 
@@ -325,23 +327,23 @@ bool distinguishing_sequence_fill::check_consistency(std::unique_ptr<apta>& aut,
 
   if(queries.size() > 0){
     //m_mutex.lock();
-    std::vector< std::pair<int, float> > answers = teacher->ask_type_confidence_batch(queries, *(inputdata_locator::get()));
+    const sul_response response = oracle->ask_sul(queries, *(inputdata_locator::get()));
     //m_mutex.unlock();
-    int answers_idx = 0;
 
+    int answers_idx = 0;
+    const vector<int>& answers = response.GET_INT_VEC();
     for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
       if(no_pred_idxs.contains(i)){
         predictions.push_back(-1);
         continue;
       }
-      auto& pred = answers[answers_idx];
-      predictions.push_back(pred.first);
+      predictions.push_back(answers[answers_idx]);
       ++answers_idx;
     }
   }
 
   if(memoized_predictions.size() != predictions.size()){
-    std::cerr << "Something weird happened." << std::endl;
+    cerr << "Something weird happened." << endl;
   }
 
   int agreed = 0;
@@ -367,15 +369,15 @@ bool distinguishing_sequence_fill::check_consistency(std::unique_ptr<apta>& aut,
  * @brief Take all the distinguishing sequences you currently have, add them to the two nodes, and ask the transformer to fill those two out.
  * Afterwards, reset the distinguishing sequences back to their original state.
  */
-void distinguishing_sequence_fill::complement_nodes(std::unique_ptr<apta>& aut, std::unique_ptr<base_teacher>& teacher, apta_node* left, apta_node* right) {
+void distinguishing_sequence_fill::complement_nodes(unique_ptr<apta>& aut, unique_ptr<oracle_base>& oracle, apta_node* left, apta_node* right) {
   auto left_access_trace = left->get_access_trace();
   auto right_access_trace = right->get_access_trace();
   
   const active_learning_namespace::pref_suf_t left_prefix = left_access_trace->get_input_sequence(true, false);
   const active_learning_namespace::pref_suf_t right_prefix = right_access_trace->get_input_sequence(true, false);
   
-  std::vector< std::vector<int> > queries;
-  std::optional< std::vector<int> > suffix = ds_ptr->next();
+  vector< vector<int> > queries;
+  optional< vector<int> > suffix = ds_ptr->next();
 
   while(suffix){
     auto full_sequence = concat_prefsuf(left_prefix, suffix.value());
@@ -387,10 +389,12 @@ void distinguishing_sequence_fill::complement_nodes(std::unique_ptr<apta>& aut, 
       queries.push_back(move(full_sequence));
 
     if(queries.size() >= MIN_BATCH_SIZE){ // MIN_BATCH_SIZE might be violated by plus one, hence min
-      std::vector< std::pair<int, float> > answers = teacher->ask_type_confidence_batch(queries, *(inputdata_locator::get()));
-
+      const sul_response response = oracle->ask_sul(queries, *(inputdata_locator::get()));
+      const vector<int>& answers = response.GET_INT_VEC();
+      const vector<float>& confidences = response.GET_FLOAT_VEC();
+      
       for(int i=0; i < queries.size(); ++i){
-        add_data_to_tree(aut, queries[i], answers[i].first, answers[i].second);
+        add_data_to_tree(aut, queries[i], answers[i], confidences[i]);
       }
 
       queries.clear();
@@ -402,8 +406,11 @@ void distinguishing_sequence_fill::complement_nodes(std::unique_ptr<apta>& aut, 
   if(queries.size() == 0)
     return;
 
-  std::vector< std::pair<int, float> > answers = teacher->ask_type_confidence_batch(queries, *(inputdata_locator::get()));
+  const sul_response response = oracle->ask_sul(queries, *(inputdata_locator::get()));
+  const vector<int>& answers = response.GET_INT_VEC();
+  const vector<float>& confidences = response.GET_FLOAT_VEC();
+
   for(int i=0; i < queries.size(); ++i){
-    add_data_to_tree(aut, queries[i], answers[i].first, answers[i].second);
+    add_data_to_tree(aut, queries[i], answers[i], confidences[i]);
   }
 }

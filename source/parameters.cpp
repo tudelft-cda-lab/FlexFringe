@@ -140,12 +140,17 @@ int K = 0;
 std::string ACTIVE_LEARNING_ALGORITHM = "l_star";
 bool DO_ACTIVE_LEARNING = false;
 std::string REJECTING_LABEL = "0";
+std::string ORACLE = "";
+std::string ORACLE_2 = "";
+std::string SYSTEM_UNDER_LEARNING = "";
+std::string SYSTEM_UNDER_LEARNING_2 = "";
+
 int START_SYMBOL = -1;
 int END_SYMBOL = -1;
+std::string CEX_SEARCH_STRATEGY = "random_w_method";
 int MAX_AL_SEARCH_DEPTH = 10;
 int MAX_CEX_LENGTH = 10;
 int NUM_CEX_PARAM = 5000;
-bool IDENTIFY_STATE_COMPLETELY = true;
 
 std::string POSTGRESQL_CONNSTRING = "";
 std::string POSTGRESQL_TBLNAME = "";

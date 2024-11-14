@@ -541,10 +541,10 @@ void ldot_algorithm::run(inputdata& id) {
 
 std::optional<psql::record> ldot_algorithm::equivalence(sqldb_sul_regex_oracle* regex_oracle) {
     if (REGEX_EQUIVALENCE && !disable_regex_oracle)
-        return regex_oracle->equivalence_query_db(my_merger.get(), teacher);
+        return regex_oracle->equivalence_query_db(my_merger.get());
 
     if (RANDOM_EQUIVALENCE) {
-        return random_oracle->equivalence_query_db(my_merger.get(), teacher, added_traces);
+        return random_oracle->equivalence_query_db(my_merger.get(), added_traces);
     }
 
     if (DISTINGUISHING_EQUIVALENCE) {

@@ -12,7 +12,6 @@
 #include "paul.h"
 #include "paul_heuristic.h"
 
-#include "base_teacher.h"
 #include "common_functions.h"
 #include "input_file_oracle.h"
 #include "input_file_sul.h"
@@ -40,8 +39,8 @@ using namespace active_learning_namespace;
 /**
  * @brief Used for multithreading.
  */
-void search_instance::operator()(promise<bool>&& out, std::unique_ptr<state_merger>& merger, std::unique_ptr<apta>& the_apta, std::unique_ptr<base_teacher>& teacher, apta_node* red_node, apta_node* blue_node){
-    //out.set_value(ii_handler->check_consistency(the_apta, teacher, red_node, blue_node));
+void search_instance::operator()(promise<bool>&& out, std::unique_ptr<state_merger>& merger, std::unique_ptr<apta>& the_apta, const unique_ptr<oracle_base>& oracle, apta_node* red_node, apta_node* blue_node){
+    //out.set_value(ii_handler->check_consistency(the_apta, oracle, red_node, blue_node));
     static inputdata& id = *inputdata_locator::get(); 
 
     vector< vector<int> > queries;
@@ -66,8 +65,11 @@ void search_instance::operator()(promise<bool>&& out, std::unique_ptr<state_merg
             queries.push_back(move(left_sequence));
             if(queries.size() >= MIN_BATCH_SIZE){
                 m_mutex.lock();
-                vector< pair<int, float> > answers = teacher->ask_type_confidence_batch(queries, *(inputdata_locator::get()));
+                const sul_response response = oracle->ask_sul(queries, *(inputdata_locator::get()));
                 m_mutex.unlock();
+
+                const vector<int>& answers = response.GET_INT_VEC();
+                //const vector<float>& confidences = response.GET_FLOAT_VEC();
 
                 int answers_idx = 0;
                 for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
@@ -75,8 +77,7 @@ void search_instance::operator()(promise<bool>&& out, std::unique_ptr<state_merg
                         predictions.push_back(-1);
                         continue;
                     }
-                    auto& pred = answers[answers_idx];
-                    predictions.push_back(pred.first);
+                    predictions.push_back(answers[answers_idx]);
                     ++answers_idx;
                 }
 
@@ -87,17 +88,17 @@ void search_instance::operator()(promise<bool>&& out, std::unique_ptr<state_merg
 
         if(queries.size() > 0){
             m_mutex.lock();
-            vector< pair<int, float> > answers = teacher->ask_type_confidence_batch(queries, *(inputdata_locator::get()));
+            const sul_response response = oracle->ask_sul(queries, *(inputdata_locator::get()));
             m_mutex.unlock();
 
+            const vector<int>& answers = response.GET_INT_VEC();
             int answers_idx = 0;
             for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
                 if(no_pred_idxs.contains(i)){
                     predictions.push_back(-1);
                     continue;
                 }
-                auto& pred = answers[answers_idx];
-                predictions.push_back(pred.first);
+                predictions.push_back(answers[answers_idx]);
                 ++answers_idx;
             }
         }
@@ -119,17 +120,17 @@ void search_instance::operator()(promise<bool>&& out, std::unique_ptr<state_merg
             queries.push_back(move(left_sequence));
             if(queries.size() >= MIN_BATCH_SIZE){
                 m_mutex.lock();
-                vector< pair<int, float> > answers = teacher->ask_type_confidence_batch(queries, *(inputdata_locator::get()));
+                const sul_response response = oracle->ask_sul(queries, *(inputdata_locator::get()));
                 m_mutex.unlock();
-                int answers_idx = 0;
 
+                const vector<int>& answers = response.GET_INT_VEC();
+                int answers_idx = 0;
                 for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
                     if(no_pred_idxs.contains(i)){
                         predictions.push_back(-1);
                         continue;
                     }
-                    auto& pred = answers[answers_idx];
-                    predictions.push_back(pred.first);
+                    predictions.push_back(answers[answers_idx]);
                     ++answers_idx;
                 }
 
@@ -142,17 +143,17 @@ void search_instance::operator()(promise<bool>&& out, std::unique_ptr<state_merg
 
         if(queries.size() > 0){
             m_mutex.lock();
-            vector< pair<int, float> > answers = teacher->ask_type_confidence_batch(queries, *(inputdata_locator::get()));
+            const sul_response response = oracle->ask_sul(queries, *(inputdata_locator::get()));
             m_mutex.unlock();
-            int answers_idx = 0;
 
+            int answers_idx = 0;
+            const vector<int>& answers = response.GET_INT_VEC();
             for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
                 if(no_pred_idxs.contains(i)){
                     predictions.push_back(-1);
                     continue;
                 }
-                auto& pred = answers[answers_idx];
-                predictions.push_back(pred.first);
+                predictions.push_back(answers[answers_idx]);
                 ++answers_idx;
             }
         }
@@ -185,15 +186,15 @@ void search_instance::operator()(promise<bool>&& out, std::unique_ptr<state_merg
 /**
  * Relevant for parallelization.
  */
-bool paul_algorithm::merge_check(unique_ptr<ii_base>& ii_handler, unique_ptr<state_merger>& merger, unique_ptr<apta>& the_apta, unique_ptr<base_teacher>& teacher, apta_node* red_node, apta_node* blue_node){
-    return ii_handler->check_consistency(the_apta, teacher, red_node, blue_node);
+bool paul_algorithm::merge_check(unique_ptr<ii_base>& ii_handler, unique_ptr<state_merger>& merger, unique_ptr<apta>& the_apta, apta_node* red_node, apta_node* blue_node){
+    return ii_handler->check_consistency(the_apta, oracle, red_node, blue_node);
 }
 
 /**
  * @brief The strategy to find the best operation as explained in the paper.
  * @return refinement* The best currently possible operation according to the heuristic.
  */
-refinement* paul_algorithm::get_best_refinement(unique_ptr<state_merger>& merger, unique_ptr<apta>& the_apta, unique_ptr<base_teacher>& teacher){
+refinement* paul_algorithm::get_best_refinement(unique_ptr<state_merger>& merger, unique_ptr<apta>& the_apta){
     const static bool ADD_TRACES = false; // if true we add sequences to the tree, else we only test, see down the code
     const static bool MERGE_WITH_LARGEST = true;
     const static int N_THREADS = 1;
@@ -217,7 +218,7 @@ refinement* paul_algorithm::get_best_refinement(unique_ptr<state_merger>& merger
         // pre-compute on all pairs to make pre_compute of blue node consistent with all the others
         if(!ii_handler->has_memoized() && ii_handler->size() < 400){
             for(apta_node* red_node: red_its){
-                ii_handler->pre_compute(the_apta, teacher, red_node, blue_node);
+                ii_handler->pre_compute(the_apta, oracle, red_node, blue_node);
             }
         }
         else if(!ii_handler->has_memoized()){
@@ -225,7 +226,7 @@ refinement* paul_algorithm::get_best_refinement(unique_ptr<state_merger>& merger
         }
 
         bool mergeable = false;
-        ii_handler->pre_compute(the_apta, teacher, blue_node);
+        ii_handler->pre_compute(the_apta, oracle, blue_node);
 
         if(N_THREADS == 1){
             for(apta_node* red_node: red_its){
@@ -234,10 +235,10 @@ refinement* paul_algorithm::get_best_refinement(unique_ptr<state_merger>& merger
 
                 // we only want to add data if they appear consistent so far
                 if(ADD_TRACES){
-                    ii_handler->complement_nodes(the_apta, teacher, red_node, blue_node);
+                    ii_handler->complement_nodes(the_apta, oracle, red_node, blue_node);
                     ref = merger->test_merge(red_node, blue_node);
                 }
-                else if(!ii_handler->check_consistency(the_apta, teacher, red_node, blue_node)){
+                else if(!ii_handler->check_consistency(the_apta, oracle, red_node, blue_node)){
                     continue;
                 }
                 
@@ -266,10 +267,10 @@ refinement* paul_algorithm::get_best_refinement(unique_ptr<state_merger>& merger
 
                 promise<bool> p;
                 t_res.push_back(p.get_future());
-                threads.push_back(thread(std::ref(search_instances[current_refs.size()-1]), move(p), std::ref(merger), std::ref(the_apta), std::ref(teacher), red_node, blue_node));
+                threads.push_back(thread(std::ref(search_instances[current_refs.size()-1]), move(p), std::ref(merger), std::ref(the_apta), std::ref(oracle), red_node, blue_node));
                     
-                //t_res.push_back(async(launch::async, search_instance(), std::ref(merger), std::ref(the_apta), std::ref(teacher), red_node, blue_node));
-                //t_res.push_back(async(launch::async, paul_algorithm::merge_check, std::ref(ii_handler), std::ref(merger), std::ref(the_apta), std::ref(teacher), red_node, blue_node));
+                //t_res.push_back(async(launch::async, search_instance(), std::ref(merger), std::ref(the_apta), std::ref(oracle), red_node, blue_node));
+                //t_res.push_back(async(launch::async, paul_algorithm::merge_check, std::ref(ii_handler), std::ref(merger), std::ref(the_apta), std::ref(oracle), red_node, blue_node));
                 
                 if(t_res.size()==N_THREADS){
                     // sync threads and collect results
@@ -350,12 +351,12 @@ list<refinement*> paul_algorithm::retry_merges(list<refinement*>& previous_refs,
  * @param previous_refs Refinements that have already been done.
  * @return list<refinement*> A list of performed refinements.
  */
-list<refinement*> paul_algorithm::find_hypothesis(list<refinement*>& previous_refs, unique_ptr<state_merger>& merger, unique_ptr<apta>& the_apta, unique_ptr<base_teacher>& teacher) {
+list<refinement*> paul_algorithm::find_hypothesis(list<refinement*>& previous_refs, unique_ptr<state_merger>& merger, unique_ptr<apta>& the_apta) {
     list<refinement*> performed_refs;
     if(previous_refs.size() > 0)
         performed_refs = retry_merges(previous_refs, merger, the_apta);
 
-    refinement* best_ref = paul_algorithm::get_best_refinement(merger, the_apta, teacher);
+    refinement* best_ref = paul_algorithm::get_best_refinement(merger, the_apta);
     int num = 0;
     while(best_ref != nullptr){
         cout << " ";
@@ -380,14 +381,14 @@ list<refinement*> paul_algorithm::find_hypothesis(list<refinement*>& previous_re
         } */
 
 //#ifndef NDEBUG
-        {
+/*         {
             static int c = 0;
             merger->print_dot("after_" + to_string(c++) + ".dot");
-        }
+        } */
 //#endif
 
         //delete best_ref;
-        best_ref = paul_algorithm::get_best_refinement(merger, the_apta, teacher);
+        best_ref = paul_algorithm::get_best_refinement(merger, the_apta);
 
         num++;
     }
@@ -398,8 +399,7 @@ list<refinement*> paul_algorithm::find_hypothesis(list<refinement*>& previous_re
 /**
  * @brief Add the counterexample to the tree. Newly creatd states will be queried.
  */
-void paul_algorithm::proc_counterex(const unique_ptr<base_teacher>& teacher, inputdata& id,
-                                      unique_ptr<apta>& the_apta, const vector<int>& counterex,
+void paul_algorithm::proc_counterex(inputdata& id, unique_ptr<apta>& the_apta, const vector<int>& counterex,
                                       unique_ptr<state_merger>& merger, const refinement_list refs) const {
     
     active_learning_namespace::reset_apta(merger.get(), refs);
@@ -407,30 +407,31 @@ void paul_algorithm::proc_counterex(const unique_ptr<base_teacher>& teacher, inp
     apta_node* n = the_apta->get_root();
     for (auto s : counterex) {
         substring.push_back(s);
-        trace* parse_trace = vector_to_trace(substring, id, 0); // TODO: inefficient like this, 0 is a dummy type that does not matter
-        tail* t = substring.size() == 0 ? parse_trace->get_end() : parse_trace->get_end()->past_tail;
+        trace* parse_trace = vector_to_trace(substring, id, 0); // TODO: inefficient like this, since we redo traces from scratch again. Sidenote: 0 is a dummy type that does not matter
+        tail* t = /* substring.size() == 0 ? parse_trace->get_end() :  */ parse_trace->get_end()->past_tail; // TODO: can case 1 ever happen?
         apta_node* n_child = active_learning_namespace::get_child_node(n, t);
 
         if (n_child == nullptr) {
             auto access_trace = n->get_access_trace();
-            pref_suf_t seq;
-            seq = access_trace->get_input_sequence(true, true);
+            pref_suf_t seq = access_trace->get_input_sequence(true, true);
+            seq[-1] = t->get_symbol();
 
-            vector< vector<int> > query;
-            query.push_back(move(seq));
-            vector< pair<int, float> > res = teacher->ask_type_confidence_batch(query, id);
+            vector< vector<int> > query(1);
+            query[0] = move(seq);
+            const sul_response res = oracle->ask_sul(query, id);
 
-            int reverse_type  = res[0].first;
-            float confidence = res[0].second;
+            int reverse_type = res.GET_INT_VEC()[0];
+            float confidence = res.GET_FLOAT_VEC()[0];
+            assert(res.GET_INT_VEC().size() == 1);
 
             trace* new_trace = active_learning_namespace::vector_to_trace(seq, id, reverse_type);
             id.add_trace_to_apta(new_trace, the_apta.get(), false);
+            n_child = active_learning_namespace::get_child_node(n, t);
+            assert(n_child != nullptr);
 
             paul_data* data;
-            data = dynamic_cast<paul_data*>(n->get_data());
+            data = dynamic_cast<paul_data*>(n_child->get_data());
             data->set_confidence(confidence);
-
-            n_child = active_learning_namespace::get_child_node(n, t);
         }
 
         n = n_child;
@@ -443,11 +444,6 @@ void paul_algorithm::proc_counterex(const unique_ptr<base_teacher>& teacher, inp
 
 void paul_algorithm::run(inputdata& id) {
     int n_runs = 0;
-
-#ifndef NDEBUG
-    LOG_S(INFO) << "Creating debug directory " << DEBUG_DIR;
-    std::filesystem::create_directories(DEBUG_DIR);
-#endif
     cout << "Running PAUL algorithm." << endl;
 
     auto eval = unique_ptr<evaluation_function>(get_evaluation());
@@ -468,7 +464,7 @@ void paul_algorithm::run(inputdata& id) {
 
     list<refinement*> performed_refs;
     while(ENSEMBLE_RUNS > 0 && n_runs <= ENSEMBLE_RUNS){
-        performed_refs = find_hypothesis(performed_refs, merger, the_apta, teacher);
+        performed_refs = find_hypothesis(performed_refs, merger, the_apta);
         cout << "Found hypothesis. Now testing" << endl;
 
         {
@@ -477,7 +473,7 @@ void paul_algorithm::run(inputdata& id) {
             print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_refs");
         }
 
-        optional<pair<vector<int>, int>> query_result = oracle->equivalence_query(merger.get(), teacher);
+        optional<pair<vector<int>, int>> query_result = oracle->equivalence_query(merger.get());
         if (!query_result) {
             cout << "Found consistent automaton => Print." << endl;
             print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
@@ -495,7 +491,7 @@ void paul_algorithm::run(inputdata& id) {
         for(auto s: cex)
             cout << id.get_symbol(s) << " ";
         cout << endl;        
-        proc_counterex(teacher, id, the_apta, cex, merger, performed_refs);
+        proc_counterex(id, the_apta, cex, merger, performed_refs);
 
         ++n_runs;
     }

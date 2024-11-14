@@ -15,9 +15,8 @@
 #include "algorithm_base.h"
 #include "lsharp.h"
 
-#include "base_teacher.h"
 #include "definitions.h"
-#include "eq_oracle_base.h"
+#include "oracle_base.h"
 #include "inputdata.h"
 #include "refinement.h"
 #include "state_merger.h"
@@ -33,9 +32,8 @@ class weighted_lsharp_algorithm : public lsharp_algorithm {
   private:
     const bool use_sinks;
   protected:
-    void proc_counterex(const std::unique_ptr<base_teacher>& teacher, inputdata& id, std::unique_ptr<apta>& hypothesis,
-                        const std::vector<int>& counterex, std::unique_ptr<state_merger>& merger,
-                        const refinement_list refs, const std::vector<int>& alphabet) const;
+    void proc_counterex(inputdata& id, std::unique_ptr<apta>& hypothesis, const std::vector<int>& counterex, 
+                        std::unique_ptr<state_merger>& merger, const refinement_list refs, const std::vector<int>& alphabet) const;
 
     void extend_fringe(std::unique_ptr<state_merger>& merger, apta_node* n,
                                                  std::unique_ptr<apta>& the_apta, inputdata& id,
@@ -48,9 +46,8 @@ class weighted_lsharp_algorithm : public lsharp_algorithm {
                                          const std::vector<int>& alphabet) override;
 
   public:
-    weighted_lsharp_algorithm(std::shared_ptr<sul_base>& sul, std::unique_ptr<base_teacher>& teacher,
-                              std::unique_ptr<eq_oracle_base>& oracle)
-        : lsharp_algorithm(sul, teacher, oracle), use_sinks(USE_SINKS) {
+    weighted_lsharp_algorithm(std::unique_ptr<oracle_base>&& oracle)
+        : lsharp_algorithm(std::move(oracle)), use_sinks(USE_SINKS) {
         std::cout << "Probabilistic L# only works with probabilistic oracle. Automatically switched to that one.\
 If this is undesired behavior check your input and/or source code."
                   << std::endl;

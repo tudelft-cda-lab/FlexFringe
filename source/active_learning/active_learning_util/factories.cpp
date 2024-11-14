@@ -1,0 +1,170 @@
+/**
+ * @file factories.cpp
+ * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
+ * @brief 
+ * @version 0.1
+ * @date 2024-11-13
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
+
+#include "factories.h"
+
+// DFAs
+#include "lsharp.h"
+#include "lstar.h"
+#include "lstar_imat.h"
+
+// weighted machines
+#include "probabilistic_lsharp.h"
+#include "weighted_lsharp.h"
+
+// databases etc.
+#include "paul.h"
+//#include "ldot.h"
+
+// the SULs
+#include "database_sul.h"
+#include "dfa_sul.h"
+#include "input_file_sul.h"
+#include "sqldb_sul.h"
+
+// the neural network SULs
+#include "nn_binary_output_sul.h"
+#include "nn_discrete_and_float_output_sul.h"
+#include "nn_discrete_output_and_hidden_reps_sul.h"
+#include "nn_discrete_output_sul.h"
+#include "nn_float_output_sul.h"
+#include "nn_float_vector_output_sul.h"
+
+// the oracles
+#include "input_file_oracle.h"
+#include "sqldb_sul_regex_oracle.h"
+#include "active_sul_oracle.h"
+#include "sqldb_sul_random_oracle.h"
+#include "sqldb_sul_regex_oracle.h"
+#include "paul_oracle.h"
+
+// parsers and input-data representations
+#include "abbadingoparser.h"
+#include "csvparser.h"
+#include "input/abbadingoreader.h"
+#include "inputdata.h"
+#include "inputdatalocator.h"
+#include "main_helpers.h"
+#include "parameters.h"
+
+#include <initializer_list>
+
+using namespace std;
+
+/**
+ * @brief Gets the SUl and returns it.
+ */
+shared_ptr<sul_base> sul_factory::select_sul(string_view sul_name){
+  // non-neural network suls
+  if(sul_name=="input_file_sul")
+    return make_shared<input_file_sul>();
+  else if(sul_name=="dfa_sul")
+    return make_shared<dfa_sul>();
+  else if(sul_name=="database_sul")
+    return make_shared<database_sul>();
+  else if(sul_name=="sqldb_sul"){
+    throw invalid_argument("sqldb_sul currently commented out in sul_factory");//return make_shared<sqldb_sul>();
+    if (!LOADSQLDB) {
+        // If reading, not loading, from db, do not drop on initialization.
+        POSTGRESQL_DROPTBLS = false;
+    }
+    auto my_sqldb = make_unique<psql::db>(POSTGRESQL_TBLNAME, POSTGRESQL_CONNSTRING);
+    if (LOADSQLDB) {
+        ifstream input_stream = get_inputstream();
+
+        cout << "Selected to use the SQL database. Creating new inputdata object and loading traces."
+        abbadingo_inputdata id;
+        inputdata_locator::provide(&id);
+        my_sqldb->load_traces(id, input_stream);
+        
+        return my_sqldb;
+    }
+  }
+
+  // the neural network suls
+  else if(sul_name=="nn_binary_output_sul")
+    return make_shared<nn_binary_output_sul>();
+  else if(sul_name=="nn_discrete_and_float_output_sul")
+    return make_shared<nn_discrete_and_float_output_sul>();
+  else if(sul_name=="nn_discrete_output_and_hidden_reps_sul")
+    return make_shared<nn_discrete_output_and_hidden_reps_sul>();
+  else if(sul_name=="nn_discrete_output_sul")
+    return make_shared<nn_discrete_output_sul>();
+  else if(sul_name=="nn_float_output_sul")
+    return make_shared<nn_float_output_sul>();
+  else if(sul_name=="nn_float_vector_output_sul")
+    return make_shared<nn_float_vector_output_sul>();
+  else
+    throw invalid_argument("Input parameter specifying system under learning has been invalid. Please check your input.");
+}
+
+/**
+ * @brief SUL is based only on the input parameters. Returns one or more SULs, based on how many are desired.
+ */
+vector< shared_ptr<sul_base> > sul_factory::create_suls(){
+  if(SYSTEM_UNDER_LEARNING.size() == 0)
+    throw logic_error("System under learning must be specified. Aborting program.");
+
+  vector< shared_ptr<sul_base> > res;
+  res.push_back(select_sul(SYSTEM_UNDER_LEARNING));
+  
+  if(SYSTEM_UNDER_LEARNING_2.size() > 0 && SYSTEM_UNDER_LEARNING != SYSTEM_UNDER_LEARNING_2)
+    res.push_back(select_sul(SYSTEM_UNDER_LEARNING_2));
+  else if (SYSTEM_UNDER_LEARNING_2.size() > 0)
+    res.push_back(res[0]); // we do a copy of the first shared pointer
+
+  return res;
+}
+
+
+unique_ptr<oracle_base> oracle_factory::create_oracle(shared_ptr<sul_base>& sul, string_view oracle_name){
+  if (ORACLE == "active_state_sul_oracle") 
+      return make_unique<active_state_sul_oracle>(sul);
+  else if(ORACLE == "active_sul_oracle")
+      return make_unique<active_sul_oracle>(sul);
+  else if(ORACLE == "input_file_oracle")
+      return make_unique<input_file_oracle>(sul);
+  else if(ORACLE == "paul_oracle")
+      return make_unique<paul_oracle>(sul);
+  else if(ORACLE == "sqldb_sul_random_oracle")
+      return make_unique<sqldb_sul_random_oracle>(sul);
+  else if(ORACLE == "sqldb_sul_regex_oracle")
+      return make_unique<sqldb_sul_regex_oracle>(sul);
+  else if(ORACLE == "string_probability_oracle")
+      return make_unique<string_probability_oracle>(sul);
+  else if(ORACLE == "weight_comparing_oracle")
+      return make_unique<weight_comparing_oracle>(sul);
+  else
+    throw std::invalid_argument("One of the oracle specifying input parameters was not recognized by the oracle factory.");
+}
+
+
+/**
+ * @brief Does what you think it does.
+ */
+unique_ptr<algorithm_base> algorithm_factory::create_algorithm_obj(){
+  vector< shared_ptr<sul_base> > sul_vec = sul_factory::create_suls(sul_key());
+  assert(sul_vec.size() > 0 && sul_vec.size() <= 2);
+
+  std::unique_ptr<algorithm_base> res;
+  if(sul_vec.size()==1){
+    unique_ptr<oracle_base> oracle_1 = oracle_factory::create_oracle(sul_vec[0], ORACLE, oracle_key());
+    res = create_algorithm_obj(move(oracle_1));
+  }
+  else if(sul_vec.size()==2){
+    unique_ptr<oracle_base> oracle_1 = oracle_factory::create_oracle(sul_vec[0], ORACLE, oracle_key());
+    unique_ptr<oracle_base> oracle_2 = oracle_factory::create_oracle(sul_vec[1], ORACLE_2, oracle_key());
+    res = create_algorithm_obj(initializer_list< std::unique_ptr<oracle_base>&& >{move(oracle_1), move(oracle_2)});
+  }
+
+  assert(res); // nullptr check
+  return res;
+}

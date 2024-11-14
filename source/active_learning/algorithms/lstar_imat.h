@@ -32,9 +32,8 @@ class lstar_imat_algorithm : public algorithm_base {
     std::set<std::vector<int>> added_traces;
 
   public:
-    lstar_imat_algorithm(std::shared_ptr<sul_base>& sul, std::unique_ptr<base_teacher>& teacher,
-                         std::unique_ptr<eq_oracle_base>& oracle)
-        : algorithm_base(sul, teacher, oracle){};
+    lstar_imat_algorithm(std::unique_ptr<oracle_base>&& oracle)
+        : algorithm_base(std::move(oracle)){};
     void run(inputdata& id) override;
 };
 

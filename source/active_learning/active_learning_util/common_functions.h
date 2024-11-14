@@ -13,7 +13,6 @@
 #define _COMMON_FUNCTIONS_H_
 
 #include "apta.h"
-#include "base_teacher.h"
 #include "count_types.h"
 #include "definitions.h"
 #include "evaluate.h"
@@ -53,7 +52,7 @@ std::vector<int> concatenate_strings(const std::vector<int>& pref1, const std::v
 void add_sequence_to_trace(/*out*/ trace* new_trace, const std::vector<int> sequence);
 void update_tail(/*out*/ tail* t, const int symbol);
 
-const double get_probability_of_last_symbol(trace* tr, inputdata& id, const std::unique_ptr<base_teacher>& teacher,
+const double get_probability_of_last_symbol(trace* tr, inputdata& id, const std::unique_ptr<oracle_base>& oracle,
                                             apta* aut);
 
 const double get_sampled_probability(

@@ -20,22 +20,16 @@
 #include <memory>
 
 class database_sul : public sul_base {
-    friend class base_teacher;
-    friend class eq_oracle_base;
-
   private:
     std::unique_ptr<database_base> database;
 
-  protected:
-    virtual void reset() override{};
-
-    virtual bool is_member(const std::vector<int>& query_trace) const override;
-    virtual const int query_trace(const std::vector<int>& query_trace, inputdata& id) const override;
-
   public:
     database_sul() { this->database = std::make_unique<prefix_tree_database>(); };
+    const sul_response do_query(const std::vector<int>& query_trace, inputdata& id) const override;
 
-    virtual void pre(inputdata& id) override;
+    void pre(inputdata& id) override;
+    void reset() override{};
+
     void update_state_with_statistics(apta_node* n) { this->database->update_state_with_statistics(n); }
 };
 

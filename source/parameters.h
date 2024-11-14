@@ -166,9 +166,14 @@ extern bool SINK_TYPE;
 extern std::string ACTIVE_LEARNING_ALGORITHM;
 extern bool DO_ACTIVE_LEARNING;
 extern std::string REJECTING_LABEL;
+extern std::string ORACLE;
+extern std::string ORACLE_2;
+extern std::string SYSTEM_UNDER_LEARNING;
+extern std::string SYSTEM_UNDER_LEARNING_2;
 
 extern int START_SYMBOL;
 extern int END_SYMBOL;
+extern std::string CEX_SEARCH_STRATEGY;
 extern int MAX_CEX_LENGTH;
 extern int NUM_CEX_PARAM;
 
@@ -178,7 +183,6 @@ extern bool POSTGRESQL_DROPTBLS;
 
 extern int MAX_AL_SEARCH_DEPTH;
 extern int NUM_CEX_PARAM;
-extern bool IDENTIFY_STATE_COMPLETELY;
 
 extern std::string PRINT_MODEL_PREFIX; // TODO: delete this one
 

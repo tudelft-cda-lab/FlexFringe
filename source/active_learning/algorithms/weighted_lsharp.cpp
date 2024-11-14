@@ -10,7 +10,6 @@
  */
 
 #include "weighted_lsharp.h"
-#include "base_teacher.h"
 #include "common_functions.h"
 #include "input_file_oracle.h"
 #include "input_file_sul.h"
@@ -95,7 +94,7 @@ void weighted_lsharp_algorithm::query_weights(unique_ptr<state_merger>& merger, 
         seq = access_trace->get_input_sequence(true, false);
     }
 
-    const vector<float> weights = teacher->get_weigth_distribution(seq, id);
+    const vector<float>& weights = oracle->ask_sul(seq, id).GET_FLOAT_VEC();
     for (int i = 0; i < weights.size(); ++i) {
         if (SOS > -1 && i == SOS)
             continue;
@@ -135,10 +134,8 @@ void weighted_lsharp_algorithm::query_weights(unique_ptr<state_merger>& merger, 
  * @param aut The merged APTA.
  * @param counterex The counterexample.
  */
-void weighted_lsharp_algorithm::proc_counterex(const unique_ptr<base_teacher>& teacher, inputdata& id,
-                                               unique_ptr<apta>& hypothesis, const vector<int>& counterex,
-                                               unique_ptr<state_merger>& merger, const refinement_list refs,
-                                               const vector<int>& alphabet) const {
+void weighted_lsharp_algorithm::proc_counterex(inputdata& id, unique_ptr<apta>& hypothesis, const vector<int>& counterex,
+                                               unique_ptr<state_merger>& merger, const refinement_list refs, const vector<int>& alphabet) const {
     // linear search to find fringe, then append new states
     cout << "proc counterex" << endl;
     reset_apta(merger.get(), refs);
@@ -335,7 +332,7 @@ void weighted_lsharp_algorithm::run(inputdata& id) {
             This puts a burden on the equivalence oracle to make sure no query is asked twice, else we end
             up in infinite loop.*/
 
-            optional<pair<vector<int>, int>> query_result = oracle->equivalence_query(merger.get(), teacher);
+            optional<pair<vector<int>, int>> query_result = oracle->equivalence_query(merger.get());
             if (!query_result) {
                 cout << "Found consistent automaton => Print." << endl;
                 print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
@@ -352,7 +349,7 @@ void weighted_lsharp_algorithm::run(inputdata& id) {
                 cout << id.get_symbol(s) << " ";
             cout << endl;
 
-            proc_counterex(teacher, id, the_apta, cex, merger, refs, alphabet);
+            proc_counterex(id, the_apta, cex, merger, refs, alphabet);
 
             break;
         }

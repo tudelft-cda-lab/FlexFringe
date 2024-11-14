@@ -1,12 +1,13 @@
 /**
  * @file dfa_sul.h
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
- * @brief Base class for the system under learning.
+ * @brief We use this class to learn from DFAs we have previously written in flexfringe, or another DFA that supports the parser. 
+ * Useful e.g. for verification of new algorithms.
  * @version 0.1
- * @date 2023-02-15
- *
- * @copyright Copyright (c) 2023
- *
+ * @date 2024-11-11
+ * 
+ * @copyright Copyright (c) 2024
+ * 
  */
 
 #ifndef _DFA_SUL_H_
@@ -21,23 +22,15 @@
 #include <vector>
 
 class dfa_sul : public sul_base {
-    friend class base_teacher;
-    friend class eq_oracle_base;
-
   private:
-    std::unique_ptr<apta> sut;
-
-  protected:
-    virtual void reset() override{};
-
-    virtual bool is_member(const std::vector<int>& query_trace) const override;
-    virtual const int query_trace(const std::vector<int>& query_trace, inputdata& id) const override;
+    std::unique_ptr<apta> sut; // an apta representing the system under test
 
   public:
     dfa_sul() { sut = std::unique_ptr<apta>(new apta()); }
+    void pre(inputdata& id) override;
 
-    virtual void pre(inputdata& id) override;
-    void pre(inputdata& id, const bool overwrite_apta);
+    void reset() override{};
+    const sul_response do_query(const std::vector<int>& query_trace, inputdata& id) const override;
 };
 
 #endif

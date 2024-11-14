@@ -15,9 +15,8 @@
 #include "algorithm_base.h"
 #include "lsharp.h"
 
-#include "base_teacher.h"
 #include "definitions.h"
-#include "eq_oracle_base.h"
+#include "oracle_base.h"
 #include "inputdata.h"
 #include "refinement.h"
 #include "state_merger.h"
@@ -59,15 +58,12 @@ class probabilistic_lsharp_algorithm : public lsharp_algorithm {
                                          const std::vector<int>& alphabet);
 
   protected:
-    inline void proc_counterex(const std::unique_ptr<base_teacher>& teacher, inputdata& id,
-                               std::unique_ptr<apta>& hypothesis, const std::vector<int>& counterex,
-                               std::unique_ptr<state_merger>& merger, const refinement_list refs,
-                               const std::vector<int>& alphabet) const;
+    inline void proc_counterex(inputdata& id, std::unique_ptr<apta>& hypothesis, const std::vector<int>& counterex,
+                               std::unique_ptr<state_merger>& merger, const refinement_list refs, const std::vector<int>& alphabet) const;
 
   public:
-    probabilistic_lsharp_algorithm(std::shared_ptr<sul_base>& sul, std::unique_ptr<base_teacher>& teacher,
-                                   std::unique_ptr<eq_oracle_base>& oracle)
-        : lsharp_algorithm(sul, teacher, oracle) {
+    probabilistic_lsharp_algorithm(std::unique_ptr<oracle_base>&& oracle)
+        : lsharp_algorithm(std::move(oracle)) {
         std::cout << "Probabilistic L# only works with probabilistic oracle. Automatically switched to that one.\
 If this is undesired behavior check your input and/or source code."
                   << std::endl;

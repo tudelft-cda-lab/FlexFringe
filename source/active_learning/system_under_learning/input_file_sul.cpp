@@ -20,27 +20,17 @@
 
 using namespace std;
 
-bool input_file_sul::is_member(const vector<int>& query_trace) const { return all_traces.contains(query_trace); }
-
-const int input_file_sul::query_trace(const vector<int>& query_trace, inputdata& id) const {
-    if (!this->is_member(query_trace)) {
-
-        static bool added_unknown_type = false;
-        static string unk_t_string = "unk";
-        if (!added_unknown_type) {
-            int counter = 0;
-            const auto& r_types = id.get_r_types();
-            while (r_types.contains(unk_t_string)) { unk_t_string = unk_t_string + to_string(counter); }
-
-            id.add_type(unk_t_string);
-            added_unknown_type = true;
-        }
-
-        return id.get_reverse_type(unk_t_string);
-    }
-    return all_traces.at(query_trace);
+/**
+ * @brief Returns the type according to the input data, and if not possible returns an extra unknown type.
+ * Side effect: Initializes the unknown type if encountered.
+ */
+const sul_response input_file_sul::do_query(const vector<int>& query_trace, inputdata& id) const {
+    return sul_response(all_traces.at(query_trace));
 }
 
+/**
+ * @brief Initializes the set of all traces, and initializes the unknown type string.
+ */
 void input_file_sul::pre(inputdata& id) {
     for (const auto it : id) {
         trace& current_trace = *it;
@@ -51,4 +41,13 @@ void input_file_sul::pre(inputdata& id) {
         const int type = current_trace.get_type();
         all_traces[current_sequence] = type;
     }
+
+    // add the unknown type to the set of types. 
+    string unk_t_string = "_unk";
+    int counter = 0;
+    const auto& r_types = id.get_r_types();
+    while (r_types.contains(unk_t_string)) { unk_t_string = unk_t_string + to_string(counter); }
+
+    cout << "Identified the generic unknown type as " << unk_t_string << ". Adding it to the alphabet." << endl;
+    id.add_type(unk_t_string);
 }

@@ -24,7 +24,7 @@
 
 using namespace std;
 
-void ii_base::complete_node(apta_node* node, std::unique_ptr<apta>& aut, std::unique_ptr<base_teacher>& teacher){
+void ii_base::complete_node(apta_node* node, std::unique_ptr<apta>& aut, std::unique_ptr<oracle_base>& oracle){
   static inputdata& id = *(inputdata_locator::get());
 
   trace* access_trace = node->get_access_trace();
@@ -34,12 +34,14 @@ void ii_base::complete_node(apta_node* node, std::unique_ptr<apta>& aut, std::un
   vector< vector<int> > query;
   query.push_back(move(seq));
 
-  vector< pair<int, float> > res = teacher->ask_type_confidence_batch(query, id);
-  if(res.size() > 1)
+  const sul_response response = oracle->ask_sul(queries, *(inputdata_locator::get()));
+  const vector<int>& answers = response.GET_INT_VEC();
+  const vector<float>& confidences = response.GET_FLOAT_VEC();
+  if(answers.size() > 1)
     cerr << "Something weird happened in complete_node method of overlap_fill_batch_wise-class" << endl;
   
-  int reverse_type = res[0].first;
-  float confidence = res[0].second;
+  int reverse_type = answers[0];
+  float confidence = confidences[0];
 
   trace* new_trace = active_learning_namespace::vector_to_trace(seq, id, reverse_type);
   id.add_trace_to_apta(new_trace, aut.get(), false);
@@ -50,7 +52,7 @@ void ii_base::complete_node(apta_node* node, std::unique_ptr<apta>& aut, std::un
   data->set_confidence(confidence);
 }
 
-bool ii_base::check_consistency(std::unique_ptr<apta>& aut, std::unique_ptr<base_teacher>& teacher, apta_node* left, apta_node* right){
+bool ii_base::check_consistency(std::unique_ptr<apta>& aut, std::unique_ptr<oracle_base>& oracle, apta_node* left, apta_node* right){
   static bool init = false;
   if(!init){
     init = true;

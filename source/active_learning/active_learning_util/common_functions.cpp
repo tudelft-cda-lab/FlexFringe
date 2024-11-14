@@ -365,7 +365,7 @@ trace* active_learning_namespace::vector_to_trace(const vector<int>& vec, inputd
  * @return const double Probability.
  */
 const double active_learning_namespace::get_probability_of_last_symbol(trace* tr, inputdata& id,
-                                                                       const unique_ptr<base_teacher>& teacher,
+                                                                       const unique_ptr<oracle_base>& oracle,
                                                                        apta* aut) {
     static unordered_map<apta_node*, unordered_map<int, double>> node_response_map; // memoization
 
@@ -386,7 +386,7 @@ const double active_learning_namespace::get_probability_of_last_symbol(trace* tr
             else if (node_response_map[n].contains(symbol))
                 return node_response_map[n][symbol];
 
-            double new_p = teacher->get_string_probability(current_string, id);
+            double new_p = oracle->ask_sul(current_string, id).get_float();
             if (new_p == 0) {
                 node_response_map[n][symbol] = 0;
                 return 0;
@@ -404,7 +404,7 @@ const double active_learning_namespace::get_probability_of_last_symbol(trace* tr
             if (product_probability == 0)
                 return 0;
         } else {
-            double new_p = teacher->get_string_probability(current_string, id);
+            double new_p = oracle->ask_sul(current_string, id).get_float();
             node_response_map[n][symbol] = new_p / product_probability;
             product_probability *= new_p;
             if (product_probability == 0)

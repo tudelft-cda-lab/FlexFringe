@@ -10,7 +10,6 @@
  */
 
 #include "lstar_imat.h"
-#include "base_teacher.h"
 #include "common_functions.h"
 #include "input_file_oracle.h"
 #include "input_file_sul.h"
@@ -114,7 +113,7 @@ void lstar_imat_algorithm::run(inputdata& id) {
         cout << "\nIteration: " << n_runs << endl;
 
         // fill the table until known
-        obs_table.complete_rows(teacher.get(), id);
+        obs_table.complete_rows(oracle, id);
 
         auto col_low = obs_table.get_lower_table().begin()->second;
         auto col_high = obs_table.get_upper_table().begin()->second;
@@ -144,7 +143,7 @@ void lstar_imat_algorithm::run(inputdata& id) {
                 string we ask cannot be parsed in automaton. We ignore those cases, as they lead to extra states in
                 hypothesis. This puts a burden on the equivalence oracle to make sure no query is asked twice, else we
                 end up in infinite loop.*/
-                optional<pair<vector<int>, int>> query_result = oracle->equivalence_query(merger.get(), teacher);
+                optional<pair<vector<int>, int>> query_result = oracle->equivalence_query(merger.get());
                 if (!query_result) {
                     cout << "Found consistent automaton => Print." << endl;
                     print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
