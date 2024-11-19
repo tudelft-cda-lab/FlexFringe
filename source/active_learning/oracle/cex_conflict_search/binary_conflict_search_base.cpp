@@ -13,6 +13,6 @@
 
 using namespace std;
 
-std::vector<int> get_next_substring(const std::vector<int>& substr) {
+std::vector<int> update_current_substring(const std::vector<int>& substr) {
   throw logic_error("Not yet implemented");
 }

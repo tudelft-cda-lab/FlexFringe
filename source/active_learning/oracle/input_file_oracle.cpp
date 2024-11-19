@@ -18,6 +18,10 @@
 using namespace std;
 using namespace active_learning_namespace;
 
+/**
+ * @brief Checks if the hypothesis is consistent with the set of input traces that are stores in 
+ * input_file_sul.
+ */
 optional<pair<vector<int>, int>> input_file_oracle::equivalence_query(state_merger* merger) {
     const count_driven* const eval_func = dynamic_cast<count_driven*>(merger->get_eval());
     if (eval_func == nullptr)

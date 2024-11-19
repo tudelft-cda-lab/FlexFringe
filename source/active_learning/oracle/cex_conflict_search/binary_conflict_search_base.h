@@ -15,12 +15,8 @@
 #include "conflict_search_base.h"
 
 class binary_conflict_search : public conflict_search_base {
-  protected:
-    std::vector<int> get_next_substring(const std::vector<int>& substr) override; // TODO: This subclass should only override this method
-    std::pair<bool, std::optional<response_wrapper> > creates_conflict(const std::vector<int>& substr, apta& hypothesis) = 0;
-
   public:
-    binary_conflict_search(const std::shared_ptr<sul_base>& sul) : conflict_search_base(sul) {
+    binary_conflict_search(const std::shared_ptr<conflict_detector_base>& cd) : conflict_search_base(cd) {
       throw std::exception("binary_conflict_search not implemented yet");
     };
 };

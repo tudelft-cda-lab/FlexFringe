@@ -13,8 +13,6 @@
 #include "paul_heuristic.h"
 
 #include "common_functions.h"
-#include "input_file_oracle.h"
-#include "input_file_sul.h"
 
 #include "greedy.h"
 #include "inputdata.h"
@@ -24,8 +22,6 @@
 #include "state_merger.h"
 
 #include <list>
-#include <stack>
-#include <queue>
 #include <unordered_set>
 
 // for the threading

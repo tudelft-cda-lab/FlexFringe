@@ -22,7 +22,6 @@ using namespace std;
 
 /**
  * @brief Returns the type according to the input data, and if not possible returns an extra unknown type.
- * Side effect: Initializes the unknown type if encountered.
  */
 const sul_response input_file_sul::do_query(const vector<int>& query_trace, inputdata& id) const {
     return sul_response(all_traces.at(query_trace));

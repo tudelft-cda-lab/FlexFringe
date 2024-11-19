@@ -20,26 +20,24 @@ using namespace std;
  * 
  * @param cex The counterexample.
  * @param hypothesis The merged hypothesis.
- * @param oracle The oracle.
  * @param id The inputdata wrapper.
- * @return std::vector<int> A vector leading to the conflict.
+ * @return std::vector<int>, sul_response A vector leading to the conflict including the corresponding SUL response.
  */
-pair< vector<int>, optional<response_wrapper> > dfa_conflict_search_namespace::linear_conflict_search::get_conflict_string(const vector<int>& cex, apta& hypothesis, 
-                                                             const unique_ptr<oracle_base>& oracle, inputdata& id){
-  vector<int> substring;
-  for(auto s: cex){
-    substring.push_back(s);
-    
-    int true_val = get_teacher_response(substring, oracle, id);
-    int pred_value = parse_dfa(substring, hypothesis, id); // TODO: we can do this one faster too via memoization
+pair< vector<int>, sul_response> dfa_conflict_search_namespace::linear_conflict_search::get_conflict_string(const vector<int>& cex, apta& hypothesis, inputdata& id) noexcept {
+  current_substring.clear();
 
-    if(true_val != pred_value){
-      response_wrapper rep(response_type::int_response);
-      rep.set_int(true_val);
-      return make_pair(substring, make_optional(rep));
-    }
-      
+  pair<bool, optional<sul_response>> resp = conflict_detector->creates_conflict(current_substring, hypothesis, id);
+  while(!resp.first){
+    update_current_substring(cex);
   }
 
-  return make_pair(cex, nullopt);
+  return make_pair(current_substring, resp.second.value());
+}
+
+/**
+ * @brief Easy to read.
+ */
+vector<int> linear_conflict_search_base::update_current_substring(const vector<int>& cex){
+  int idx = current_substring.size();
+  current_substring.push_back(cex[idx]);
 }

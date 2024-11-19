@@ -11,8 +11,6 @@
 
 #include "lstar.h"
 #include "common_functions.h"
-#include "input_file_oracle.h"
-#include "input_file_sul.h"
 
 #include "greedy.h"
 #include "inputdata.h"

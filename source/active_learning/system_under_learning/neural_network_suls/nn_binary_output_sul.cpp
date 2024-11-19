@@ -39,11 +39,7 @@ const double nn_binary_output_sul::get_sigmoid_output(const vector<int>& query_t
 
 
 /**
- * @brief Queries trace, returns result.
- *
- * Sidenote: We have duplicate code with get_string_probability here. The reason being is that is is a hot
- * path, hence we avoid function call overhead with this as part of our optimization. -> duplicate code
- * is wanted.
+ * @brief Returns a single binary output.
  *
  * @param query_trace
  * @param id

@@ -16,116 +16,63 @@ using namespace std;
 using namespace active_learning_namespace;
 
 /**
- * @brief Asks the oracle a membership query. In case the automaton cannot be parsed with the query, it returns -1.
- * Else the mapping as defined by the inputdata.
- *
- * @param prefix S.e.
- * @param suffix S.e.
- * @param id Inputdata.
- * @return const int 0 or greater for the type, -1 if automaton cannot be parsed with the query.
- */
-const int base_oracle::ask_membership_query(const pref_suf_t& prefix, const pref_suf_t& suffix, inputdata& id) {
-    pref_suf_t query(prefix);
-    query.insert(query.end(), suffix.begin(), suffix.end());
-
-    return ask_membership_query(query, id);
-}
-
-/**
- * @brief See ask_membership_query(const pref_suf_t& prefix, const pref_suf_t& suffix, inputdata& id)
- *
- * @return const int 0 or greater for the type, -1 if target cannot answer the query.
- */
-const int base_oracle::ask_membership_query(const pref_suf_t& query, inputdata& id) {
-    return sul->query_trace(query, id);
-}
-
-/**
- * @brief See ask_membership_query(const pref_suf_t& prefix, const pref_suf_t& suffix, inputdata& id)
- *
- * @return Integer in pair like overloaded function. Float represents confidence of oracle (e.g. transformer) that output is correct. 
- */
-const pair<int, float> base_oracle::ask_membership_confidence_query(const pref_suf_t& query, inputdata& id) {
-    tuple<int, float, vector< vector<float> >> query_res = sul->get_type_confidence_and_states(query, id);
-    return make_pair(get<0>(query_res), get<1>(query_res));
-}
-
-const std::vector< std::pair<int, float> > 
-base_oracle::ask_type_confidence_batch(const std::vector< std::vector<int> >& query_traces, inputdata& id) const {
-    return sul->get_type_confidence_batch(query_traces, id);
-}
-
-
-/**
- * @brief 
+ * @brief Giving the strategy access to the merger. 
  * 
- * @return const std::pair< int, std::vector< std::vector<float> > > Int is response of network, vector<float> is the sequence of hidden states.
+ * Was hard to put into the constructors at time of writing.
  */
-const std::pair< int, std::vector< std::vector<float> > > 
-base_oracle::get_membership_state_pair(const active_learning_namespace::pref_suf_t& access_seq, inputdata& id){
-    return sul->get_type_and_states(access_seq, id);
+void oracle_base::initialize(state_merger* merger){
+    cex_search_strategy->initialize(merger);
+}
+
+const sul_response oracle_base::ask_sul(const vector<int>& query_trace, inputdata& id) const {
+    return sul->do_query(query_trace, id);
+}
+
+
+const sul_response oracle_base::ask_sul(const vector<int>&& query_trace, inputdata& id) const {
+    return sul->do_query(query_trace, id);
+}
+
+const sul_response oracle_base::ask_sul(const vector< vector<int> >& query_traces, inputdata& id) const {
+    return sul->do_query(query_traces, id);
+}
+
+const sul_response oracle_base::ask_sul(const vector< vector<int> >&& query_traces, inputdata& id) const {
+    return sul->do_query(query_traces, id);
 }
 
 /**
- * @brief Gets the probability of a certain string. Only supported with certain SULs.
+ * @brief The basic flow of the equivalence oracle. Can be overwritten in some exceptional 
+ * examples, but most oracle implementations will use this flow.
  *
- * @param query
- * @param id
- * @return const double
+ * @param merger The state-merger.
+ * @return std::optional< std::pair< std::vector<int>, int> > Counterexample if not equivalent, else nullopt.
+ * Counterexample is pair of trace and the answer to the counterexample as returned by the SUL.
  */
-const double base_oracle::get_string_probability(const pref_suf_t& query, inputdata& id) {
-    double res = sul->get_string_probability(query, id);
-    return res;
-}
+optional< pair<vector<int>, sul_response> > active_sul_oracle::equivalence_query(state_merger* merger) {
+    inputdata& id = *(merger->get_dat());
+    apta& hypothesis = *(merger->get_aut());
 
-/**
- * @brief Gets the weights from the state reached by access_seq.
- *
- * @param access_seq
- * @param id
- * @return const std::vector<float>
- */
-const std::vector<float> base_oracle::get_weigth_distribution(const active_learning_namespace::pref_suf_t& access_seq,
-                                                               inputdata& id) {
-    return sul->get_weight_distribution(access_seq, id);
-}
+    cex_search_strategy->reset();
 
-/**
- * @brief Get the weigth state pair object
- * 
- * @param access_seq 
- * @param id 
- * @return const std::pair< std::vector<float>, std::vector<float> > 
- */
-const std::pair< std::vector<float>, std::vector<float> > base_oracle::get_weigth_state_pair(const active_learning_namespace::pref_suf_t& access_seq,
-                                                     inputdata& id) {
-    return sul->get_weights_and_state(access_seq, id);
-}
+    optional<vector<int>> query_string_opt = cex_search_strategy->next(id);
+    while (query_string_opt != nullopt) { // nullopt == search exhausted
+        auto& query_string = query_string_opt.value();
 
-/**
- * @brief For ldot
- * 
- * @param query 
- * @param id 
- * @return const int 
- */
-const int oracle_base::ask_membership_query_maybe(const pref_suf_t& query, inputdata& id) {
-    return sul->query_trace_maybe(query, id);
-}
+        pair<bool, optional<sul_response> > resp = conflict_detector->creates_conflict(query_string, hypothesis, id);
+        if(resp.first){
+            pair< vector<int>, sul_response> conflict_resp_pair = conflict_searcher->get_conflict_string(query_string, hypothesis, id);
+            
+            cout << "Found counterexample of length " << conflict_resp_pair.first.size() << ":";
+            for(auto x: conflict_resp_pair.first)
+                cout << " " << id.get_symbol(x);
+            cout << endl;
 
-const sul_response ask_sul(const std::vector<int>& query_trace, inputdata& id) const {
-    return sul->query_trace(query_trace, id);
-}
+            return make_optional<pair< vector<int>, sul_response>>(conflict_resp_pair);
+        }
+        
+        query_string_opt = cex_search_strategy->next(id);
+    }
 
-
-const sul_response ask_sul(const std::vector<int>&& query_trace, inputdata& id) const {
-    return sul->query_trace(query_trace, id);
-}
-
-const sul_response ask_sul(const std::vector< std::vector<int> >& query_traces, inputdata& id) const {
-    return sul->query_trace(query_traces, id);
-}
-
-const sul_response ask_sul(const std::vector< std::vector<int> >&& query_traces, inputdata& id) const {
-    return sul->query_trace(query_traces, id);
+    return nullopt;
 }

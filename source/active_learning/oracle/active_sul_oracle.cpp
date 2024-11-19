@@ -16,15 +16,6 @@ using namespace std;
 using namespace active_learning_namespace;
 
 /**
- * @brief Avoids duplicate code in the active_state_sul_oracle.
- * 
- * @return int The response of the SUL.
- */
-int active_sul_oracle::get_sul_response(const vector<int>& query_string, inputdata& id) const {
-    return ask_membership_query(query_string, id);
-}
-
-/**
  * @brief This function does what you think it does.
  *
  * @param merger The merger.

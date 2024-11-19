@@ -18,19 +18,15 @@
 #include <memory>
 #include <vector>
 #include <utility>
-#include <optional>
 
 class conflict_search_base {
-  protected: 
-    std::shared_ptr<sul_base> sul;
-
-    std::pair<bool, sul_response > found_conflict_string() = 0;
-    std::vector<int> get_next_substring(const std::vector<int>& substr);
-    std::pair<bool, std::optional<sul_response> > creates_conflict(const std::vector<int>& substr, apta& hypothesis);
+  protected:
+    std::shared_ptr<conflict_detector_base> conflict_detector;
+    int parse_dfa_for_type(const std::vector<int>& seq, apta& hypothesis, inputdata& id);
 
   public:
-    conflict_search_base(const std::shared_ptr<sul_base>& sul) : sul(sul){};
-    std::pair< std::vector<int>, sul_response> get_conflict_string(const std::vector<int>& cex, apta& hypothesis, inputdata& id);
+    conflict_search_base(const std::shared_ptr<conflict_detector_base>& cd) : conflict_detector(cd) {};
+    virtual std::pair< std::vector<int>, sul_response> get_conflict_string(const std::vector<int>& cex, apta& hypothesis, inputdata& id) = 0;
 };
 
-#endif
+#endif // _AL_CONFLICT_SEARCH_BASE_H_

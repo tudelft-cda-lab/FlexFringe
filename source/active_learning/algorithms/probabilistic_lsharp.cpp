@@ -11,8 +11,6 @@
 
 #include "probabilistic_lsharp.h"
 #include "common_functions.h"
-#include "input_file_oracle.h"
-#include "input_file_sul.h"
 
 #include "greedy.h"
 #include "inputdata.h"
@@ -249,7 +247,7 @@ void probabilistic_lsharp_algorithm::proc_counterex(inputdata& id,
     apta_node* n = hypothesis->get_root();
     for (auto s : counterex) {
         if (n == nullptr) {
-            //const auto queried_type = oracle->ask_membership_query(substring, id); // TODO: necessary here?
+            //const int queried_type = oracle->ask_sul(substring, id).GET_INT(); // TODO: necessary here?
             trace* new_trace = vector_to_trace(substring, id, 0);
             id.add_trace_to_apta(new_trace, hypothesis.get(), false);
             id.add_trace(new_trace);
@@ -266,7 +264,7 @@ void probabilistic_lsharp_algorithm::proc_counterex(inputdata& id,
 
     // for the last element, too
     if(n==nullptr){
-        //const auto queried_type = oracle->ask_membership_query(substring, id); // TODO: necessary here?
+        //const int queried_type = oracle->ask_sul(substring, id).GET_INT(); // TODO: necessary here?
         trace* new_trace = vector_to_trace(substring, id, 0);
         id.add_trace_to_apta(new_trace, hypothesis.get(), false);
         id.add_trace(new_trace);

@@ -36,6 +36,9 @@ int paul_oracle::get_sul_response(const vector< vector<int> >& query_string, inp
  * @return std::optional< pair< vector<int>, int> > nullopt if no counterexample found, else the counterexample.
  */
 std::optional<pair<vector<int>, int>> paul_oracle::equivalence_query(state_merger* merger) {
+    // TODO: this one is going to look a little more complicated perhaps. 
+    throw logic_error("EQ not implemented for PAUL oracle yet Perhaps do a sort of overlap driven conflict detector?");
+
     inputdata& id = *(merger->get_dat());
     apta& hypothesis = *(merger->get_aut());
 

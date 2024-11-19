@@ -15,6 +15,7 @@
 #include "parameters.h"
 #include "cex_search_strategies/cex_search_strategy_factory.h" // TODO: won't eat those two without the path. Why?
 #include "cex_conflict_search/conflict_search_base.h" // TODO: won't eat those two without the path. Why?
+#include "conflict_detectors/conflict_detector_base.h" // TODO: won't eat those two without the path. Why?
 #include "sul_base.h"
 
 #include "apta.h"
@@ -24,65 +25,35 @@
 #include <optional>
 #include <utility>
 #include <vector>
-#include <type_traits> // used in derived classes: check for SUL types
 
 class oracle_base {
   protected:
     std::shared_ptr<sul_base> sul;
     std::unique_ptr<search_base> cex_search_strategy;
-    std::unique_ptr<conflict_search_base> conflict_searcher;
+    std::unique_ptr<conflict_search_base> conflict_searcher; // these two are to be determined by derived classes
+    std::unique_ptr<conflict_detector_base> conflict_detector; // these two are to be determined by derived classes
 
     virtual void reset_sul() = 0;
 
-  public:
     oracle_base(std::shared_ptr<sul_base>& sul) : sul(sul){
       cex_search_strategy = cex_search_strategy_factory::create_search_strategy();
-    };
-
-    /**
-     * @brief Poses the equivalence query. Returns counterexample cex and true answer to cex if no equivalence proven.
-     *
-     * @param merger The state-merger.
-     * @return std::optional< std::pair< std::vector<int>, int> > Counterexample if not equivalent, else nullopt.
-     * Counterexample is pair of trace and the answer to the counterexample as returned by the SUL.
-     */
-    virtual std::optional<std::pair<std::vector<int>, int>>
-    equivalence_query(state_merger* merger) = 0;
-
-    virtual void initialize(state_merger* merger){
-      this->cex_search_strategy->initialize(merger);
     }
+
+    // https://stackoverflow.com/a/10001573/11956515
+    oracle_base(){
+      throw logic_error("oracle_base call to overloaded constructor providing the sul has to be called!");
+    }
+
+  public:
+    virtual void initialize(state_merger* merger);
 
     const sul_response ask_sul(const std::vector<int>& query_trace, inputdata& id);
     const sul_response ask_sul(const std::vector<int>&& query_trace, inputdata& id);
     const sul_response ask_sul(const std::vector< std::vector<int> >& query_traces, inputdata& id);
     const sul_response ask_sul(const std::vector< std::vector<int> >&& query_traces, inputdata& id);
 
-    const int ask_membership_query(const active_learning_namespace::pref_suf_t& query, inputdata& id);
-    const int ask_membership_query(const active_learning_namespace::pref_suf_t& prefix,
-                                   const active_learning_namespace::pref_suf_t& suffix, inputdata& id);
-    
-    const std::pair<int, float> ask_membership_confidence_query(const active_learning_namespace::pref_suf_t& query, inputdata& id);
-    const std::vector< std::pair<int, float> > ask_type_confidence_batch(const std::vector< std::vector<int> >& query_traces, inputdata& id) const;
-
-    
-    const std::pair< int, std::vector< std::vector<float> > > get_membership_state_pair(const active_learning_namespace::pref_suf_t& access_seq,
-                                                     inputdata& id);
-    /* For learning weighted automata or PDFA */
-    const double get_string_probability(const active_learning_namespace::pref_suf_t& query, inputdata& id);
-    // const float get_symbol_probability(const active_learning_namespace::pref_suf_t& access_seq, const int symbol,
-    // inputdata& id);
-    const std::vector<float> get_weigth_distribution(const active_learning_namespace::pref_suf_t& access_seq,
-                                                     inputdata& id);
-    const std::pair< std::vector<float>, std::vector<float> > get_weigth_state_pair(const active_learning_namespace::pref_suf_t& access_seq,
-                                                     inputdata& id);
-
-
-    const int ask_membership_query_maybe(const active_learning_namespace::pref_suf_t& query, inputdata& id);
-
-    const std::unique_ptr<sul_base>& get_sul_ref() const noexcept {
-      return sul;
-    }
+    virtual std::optional<std::pair<std::vector<int>, sul_response>>
+    equivalence_query(state_merger* merger);
 };
 
 #endif

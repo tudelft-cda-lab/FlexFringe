@@ -22,22 +22,16 @@
 
 class active_sul_oracle : public oracle_base {
   protected:
-    virtual int get_sul_response(const std::vector<int>& query_string, inputdata& id) const;
     void reset_sul() override {};
 
   public:
     active_sul_oracle(std::unique_ptr<sul_base>& sul) : oracle_base(sul) {
-        cex_search_strategy = std::unique_ptr<search_base>(
-            //new random_w_method(MAX_AL_SEARCH_DEPTH)); // std::unique_ptr<search_base>(new bfs_strategy(8)); // number here is
-            new random_w_method(MAX_AL_SEARCH_DEPTH)); // std::unique_ptr<search_base>(new bfs_strategy(8)); // number here is
-                                           // maximum length of sequence. Find a better way to set this
-
-        conflict_searcher = std::unique_ptr<conflict_search_base>(new dfa_conflict_search_namespace::linear_conflict_search());
-        assert(dynamic_cast<input_file_sul*>(sul.get()) == nullptr);
+        conflict_searcher = std::make_unique<type_linear_conflict_searcher>(sul);
+        conflict_detector = std::make_unique<type_conflict_detector>(sul);
     };
 
-    std::optional<std::pair<std::vector<int>, int>>
-    equivalence_query(state_merger* merger);
+    std::optional<std::pair<std::vector<int>, sul_response>>
+    equivalence_query(state_merger* merger) override;
 };
 
 #endif

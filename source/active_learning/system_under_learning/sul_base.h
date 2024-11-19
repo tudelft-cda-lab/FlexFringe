@@ -86,18 +86,6 @@ class sul_base {
       throw std::logic_error("batched queries not implemented in this sul-class.");
     }
 
-    virtual const int query_trace(const std::vector<int>& query_trace, inputdata& id) const = 0;
-
-    /** Query_trace, but in case the query is not available returns -1 instead of throwing an error */
-    virtual const std::pair< int, std::vector< std::vector<float> > > get_type_and_states(const std::vector<int>& query_trace, inputdata& id) const;
-    virtual const std::tuple< int, float, std::vector< std::vector<float> > > get_type_confidence_and_states(const std::vector<int>& query_trace, inputdata& id) const;
-    virtual const std::vector< std::pair<int, float> > get_type_confidence_batch(const std::vector< std::vector<int> >& query_traces, inputdata& id) const;
-
-    // TODO: can we simplify all of those with some sort of template?
-    virtual const double get_string_probability(const std::vector<int>& query_trace, inputdata& id) const;
-    virtual const std::vector<float> get_weight_distribution(const std::vector<int>& query_trace, inputdata& id) const;
-    virtual const std::pair< std::vector<float>, std::vector<float> > get_weights_and_state(const std::vector<int>& query_trace, inputdata& id) const;
-  
   public:
     /**
      * @brief Initialize the sul class.

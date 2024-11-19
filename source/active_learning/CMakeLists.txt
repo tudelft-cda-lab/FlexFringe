@@ -7,10 +7,12 @@ include_directories(
         "${CMAKE_CURRENT_SOURCE_DIR}/system_under_learning/neural_network_suls"
         "${CMAKE_CURRENT_SOURCE_DIR}/system_under_learning/benchmark_parsers"
         "${CMAKE_CURRENT_SOURCE_DIR}/counterexample_strategies"
-        "${CMAKE_CURRENT_SOURCE_DIR}/equivalence_oracle"
+        "${CMAKE_CURRENT_SOURCE_DIR}/oracle"
         "${CMAKE_CURRENT_SOURCE_DIR}/incomplete_information"
-        "${CMAKE_CURRENT_SOURCE_DIR}/equivalence_oracle/cex_search_strategies"
-        "${CMAKE_CURRENT_SOURCE_DIR}/equivalence_oracle/cex_conflict_search"
+        "${CMAKE_CURRENT_SOURCE_DIR}/oracle/cex_search_strategies"
+        "${CMAKE_CURRENT_SOURCE_DIR}/oracle/cex_conflict_search"
+        "${CMAKE_CURRENT_SOURCE_DIR}/oracle/cex_conflict_search/linear_searchers"
+        "${CMAKE_CURRENT_SOURCE_DIR}/oracle/conflict_detectors"
         "${CMAKE_CURRENT_SOURCE_DIR}/algorithms"
         )
 
@@ -55,50 +57,54 @@ add_library(ActiveLearning STATIC
             databases/prefix_tree_database.cpp
 
             # Equivalence oracles
-            equivalence_oracle/oracle_base.h
-            equivalence_oracle/oracle_base.cpp
-            equivalence_oracle/input_file_oracle.h
-            equivalence_oracle/input_file_oracle.cpp
-            equivalence_oracle/active_sul_oracle.h
-            equivalence_oracle/active_sul_oracle.cpp
-            equivalence_oracle/active_state_sul_oracle.h
-            equivalence_oracle/active_state_sul_oracle.cpp
-            equivalence_oracle/string_probability_oracle.h
-            equivalence_oracle/string_probability_oracle.cpp
-            equivalence_oracle/weight_comparing_oracle.h
-            equivalence_oracle/weight_comparing_oracle.cpp
-            #equivalence_oracle/sqldb_sul_regex_oracle.h
-            #equivalence_oracle/sqldb_sul_regex_oracle.cpp
-            #equivalence_oracle/sqldb_sul_random_oracle.h
-            #equivalence_oracle/sqldb_sul_random_oracle.cpp
-            equivalence_oracle/paul_oracle.h
-            equivalence_oracle/paul_oracle.cpp
+            oracle/oracle_base.h
+            oracle/oracle_base.cpp
+            oracle/input_file_oracle.h
+            oracle/input_file_oracle.cpp
+            oracle/active_sul_oracle.h
+            oracle/active_sul_oracle.cpp
+            oracle/string_probability_oracle.h
+            oracle/string_probability_oracle.cpp
+            oracle/weight_comparing_oracle.h
+            oracle/weight_comparing_oracle.cpp
+            #oracle/sqldb_sul_regex_oracle.h
+            #oracle/sqldb_sul_regex_oracle.cpp
+            #oracle/sqldb_sul_random_oracle.h
+            #oracle/sqldb_sul_random_oracle.cpp
+            oracle/paul_oracle.h
+            oracle/paul_oracle.cpp
 
             # Counterexample search strategies
-            equivalence_oracle/cex_search_strategies/cex_search_strategy_factory.h
-            equivalence_oracle/cex_search_strategies/cex_search_strategy_factory.cpp
-            equivalence_oracle/cex_search_strategies/search_base.h
-            equivalence_oracle/cex_search_strategies/search_base.cpp
-            equivalence_oracle/cex_search_strategies/breadth_first_search.h
-            equivalence_oracle/cex_search_strategies/breadth_first_search.cpp
-            equivalence_oracle/cex_search_strategies/random_string_search.h
-            equivalence_oracle/cex_search_strategies/random_string_search.cpp
-            equivalence_oracle/cex_search_strategies/random_w_method.h
-            equivalence_oracle/cex_search_strategies/random_w_method.cpp
-            equivalence_oracle/cex_search_strategies/targeted_bfs_walk.h
-            equivalence_oracle/cex_search_strategies/targeted_bfs_walk.cpp
-            equivalence_oracle/cex_search_strategies/fringe_walk.h
-            equivalence_oracle/cex_search_strategies/fringe_walk.cpp
+            oracle/cex_search_strategies/cex_search_strategy_factory.h
+            oracle/cex_search_strategies/cex_search_strategy_factory.cpp
+            oracle/cex_search_strategies/search_base.h
+            oracle/cex_search_strategies/search_base.cpp
+            oracle/cex_search_strategies/breadth_first_search.h
+            oracle/cex_search_strategies/breadth_first_search.cpp
+            oracle/cex_search_strategies/random_string_search.h
+            oracle/cex_search_strategies/random_string_search.cpp
+            oracle/cex_search_strategies/random_w_method.h
+            oracle/cex_search_strategies/random_w_method.cpp
+            oracle/cex_search_strategies/targeted_bfs_walk.h
+            oracle/cex_search_strategies/targeted_bfs_walk.cpp
+            oracle/cex_search_strategies/fringe_walk.h
+            oracle/cex_search_strategies/fringe_walk.cpp
 
-            # Conflict search strategies
-            equivalence_oracle/cex_conflict_search/dfa_conflict_search_base.h
-            equivalence_oracle/cex_conflict_search/dfa_conflict_search_base.cpp
-            equivalence_oracle/cex_conflict_search/linear_conflict_search_base.h
-            equivalence_oracle/cex_conflict_search/linear_conflict_search_base.cpp
-            equivalence_oracle/cex_conflict_search/linear_state_query_conflict_search.h
-            equivalence_oracle/cex_conflict_search/linear_state_query_conflict_search.cpp
-            equivalence_oracle/cex_conflict_search/binary_conflict_search_base.h
-            equivalence_oracle/cex_conflict_search/binary_conflict_search_base.cpp
+            # conflict search strategies
+            oracle/cex_conflict_search/conflict_search_base.h
+            oracle/cex_conflict_search/conflict_search_base.cpp
+            oracle/cex_conflict_search/linear_conflict_search_base.h
+            oracle/cex_conflict_search/linear_conflict_search_base.cpp
+            oracle/cex_conflict_search/binary_conflict_search_base.h
+            oracle/cex_conflict_search/binary_conflict_search_base.cpp
+
+            # conflict detectors
+            oracle/conflict_detectors/conflict_detector_base.h
+            oracle/conflict_detectors/conflict_detector_base.cpp
+            oracle/conflict_detectors/type_conflict_detector.h
+            oracle/conflict_detectors/type_conflict_detector.cpp
+            oracle/conflict_detectors/string_probability_conflict_detector.h
+            oracle/conflict_detectors/string_probability_conflict_detector.cpp
 
             # Methods to deal with incomplete information
             incomplete_information/ii_base.h
