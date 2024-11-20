@@ -1,4 +1,5 @@
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/evaluation"
+        "${CMAKE_CURRENT_SOURCE_DIR}/evaluation/probabilistic_heuristics"
         "${CMAKE_CURRENT_SOURCE_DIR}/utility"
         "${CMAKE_CURRENT_SOURCE_DIR}/input"
         "${CMAKE_CURRENT_SOURCE_DIR}/input/parsers"
@@ -24,6 +25,12 @@ file(WRITE "evaluators.h" "#ifndef __ALL_HEADERS__ \n#define __ALL_HEADERS__ \n\
 foreach (Filepath ${Files})
     get_filename_component(Filename ${Filepath} NAME)
     file(APPEND "evaluators.h" "#include \"${Filename}\"\n")
+endforeach ()
+
+file(GLOB ProbFiles "${CMAKE_CURRENT_SOURCE_DIR}/evaluation/probabilistic_heuristics/*.h")
+foreach (Filepath ${ProbFiles})
+    get_filename_component(Filename ${Filepath} NAME)
+    file(APPEND "evaluators.h" "#include \"probabilistic_heuristics/${Filename}\"\n")
 endforeach ()
 file(APPEND "evaluators.h" "\n#endif")
 
@@ -107,12 +114,23 @@ add_library(Source STATIC
 set(cmakelists_eval "evaluation/CMakeLists.txt")
 file(WRITE "${cmakelists_eval}" "add_library(Evaluation STATIC")
 file(GLOB CPPFiles "${CMAKE_CURRENT_SOURCE_DIR}/evaluation/*.cpp")
+
 foreach (Filepath ${Files})
     get_filename_component(Filename ${Filepath} NAME)
     string(REGEX REPLACE "\\.[^.]*$" "" CleanFilename ${Filename})
     file(APPEND "${cmakelists_eval}" "\n            ${CleanFilename}.h")
     file(APPEND "${cmakelists_eval}" "\n            ${CleanFilename}.cpp")
 endforeach ()
+
+file(GLOB CPPProbFiles "${CMAKE_CURRENT_SOURCE_DIR}/evaluation/probabilistic_heuristics/*.h")
+foreach (Filepath ${CPPProbFiles})
+    get_filename_component(Filename ${Filepath} NAME)
+    get_filename_component(Filename ${Filepath} NAME)
+    string(REGEX REPLACE "\\.[^.]*$" "" CleanFilename ${Filename})
+    file(APPEND "${cmakelists_eval}" "\n            probabilistic_heuristics/${CleanFilename}.h")
+    file(APPEND "${cmakelists_eval}" "\n            probabilistic_heuristics/${CleanFilename}.cpp")
+endforeach ()
+
 file(APPEND "${cmakelists_eval}" ")")
 
 add_subdirectory(evaluation)

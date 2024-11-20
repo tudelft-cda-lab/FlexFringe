@@ -140,8 +140,6 @@ unique_ptr<oracle_base> oracle_factory::create_oracle(shared_ptr<sul_base>& sul,
       return make_unique<sqldb_sul_regex_oracle>(sul);
   else if(ORACLE == "string_probability_oracle")
       return make_unique<string_probability_oracle>(sul);
-  else if(ORACLE == "weight_comparing_oracle")
-      return make_unique<weight_comparing_oracle>(sul);
   else
     throw std::invalid_argument("One of the oracle specifying input parameters was not recognized by the oracle factory.");
 }

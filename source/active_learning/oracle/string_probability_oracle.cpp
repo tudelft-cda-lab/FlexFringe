@@ -29,7 +29,7 @@ using namespace active_learning_namespace;
  * @return std::optional< pair< vector<int>, int> > nullopt if no counterexample found, else the counterexample. The
  * type (integer) will always be zero.
  */
-std::optional<pair<vector<int>, int>>
+/* std::optional<pair<vector<int>, int>>
 string_probability_oracle::equivalence_query(state_merger* merger) {
     inputdata& id = *(merger->get_dat());
     apta& hypothesis = *(merger->get_aut());
@@ -65,7 +65,7 @@ string_probability_oracle::equivalence_query(state_merger* merger) {
             }
 
             if (t->is_final() && FINAL_PROBABILITIES) {
-                sampled_probability *= static_cast<string_probability_estimator_data*>(n->get_data())->get_final_prob();
+                sampled_probability *= static_cast<string_probability_estimator_data*>(n->get_data())->get_final_probability();
                 break;
             } else if (t->is_final())
                 break;
@@ -90,4 +90,4 @@ string_probability_oracle::equivalence_query(state_merger* merger) {
     }
 
     return nullopt;
-}
+} */

@@ -149,8 +149,6 @@ public:
     virtual void print_state_style_json(std::iostream &output);
 
     bool align_consistent(tail *t);
-
-    virtual const float get_weight(const int symbol) const;
 };
 
 

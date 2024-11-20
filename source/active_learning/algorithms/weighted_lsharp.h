@@ -38,7 +38,7 @@ class weighted_lsharp_algorithm : public lsharp_algorithm {
     void extend_fringe(std::unique_ptr<state_merger>& merger, apta_node* n,
                                                  std::unique_ptr<apta>& the_apta, inputdata& id,
                                                  const std::vector<int>& alphabet) const;
-    virtual void query_weights(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id,
+    void query_weights(std::unique_ptr<state_merger>& merger, apta_node* n, inputdata& id,
                                const std::vector<int>& alphabet,
                                std::optional<active_learning_namespace::pref_suf_t> seq_opt) const;
 
@@ -46,15 +46,12 @@ class weighted_lsharp_algorithm : public lsharp_algorithm {
                                          const std::vector<int>& alphabet) override;
 
   public:
-    weighted_lsharp_algorithm(std::unique_ptr<oracle_base>&& oracle)
-        : lsharp_algorithm(std::move(oracle)), use_sinks(USE_SINKS) {
-        std::cout << "Probabilistic L# only works with probabilistic oracle. Automatically switched to that one.\
-If this is undesired behavior check your input and/or source code."
-                  << std::endl;
-        this->oracle.reset(new weight_comparing_oracle(sul));
+    weighted_lsharp_algorithm(std::unique_ptr<oracle_base>&& oracle) : lsharp_algorithm(std::move(oracle)), use_sinks(USE_SINKS) {
+        if(dynamic_cast<weight_comparing_oracle*>(oracle.get()) == nullptr)
+          throw std::logic_error("Weighted L# only works with weight_comparing_oracle");
     };
 
-    virtual void run(inputdata& id) override;
+    void run(inputdata& id) override;
 };
 
 #endif

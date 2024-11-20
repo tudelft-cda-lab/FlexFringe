@@ -22,6 +22,7 @@
 #include "string_probability_estimator.h"
 
 #include <list>
+#include <stack>
 #include <stdexcept>
 
 using namespace std;
@@ -115,10 +116,6 @@ void probabilistic_lsharp_algorithm::add_statistics(unique_ptr<state_merger>& me
         if (std::isnan(new_prob))
             throw runtime_error("Error: NaN value has occurred."); // debugging
 
-        /* cout << "Seq:";
-        print_vector(seq);
-        cout << "prob: " << new_prob << endl; */
-
         data->update_probability(symbol, new_prob);
     }
 
@@ -134,15 +131,12 @@ void probabilistic_lsharp_algorithm::add_statistics(unique_ptr<state_merger>& me
  * This function must only be called from within add_statistics() and
  * must be called after init_final_prob() [make sure that the node n's
  * final probability has been initialized].
- *
- * @param n The node.
- * @param the_apta The apta.
  */
 void probabilistic_lsharp_algorithm::update_access_path(apta_node* n, apta* the_apta,
                                                         const vector<int>& alphabet) const {
     auto access_trace = n->get_access_trace();
-    if (access_trace == nullptr)
-        return; // The root node
+    if (access_trace == nullptr) // this is the root node
+        return;
 
     stack<apta_node*> nodes_to_update;
     apta_node* current_node = the_apta->get_root();
@@ -157,8 +151,7 @@ void probabilistic_lsharp_algorithm::update_access_path(apta_node* n, apta* the_
     }
 
     // update the nodes behind n
-    const auto& data_to_add =
-        static_cast<string_probability_estimator_data*>(n->get_data())->get_outgoing_distribution();
+    const auto& data_to_add = static_cast<string_probability_estimator_data*>(n->get_data())->get_non_normalized_distribution();
     while (!nodes_to_update.empty()) {
         current_node = nodes_to_update.top();
         if (current_node == n)
@@ -196,7 +189,7 @@ void probabilistic_lsharp_algorithm::update_tree_dfs(apta* the_apta, const vecto
             continue;
 
         node_stack.push(child_node);
-        p_stack.push(static_cast<string_probability_estimator_data*>(n->get_data())->get_normalized_probability(s));
+        p_stack.push(static_cast<string_probability_estimator_data*>(n->get_data())->get_probability(s));
     }
 
     while (!node_stack.empty()) {
@@ -217,14 +210,12 @@ void probabilistic_lsharp_algorithm::update_tree_dfs(apta* the_apta, const vecto
 
             node_stack.push(child_node);
             double new_p =
-                p * static_cast<string_probability_estimator_data*>(n->get_data())->get_normalized_probability(s);
+                p * static_cast<string_probability_estimator_data*>(n->get_data())->get_probability(s);
             p_stack.push(new_p);
         }
 
         node_set.insert(n);
     }
-
-    /* return false; */
 }
 
 /**
@@ -264,7 +255,6 @@ void probabilistic_lsharp_algorithm::proc_counterex(inputdata& id,
 
     // for the last element, too
     if(n==nullptr){
-        //const int queried_type = oracle->ask_sul(substring, id).GET_INT(); // TODO: necessary here?
         trace* new_trace = vector_to_trace(substring, id, 0);
         id.add_trace_to_apta(new_trace, hypothesis.get(), false);
         id.add_trace(new_trace);
@@ -274,19 +264,11 @@ void probabilistic_lsharp_algorithm::proc_counterex(inputdata& id,
     n = hypothesis->get_root();
     trace* parsing_trace = vector_to_trace(counterex, id);
     tail* t = parsing_trace->get_head();
-    // double product = 1;
 
     while (n != nullptr) {
         add_statistics(merger, n, id, alphabet, nullopt);
-        // if(queried_traces) extend_fringe_balanced(merger, n, hypothesis, id, queried_traces.value());
-
-        // auto* data = static_cast<string_probability_estimator_data*>(n->get_data());
-        // product *= data->get_weight(t->get_symbol());
-
         n = active_learning_namespace::get_child_node(n, t);
         t = t->future();
-
-        // if(n != nullptr) static_cast<string_probability_estimator_data*>(n->get_data())->update_final_prob(product);
     }
 }
 
@@ -301,18 +283,12 @@ list<refinement*> probabilistic_lsharp_algorithm::find_complete_base(unique_ptr<
                                                                      unique_ptr<apta>& the_apta, inputdata& id,
                                                                      const vector<int>& alphabet) {
     static int depth = 1;           // because we initialize root node with depth 1
-    static const int MAX_DEPTH = 6; // 6 for most problems
+    static const int MAX_DEPTH = 6; // 6 for most problems from the TAYSIR dataset
 
     list<refinement*> performed_refs;
     unordered_set<apta_node*> fringe_nodes;
 
     int merge_depth = 0;
-
-    // if(MAX_DEPTH_REACHED){
-    //   minimize_apta(performed_refs, merger.get());
-    //   return performed_refs;
-    // }
-
     while (true) { // cancel when either not red node identified or max depth
 
         unordered_set<apta_node*> blue_nodes;
@@ -338,7 +314,7 @@ list<refinement*> probabilistic_lsharp_algorithm::find_complete_base(unique_ptr<
             continue;
         } else if (depth == MAX_DEPTH) {
             cout << "Max-depth reached. Minimize and print the automaton." << endl;
-            find_closed_automaton(performed_refs, the_apta, merger, string_probability_estimator::get_distance);
+            find_closed_automaton(performed_refs, the_apta, merger, probabilistic_heuristic_interface<double>::get_merge_distance_access_trace);
             print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
             exit(0);
         }
@@ -387,7 +363,7 @@ list<refinement*> probabilistic_lsharp_algorithm::find_complete_base(unique_ptr<
 
         if (!identified_red_node) {
             cout << "Complete basis found. Forwarding hypothesis" << endl;
-            find_closed_automaton(performed_refs, the_apta, merger, string_probability_estimator::get_distance);
+            find_closed_automaton(performed_refs, the_apta, merger, probabilistic_heuristic_interface<double>::get_merge_distance_access_trace);
             return performed_refs;
         } else if (!reached_fringe) {
             cout << "Processed layer " << merge_depth << endl;
@@ -410,6 +386,8 @@ void probabilistic_lsharp_algorithm::run(inputdata& id) {
 
     auto eval = unique_ptr<evaluation_function>(get_evaluation());
     eval->initialize_before_adding_traces();
+    if(dynamic_cast<string_probability_estimator*>(eval.get()) == nullptr)
+        throw logic_error("Currently probabilistic lsharp algorithm only supports the string_probability_estimator function");
 
     auto the_apta = unique_ptr<apta>(new apta());
     auto merger = unique_ptr<state_merger>(new state_merger(&id, eval.get(), the_apta.get()));
@@ -441,14 +419,14 @@ void probabilistic_lsharp_algorithm::run(inputdata& id) {
             we ask cannot be parsed in automaton. We ignore those cases, as they lead to extra states in hypothesis.
             This puts a burden on the equivalence oracle to make sure no query is asked twice, else we end
             up in infinite loop.*/
-            optional<pair<vector<int>, int>> query_result = oracle->equivalence_query(merger.get());
+            optional<pair<vector<int>, sul_response>> query_result = oracle->equivalence_query(merger.get());
             if (!query_result) {
                 cout << "Found consistent automaton => Print." << endl;
                 print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
                 return;
             }
 
-            const int type = query_result.value().second;
+            const int type = query_result.value().second.get_int();
             if (type < 0)
                 continue;
 

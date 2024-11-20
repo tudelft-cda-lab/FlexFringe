@@ -47,8 +47,6 @@ add_library(ActiveLearning STATIC
             algorithms/probabilistic_lsharp.cpp
             algorithms/weighted_lsharp.h
             algorithms/weighted_lsharp.cpp
-            algorithms/transformer_weighted_lsharp.h
-            algorithms/transformer_weighted_lsharp.cpp
 
             # databases
             databases/database_base.h
@@ -65,8 +63,8 @@ add_library(ActiveLearning STATIC
             oracle/active_sul_oracle.cpp
             oracle/string_probability_oracle.h
             oracle/string_probability_oracle.cpp
-            oracle/weight_comparing_oracle.h
-            oracle/weight_comparing_oracle.cpp
+            #oracle/weight_comparing_oracle.h
+            #oracle/weight_comparing_oracle.cpp
             #oracle/sqldb_sul_regex_oracle.h
             #oracle/sqldb_sul_regex_oracle.cpp
             #oracle/sqldb_sul_random_oracle.h

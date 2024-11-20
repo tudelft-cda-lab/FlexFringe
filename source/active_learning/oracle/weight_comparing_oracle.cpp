@@ -22,7 +22,7 @@ using namespace active_learning_namespace;
 /**
  * @brief Returns true if the test trace is accepted, else 0.
  */
-bool
+/* bool
 weight_comparing_oracle::test_trace_accepted(apta& hypothesis, trace* const tr, inputdata& id){
     static const auto mu = static_cast<double>(MU);
     static const auto EOS = END_SYMBOL;
@@ -35,7 +35,7 @@ weight_comparing_oracle::test_trace_accepted(apta& hypothesis, trace* const tr, 
     double true_value = 1;
 
     while (t != nullptr) {
-        auto weights = get_weigth_distribution(current_substring, id);
+        auto weights = sul->do_query(current_substring, id).GET_FLOAT_VEC();
         const int symbol = t->get_symbol();
 
         if (use_sinks && n==nullptr) {
@@ -81,7 +81,7 @@ weight_comparing_oracle::test_trace_accepted(apta& hypothesis, trace* const tr, 
     }
 
     return true;
-}
+} */
 
 /**
  * @brief This function does what you think it does. The type does not matter, because we perform this one
@@ -93,7 +93,7 @@ weight_comparing_oracle::test_trace_accepted(apta& hypothesis, trace* const tr, 
  * @return std::optional< pair< vector<int>, int> > nullopt if no counterexample found, else the counterexample. The
  * type (integer) will always be zero.
  */
-std::optional<pair<vector<int>, int>>
+/* std::optional<pair<vector<int>, int>>
 weight_comparing_oracle::equivalence_query(state_merger* merger) {
     inputdata& id = *(merger->get_dat());
     apta& hypothesis = *(merger->get_aut());
@@ -178,3 +178,4 @@ weight_comparing_oracle::equivalence_query(state_merger* merger) {
 
     return nullopt;
 }
+ */

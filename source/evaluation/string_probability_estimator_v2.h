@@ -67,7 +67,7 @@ public:
         this->final_prob = p;
     }
 
-    double get_final_prob() noexcept {
+    double get_final_probability() noexcept {
         return this->final_prob;
     }
     double get_access_p() noexcept {

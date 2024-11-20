@@ -21,22 +21,16 @@
 
 class string_probability_oracle : public oracle_base {
   protected:
-    state_merger* merger;
-
     virtual void reset_sul() override{};
 
   public:
     string_probability_oracle(std::unique_ptr<sul_base>& sul) : oracle_base(sul) {
-        cex_search_strategy = std::unique_ptr<search_base>(new random_string_search(MAX_AL_SEARCH_DEPTH));
-        // cex_search_strategy = std::unique_ptr<search_base>(new bfs_strategy(8)); // number here is maximum length of
-        // sequence. Find a better way to set this
-        assert(dynamic_cast<input_file_sul*>(sul.get()) == nullptr);
-
-        merger = nullptr;
+        conflict_searcher = std::make_unique<type_linear_conflict_searcher>(sul);
+        conflict_detector = std::make_unique<string_probability_conflict_detector>(sul);
     };
 
-    std::optional<std::pair<std::vector<int>, int>>
-    equivalence_query(state_merger* merger);
+    /* std::optional<std::pair<std::vector<int>, int>>
+    equivalence_query(state_merger* merger); */
 };
 
 #endif

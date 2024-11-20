@@ -12,7 +12,7 @@
 #ifndef _WEIGHT_COMPARING_ORACLE_H_
 #define _WEIGHT_COMPARING_ORACLE_H_
 
-#include "oracle_base.h"
+/* #include "oracle_base.h"
 #include "state_merger.h"
 #include "parameters.h"
 
@@ -24,8 +24,6 @@ class weight_comparing_oracle : public oracle_base {
     const bool use_sinks; 
 
   protected:
-    state_merger* merger;
-
     virtual void reset_sul() override{};
 
     bool
@@ -33,18 +31,12 @@ class weight_comparing_oracle : public oracle_base {
 
   public:
     weight_comparing_oracle(std::unique_ptr<sul_base>& sul) : oracle_base(sul), use_sinks(USE_SINKS) {
-        //search_strategy = std::unique_ptr<search_base>(new fringe_walk(MAX_AL_SEARCH_DEPTH));
-        search_strategy = std::unique_ptr<search_base>(new random_w_method(MAX_AL_SEARCH_DEPTH));
-        //search_strategy = std::unique_ptr<search_base>(new targeted_bfs_walk(MAX_AL_SEARCH_DEPTH));
-        // search_strategy = std::unique_ptr<search_base>(new bfs_strategy(8)); // number here is maximum length of
-        // sequence. Find a better way to set this
-        assert(dynamic_cast<input_file_sul*>(sul.get()) == nullptr);
-
-        merger = nullptr;
+        conflict_searcher = std::make_unique<type_linear_conflict_searcher>(sul);
+        conflict_detector = std::make_unique<string_probability_conflict_detector>(sul);
     };
 
-    std::optional<std::pair<std::vector<int>, int>>
-    equivalence_query(state_merger* merger, [[maybe_unused]] const std::unique_ptr<oracle_base>& oracle);
-};
+    std::optional<std::pair<std::vector<int>, sul_response>>
+    equivalence_query(state_merger* merger) override;
+}; */
 
 #endif

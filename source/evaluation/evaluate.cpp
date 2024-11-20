@@ -161,12 +161,6 @@ tail* evaluation_data::sample_tail() {
     return mem_store::create_tail(nullptr);
 }
 
-const float evaluation_data::get_weight(const int symbol) const {
-    std::cerr << "WARNING: get_weight() method not implemented for the heuristic you are using. Perhaps you"
-    "chose the wrong counterexample search strategy?" << std::endl;
-    throw std::exception();
-}
-
 
 /* defa */ 
 evaluation_function::evaluation_function() {

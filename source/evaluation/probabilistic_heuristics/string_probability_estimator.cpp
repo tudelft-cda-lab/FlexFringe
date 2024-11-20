@@ -40,13 +40,13 @@ void string_probability_estimator_data::read_json(json& data){
     evaluation_data::read_json(data);
 
     static int alphabet_size = inputdata_locator::get()->get_alphabet().size();
-    normalized_symbol_probability_map.resize(alphabet_size);
+    symbol_probability_map.resize(alphabet_size);
 
     json& d = data["trans_probs"];
     for (auto& symbol : d.items()){
         std::string sym = symbol.key();
         std::string val = symbol.value();
-        normalized_symbol_probability_map[inputdata_locator::get()->symbol_from_string(sym)] = stod(val);
+        symbol_probability_map[inputdata_locator::get()->symbol_from_string(sym)] = stod(val);
     }
 
     if(FINAL_PROBABILITIES){
@@ -61,9 +61,9 @@ void string_probability_estimator_data::write_json(json& data){
     evaluation_data::write_json(data);
 
 
-    //for(auto & symbol_count : normalized_symbol_probability_map) {
-    for(int symbol=0; symbol<normalized_symbol_probability_map.size(); ++symbol) {
-        double value = normalized_symbol_probability_map[symbol];
+    //for(auto & symbol_count : symbol_probability_map) {
+    for(int symbol=0; symbol<symbol_probability_map.size(); ++symbol) {
+        double value = symbol_probability_map[symbol];
         data["trans_probs"][inputdata_locator::get()->string_from_symbol(symbol)] = std::to_string(value);
     }
     
@@ -71,13 +71,13 @@ void string_probability_estimator_data::write_json(json& data){
 };
 
 void string_probability_estimator_data::print_transition_label(std::iostream& output, int symbol){
-    output << symbol << ": " << symbol_probability_map[symbol];
+    output << symbol << ": " << seen_probability_mass[symbol];
 };
 
 void string_probability_estimator_data::print_state_label(std::iostream& output){
     evaluation_data::print_state_label(output);
-    for(int symbol=0; symbol<normalized_symbol_probability_map.size(); ++symbol){
-        output << symbol << " : " << normalized_symbol_probability_map[symbol] << "\n";
+    for(int symbol=0; symbol<symbol_probability_map.size(); ++symbol){
+        output << symbol << " : " << symbol_probability_map[symbol] << "\n";
     }
     if(FINAL_PROBABILITIES) output << "f: " << final_prob << "\n";
 };
@@ -100,8 +100,8 @@ void string_probability_estimator_data::undo(evaluation_data* right){
 int string_probability_estimator_data::predict_symbol(tail*){
     double max_p = -1;
     int max_symbol = 0;
-    for(int s=0; s<normalized_symbol_probability_map.size(); ++s){
-        auto p = normalized_symbol_probability_map[s];
+    for(int s=0; s<symbol_probability_map.size(); ++s){
+        auto p = symbol_probability_map[s];
         if(max_p < 0 || max_p < p){
             max_p = p;
             max_symbol = s;
@@ -113,15 +113,15 @@ int string_probability_estimator_data::predict_symbol(tail*){
 double string_probability_estimator_data::predict_symbol_score(int t){
     if(t == -1)
         return final_prob;
-    return normalized_symbol_probability_map[t];
+    return symbol_probability_map[t];
 }
 
 void string_probability_estimator_data::add_probability(const int symbol, const double p) {
-    this->symbol_probability_map[symbol] += p;
+    this->seen_probability_mass[symbol] += p;
 }
 
 void string_probability_estimator_data::update_probability(const int symbol, const double p) {
-    this->symbol_probability_map[symbol] = p;
+    this->seen_probability_mass[symbol] = p;
 }
 
 bool string_probability_estimator::consistent(state_merger *merger, apta_node* left_node, apta_node* right_node, int depth){
@@ -143,11 +143,11 @@ bool string_probability_estimator::consistent(state_merger *merger, apta_node* l
 
     double at_prob = 1;
     for(auto symbol: right_sequence){
-        at_prob *= n_data->get_normalized_probability(symbol);
+        at_prob *= n_data->get_probability(symbol);
         n = n->get_child(symbol);
         n_data = static_cast<string_probability_estimator_data*>( n->get_data() );
     }
-    at_prob *= l->get_final_prob();
+    at_prob *= l->get_final_probability();
 
     double diff = abs(at_prob - r->access_trace_prob);
     if(diff > mu){
@@ -166,7 +166,7 @@ bool string_probability_estimator::consistent(state_merger *merger, apta_node* l
  */
 void string_probability_estimator::normalize_probabilities(string_probability_estimator_data* data) {
     double p_sum = 0;
-    for(auto& p: data->symbol_probability_map){
+    for(auto& p: data->seen_probability_mass){
         p_sum += p;
     }
 
@@ -175,9 +175,9 @@ void string_probability_estimator::normalize_probabilities(string_probability_es
     double factor = FINAL_PROBABILITIES ? (1. - data->final_prob) / p_sum : 1 / p_sum;
     assert(factor >= 0);
 
-    for(int i=0; i<data->symbol_probability_map.size(); ++i){
-        auto p = data->symbol_probability_map[i];
-        data->normalized_symbol_probability_map[i] = p * factor;
+    for(int i=0; i<data->seen_probability_mass.size(); ++i){
+        auto p = data->seen_probability_mass[i];
+        data->symbol_probability_map[i] = p * factor;
     }
 }
 
@@ -188,25 +188,4 @@ double string_probability_estimator::compute_score(state_merger *merger, apta_no
 void string_probability_estimator::reset(state_merger *merger){
     inconsistency_found = false;
     score = 0;
-};
-
-double string_probability_estimator::get_distance(apta* aut, apta_node* left_node, apta_node* right_node){
-    auto* l = static_cast<string_probability_estimator_data*>( left_node->get_data() );
-    auto* r = static_cast<string_probability_estimator_data*>( right_node->get_data() );
-
-    auto right_sequence = right_node->get_access_trace()->get_input_sequence(true, false);
-    auto n = aut->get_root();
-    auto n_data = static_cast<string_probability_estimator_data*>( n->get_data() );
-
-    double at_prob = 1;
-    for(auto symbol: right_sequence){
-        at_prob *= n_data->get_normalized_probability(symbol);
-        n = n->get_child(symbol);
-        n_data = static_cast<string_probability_estimator_data*>( n->get_data() );
-    }
-    at_prob *= l->get_final_prob();
-
-    double diff = abs(at_prob - r->access_trace_prob);
-
-    return diff;
 };

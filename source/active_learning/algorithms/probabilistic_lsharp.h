@@ -1,7 +1,8 @@
 /**
  * @file probabilistic_lsharp.h
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
- * @brief
+ * @brief The algorithm as described in "PDFA Distillation via String Probability Queries", 
+ * Baumgartner and Verwer 2024.
  * @version 0.1
  * @date 2023-10-10
  *
@@ -37,11 +38,8 @@
 class probabilistic_lsharp_algorithm : public lsharp_algorithm {
   private:
     bool MAX_DEPTH_REACHED = false;
-    // bool underestimated_dist = false; // helper flag. If we see final prob larger than 1 in one node, we continue
-    // extending the fringe.
 
-    FLEXFRINGE_ALWAYS_INLINE /* bool */ void update_tree_dfs(apta* the_apta,
-                                                                          const std::vector<int>& alphabet) const;
+    FLEXFRINGE_ALWAYS_INLINE void update_tree_dfs(apta* the_apta, const std::vector<int>& alphabet) const;
     FLEXFRINGE_ALWAYS_INLINE void update_access_path(apta_node* n, apta* the_apta,
                                                                   const std::vector<int>& alphabet) const;
 
@@ -62,15 +60,12 @@ class probabilistic_lsharp_algorithm : public lsharp_algorithm {
                                std::unique_ptr<state_merger>& merger, const refinement_list refs, const std::vector<int>& alphabet) const;
 
   public:
-    probabilistic_lsharp_algorithm(std::unique_ptr<oracle_base>&& oracle)
-        : lsharp_algorithm(std::move(oracle)) {
-        std::cout << "Probabilistic L# only works with probabilistic oracle. Automatically switched to that one.\
-If this is undesired behavior check your input and/or source code."
-                  << std::endl;
-        this->oracle.reset(new string_probability_oracle(sul));
+    probabilistic_lsharp_algorithm(std::unique_ptr<oracle_base>&& oracle) : lsharp_algorithm(std::move(oracle)) {
+      if(dynamic_cast<string_probability_oracle*>(oracle.get()) == nullptr)
+          throw std::logic_error("Probabilistic L# only works with probabilistic oracle.");
     };
 
-    virtual void run(inputdata& id) override;
+    void run(inputdata& id) override;
 };
 
 #endif

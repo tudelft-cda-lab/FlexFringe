@@ -147,7 +147,7 @@ bool string_probability_estimator_v2::consistent(state_merger *merger, apta_node
         n = n->get_child(symbol);
         n_data = static_cast<string_probability_estimator_v2_data*>( n->get_data() );
     }
-    at_prob *= l->get_final_prob();
+    at_prob *= l->get_final_probability();
 
     double diff = std::abs(at_prob - r->access_trace_prob);
     if(diff > mu){
@@ -218,7 +218,7 @@ double string_probability_estimator_v2::get_distance(apta* aut, apta_node* left_
         n = n->get_child(symbol);
         n_data = static_cast<string_probability_estimator_v2_data*>( n->get_data() );
     }
-    at_prob *= l->get_final_prob();
+    at_prob *= l->get_final_probability();
 
     double diff = std::abs(at_prob - r->access_trace_prob);
 

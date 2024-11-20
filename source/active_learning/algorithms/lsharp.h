@@ -47,7 +47,7 @@ class lsharp_algorithm : public algorithm_base {
     lsharp_algorithm(std::unique_ptr<oracle_base>&& oracle)
         : algorithm_base(std::move(oracle)){};
 
-    virtual void run(inputdata& id) override;
+    void run(inputdata& id) override;
 };
 
 #endif

@@ -57,7 +57,7 @@ void weighted_lsharp_algorithm::extend_fringe(unique_ptr<state_merger>& merger, 
         query_weights(merger, n->get_child(symbol), id, alphabet, seq);
 
         // we do not create states that have zero incoming probability
-        if(use_sinks && data->get_weight(symbol)==float(0.0)){
+        if(use_sinks && data->get_probability(symbol)== static_cast(0)){
             auto* new_data = static_cast<weight_comparator_data*>(n->get_child(symbol)->get_data());
             new_data->set_sink();
         }
@@ -66,11 +66,8 @@ void weighted_lsharp_algorithm::extend_fringe(unique_ptr<state_merger>& merger, 
 }
 
 /**
- * @brief Adds statistics to a node, returns the traces that were queried along the way.
- *
- * @param n The node to upate.
- * @return optional< vector<trace*> > A vector with all the new traces we added to the apta, or nullopt if we already
- * processed this node. Saves runtime.
+ * @brief Ask the oracle for the next distributoin and update the fields of node n with it.
+ * seq_opt can be provided, minor optimization saving us runtime.
  */
 void weighted_lsharp_algorithm::query_weights(unique_ptr<state_merger>& merger, apta_node* n, inputdata& id,
                                               const vector<int>& alphabet, optional<pref_suf_t> seq_opt) const {
@@ -97,27 +94,27 @@ void weighted_lsharp_algorithm::query_weights(unique_ptr<state_merger>& merger, 
         if (SOS > -1 && i == SOS)
             continue;
         else if (i == EOS) {
-            data->set_final_weight(weights[i]);
+            data->set_final_probability(weights[i]);
             continue;
         }
         int symbol = id.symbol_from_string(to_string(i));
-        data->set_weight(symbol, weights[i]);
+        data->set_probability(symbol, weights[i]);
     }
 
     if (n == merger->get_aut()->get_root()) {
-        data->initialize_access_weight(weights[EOS]);
+        data->initialize_access_probability(weights[EOS]);
     } else {
         auto node_it = merger->get_aut()->get_root();
         double w_product = 1;
         for (auto s : seq) {
             data = static_cast<weight_comparator_data*>(node_it->get_data());
-            w_product *= data->get_weight(s);
+            w_product *= data->get_probability(s);
             node_it = node_it->get_child(s);
         }
         assert(node_it == n);
         data = static_cast<weight_comparator_data*>(n->get_data());
         w_product *= weights[EOS];
-        data->initialize_access_weight(w_product);
+        data->initialize_access_probability(w_product);
     }
 
     completed_nodes.insert(n);
@@ -236,7 +233,7 @@ list<refinement*> weighted_lsharp_algorithm::find_complete_base(unique_ptr<state
 
         if(termination_reached){
             cout << "Max number of states reached and counterexample strategy disabled. Printing the automaton with " << n_red_nodes << " states." << endl;
-            find_closed_automaton(performed_refs, the_apta, merger, weight_comparator::get_distance);
+            find_closed_automaton(performed_refs, the_apta, merger, probabilistic_heuristic_interface<double>::get_merge_distance_access_trace);
             print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
             cout << "Printed. Terminating" << endl;
             exit(0);
@@ -259,7 +256,7 @@ list<refinement*> weighted_lsharp_algorithm::find_complete_base(unique_ptr<state
             //    exit(0);
             //}
             cout << "Complete basis found. Forwarding hypothesis" << endl;
-            find_closed_automaton(performed_refs, the_apta, merger, weight_comparator::get_distance);
+            find_closed_automaton(performed_refs, the_apta, merger, probabilistic_heuristic_interface<double>::get_merge_distance_access_trace);
             return performed_refs;
         }
 
@@ -330,14 +327,14 @@ void weighted_lsharp_algorithm::run(inputdata& id) {
             This puts a burden on the equivalence oracle to make sure no query is asked twice, else we end
             up in infinite loop.*/
 
-            optional<pair<vector<int>, int>> query_result = oracle->equivalence_query(merger.get());
+            optional<pair<vector<int>, sul_response>> query_result = oracle->equivalence_query(merger.get());
             if (!query_result) {
                 cout << "Found consistent automaton => Print." << endl;
                 print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
                 return;
             }
 
-            const int type = query_result.value().second;
+            const int type = query_result.value().second.get_int();
             if (type < 0)
                 continue;
 
