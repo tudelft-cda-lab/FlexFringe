@@ -30,9 +30,9 @@ class weight_comparing_oracle : public oracle_base {
     test_trace_accepted(apta& hypothesis, trace* const tr, [[maybe_unused]] const std::unique_ptr<oracle_base>& oracle, inputdata& id);
 
   public:
-    weight_comparing_oracle(std::unique_ptr<sul_base>& sul) : oracle_base(sul), use_sinks(USE_SINKS) {
-        conflict_searcher = std::make_unique<type_linear_conflict_searcher>(sul);
-        conflict_detector = std::make_unique<string_probability_conflict_detector>(sul);
+    weight_comparing_oracle(const std::unique_ptr<sul_base>& sul) : oracle_base(sul), use_sinks(USE_SINKS) {
+        conflict_detector = std::make_unique<type_conflict_detector>(sul);
+        conflict_searcher = std::make_unique<linear_conflict_search>(conflict_detector);
     };
 
     std::optional<std::pair<std::vector<int>, sul_response>>

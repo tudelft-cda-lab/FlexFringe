@@ -16,6 +16,9 @@
 #include "state_merger.h"
 #include "parameters.h"
 
+#include "string_probability_conflict_detector.h"
+#include "linear_conflict_search.h"
+
 #include <optional>
 #include <utility>
 
@@ -24,9 +27,9 @@ class string_probability_oracle : public oracle_base {
     virtual void reset_sul() override{};
 
   public:
-    string_probability_oracle(std::unique_ptr<sul_base>& sul) : oracle_base(sul) {
-        conflict_searcher = std::make_unique<type_linear_conflict_searcher>(sul);
-        conflict_detector = std::make_unique<string_probability_conflict_detector>(sul);
+    string_probability_oracle(const std::shared_ptr<sul_base>& sul) : oracle_base(sul) {
+        conflict_detector = std::make_shared<string_probability_conflict_detector>(sul);
+        conflict_searcher = std::make_unique<linear_conflict_search>(conflict_detector);
     };
 
     /* std::optional<std::pair<std::vector<int>, int>>

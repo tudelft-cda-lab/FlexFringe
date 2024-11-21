@@ -22,12 +22,13 @@
 
 class distinguishing_sequence_fill : public ii_base {
   private:
+    // technically this function exists in common_functions.h, but we want to inline it here, since this will be called very often
     inline std::vector<int> concat_prefsuf(const std::vector<int>& pref, const std::vector<int>& suff) const;
     inline void add_data_to_tree(std::unique_ptr<apta>& aut, const std::vector<int>& seq, const int reverse_type, const float confidence);
 
   protected:
-    const int MIN_BATCH_SIZE = 256;
-    const int MAX_LEN = 30;
+    const int MIN_BATCH_SIZE = 256; // TODO: set those accordingly
+    const int MAX_LEN = 30; // TODO: set those accordingly
 
     inline static std::vector< std::vector<int> > m_suffixes;
     inline static std::vector<int> memoized_predictions; // static for multithreading

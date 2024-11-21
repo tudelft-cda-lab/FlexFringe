@@ -26,17 +26,17 @@ const sul_response nn_float_output_sul::do_query(const vector<int>& query_trace,
     if (p_result == NULL)
         print_p_error();
 
-    float res;
+    double res;
     if(PyList_Check(p_result) && PyList_Size(p_result) == 1){
       PyObject* p_float = PyList_GET_ITEM(p_result, 0);
       if(!PyFloat_Check(p_float)){
         cerr << "Error in return value of Python script. The list did not contain a proper float value. Terminating." << endl;
         exit(EXIT_FAILURE);
       }
-      res = static_cast<float>(PyFloat_AsDouble(p_float));
+      res = static_cast<double>(PyFloat_AsDouble(p_float));
     }
     else if(PyFloat_Check(p_result)){
-      res = static_cast<float>(PyFloat_AsDouble(p_result));
+      res = static_cast<double>(PyFloat_AsDouble(p_result));
     }
     else{
       throw std::runtime_error("Python script neither returned a list of length 1 nor a float value"); 

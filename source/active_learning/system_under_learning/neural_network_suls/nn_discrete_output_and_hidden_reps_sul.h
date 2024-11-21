@@ -22,6 +22,8 @@
 
 #include "nn_sul_base.h"
 
+#ifdef __FLEXFRINGE_PYTHON
+
 #if defined(_MSC_VER) 
 #  define FLEXFRINGE_ALWAYS_INLINE inline
 #else
@@ -48,11 +50,23 @@ class nn_discrete_output_and_hidden_reps_sul : public nn_sul_base {
 
   protected:
     void reset() override {};
-    const sul_response do_query(const std::vector<int>& query_trace, inputdata& id) const override;
 
   public:
     nn_discrete_output_and_hidden_reps_sul() : nn_sul_base() {};
+    const sul_response do_query(const std::vector<int>& query_trace, inputdata& id) const override;
 };
 
 #undef FLEXFRINGE_ALWAYS_INLINE
-#endif
+
+#else 
+
+class nn_discrete_output_and_hidden_reps_sul : public nn_sul_base {
+  protected:
+    const sul_response do_query(const std::vector<int>& query_trace, inputdata& id) const override;
+
+  public:
+    nn_discrete_output_and_hidden_reps_sul(const std::string& cf) : nn_sul_base(cf){};
+};
+
+#endif // __FLEXFRINGE_PYTHON
+#endif // _NN_DISCRETE_OUTPUT_AND_HIDDEN_REPS_SUL_H_

@@ -391,7 +391,7 @@ void distinguishing_sequence_fill::complement_nodes(unique_ptr<apta>& aut, uniqu
     if(queries.size() >= MIN_BATCH_SIZE){ // MIN_BATCH_SIZE might be violated by plus one, hence min
       const sul_response response = oracle->ask_sul(queries, *(inputdata_locator::get()));
       const vector<int>& answers = response.GET_INT_VEC();
-      const vector<float>& confidences = response.GET_FLOAT_VEC();
+      const vector<double>& confidences = response.GET_DOUBLE_VEC();
       
       for(int i=0; i < queries.size(); ++i){
         add_data_to_tree(aut, queries[i], answers[i], confidences[i]);
@@ -408,7 +408,7 @@ void distinguishing_sequence_fill::complement_nodes(unique_ptr<apta>& aut, uniqu
 
   const sul_response response = oracle->ask_sul(queries, *(inputdata_locator::get()));
   const vector<int>& answers = response.GET_INT_VEC();
-  const vector<float>& confidences = response.GET_FLOAT_VEC();
+  const vector<double>& confidences = response.GET_DOUBLE_VEC();
 
   for(int i=0; i < queries.size(); ++i){
     add_data_to_tree(aut, queries[i], answers[i], confidences[i]);

@@ -14,6 +14,7 @@
 
 #include "source/input/inputdata.h"
 #include "sul_base.h"
+#include "conflict_detector_base.h"
 
 #include <memory>
 #include <vector>

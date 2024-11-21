@@ -65,7 +65,7 @@ void search_instance::operator()(promise<bool>&& out, std::unique_ptr<state_merg
                 m_mutex.unlock();
 
                 const vector<int>& answers = response.GET_INT_VEC();
-                //const vector<float>& confidences = response.GET_FLOAT_VEC();
+                //const vector<double>& confidences = response.GET_DOUBLE_VEC();
 
                 int answers_idx = 0;
                 for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
@@ -182,7 +182,7 @@ void search_instance::operator()(promise<bool>&& out, std::unique_ptr<state_merg
 /**
  * Relevant for parallelization.
  */
-bool paul_algorithm::merge_check(unique_ptr<ii_base>& ii_handler, unique_ptr<state_merger>& merger, unique_ptr<apta>& the_apta, apta_node* red_node, apta_node* blue_node){
+bool paul_algorithm::merge_check(unique_ptr<ii_base>& ii_handler, unique_ptr<state_merger>& merger, unique_ptr<oracle_base>& oracle, unique_ptr<apta>& the_apta, apta_node* red_node, apta_node* blue_node){
     return ii_handler->check_consistency(the_apta, oracle, red_node, blue_node);
 }
 
@@ -266,7 +266,7 @@ refinement* paul_algorithm::get_best_refinement(unique_ptr<state_merger>& merger
                 threads.push_back(thread(std::ref(search_instances[current_refs.size()-1]), move(p), std::ref(merger), std::ref(the_apta), std::ref(oracle), red_node, blue_node));
                     
                 //t_res.push_back(async(launch::async, search_instance(), std::ref(merger), std::ref(the_apta), std::ref(oracle), red_node, blue_node));
-                //t_res.push_back(async(launch::async, paul_algorithm::merge_check, std::ref(ii_handler), std::ref(merger), std::ref(the_apta), std::ref(oracle), red_node, blue_node));
+                //t_res.push_back(async(launch::async, paul_algorithm::merge_check, std::ref(ii_handler), std::ref(merger), std::ref(oracle), std::ref(the_apta), red_node, blue_node));
                 
                 if(t_res.size()==N_THREADS){
                     // sync threads and collect results
@@ -417,7 +417,7 @@ void paul_algorithm::proc_counterex(inputdata& id, unique_ptr<apta>& the_apta, c
             const sul_response res = oracle->ask_sul(query, id);
 
             int reverse_type = res.GET_INT_VEC()[0];
-            float confidence = res.GET_FLOAT_VEC()[0];
+            double confidence = res.GET_DOUBLE_VEC()[0];
             assert(res.GET_INT_VEC().size() == 1);
 
             trace* new_trace = active_learning_namespace::vector_to_trace(seq, id, reverse_type);
@@ -469,7 +469,7 @@ void paul_algorithm::run(inputdata& id) {
             print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_refs");
         }
 
-        optional<pair<vector<int>, int>> query_result = oracle->equivalence_query(merger.get());
+        optional<pair<vector<int>, sul_response>> query_result = oracle->equivalence_query(merger.get());
         if (!query_result) {
             cout << "Found consistent automaton => Print." << endl;
             print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
@@ -480,7 +480,7 @@ void paul_algorithm::run(inputdata& id) {
             return;
         }
 
-        const int type = query_result.value().second;
+        const int type = query_result.value().second.get_int();
         const vector<int>& cex = query_result.value().first;
 
         cout << "Counterexample of length " << cex.size() << " found: ";

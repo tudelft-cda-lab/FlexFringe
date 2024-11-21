@@ -72,10 +72,10 @@ std::optional<pair<vector<int>, int>> paul_oracle::equivalence_query(state_merge
                 cout << id.get_symbol(x) << " ";
             cout << endl;
             
-            pair< vector<int>, optional<response_wrapper> > conflict_rep_pair = conflict_searcher->get_conflict_string(query_string[0], hypothesis, id);
+            pair< vector<int>, optional<sul_response> > conflict_rep_pair = conflict_searcher->get_conflict_string(query_string[0], hypothesis, id);
             if(conflict_rep_pair.second == nullopt)
-                return make_optional<pair< vector<int>, int>>(make_pair(query_string[0], inferred_value));
-            return make_optional<pair< vector<int>, int>>(make_pair( move(conflict_rep_pair.first), conflict_rep_pair.second.value().get_int_response()));
+                return make_optional(make_pair(query_string[0], inferred_value));
+            return make_optional(make_pair( move(conflict_rep_pair.first), conflict_rep_pair.second.value())); // TODO: this line bothers me for sure
         }
 
         query_string_opt = cex_search_strategy->next(id);

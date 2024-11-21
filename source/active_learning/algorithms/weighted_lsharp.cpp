@@ -57,7 +57,7 @@ void weighted_lsharp_algorithm::extend_fringe(unique_ptr<state_merger>& merger, 
         query_weights(merger, n->get_child(symbol), id, alphabet, seq);
 
         // we do not create states that have zero incoming probability
-        if(use_sinks && data->get_probability(symbol)== static_cast(0)){
+        if(use_sinks && data->get_probability(symbol)== static_cast<double>(0)){
             auto* new_data = static_cast<weight_comparator_data*>(n->get_child(symbol)->get_data());
             new_data->set_sink();
         }
@@ -89,7 +89,7 @@ void weighted_lsharp_algorithm::query_weights(unique_ptr<state_merger>& merger, 
         seq = access_trace->get_input_sequence(true, false);
     }
 
-    const vector<float>& weights = oracle->ask_sul(seq, id).GET_FLOAT_VEC();
+    const vector<double>& weights = oracle->ask_sul(seq, id).GET_DOUBLE_VEC();
     for (int i = 0; i < weights.size(); ++i) {
         if (SOS > -1 && i == SOS)
             continue;
@@ -102,7 +102,7 @@ void weighted_lsharp_algorithm::query_weights(unique_ptr<state_merger>& merger, 
     }
 
     if (n == merger->get_aut()->get_root()) {
-        data->initialize_access_probability(weights[EOS]);
+        data->init_access_probability(weights[EOS]);
     } else {
         auto node_it = merger->get_aut()->get_root();
         double w_product = 1;
@@ -114,7 +114,7 @@ void weighted_lsharp_algorithm::query_weights(unique_ptr<state_merger>& merger, 
         assert(node_it == n);
         data = static_cast<weight_comparator_data*>(n->get_data());
         w_product *= weights[EOS];
-        data->initialize_access_probability(w_product);
+        data->init_access_probability(w_product);
     }
 
     completed_nodes.insert(n);
@@ -233,7 +233,7 @@ list<refinement*> weighted_lsharp_algorithm::find_complete_base(unique_ptr<state
 
         if(termination_reached){
             cout << "Max number of states reached and counterexample strategy disabled. Printing the automaton with " << n_red_nodes << " states." << endl;
-            find_closed_automaton(performed_refs, the_apta, merger, probabilistic_heuristic_interface<double>::get_merge_distance_access_trace);
+            find_closed_automaton(performed_refs, the_apta, merger, probabilistic_heuristic_interface::get_merge_distance_access_trace);
             print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
             cout << "Printed. Terminating" << endl;
             exit(0);
@@ -256,7 +256,7 @@ list<refinement*> weighted_lsharp_algorithm::find_complete_base(unique_ptr<state
             //    exit(0);
             //}
             cout << "Complete basis found. Forwarding hypothesis" << endl;
-            find_closed_automaton(performed_refs, the_apta, merger, probabilistic_heuristic_interface<double>::get_merge_distance_access_trace);
+            find_closed_automaton(performed_refs, the_apta, merger, probabilistic_heuristic_interface::get_merge_distance_access_trace);
             return performed_refs;
         }
 

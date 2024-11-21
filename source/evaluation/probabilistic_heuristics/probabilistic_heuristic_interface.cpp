@@ -22,20 +22,20 @@ using namespace std;
  * This function compares those two probabilities and returns the absolute value of the difference.
  */
 double probabilistic_heuristic_interface::get_merge_distance_access_trace(apta* aut, apta_node* left_node, apta_node* right_node){
-    auto* l = static_cast<probabilistic_heuristic_interface_data<double>*>( left_node->get_data() );
-    auto* r = static_cast<probabilistic_heuristic_interface_data<double>*>( right_node->get_data() );
+    auto* l = static_cast<probabilistic_heuristic_interface_data*>( left_node->get_data() );
+    auto* r = static_cast<probabilistic_heuristic_interface_data*>( right_node->get_data() );
 
     auto right_sequence = right_node->get_access_trace()->get_input_sequence(true, false);
     auto n = aut->get_root();
-    auto n_data = static_cast<probabilistic_heuristic_interface_data<double>*>( n->get_data() );
+    auto n_data = static_cast<probabilistic_heuristic_interface_data*>( n->get_data() );
 
     double at_weight = 1;
     for(auto symbol: right_sequence){
-        at_weight *= n_data->get_weight(symbol);
+        at_weight *= n_data->get_probability(symbol);
         n = n->get_child(symbol);
-        n_data = static_cast<weight_comparator_data*>( n->get_data() );
+        n_data = static_cast<probabilistic_heuristic_interface_data*>( n->get_data() );
     }
 
-    double diff = abs(at_weight * l->get_final_weight() - at_weight * r->get_final_weight());
+    double diff = abs(at_weight * l->get_final_probability() - at_weight * r->get_final_probability());
     return diff;
 };

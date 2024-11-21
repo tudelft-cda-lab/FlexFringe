@@ -21,6 +21,7 @@
 #include "refinement.h"
 #include "tail.h"
 #include "trace.h"
+#include "oracle_base.h"
 
 #include <functional>
 #include <list>
@@ -44,7 +45,14 @@ trace* concatenate_traces(trace* tr1, trace* tr2);
                                         std::unique_ptr<state_merger>& merger,
                                         double (*distance_func)(apta*, apta_node*, apta_node*));
 
-std::vector<int> concatenate_strings(const std::vector<int>& pref1, const std::vector<int>& pref2);
+template<typename T>
+std::vector<T> concatenate_vectors(const std::vector<T>& prefix, const std::vector<T>& suffix){
+    std::vector<T> res;
+    res.reserve(prefix.size() + suffix.size());
+    res.insert(res.end(), prefix.begin(), prefix.end());
+    res.insert(res.end(), suffix.begin(), suffix.end());    
+    return res;
+}
 
 /* __attribute__((always_inline)) */
 /* inline */ trace* vector_to_trace(const std::vector<int>& vec, inputdata& id, const int trace_type = 0);

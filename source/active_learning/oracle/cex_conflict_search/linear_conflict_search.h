@@ -9,8 +9,8 @@
  * 
  */
 
-#ifndef _AL_LINEAR_CONFLICT_SEARCH_BASE_H_
-#define _AL_LINEAR_CONFLICT_SEARCH_BASE_H_
+#ifndef _AL_LINEAR_CONFLICT_SEARCH_H_
+#define _AL_LINEAR_CONFLICT_SEARCH_H_
 
 #include "conflict_search_base.h"
 

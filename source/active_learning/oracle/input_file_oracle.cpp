@@ -22,7 +22,7 @@ using namespace active_learning_namespace;
  * @brief Checks if the hypothesis is consistent with the set of input traces that are stores in 
  * input_file_sul.
  */
-optional<pair<vector<int>, int>> input_file_oracle::equivalence_query(state_merger* merger) {
+optional<pair<vector<int>, sul_response>> input_file_oracle::equivalence_query(state_merger* merger) {
     const count_driven* const eval_func = dynamic_cast<count_driven*>(merger->get_eval());
     if (eval_func == nullptr)
         throw logic_error("Must have a heuristic that derives from count_driven at this point.");
@@ -30,7 +30,7 @@ optional<pair<vector<int>, int>> input_file_oracle::equivalence_query(state_merg
     for (const auto& [sequence, type] : dynamic_cast<input_file_sul*>(sul.get())->get_all_traces()) {
         trace* tr = vector_to_trace(sequence, *(merger->get_dat()), type);
         if (!active_learning_namespace::aut_accepts_trace(tr, merger->get_aut(), eval_func)) {
-            return make_optional<pair<vector<int>, int>>(make_pair(sequence, type));
+            return make_optional(make_pair(sequence, sul_response(type)));
         }
     }
     return nullopt;

@@ -10,7 +10,10 @@
  */
 
 #include "active_learning_main.h"
+#include "algorithm_base.h" 
+#include "factories.h"
 
+#include "inputdatalocator.h"
 #include "misc/printutil.h"
 #include "utility/loguru.hpp"
 
@@ -19,12 +22,9 @@
 #include <stdexcept>
 #include <string>
 
-#define assertm(exp, msg) assert(((void)msg, exp))
-
 using namespace std;
-using namespace active_learning_namespace;
 
-ifstream active_learning_main_func::get_inputstream() const {
+/* ifstream active_learning_main_func::get_inputstream() const {
     ifstream input_stream(INPUT_FILE);
     cout << "Input file: " << INPUT_FILE << endl;
     if (!input_stream) {
@@ -53,26 +53,7 @@ inputdata* active_learning_main_func::get_inputdata() const {
     id->read(input_parser.get());
     input_stream.close();
     return id;
-}
-
-/**
- * @brief Selects the SUL to be used.
- *
- * @return shared_ptr<sul_base> The sul.
- */
-unique_ptr<sul_base> active_learning_main_func::select_sul_class(const bool ACTIVE_SUL) const {
-
-}
-
-/**
- * @brief Selects the oracle to be used. In case alternative oracles want to be written.
- *
- * @return unique_ptr<oracle_base> The oracle.
- */
-unique_ptr<oracle_base> active_learning_main_func::select_oracle_class(unique_ptr<sul_base>&& sul,
-                                                                          const bool ACTIVE_SUL) const {
-
-}
+} */
 
 /**
  * @brief Selects the parameters the algorithm runs with and runs the algorithm.
@@ -81,48 +62,16 @@ unique_ptr<oracle_base> active_learning_main_func::select_oracle_class(unique_pt
 void active_learning_main_func::run_active_learning() {
     inputdata id;
     inputdata_locator::provide(&id);
-    assertm(ENSEMBLE_RUNS > 0, "nruns parameter must be larger than 0 for active learning.");
+    if(ENSEMBLE_RUNS <= 0) // TODO: delete this one?
+        throw logic_error("ensemble runs must be larger then 0");
 
-    unique_ptr<sul_base> sul = select_sul_class(ACTIVE_SUL);
-    unique_ptr<oracle_base> oracle = select_oracle_class(move(sul), ACTIVE_SUL);
+    unique_ptr<algorithm_base> algorithm = algorithm_factory::create_algorithm_obj();
+    algorithm->run(id);
 
-    unique_ptr<algorithm_base> algorithm;
-    if (ACTIVE_LEARNING_ALGORITHM == "l_star") {
-        algorithm = make_unique<lstar_algorithm>(move(oracle));
-    } else if (ACTIVE_LEARNING_ALGORITHM == "l_star_imat") {
-        STORE_ACCESS_STRINGS = true;
-        algorithm = make_unique<lstar_imat_algorithm>(move(oracle));
-    } else if (ACTIVE_LEARNING_ALGORITHM == "l_sharp") {
-        STORE_ACCESS_STRINGS = true;
-        algorithm = make_unique<lsharp_algorithm>(move(oracle));
-    } else if (ACTIVE_LEARNING_ALGORITHM == "p_l_sharp") {
-        STORE_ACCESS_STRINGS = true;
-        algorithm = make_unique<probabilistic_lsharp_algorithm>(move(oracle));
-    } else if (ACTIVE_LEARNING_ALGORITHM == "weighted_l_sharp") {
-        STORE_ACCESS_STRINGS = true;
-        algorithm = make_unique<weighted_lsharp_algorithm>(move(oracle));
-    } else if (ACTIVE_LEARNING_ALGORITHM == "l_dot") {
-        STORE_ACCESS_STRINGS = true; // refinement uses this to get nodes, but that seems buggy somehow.
-        //algorithm = make_unique<ldot_algorithm>(move(oracle));
-        cerr << "ldot currently commented out. Terminating" << endl;
-        exit(0);
-    } else if (ACTIVE_LEARNING_ALGORITHM == "paul") {
-        STORE_ACCESS_STRINGS = true;
-        algorithm = make_unique<paul_algorithm>(move(oracle));
-    } else {
-        throw logic_error("Fatal error: Unknown active_learning_algorithm flag used: " + ACTIVE_LEARNING_ALGORITHM);
-    }
-
-    if (ACTIVE_SUL && ACTIVE_LEARNING_ALGORITHM != "paul") {
-        LOG_S(INFO) << "We do not want to run the input file, alphabet and input data must be inferred from SUL.";
-
-        sul->pre(id);
-        algorithm->run(id);
-    } else {
-        LOG_S(INFO) << "Learning (partly) passively. Therefore read in input-data.";
+        // Hielke: Can we we this one better? For example, we do it in the constructor of the corresponding algorithms
+/*         LOG_S(INFO) << "Learning (partly) passively. Therefore read in input-data.";
         get_inputdata();
 
         sul->pre(id);
-        algorithm->run(id);
-    }
+        algorithm->run(id); */
 }

@@ -25,7 +25,7 @@ class conflict_detector_base {
 
   public:
     conflict_detector_base(const std::shared_ptr<sul_base>& sul) : sul(sul) {}; 
-    virtual std::pair<bool, std::optional<sul_reponse> > creates_conflict(const std::vector<int>& substr, apta& hypothesis, inputdata& id) = 0;
+    virtual std::pair<bool, std::optional<sul_response> > creates_conflict(const std::vector<int>& substr, apta& hypothesis, inputdata& id) = 0;
 };
 
 #endif // _AL_CONFLICT_DETECTOR_BASE_H_

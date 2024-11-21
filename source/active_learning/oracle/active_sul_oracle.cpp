@@ -21,7 +21,7 @@ using namespace active_learning_namespace;
  * @param merger The merger.
  * @return std::optional< pair< vector<int>, int> > nullopt if no counterexample found, else the counterexample.
  */
-std::optional<pair<vector<int>, int>> active_sul_oracle::equivalence_query(state_merger* merger) {
+std::optional<pair<vector<int>, sul_response>> active_sul_oracle::equivalence_query(state_merger* merger) {
     inputdata& id = *(merger->get_dat());
     apta& hypothesis = *(merger->get_aut());
 
@@ -30,11 +30,11 @@ std::optional<pair<vector<int>, int>> active_sul_oracle::equivalence_query(state
     std::optional<vector<int>> query_string_opt = cex_search_strategy->next(id);
     while (query_string_opt != nullopt) { // nullopt == search exhausted
         auto& query_string = query_string_opt.value();
-        int true_val = get_sul_response(query_string, id);
+        sul_response resp = sul->do_query(query_string, id);
+        int true_val = resp.GET_INT();
 
         if (true_val < 0)
-            return make_optional<pair<vector<int>, int>>(
-                query_string, true_val); // target automaton cannot be parsed with this query string
+            return make_optional(query_string, resp); // target automaton cannot be parsed with this query string
 
         trace* test_tr = vector_to_trace(query_string, id, 0); // type-argument irrelevant here
 

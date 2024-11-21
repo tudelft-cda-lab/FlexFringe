@@ -92,14 +92,10 @@ const sul_response nn_discrete_output_and_hidden_reps_sul::do_query(const vector
     return sul_response(type, move(hidden_rep));
 }
 
-#else
+#else 
 
 const sul_response nn_discrete_output_and_hidden_reps_sul::do_query(const vector<int>& query_trace, inputdata& id) const {
   nn_sul_base::do_query(query_trace, id);
-}
-
-const sul_response nn_discrete_output_and_hidden_reps_sul::do_query(const vector< vector<int> >& query_traces, inputdata& id) const {
-  nn_sul_base::do_query(query_traces, id);
 }
 
 #endif // __FLEXFRINGE_PYTHON

@@ -25,12 +25,14 @@ class dfa_sul : public sul_base {
   private:
     std::unique_ptr<apta> sut; // an apta representing the system under test
 
+  protected: 
+    const sul_response do_query(const std::vector<int>& query_trace, inputdata& id) const override;
+
   public:
     dfa_sul() { sut = std::unique_ptr<apta>(new apta()); }
     void pre(inputdata& id) override;
 
     void reset() override{};
-    const sul_response do_query(const std::vector<int>& query_trace, inputdata& id) const override;
 };
 
 #endif

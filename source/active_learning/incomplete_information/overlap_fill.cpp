@@ -32,7 +32,7 @@ void overlap_fill::add_data_to_tree(std::unique_ptr<apta>& aut, active_learning_
 
   std::pair<int, float> res = oracle->ask_sul(seq, id);
   int reverse_type = res.GET_INT();
-  float confidence = res.GET_FLOAT();
+  double confidence = res.GET_DOUBLE();
   
   if(confidence < 0.9){
     //cout << "Skipping node" << endl;

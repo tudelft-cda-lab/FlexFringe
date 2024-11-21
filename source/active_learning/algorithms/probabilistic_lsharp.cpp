@@ -78,7 +78,7 @@ void probabilistic_lsharp_algorithm::init_final_prob(apta_node* n, apta* the_apt
     }
 
     trace* new_trace = vector_to_trace(seq, id);
-    const double new_prob = oracle->ask_sul(seq, id).GET_FLOAT();
+    const double new_prob = oracle->ask_sul(seq, id).GET_DOUBLE();
     static_cast<string_probability_estimator_data*>(n->get_data())->init_access_probability(new_prob);
 }
 
@@ -112,7 +112,7 @@ void probabilistic_lsharp_algorithm::add_statistics(unique_ptr<state_merger>& me
         trace* new_trace = vector_to_trace(seq, id);
         id.add_trace(new_trace);
 
-        const double new_prob = oracle->ask_sul(seq, id).GET_FLOAT();
+        const double new_prob = oracle->ask_sul(seq, id).GET_DOUBLE();
         if (std::isnan(new_prob))
             throw runtime_error("Error: NaN value has occurred."); // debugging
 
@@ -314,7 +314,7 @@ list<refinement*> probabilistic_lsharp_algorithm::find_complete_base(unique_ptr<
             continue;
         } else if (depth == MAX_DEPTH) {
             cout << "Max-depth reached. Minimize and print the automaton." << endl;
-            find_closed_automaton(performed_refs, the_apta, merger, probabilistic_heuristic_interface<double>::get_merge_distance_access_trace);
+            find_closed_automaton(performed_refs, the_apta, merger, probabilistic_heuristic_interface::get_merge_distance_access_trace);
             print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
             exit(0);
         }
@@ -363,7 +363,7 @@ list<refinement*> probabilistic_lsharp_algorithm::find_complete_base(unique_ptr<
 
         if (!identified_red_node) {
             cout << "Complete basis found. Forwarding hypothesis" << endl;
-            find_closed_automaton(performed_refs, the_apta, merger, probabilistic_heuristic_interface<double>::get_merge_distance_access_trace);
+            find_closed_automaton(performed_refs, the_apta, merger, probabilistic_heuristic_interface::get_merge_distance_access_trace);
             return performed_refs;
         } else if (!reached_fringe) {
             cout << "Processed layer " << merge_depth << endl;

@@ -17,6 +17,8 @@
 
 #include <memory>
 #include <utility>
+#include <initializer_list>
+#include <iostream>
 
 class algorithm_base {
   protected:

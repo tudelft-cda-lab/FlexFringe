@@ -289,12 +289,12 @@ const sul_response nn_sul_base::do_query(const vector<int>& query_trace, inputda
     throw std::logic_error("Enable this feature with -DENABLE_PYTHON=ON on cmake.");
 }
 
-void nn_sul_base::init_types() const {
+/* void nn_sul_base::init_types() const {
     throw std::logic_error("Enable this feature with -DENABLE_PYTHON=ON on cmake.");
 }
 
 void nn_sul_base::print_p_error() const {
     throw std::logic_error("Enable this feature with -DENABLE_PYTHON=ON on cmake.");
-}
+} */
 
 #endif /* __FLEXFRINGE_PYTHON */

@@ -19,7 +19,7 @@
 #include "input/trace.h"
 #include "inputdata.h"
 #include "refinement.h"
-#include "sqldb_sul.h"
+//#include "sqldb_sul.h"
 #include "sqldb_sul_random_oracle.h"
 #include "sqldb_sul_regex_oracle.h"
 #include "state_merger.h"
@@ -134,7 +134,16 @@ class ldot_algorithm : public algorithm_base {
 
   public:
     ldot_algorithm(std::unique_ptr<oracle_base>&& oracle)
-        : algorithm_base(std::move(oracle)){};
+        : algorithm_base(std::move(oracle)){
+          STORE_ACCESS_STRINGS = true;
+        };
+
+    ldot_algorithm(std::initializer_list< std::unique_ptr<oracle_base> >&& i_list){
+      // TODO: update this constructor 
+      //std::cerr << "This algorithm does not support multiple oracles. Oracle 2 is ignored." << std::endl;
+      //std::unique_ptr<oracle_base>& ptr = *(i_list.begin());
+      //ldot_algorithm(std::move(ptr));
+    }
 
     /**
      * @brief Call to run algorithm.

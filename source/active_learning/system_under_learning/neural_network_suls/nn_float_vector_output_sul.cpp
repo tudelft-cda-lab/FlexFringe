@@ -30,7 +30,7 @@ const sul_response nn_float_vector_output_sul::do_query(const vector<int>& query
       throw std::runtime_error("Python script did not return a list to SUL that expected a list.");
 
     const static int res_size = PyList_Size(p_result);
-    vector<float> res(res_size);
+    vector<double> res(res_size);
     for(int i=0; i<res_size; ++i){
       PyObject* p_float = PyList_GET_ITEM(p_result, i);
       if(!PyFloat_Check(p_float)){
@@ -38,7 +38,7 @@ const sul_response nn_float_vector_output_sul::do_query(const vector<int>& query
         exit(EXIT_FAILURE);
       }
 
-      res[i] = static_cast<float>(PyFloat_AsDouble(p_float));
+      res[i] = static_cast<double>(PyFloat_AsDouble(p_float));
     }
     
     Py_DECREF(p_list);

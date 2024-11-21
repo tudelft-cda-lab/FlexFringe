@@ -63,7 +63,14 @@ class probabilistic_lsharp_algorithm : public lsharp_algorithm {
     probabilistic_lsharp_algorithm(std::unique_ptr<oracle_base>&& oracle) : lsharp_algorithm(std::move(oracle)) {
       if(dynamic_cast<string_probability_oracle*>(oracle.get()) == nullptr)
           throw std::logic_error("Probabilistic L# only works with probabilistic oracle.");
+      
+      STORE_ACCESS_STRINGS = true;
     };
+    probabilistic_lsharp_algorithm(std::initializer_list< std::unique_ptr<oracle_base> >&& i_list)/*  : probabilistic_lsharp_algorithm(std::move(*(i_list.begin()))) */{
+      std::cerr << "This algorithm does not support multiple oracles. Oracle 2 is ignored." << std::endl;
+      std::unique_ptr<oracle_base>& ptr = i_list.data()[0];
+      probabilistic_lsharp_algorithm(std::move(ptr));
+    }
 
     void run(inputdata& id) override;
 };

@@ -28,9 +28,9 @@ class paul_oracle : public active_sul_oracle {
     void reset_sul() override {};
 
   public:
-    paul_oracle(std::shared_ptr<sul_base>& sul) : active_sul_oracle(sul) {
-        conflict_searcher = std::make_unique<type_linear_conflict_searcher>(sul);
-        conflict_detector = std::make_unique<type_conflict_detector>(sul);
+    paul_oracle(const std::shared_ptr<sul_base>& sul) : active_sul_oracle(sul) {
+        conflict_detector = std::make_shared<type_conflict_detector>(sul);
+        conflict_searcher = std::make_unique<linear_conflict_search>(conflict_detector);
     };
 
     std::optional<std::pair<std::vector<int>, sul_response>>

@@ -54,18 +54,18 @@ int sul_response::GET_INT() const noexcept {
 /**
  * @brief Get the int response. Safety check included.
  */
-float sul_response::get_float() const {
-    if(!float_opt){
-      throw runtime_error("Tried to retrieve float response, but it does not exist in response type.");
+double sul_response::get_double() const {
+    if(!double_opt){
+      throw runtime_error("Tried to retrieve double response, but it does not exist in response type.");
     }
-    return float_opt.value();
+    return double_opt.value();
 }
 
 /**
- * @brief Same as get_float, but no check on whether optional has been set. Will terminate program if called unsuccessfully.
+ * @brief Same as get_double, but no check on whether optional has been set. Will terminate program if called unsuccessfully.
  */
-float sul_response::GET_FLOAT() const noexcept {
-  return float_opt.value();
+double sul_response::GET_DOUBLE() const noexcept {
+  return double_opt.value();
 }
 
 /**
@@ -88,18 +88,18 @@ const vector<int>& sul_response::GET_INT_VEC() const noexcept {
 /**
  * @brief Get the vector with floats. Safety check included.
  */
-const vector<float>& sul_response::get_float_vec() const {
-  if(!float_vec_opt){
-    throw runtime_error("Tried to retrieve float-vec field, but it does not exist in response type.");
+const vector<double>& sul_response::get_double_vec() const {
+  if(!double_vec_opt){
+    throw runtime_error("Tried to retrieve double-vec field, but it does not exist in response type.");
   }
-  return float_vec_opt.value();
+  return double_vec_opt.value();
 }
 
 /**
- * @brief Same as get_float_vec, but no check on whether optional has been set. Will terminate program if called unsuccessfully.
+ * @brief Same as get_double_vec, but no check on whether optional has been set. Will terminate program if called unsuccessfully.
  */
-const vector<float>& sul_response::GET_FLOAT_VEC() const noexcept {
-  return float_vec_opt.value();
+const vector<double>& sul_response::GET_DOUBLE_VEC() const noexcept {
+  return double_vec_opt.value();
 }
 
 /**
@@ -117,40 +117,3 @@ ifstream sul_base::get_input_stream() const {
     }
     return input_stream;
 }
-
-const int sul_base::query_trace(const vector<int>& query_trace, inputdata& id) const {
-    throw logic_error("query_trace not implemented. That is a programming error. Aborting program.");
-}
-
-const pair<int, vector< vector<float> > > sul_base::get_type_and_states(const vector<int>& query_trace, inputdata& id) const {
-    throw logic_error("This SUL does not support type queries along with a hidden state representation. \
-    Please change the program settings. Aborting program.");
-}
-
-const tuple<int, float, vector< vector<float> > > sul_base::get_type_confidence_and_states(const vector<int>& query_trace, inputdata& id) const {
-    throw logic_error("This SUL does not support type queries along with confidence and hidden state representation. \
-    Please change the program settings. Aborting program.");
-}
-
-const vector< pair<int, float> > sul_base::get_type_confidence_batch(const vector< vector<int> >& query_traces, inputdata& id) const {
-    throw logic_error("This SUL does not support type queries along with confidence and hidden state representation. \
-    Please change the program settings. Aborting program.");
-}
-
-const double sul_base::get_string_probability(const vector<int>& query_trace, inputdata& id) const {
-    throw logic_error("The SUL tries to infer string probability, but this SUL does not support this. \
-  Please change the program settings. Aborting program.");
-}
-
-const vector<float> sul_base::get_weight_distribution(const vector<int>& query_trace, inputdata& id) const {
-    throw logic_error(
-        "This SUL does not support inference of the weight distribution. Please change the program settings. \
-  Aborting program.");
-};
-
-const pair< vector<float>, vector<float> > sul_base::get_weights_and_state(const vector<int>& query_trace, inputdata& id) const{
-    throw logic_error(
-        "This SUL does not support inference of the weight distribution. Please change the program settings. \
-  Aborting program.");  
-}
-

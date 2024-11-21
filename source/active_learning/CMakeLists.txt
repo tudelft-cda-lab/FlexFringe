@@ -1,19 +1,18 @@
 include_directories(
         "${CMAKE_CURRENT_SOURCE_DIR}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/algorithms"
         "${CMAKE_CURRENT_SOURCE_DIR}/databases"
         "${CMAKE_CURRENT_SOURCE_DIR}/active_learning_util"
         "${CMAKE_CURRENT_SOURCE_DIR}/memory"
         "${CMAKE_CURRENT_SOURCE_DIR}/system_under_learning"
         "${CMAKE_CURRENT_SOURCE_DIR}/system_under_learning/neural_network_suls"
         "${CMAKE_CURRENT_SOURCE_DIR}/system_under_learning/benchmark_parsers"
-        "${CMAKE_CURRENT_SOURCE_DIR}/counterexample_strategies"
-        "${CMAKE_CURRENT_SOURCE_DIR}/oracle"
         "${CMAKE_CURRENT_SOURCE_DIR}/incomplete_information"
+        "${CMAKE_CURRENT_SOURCE_DIR}/oracle"
         "${CMAKE_CURRENT_SOURCE_DIR}/oracle/cex_search_strategies"
         "${CMAKE_CURRENT_SOURCE_DIR}/oracle/cex_conflict_search"
         "${CMAKE_CURRENT_SOURCE_DIR}/oracle/cex_conflict_search/linear_searchers"
         "${CMAKE_CURRENT_SOURCE_DIR}/oracle/conflict_detectors"
-        "${CMAKE_CURRENT_SOURCE_DIR}/algorithms"
         )
 
 
@@ -91,10 +90,10 @@ add_library(ActiveLearning STATIC
             # conflict search strategies
             oracle/cex_conflict_search/conflict_search_base.h
             oracle/cex_conflict_search/conflict_search_base.cpp
-            oracle/cex_conflict_search/linear_conflict_search_base.h
-            oracle/cex_conflict_search/linear_conflict_search_base.cpp
-            oracle/cex_conflict_search/binary_conflict_search_base.h
-            oracle/cex_conflict_search/binary_conflict_search_base.cpp
+            oracle/cex_conflict_search/linear_conflict_search.h
+            oracle/cex_conflict_search/linear_conflict_search.cpp
+            oracle/cex_conflict_search/binary_conflict_search.h
+            oracle/cex_conflict_search/binary_conflict_search.cpp
 
             # conflict detectors
             oracle/conflict_detectors/conflict_detector_base.h

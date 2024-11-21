@@ -36,7 +36,7 @@ void ii_base::complete_node(apta_node* node, std::unique_ptr<apta>& aut, std::un
 
   const sul_response response = oracle->ask_sul(queries, *(inputdata_locator::get()));
   const vector<int>& answers = response.GET_INT_VEC();
-  const vector<float>& confidences = response.GET_FLOAT_VEC();
+  const vector<double>& confidences = response.GET_DOUBLE_VEC();
   if(answers.size() > 1)
     cerr << "Something weird happened in complete_node method of overlap_fill_batch_wise-class" << endl;
   

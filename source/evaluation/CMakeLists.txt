@@ -39,12 +39,6 @@ add_library(Evaluation STATIC
             rti+.cpp
             space-saving.h
             space-saving.cpp
-            string_probability_estimator_v2.h
-            string_probability_estimator_v2.cpp
-            types_state_comparator.h
-            types_state_comparator.cpp
-            weight_state_comparator.h
-            weight_state_comparator.cpp
             probabilistic_heuristics/probabilistic_heuristic_interface.h
             probabilistic_heuristics/probabilistic_heuristic_interface.cpp
             probabilistic_heuristics/string_probability_estimator.h

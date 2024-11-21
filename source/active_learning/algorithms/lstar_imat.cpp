@@ -66,7 +66,7 @@ const list<refinement*> lstar_imat_algorithm::construct_automaton_from_table(con
             dest.insert(dest.end(), suffix.begin(), suffix.end());
             DLOG_S(INFO) << prefix << suffix << endl;
             DLOG_S(INFO) << "build:" << dest << ":" << answer << endl;
-            auto whole_prefix = concatenate_strings(prefix, suffix);
+            auto whole_prefix = concatenate_vectors(prefix, suffix);
 
             if (added_traces.contains(whole_prefix))
                 continue;
@@ -141,14 +141,14 @@ void lstar_imat_algorithm::run(inputdata& id) {
                 string we ask cannot be parsed in automaton. We ignore those cases, as they lead to extra states in
                 hypothesis. This puts a burden on the equivalence oracle to make sure no query is asked twice, else we
                 end up in infinite loop.*/
-                optional<pair<vector<int>, int>> query_result = oracle->equivalence_query(merger.get());
+                optional<pair<vector<int>, sul_response>> query_result = oracle->equivalence_query(merger.get());
                 if (!query_result) {
                     cout << "Found consistent automaton => Print." << endl;
                     print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
                     return;
                 }
 
-                const int type = query_result.value().second;
+                const int type = query_result.value().second.get_int();
                 if (type < 0)
                     continue;
 

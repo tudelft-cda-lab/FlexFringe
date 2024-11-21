@@ -120,7 +120,7 @@ void overlap_fill_batch_wise::complement_nodes(std::vector< std::vector<int> >& 
       if(query_traces.size() == BATCH_SIZE){
         const sul_response response = oracle->ask_sul(queries, *(inputdata_locator::get()));
         const vector<int>& answers = response.GET_INT_VEC();
-        const vector<float>& confidences = response.GET_FLOAT_VEC();
+        const vector<double>& confidences = response.GET_DOUBLE_VEC();
 
         for(int i=0; i < query_traces.size(); ++i){
           add_data_to_tree(aut, query_traces[i], answers[i], confidences[i], query_node_symbol_pairs[i].first, query_node_symbol_pairs[i].second);
@@ -164,7 +164,7 @@ void overlap_fill_batch_wise::complement_nodes(std::vector< std::vector<int> >& 
       if(query_traces.size() == BATCH_SIZE){
         const sul_response response = oracle->ask_sul(queries, *(inputdata_locator::get()));
         const vector<int>& answers = response.GET_INT_VEC();
-        const vector<float>& confidences = response.GET_FLOAT_VEC();
+        const vector<double>& confidences = response.GET_DOUBLE_VEC();
 
         for(int i=0; i < query_traces.size(); ++i){
           add_data_to_tree(aut, query_traces[i], answers[i], confidences[i], query_node_symbol_pairs[i].first, query_node_symbol_pairs[i].second);
@@ -212,7 +212,7 @@ void overlap_fill_batch_wise::complement_nodes(std::unique_ptr<apta>& aut, std::
   // doing the remaining queries
   const sul_response response = oracle->ask_sul(queries, *(inputdata_locator::get()));
   const vector<int>& answers = response.GET_INT_VEC();
-  const vector<float>& confidences = response.GET_FLOAT_VEC();  
+  const vector<double>& confidences = response.GET_DOUBLE_VEC();  
   
   for(int i=0; i < query_traces.size(); ++i){
     add_data_to_tree(aut, query_traces[i], answers[i], confidences[i], query_node_symbol_pairs[i].first, query_node_symbol_pairs[i].second);

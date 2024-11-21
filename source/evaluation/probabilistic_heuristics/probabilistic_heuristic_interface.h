@@ -12,19 +12,19 @@
 #ifndef __PROBABILISTIC_HEURISTIC_INTERFACE__
 #define __PROBABILISTIC_HEURISTIC_INTERFACE__
 
-#include "evaluation.h"
+#include "evaluate.h"
 
-#include <type_traits>
+#include <vector>
 
 class probabilistic_heuristic_interface_data : public evaluation_data {
 protected:
-    double final_prob;
-    double access_trace_prob; // this is the total string probability to end in this state. We need it so that we can compute the final prob
+    double final_prob = 0;
+    double access_trace_prob = 0; // this is the total string probability to end in this state. We need it so that we can compute the final prob
     
     typename std::vector<double> symbol_probability_map;
 
+    probabilistic_heuristic_interface_data() = default; // we don't want to instantiate this class
 public:
-    probabilistic_heuristic_interface_data() = delete;
 
     double get_final_probability() noexcept {
         return this->final_prob;
@@ -39,7 +39,7 @@ public:
     }
 
     double get_access_probability() const noexcept {
-        return this->access_prob;
+        return this->access_trace_prob;
     }
 
     const std::vector<double>& get_probabilities() noexcept {
@@ -55,9 +55,11 @@ public:
     }
 };
 
-class probabilistic_heuristic_interface : evaluation_function {
+class probabilistic_heuristic_interface : public evaluation_function {
+protected: 
+    probabilistic_heuristic_interface() = default; // no instantiation should be possible of this class
+
 public:
-    probabilistic_heuristic_interface() = delete;
     static double get_merge_distance_access_trace(apta* aut, apta_node* left_node, apta_node* right_node);
 };
 

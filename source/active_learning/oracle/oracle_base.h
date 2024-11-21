@@ -31,26 +31,28 @@ class oracle_base {
     std::shared_ptr<sul_base> sul;
     std::unique_ptr<search_base> cex_search_strategy;
     std::unique_ptr<conflict_search_base> conflict_searcher; // these two are to be determined by derived classes
-    std::unique_ptr<conflict_detector_base> conflict_detector; // these two are to be determined by derived classes
+    std::shared_ptr<conflict_detector_base> conflict_detector; // these two are to be determined by derived classes
 
     virtual void reset_sul() = 0;
 
-    oracle_base(std::shared_ptr<sul_base>& sul) : sul(sul){
+    oracle_base(const std::shared_ptr<sul_base>& sul) : sul(sul) {
       cex_search_strategy = cex_search_strategy_factory::create_search_strategy();
     }
 
-    // https://stackoverflow.com/a/10001573/11956515
+    // For logic behind this see e.g. https://stackoverflow.com/a/10001573/11956515
     oracle_base(){
-      throw logic_error("oracle_base call to overloaded constructor providing the sul has to be called!");
+      throw std::logic_error("oracle_base call to overloaded constructor providing the sul has to be called!");
     }
 
   public:
     virtual void initialize(state_merger* merger);
 
-    const sul_response ask_sul(const std::vector<int>& query_trace, inputdata& id);
-    const sul_response ask_sul(const std::vector<int>&& query_trace, inputdata& id);
-    const sul_response ask_sul(const std::vector< std::vector<int> >& query_traces, inputdata& id);
-    const sul_response ask_sul(const std::vector< std::vector<int> >&& query_traces, inputdata& id);
+    const sul_response ask_sul(const std::vector<int>& query_trace, inputdata& id) const;
+    const sul_response ask_sul(const std::vector<int>& prefix, const std::vector<int>& suffix, inputdata& id) const;
+    const sul_response ask_sul(const std::vector<int>&& query_trace, inputdata& id) const;
+    const sul_response ask_sul(const std::vector<int>&& prefix, const std::vector<int>&& suffix, inputdata& id) const;
+    const sul_response ask_sul(const std::vector< std::vector<int> >& query_traces, inputdata& id) const;
+    const sul_response ask_sul(const std::vector< std::vector<int> >&& query_traces, inputdata& id) const;
 
     virtual std::optional<std::pair<std::vector<int>, sul_response>>
     equivalence_query(state_merger* merger);

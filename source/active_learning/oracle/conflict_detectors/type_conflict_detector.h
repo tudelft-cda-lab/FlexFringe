@@ -17,7 +17,8 @@
 
 class type_conflict_detector: public conflict_detector_base {
   public: 
-    std::pair<bool, std::optional<sul_reponse> > creates_conflict(const std::vector<int>& substr, apta& hypothesis, inputdata& id) override;
+    type_conflict_detector(const std::shared_ptr<sul_base>& sul) : conflict_detector_base(sul) {}; 
+    std::pair<bool, std::optional<sul_response> > creates_conflict(const std::vector<int>& substr, apta& hypothesis, inputdata& id) override;
 };
 
 #endif // _AL_CONFLICT_DETECTOR_BASE_H_

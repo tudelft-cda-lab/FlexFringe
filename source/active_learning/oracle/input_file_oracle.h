@@ -14,6 +14,7 @@
 
 #include "oracle_base.h"
 #include "parameters.h"
+#include "input_file_sul.h"
 
 #include <optional>
 #include <utility>
@@ -31,11 +32,12 @@ class input_file_oracle : public oracle_base {
     };
 
   public:
-    input_file_oracle(std::shared_ptr<sul_base>& sul) : oracle_base(sul) {
-      assert(dynamic_cast<input_file_sul*>(sul.get()) != nullptr, "input_file_oracle needs an input_file_sul");
+    input_file_oracle(const std::shared_ptr<sul_base>& sul) : oracle_base(sul) {
+      if(dynamic_cast<input_file_sul*>(sul.get()) != nullptr)
+        throw std::logic_error("input_file_oracle needs an input_file_sul");
     };
 
-    std::optional<std::pair<std::vector<int>, int>>
+    std::optional<std::pair<std::vector<int>, sul_response>>
     equivalence_query(state_merger* merger) override;
 };
 

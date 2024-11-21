@@ -266,14 +266,14 @@ void lsharp_algorithm::run(inputdata& id) {
             This puts a burden on the equivalence oracle to make sure no query is asked twice, else we end
             up in infinite loop.*/
 
-            optional<pair<vector<int>, int>> query_result = oracle->equivalence_query(merger.get());
+            optional<pair<vector<int>, sul_response>> query_result = oracle->equivalence_query(merger.get());
             if (!query_result) {
                 cout << "Found consistent automaton => Print." << endl;
                 print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
                 return;
             }
 
-            const int type = query_result.value().second;
+            const int type = query_result.value().second.get_int();
             if (type < 0)
                 continue;
 

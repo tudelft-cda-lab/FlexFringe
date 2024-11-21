@@ -61,7 +61,7 @@ class paul_algorithm : public algorithm_base {
     /**
      * Relevant for parallelization.
      */
-    static bool merge_check(std::unique_ptr<ii_base>& ii_handler, std::unique_ptr<state_merger>& merger, std::unique_ptr<apta>& the_apta, apta_node* red_node, apta_node* blue_node);
+    static bool merge_check(std::unique_ptr<ii_base>& ii_handler, std::unique_ptr<state_merger>& merger, std::unique_ptr<oracle_base>& oracle, std::unique_ptr<apta>& the_apta, apta_node* red_node, apta_node* blue_node);
 
     std::list<refinement*> retry_merges(std::list<refinement*>& previous_refs, std::unique_ptr<state_merger>& merger, std::unique_ptr<apta>& the_apta);
     std::list<refinement*> find_hypothesis(std::list<refinement*>& previous_refs, std::unique_ptr<state_merger>& merger, std::unique_ptr<apta>& the_apta);
@@ -70,9 +70,14 @@ class paul_algorithm : public algorithm_base {
   public:
     paul_algorithm(std::unique_ptr<oracle_base>&& oracle)
         : algorithm_base(std::move(oracle)){
-          
           ii_handler = std::make_unique<distinguishing_sequence_fill>();
+          STORE_ACCESS_STRINGS = true;
         };
+    paul_algorithm(std::initializer_list< std::unique_ptr<oracle_base> >&& i_list) : paul_algorithm(std::move(*(i_list.begin()))){
+      std::cerr << "This algorithm does not support multiple oracles. Oracle 2 is ignored." << std::endl;
+      std::unique_ptr<oracle_base>& ptr = i_list.data()[0];
+      paul_algorithm(std::move(ptr));
+    }
 
     void run(inputdata& id) override;
 };

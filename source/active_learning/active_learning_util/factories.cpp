@@ -28,7 +28,7 @@
 #include "database_sul.h"
 #include "dfa_sul.h"
 #include "input_file_sul.h"
-#include "sqldb_sul.h"
+//#include "sqldb_sul.h"
 
 // the neural network SULs
 #include "nn_binary_output_sul.h"
@@ -40,10 +40,9 @@
 
 // the oracles
 #include "input_file_oracle.h"
-#include "sqldb_sul_regex_oracle.h"
 #include "active_sul_oracle.h"
-#include "sqldb_sul_random_oracle.h"
-#include "sqldb_sul_regex_oracle.h"
+//#include "sqldb_sul_random_oracle.h"
+//#include "sqldb_sul_regex_oracle.h"
 #include "paul_oracle.h"
 
 // parsers and input-data representations
@@ -72,6 +71,8 @@ shared_ptr<sul_base> sul_factory::select_sul(string_view sul_name){
     return make_shared<database_sul>();
   else if(sul_name=="sqldb_sul"){
     throw invalid_argument("sqldb_sul currently commented out in sul_factory");//return make_shared<sqldb_sul>();
+    // HIELKE: The code for these functions was in main.cpp, currently commented out
+/*     bool LOADSQLDB = false;
     if (!LOADSQLDB) {
         // If reading, not loading, from db, do not drop on initialization.
         POSTGRESQL_DROPTBLS = false;
@@ -86,7 +87,7 @@ shared_ptr<sul_base> sul_factory::select_sul(string_view sul_name){
         my_sqldb->load_traces(id, input_stream);
         
         return my_sqldb;
-    }
+    } */
   }
 
   // the neural network suls
@@ -121,23 +122,32 @@ vector< shared_ptr<sul_base> > sul_factory::create_suls(){
   else if (SYSTEM_UNDER_LEARNING_2.size() > 0)
     res.push_back(res[0]); // we do a copy of the first shared pointer
 
+  inputdata* id = inputdata_locator::get();
+  if(id == nullptr)
+    throw logic_error("Inputdata must exist the moment the SUL is created");
+    
+  for(auto& sul: res)
+    sul->pre(*id);
+
   return res;
 }
 
-
-unique_ptr<oracle_base> oracle_factory::create_oracle(shared_ptr<sul_base>& sul, string_view oracle_name){
-  if (ORACLE == "active_state_sul_oracle") 
-      return make_unique<active_state_sul_oracle>(sul);
-  else if(ORACLE == "active_sul_oracle")
+/**
+ * @brief Does what you think it does.
+ */
+unique_ptr<oracle_base> oracle_factory::create_oracle(const shared_ptr<sul_base>& sul, string_view oracle_name){
+  if(ORACLE == "active_sul_oracle")
       return make_unique<active_sul_oracle>(sul);
   else if(ORACLE == "input_file_oracle")
       return make_unique<input_file_oracle>(sul);
   else if(ORACLE == "paul_oracle")
       return make_unique<paul_oracle>(sul);
   else if(ORACLE == "sqldb_sul_random_oracle")
-      return make_unique<sqldb_sul_random_oracle>(sul);
+      throw std::runtime_error("Invalid oracle: Not included at the moment");
+      //return make_unique<sqldb_sul_random_oracle>(sul);
   else if(ORACLE == "sqldb_sul_regex_oracle")
-      return make_unique<sqldb_sul_regex_oracle>(sul);
+      throw std::logic_error("Not implemented yet");
+      //return make_unique<sqldb_sul_regex_oracle>(sul);
   else if(ORACLE == "string_probability_oracle")
       return make_unique<string_probability_oracle>(sul);
   else
@@ -149,18 +159,18 @@ unique_ptr<oracle_base> oracle_factory::create_oracle(shared_ptr<sul_base>& sul,
  * @brief Does what you think it does.
  */
 unique_ptr<algorithm_base> algorithm_factory::create_algorithm_obj(){
-  vector< shared_ptr<sul_base> > sul_vec = sul_factory::create_suls(sul_key());
+  vector< shared_ptr<sul_base> > sul_vec = sul_factory::create_suls(sul_factory::sul_key());
   assert(sul_vec.size() > 0 && sul_vec.size() <= 2);
 
   std::unique_ptr<algorithm_base> res;
   if(sul_vec.size()==1){
-    unique_ptr<oracle_base> oracle_1 = oracle_factory::create_oracle(sul_vec[0], ORACLE, oracle_key());
+    unique_ptr<oracle_base> oracle_1 = oracle_factory::create_oracle(sul_vec[0], ORACLE, oracle_factory::oracle_key());
     res = create_algorithm_obj(move(oracle_1));
   }
   else if(sul_vec.size()==2){
-    unique_ptr<oracle_base> oracle_1 = oracle_factory::create_oracle(sul_vec[0], ORACLE, oracle_key());
-    unique_ptr<oracle_base> oracle_2 = oracle_factory::create_oracle(sul_vec[1], ORACLE_2, oracle_key());
-    res = create_algorithm_obj(initializer_list< std::unique_ptr<oracle_base>&& >{move(oracle_1), move(oracle_2)});
+    unique_ptr<oracle_base> oracle_1 = oracle_factory::create_oracle(sul_vec[0], ORACLE, oracle_factory::oracle_key());
+    unique_ptr<oracle_base> oracle_2 = oracle_factory::create_oracle(sul_vec[1], ORACLE_2, oracle_factory::oracle_key());
+    res = create_algorithm_obj(initializer_list< std::unique_ptr<oracle_base> >{move(oracle_1), move(oracle_2)});
   }
 
   assert(res); // nullptr check

@@ -31,8 +31,7 @@ protected:
     std::vector<float> state;
 
 public:
-    weight_state_comparator_data() : weight_comparator_data::weight_comparator_data(){        
-    }
+    weight_state_comparator_data() = default;
 
     void initialize_state(const std::vector<float>& state){
         this->state = state;

@@ -35,7 +35,7 @@ weight_comparing_oracle::test_trace_accepted(apta& hypothesis, trace* const tr, 
     double true_value = 1;
 
     while (t != nullptr) {
-        auto weights = sul->do_query(current_substring, id).GET_FLOAT_VEC();
+        auto weights = sul->do_query(current_substring, id).GET_DOUBLE_VEC();
         const int symbol = t->get_symbol();
 
         if (use_sinks && n==nullptr) {

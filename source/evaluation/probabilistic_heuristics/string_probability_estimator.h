@@ -23,7 +23,7 @@
  * "PDFA Distillation via String Probability Queries", Baumgartner and Verwer 2024.
  * 
  */
-class string_probability_estimator_data: public evaluation_data, public probabilistic_heuristic_interface_data<double> {
+class string_probability_estimator_data: public probabilistic_heuristic_interface_data {
     friend class string_probability_estimator;
 protected:
 
@@ -32,8 +32,6 @@ protected:
     std::vector<double> seen_probability_mass; // for merges and actual predictions
 
 public:
-    string_probability_estimator_data() : evaluation_data::evaluation_data() {}
-
     void print_transition_label(std::iostream& output, int symbol) override;
     void print_state_label(std::iostream& output) override;
 
@@ -99,7 +97,7 @@ public:
     }
 };
 
-class string_probability_estimator: public evaluation_function {
+class string_probability_estimator: public probabilistic_heuristic_interface {
 
 protected:
     REGISTER_DEC_TYPE(string_probability_estimator);

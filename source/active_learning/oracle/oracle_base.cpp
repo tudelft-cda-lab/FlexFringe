@@ -11,6 +11,7 @@
 
 #include "oracle_base.h"
 #include "definitions.h"
+#include "common_functions.h"
 
 using namespace std;
 using namespace active_learning_namespace;
@@ -28,9 +29,18 @@ const sul_response oracle_base::ask_sul(const vector<int>& query_trace, inputdat
     return sul->do_query(query_trace, id);
 }
 
+const sul_response oracle_base::ask_sul(const vector<int>& prefix, const vector<int>& suffix, inputdata& id) const {
+    vector<int> query_trace = concatenate_vectors(prefix, suffix);
+    return ask_sul(query_trace, id);
+}
 
 const sul_response oracle_base::ask_sul(const vector<int>&& query_trace, inputdata& id) const {
     return sul->do_query(query_trace, id);
+}
+
+const sul_response oracle_base::ask_sul(const vector<int>&& prefix, const vector<int>&& suffix, inputdata& id) const {
+    vector<int> query_trace = concatenate_vectors(prefix, suffix);
+    return ask_sul(move(query_trace), id);
 }
 
 const sul_response oracle_base::ask_sul(const vector< vector<int> >& query_traces, inputdata& id) const {
@@ -49,7 +59,7 @@ const sul_response oracle_base::ask_sul(const vector< vector<int> >&& query_trac
  * @return std::optional< std::pair< std::vector<int>, int> > Counterexample if not equivalent, else nullopt.
  * Counterexample is pair of trace and the answer to the counterexample as returned by the SUL.
  */
-optional< pair<vector<int>, sul_response> > active_sul_oracle::equivalence_query(state_merger* merger) {
+optional< pair<vector<int>, sul_response> > oracle_base::equivalence_query(state_merger* merger) {
     inputdata& id = *(merger->get_dat());
     apta& hypothesis = *(merger->get_aut());
 
@@ -68,7 +78,7 @@ optional< pair<vector<int>, sul_response> > active_sul_oracle::equivalence_query
                 cout << " " << id.get_symbol(x);
             cout << endl;
 
-            return make_optional<pair< vector<int>, sul_response>>(conflict_resp_pair);
+            return make_optional(conflict_resp_pair);
         }
         
         query_string_opt = cex_search_strategy->next(id);

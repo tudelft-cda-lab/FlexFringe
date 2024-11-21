@@ -22,7 +22,7 @@
 #include "state_merger.h"
 #include "tail.h"
 #include "trace.h"
-#include "weight_comparing_oracle.h"
+#include "string_probability_oracle.h"
 
 #include <list>
 #include <memory>
@@ -47,9 +47,16 @@ class weighted_lsharp_algorithm : public lsharp_algorithm {
 
   public:
     weighted_lsharp_algorithm(std::unique_ptr<oracle_base>&& oracle) : lsharp_algorithm(std::move(oracle)), use_sinks(USE_SINKS) {
-        if(dynamic_cast<weight_comparing_oracle*>(oracle.get()) == nullptr)
+        if(dynamic_cast<string_probability_oracle*>(oracle.get()) == nullptr)
           throw std::logic_error("Weighted L# only works with weight_comparing_oracle");
+
+        STORE_ACCESS_STRINGS = true;
     };
+    weighted_lsharp_algorithm(std::initializer_list< std::unique_ptr<oracle_base> >&& i_list)/*  : weighted_lsharp_algorithm(std::move(i_list.data()[0])) */{
+      std::cerr << "This algorithm does not support multiple oracles. Oracle 2 is ignored." << std::endl;
+      std::unique_ptr<oracle_base>& ptr = i_list.data()[0];
+      weighted_lsharp_algorithm(std::move(ptr));
+    }
 
     void run(inputdata& id) override;
 };

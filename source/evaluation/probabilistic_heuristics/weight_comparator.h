@@ -18,19 +18,15 @@
 #include <unordered_map>
 #include <optional>
 
-class weight_comparator_data: public probabilistic_heuristic_interface {
+class weight_comparator_data: public probabilistic_heuristic_interface_data {
     friend class weight_comparator;
 
 protected:
     REGISTER_DEC_DATATYPE(weight_comparator_data);
-    bool is_sink;
+    bool is_sink = false;
 
 public:
-    weight_comparator_data() : evaluation_data::evaluation_data(), probabilistic_heuristic_interface(){        
-        final_prob = 0;
-        access_trace_prob = 0;
-        is_sink = false;
-    }
+    weight_comparator_data() = default;
 
     void print_transition_label(std::iostream& output, int symbol) override;
     void print_state_label(std::iostream& output) override;
@@ -61,7 +57,7 @@ public:
 
 };
 
-class weight_comparator: public evaluation_function {
+class weight_comparator: public probabilistic_heuristic_interface {
 
 protected:
     REGISTER_DEC_TYPE(weight_comparator);

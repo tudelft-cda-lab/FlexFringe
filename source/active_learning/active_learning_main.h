@@ -21,14 +21,10 @@
 
 class active_learning_main_func {
   private:
-    inputdata* get_inputdata() const;
-    std::ifstream get_inputstream() const;
-    std::unique_ptr<parser> get_parser(std::ifstream& input_stream) const;
-    std::unique_ptr<psql::db> my_sqldb;
-
-
-    std::unique_ptr<sul_base> select_sul_class(const bool ACTIVE_SUL) const;
-    std::unique_ptr<oracle_base> select_oracle_class(std::unique_ptr<sul_base>&& sul, const bool ACTIVE_SUL) const;
+    // TODO: remove all those here if possible
+    //inputdata* get_inputdata() const;
+    //std::ifstream get_inputstream() const;
+    //std::unique_ptr<parser> get_parser(std::ifstream& input_stream) const;
 
   public:
     active_learning_main_func() = default;

@@ -11,7 +11,7 @@
 
 #include "type_conflict_detector.h"
 
-pair<bool, optional<sul_reponse> > type_conflict_detector::creates_conflict(const vector<int>& substr, apta& hypothesis, inputdata& id) {
+pair<bool, optional<sul_response> > type_conflict_detector::creates_conflict(const vector<int>& substr, apta& hypothesis, inputdata& id) {
   int true_val = sul->do_query(substr, id).GET_INT();
   int pred_value = parse_dfa(substr, hypothesis, id); // TODO: we can do this one faster too via memoization
 
