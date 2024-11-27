@@ -23,7 +23,7 @@ using namespace std;
  * @brief Takes the two nodes, walks through their subtrees, and stores all the suffixes for which the two subtree disagree. 
  * If a suffix in not in the set of distinguishing sequences at the moment, then it will be added 
  */
-void distinguishing_sequence_fill::pre_compute(list<int>& suffix, unordered_set<apta_node*>& seen_nodes, unique_ptr<apta>& aut, unique_ptr<oracle_base>& oracle, apta_node* left, apta_node* right, const int depth){
+void distinguishing_sequence_fill::pre_compute(list<int>& suffix, unordered_set<apta_node*>& seen_nodes, unique_ptr<apta>& aut, apta_node* left, apta_node* right, const int depth) {
   const static int max_search_depth = MAX_AL_SEARCH_DEPTH;
   if(max_search_depth > 0 && (left->get_depth() > max_search_depth || right->get_depth() > max_search_depth)) // making sure we don't bust the transformer
     return;
@@ -44,10 +44,10 @@ void distinguishing_sequence_fill::pre_compute(list<int>& suffix, unordered_set<
   
   // in these two following if-clauses the side effect happens (see description)
   if(!r_data->has_type()){
-    complete_node(right, aut, oracle);
+    complete_node(right, aut);
   }
   if(!l_data->has_type()){
-    complete_node(left, aut, oracle);
+    complete_node(left, aut);
   }
 
   if(l_data->predict_type(nullptr) != r_data->predict_type(nullptr)){
@@ -75,7 +75,7 @@ void distinguishing_sequence_fill::pre_compute(list<int>& suffix, unordered_set<
       
       if(left_child != right_child){
         suffix.push_back(symbol);
-        pre_compute(suffix, seen_nodes, aut, oracle, left_child, right_child, depth+1);
+        pre_compute(suffix, seen_nodes, aut, left_child, right_child, depth+1);
         suffix.pop_back();
       }
     }
@@ -103,7 +103,7 @@ void distinguishing_sequence_fill::pre_compute(list<int>& suffix, unordered_set<
       
       if(left_child != right_child){
         suffix.push_back(symbol);
-        pre_compute(suffix, seen_nodes, aut, oracle, left_child, right_child, depth+1);
+        pre_compute(suffix, seen_nodes, aut, left_child, right_child, depth+1);
         suffix.pop_back();
       } 
     }
@@ -113,10 +113,10 @@ void distinguishing_sequence_fill::pre_compute(list<int>& suffix, unordered_set<
 /**
  * @brief Collect all sequences that distinguish the two states.
  */
-void distinguishing_sequence_fill::pre_compute(unique_ptr<apta>& aut, unique_ptr<oracle_base>& oracle, apta_node* left, apta_node* right){
+void distinguishing_sequence_fill::pre_compute(unique_ptr<apta>& aut, apta_node* left, apta_node* right){
   list<int> suffix;
   unordered_set<apta_node*> seen_nodes;
-  pre_compute(suffix, seen_nodes, aut, oracle, left, right, 0);
+  pre_compute(suffix, seen_nodes, aut, left, right, 0);
 }
 
 /**
@@ -166,7 +166,7 @@ void distinguishing_sequence_fill::memoize() noexcept {
 /**
  * @brief Prerequisite to check_consistency. We already compute the distribution for the red node.
  */
-void distinguishing_sequence_fill::pre_compute(unique_ptr<apta>& aut, unique_ptr<oracle_base>& oracle, apta_node* node) {
+void distinguishing_sequence_fill::pre_compute(unique_ptr<apta>& aut, apta_node* node) {
   static inputdata& id = *inputdata_locator::get(); 
 
   auto right_access_trace = node->get_access_trace();
@@ -187,7 +187,7 @@ void distinguishing_sequence_fill::pre_compute(unique_ptr<apta>& aut, unique_ptr
 
       queries.push_back(concat_prefsuf(right_prefix, suffix.value()));
       if(queries.size() >= MIN_BATCH_SIZE){ // if min-batch size % 2 != 0 will be larger
-        const sul_response response = oracle->ask_sul(queries, *(inputdata_locator::get()));
+        const sul_response response = sul->do_query(queries, *(inputdata_locator::get()));
 
         int answers_idx = 0;
         const vector<int>& answers = response.GET_INT_VEC();
@@ -216,10 +216,10 @@ void distinguishing_sequence_fill::pre_compute(unique_ptr<apta>& aut, unique_ptr
 
       queries.push_back(concat_prefsuf(right_prefix, suffix));
       if(queries.size() >= MIN_BATCH_SIZE){ // if min-batch size % 2 != 0 will be larger
-        const sul_response response = oracle->ask_sul(queries, *(inputdata_locator::get()));
+        const sul_response response = sul->do_query(queries, *(inputdata_locator::get()));
         
         int answers_idx = 0;
-        const vector<int>& answers = response.GET_IT_VEC();
+        const vector<int>& answers = response.GET_INT_VEC();
         for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
           if(no_pred_idxs.contains(i)){
             memoized_predictions.push_back(-1);
@@ -236,7 +236,7 @@ void distinguishing_sequence_fill::pre_compute(unique_ptr<apta>& aut, unique_ptr
   }
 
   if(queries.size() > 0){
-    const sul_response response = oracle->ask_sul(queries, *(inputdata_locator::get()));
+    const sul_response response = sul->do_query(queries, *(inputdata_locator::get()));
     
     int answers_idx = 0;
     const vector<int>& answers = response.GET_INT_VEC();
@@ -256,7 +256,7 @@ void distinguishing_sequence_fill::pre_compute(unique_ptr<apta>& aut, unique_ptr
  * @return true If consistent.
  * @return false If not consistent.
  */
-bool distinguishing_sequence_fill::check_consistency(unique_ptr<apta>& aut, unique_ptr<oracle_base>& oracle, apta_node* left, apta_node* right){
+bool distinguishing_sequence_fill::check_consistency(unique_ptr<apta>& aut, apta_node* left, apta_node* right){
   static inputdata& id = *inputdata_locator::get(); 
 
   auto left_access_trace = left->get_access_trace();
@@ -277,7 +277,7 @@ bool distinguishing_sequence_fill::check_consistency(unique_ptr<apta>& aut, uniq
 
       queries.push_back(concat_prefsuf(left_prefix, suffix.value()));
       if(queries.size() >= MIN_BATCH_SIZE){
-        const sul_response response = oracle->ask_sul(queries, *(inputdata_locator::get()));
+        const sul_response response = sul->do_query(queries, *(inputdata_locator::get()));
         
         int answers_idx = 0;
         const vector<int>& answers = response.GET_INT_VEC();
@@ -306,7 +306,7 @@ bool distinguishing_sequence_fill::check_consistency(unique_ptr<apta>& aut, uniq
 
       queries.push_back(concat_prefsuf(left_prefix, suffix));
       if(queries.size() >= MIN_BATCH_SIZE){
-        const sul_response response = oracle->ask_sul(queries, *(inputdata_locator::get()));
+        const sul_response response = sul->do_query(queries, *(inputdata_locator::get()));
 
         int answers_idx = 0;
         const vector<int>& answers = response.GET_INT_VEC();
@@ -327,7 +327,7 @@ bool distinguishing_sequence_fill::check_consistency(unique_ptr<apta>& aut, uniq
 
   if(queries.size() > 0){
     //m_mutex.lock();
-    const sul_response response = oracle->ask_sul(queries, *(inputdata_locator::get()));
+    const sul_response response = sul->do_query(queries, *(inputdata_locator::get()));
     //m_mutex.unlock();
 
     int answers_idx = 0;
@@ -369,7 +369,7 @@ bool distinguishing_sequence_fill::check_consistency(unique_ptr<apta>& aut, uniq
  * @brief Take all the distinguishing sequences you currently have, add them to the two nodes, and ask the transformer to fill those two out.
  * Afterwards, reset the distinguishing sequences back to their original state.
  */
-void distinguishing_sequence_fill::complement_nodes(unique_ptr<apta>& aut, unique_ptr<oracle_base>& oracle, apta_node* left, apta_node* right) {
+void distinguishing_sequence_fill::complement_nodes(unique_ptr<apta>& aut, apta_node* left, apta_node* right) {
   auto left_access_trace = left->get_access_trace();
   auto right_access_trace = right->get_access_trace();
   
@@ -389,7 +389,7 @@ void distinguishing_sequence_fill::complement_nodes(unique_ptr<apta>& aut, uniqu
       queries.push_back(move(full_sequence));
 
     if(queries.size() >= MIN_BATCH_SIZE){ // MIN_BATCH_SIZE might be violated by plus one, hence min
-      const sul_response response = oracle->ask_sul(queries, *(inputdata_locator::get()));
+      const sul_response response = sul->do_query(queries, *(inputdata_locator::get()));
       const vector<int>& answers = response.GET_INT_VEC();
       const vector<double>& confidences = response.GET_DOUBLE_VEC();
       
@@ -406,7 +406,7 @@ void distinguishing_sequence_fill::complement_nodes(unique_ptr<apta>& aut, uniqu
   if(queries.size() == 0)
     return;
 
-  const sul_response response = oracle->ask_sul(queries, *(inputdata_locator::get()));
+  const sul_response response = sul->do_query(queries, *(inputdata_locator::get()));
   const vector<int>& answers = response.GET_INT_VEC();
   const vector<double>& confidences = response.GET_DOUBLE_VEC();
 

@@ -32,7 +32,6 @@ class nn_float_output_sul : public nn_sul_base {
     const sul_response do_query(const std::vector< std::vector<int> >& query_traces, inputdata& id) const override;
 
   public:
-    nn_float_output_sul(const std::string& cf) : nn_sul_base(cf){};
 };
 
 #undef FLEXFRINGE_ALWAYS_INLINE

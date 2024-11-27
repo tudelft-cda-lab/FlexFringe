@@ -26,11 +26,12 @@ using namespace std;
 const float string_probability_conflict_detector::get_string_prob(const std::vector<int>& substr, apta& hypothesis, inputdata& id) const {
   static const bool use_sinks = USE_SINKS; 
   apta_node* n = hypothesis.get_root();
-  tail* t = test_tr->get_head();
+  //tail* t = test_tr->get_head();
 
   vector<int> current_substring;
   double sampled_probability = 1;
-  while (t != nullptr) {
+  //while (t != nullptr) {
+  for (const int symbol : substr) {
     if (use_sinks && n==nullptr) {
       cout << "Sink found in eq" << endl;
       return 0; // TODO: does this make sense?
@@ -40,18 +41,21 @@ const float string_probability_conflict_detector::get_string_prob(const std::vec
       return numeric_limits<float>::min();; // ensures that condition will not be satisfied (uness there's a very extreme case which is unlikely to happen)
     }
 
-    if (t->is_final() && FINAL_PROBABILITIES) {
-      sampled_probability *= static_cast<probabilistic_heuristic_interface_data*>(n->get_data())->get_final_probability(); // TODO: predict probability better here
-      break;
-    } else if (t->is_final())
-        break;
+    //if (FINAL_PROBABILITIES) {
+    //  sampled_probability *= static_cast<probabilistic_heuristic_interface_data*>(n->get_data())->get_final_probability(); // TODO: predict probability better here
+      //break;
+    //} else if (t->is_final())
+    //    break;
 
-    const int symbol = t->get_symbol();
-    sampled_probability *= static_cast<probabilistic_heuristic_interface_data*>(n->get_data())->get_normalized_probability(symbol);
+    //const int symbol = t->get_symbol();
+    sampled_probability *= static_cast<probabilistic_heuristic_interface_data*>(n->get_data())->get_probability(symbol);
 
-    n = active_learning_namespace::get_child_node(n, t);
-    t = t->future();
+    n = n->get_child(symbol);
+    //t = t->future();
   }
+
+  if (FINAL_PROBABILITIES)
+    sampled_probability *= static_cast<probabilistic_heuristic_interface_data*>(n->get_data())->get_final_probability(); // TODO: predict probability better here
 
   return sampled_probability;
 }
@@ -78,3 +82,4 @@ pair<bool, optional<sul_response> > string_probability_conflict_detector::create
 
   return make_pair(false, nullopt);
 }
+

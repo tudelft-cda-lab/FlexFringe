@@ -46,13 +46,10 @@
  */
 class nn_discrete_output_and_hidden_reps_sul : public nn_sul_base {
   private:
-      FLEXFRINGE_ALWAYS_INLINE std::vector<float> compile_hidden_rep(PyObject* p_result, const int offset) const;
-
-  protected:
-    void reset() override {};
+      FLEXFRINGE_ALWAYS_INLINE std::vector<double> compile_hidden_rep(PyObject* p_result) const;
 
   public:
-    nn_discrete_output_and_hidden_reps_sul() : nn_sul_base() {};
+    void reset() override {};
     const sul_response do_query(const std::vector<int>& query_trace, inputdata& id) const override;
 };
 
@@ -61,11 +58,8 @@ class nn_discrete_output_and_hidden_reps_sul : public nn_sul_base {
 #else 
 
 class nn_discrete_output_and_hidden_reps_sul : public nn_sul_base {
-  protected:
-    const sul_response do_query(const std::vector<int>& query_trace, inputdata& id) const override;
-
   public:
-    nn_discrete_output_and_hidden_reps_sul(const std::string& cf) : nn_sul_base(cf){};
+    const sul_response do_query(const std::vector<int>& query_trace, inputdata& id) const override;
 };
 
 #endif // __FLEXFRINGE_PYTHON

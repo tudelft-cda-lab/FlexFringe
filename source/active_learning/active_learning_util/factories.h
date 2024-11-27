@@ -15,6 +15,7 @@
 #include "algorithm_base.h"
 #include "oracle_base.h"
 #include "sul_base.h"
+#include "ii_base.h"
 
 //#include "ldot.h"
 #include "lsharp.h"
@@ -35,7 +36,7 @@
 class algorithm_factory {
   private:
     template<typename T>
-    static std::unique_ptr<algorithm_base> create_algorithm_obj(T&& oracle);
+    static std::unique_ptr<algorithm_base> create_algorithm_obj(T&& oracle, const std::shared_ptr<ii_base>& ii_handler);
 
   public:
     algorithm_factory() = delete;
@@ -73,7 +74,7 @@ class sul_factory {
  */
 class oracle_factory {
   private:
-    static std::unique_ptr<oracle_base> create_oracle(const std::shared_ptr<sul_base>& sul, std::string_view oracle_name);
+    static std::unique_ptr<oracle_base> create_oracle(const std::shared_ptr<sul_base>& sul, std::string_view oracle_name, const std::shared_ptr<ii_base>& ii_handler);
 
   public:
     oracle_factory() = delete;
@@ -84,8 +85,29 @@ class oracle_factory {
       oracle_key() = default;
     };
 
-    static std::unique_ptr<oracle_base> create_oracle(const std::shared_ptr<sul_base>& sul, std::string_view oracle_name, const oracle_key&& key){ 
-      return create_oracle(sul, oracle_name); 
+    static std::unique_ptr<oracle_base> create_oracle(const std::shared_ptr<sul_base>& sul, std::string_view oracle_name, const std::shared_ptr<ii_base>& ii_handler, const oracle_key&& key){ 
+      return create_oracle(sul, oracle_name, ii_handler); 
+    }
+};
+
+/**
+ * @brief 
+ */
+class ii_handler_factory {
+  private:
+    static std::shared_ptr<ii_base> create_ii_handler(const std::shared_ptr<sul_base>& sul, std::string_view ii_name);
+
+  public:
+    ii_handler_factory() = delete;
+
+    // key trick explained in sul factory
+    class ii_handler_key {
+      friend class algorithm_factory;
+      ii_handler_key() = default;
+    };
+
+    static std::shared_ptr<ii_base> create_ii_handler(const std::shared_ptr<sul_base>& sul, std::string_view ii_name, const ii_handler_key&& key){ 
+      return create_ii_handler(sul, ii_name); 
     }
 };
 
@@ -98,7 +120,7 @@ class oracle_factory {
  * in "Effective Modern C++" by Scott Meyers
  */
 template<typename T>
-std::unique_ptr<algorithm_base> algorithm_factory::create_algorithm_obj(T&& oracle){
+std::unique_ptr<algorithm_base> algorithm_factory::create_algorithm_obj(T&& oracle, const std::shared_ptr<ii_base>& ii_handler){
   if(ACTIVE_LEARNING_ALGORITHM=="ldot")
     throw std::invalid_argument("Not implemented yet."); //return make_unique<ldot_algorithm>(std::forward<T>(oracle));
   else if(ACTIVE_LEARNING_ALGORITHM=="lsharp")
@@ -108,7 +130,7 @@ std::unique_ptr<algorithm_base> algorithm_factory::create_algorithm_obj(T&& orac
   else if(ACTIVE_LEARNING_ALGORITHM=="lstar")
     return make_unique<lstar_algorithm>(std::forward<T>(oracle));
   else if(ACTIVE_LEARNING_ALGORITHM=="paul")
-    return make_unique<paul_algorithm>(std::forward<T>(oracle));
+    return make_unique<paul_algorithm>(std::forward<T>(oracle), ii_handler);
   else if(ACTIVE_LEARNING_ALGORITHM=="probabilistic_lsharp")
     return make_unique<probabilistic_lsharp_algorithm>(std::forward<T>(oracle));
   else if(ACTIVE_LEARNING_ALGORITHM=="weighted_lsharp")

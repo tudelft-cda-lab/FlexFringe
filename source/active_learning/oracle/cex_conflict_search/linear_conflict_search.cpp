@@ -23,7 +23,7 @@ using namespace std;
  * @param id The inputdata wrapper.
  * @return std::vector<int>, sul_response A vector leading to the conflict including the corresponding SUL response.
  */
-pair< vector<int>, sul_response> dfa_conflict_search_namespace::linear_conflict_search::get_conflict_string(const vector<int>& cex, apta& hypothesis, inputdata& id) noexcept {
+pair< vector<int>, sul_response> linear_conflict_search::get_conflict_string(const vector<int>& cex, apta& hypothesis, inputdata& id) {
   current_substring.clear();
 
   pair<bool, optional<sul_response>> resp = conflict_detector->creates_conflict(current_substring, hypothesis, id);
@@ -37,7 +37,7 @@ pair< vector<int>, sul_response> dfa_conflict_search_namespace::linear_conflict_
 /**
  * @brief Easy to read.
  */
-vector<int> linear_conflict_search_base::update_current_substring(const vector<int>& cex){
+vector<int> linear_conflict_search::update_current_substring(const vector<int>& cex) noexcept {
   int idx = current_substring.size();
   current_substring.push_back(cex[idx]);
 }

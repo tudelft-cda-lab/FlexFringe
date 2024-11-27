@@ -52,24 +52,21 @@ void nn_sul_base::init_types() const {
  * is done according to the alphabet/r_alphabet twin structure in the inputdata object.
  */
 int nn_sul_base::pyobj_to_int(PyObject* p_obj, inputdata& id) const{
-    int res;
+    int type;
 
     // first check on string: This is the hot path
     if(PyUnicode_CheckExact(p_obj)){
-      int type = id.get_reverse_type(PyUnicode_AsUTF8(p_obj));
+      type = id.get_reverse_type(PyUnicode_AsUTF8(p_obj));
       if(type > id.get_alphabet_size()){
           id.add_type(PyUnicode_AsUTF8(p_obj));
       }
-    }
-    else if(PyLong_Check(p_obj)){
-      type = PyLong_AsLong(p_obj);
     }
     else{
         cerr << "Problem with type as returned by Python script. Type must be string or int value." << endl;
         throw exception();
     }
 
-    return res;
+    return type;
 }
 
 /**
@@ -97,8 +94,8 @@ void nn_sul_base::input_sequence_to_pylist(PyObject* p_list_out, const vector<in
  * @param id Not needed.
  */
 void nn_sul_base::pre(inputdata& id) {
-    string CONNECTOR_SCRIPT = APTA_FILE2.size() == 0 ? INPUT_FILE : APTA_FILE2;
-    if (CONNECTOR_SCRIPT.compare(CONNECTOR_SCRIPT.length() - 3, CONNECTOR_SCRIPT.length(), ".py") != 0)
+    string CONNECTOR_FILE = APTA_FILE2.size() == 0 ? INPUT_FILE : APTA_FILE2;
+    if (CONNECTOR_FILE.compare(CONNECTOR_FILE.length() - 3, CONNECTOR_FILE.length(), ".py") != 0)
         throw invalid_argument("The connector script for the Python module is not ending on .py. Please check your input again.");
 
     Py_Initialize(); // start python interpreter
@@ -122,7 +119,7 @@ void nn_sul_base::pre(inputdata& id) {
     cmd << "sys.path.append( os.path.join(os.getcwd(), \"";
     cmd << PYTHON_SCRIPT_PATH;
     cmd << "\") )\n";
-    cmd << "sys.path.append( os.path.join(os.getcwd(), \"source/active_learning/system_under_learning/python/util\") )";
+    cmd << "sys.path.append( os.path.join(os.getcwd(), \"source/active_learning/system_under_learning/neural_network_suls/python/util\") )";
     PyRun_SimpleString(cmd.str().c_str());
     // for debugging
     // PyRun_SimpleString("print('Script uses the following interpreter: ', sys.executable)\n");
@@ -136,14 +133,13 @@ void nn_sul_base::pre(inputdata& id) {
     }
 
     cout << "Loading module: " << PyUnicode_AsUTF8(PyObject_Str(p_name)) << endl;
-
     p_module = PyImport_Import(p_name);
     if (p_module == NULL) {
         Py_DECREF(p_name);
-        cerr << "Error in loading python module " << INPUT_FILE << ". Terminating program.\n \
-Possible hints for debugging: Does your interpreter have access to the imported libraries? \
-Is your sys.path environment correct? Perhaps try to import the libraries as a standalone and \
-see what happens."
+        PyErr_Print();
+        cerr << "Error in loading python module " << CONNECTOR_FILE << ". Terminating program.\n \
+Possible hints for debugging: 1. Check the error message above. 2. Does your interpreter have access to the imported libraries? \
+3. Is your sys.path environment correct? Perhaps try to import the libraries as a standalone and see what happens."
              << endl;
         exit(1);
     }

@@ -34,10 +34,10 @@ class random_string_search : public search_base {
     std::vector<int> alphabet_vec;
 
   public:
-    random_string_search(const int max_depth) : search_base(max_depth) {
+    random_string_search() {
         samples_drawn = 0;
         last_lower_bound = 5;
-        length_generator.set_limits(1, max_depth);
+        length_generator.set_limits(1, MAX_SEARCH_DEPTH);
 
         max_samples = 500000;
     };

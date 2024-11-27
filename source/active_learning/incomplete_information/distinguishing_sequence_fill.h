@@ -34,14 +34,16 @@ class distinguishing_sequence_fill : public ii_base {
     inline static std::vector<int> memoized_predictions; // static for multithreading
     std::unique_ptr<distinguishing_sequences> ds_ptr = std::make_unique<distinguishing_sequences>();
 
-    void add_dist_sequences_to_apta(std::unique_ptr<apta>& aut, std::unique_ptr<oracle_base>& oracle, apta_node* left, apta_node* right);
-    void pre_compute(std::list<int>& suffix, std::unordered_set<apta_node*>& seen_nodes, std::unique_ptr<apta>& aut, std::unique_ptr<oracle_base>& oracle, apta_node* left, apta_node* right, const int depth);
-    void pre_compute(std::unique_ptr<apta>& aut, std::unique_ptr<oracle_base>& oracle, apta_node* node) override;
+    void add_dist_sequences_to_apta(std::unique_ptr<apta>& aut, apta_node* left, apta_node* right);
+    void pre_compute(std::list<int>& suffix, std::unordered_set<apta_node*>& seen_nodes, std::unique_ptr<apta>& aut, apta_node* left, apta_node* right, const int depth);
+    void pre_compute(std::unique_ptr<apta>& aut, apta_node* node) override;
   
   public:
-    void pre_compute(std::unique_ptr<apta>& aut, std::unique_ptr<oracle_base>& oracle, apta_node* left, apta_node* right) override;
-    void complement_nodes(std::unique_ptr<apta>& aut, std::unique_ptr<oracle_base>& oracle, apta_node* left, apta_node* right) override;
-    bool check_consistency(std::unique_ptr<apta>& aut, std::unique_ptr<oracle_base>& oracle, apta_node* left, apta_node* right) override;
+    distinguishing_sequence_fill(const std::shared_ptr<sul_base>& sul) : ii_base(sul){};
+    
+    void pre_compute(std::unique_ptr<apta>& aut, apta_node* left, apta_node* right) override;
+    void complement_nodes(std::unique_ptr<apta>& aut, apta_node* left, apta_node* right) override;
+    bool check_consistency(std::unique_ptr<apta>& aut, apta_node* left, apta_node* right) override;
 
     void memoize() noexcept override;
     const std::vector< std::vector<int> >& get_m_suffixes() noexcept {return m_suffixes;}

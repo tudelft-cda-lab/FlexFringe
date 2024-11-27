@@ -40,10 +40,15 @@
 
 // the oracles
 #include "input_file_oracle.h"
-#include "active_sul_oracle.h"
+#include "discrete_output_sul_oracle.h"
 //#include "sqldb_sul_random_oracle.h"
 //#include "sqldb_sul_regex_oracle.h"
 #include "paul_oracle.h"
+
+// the ii_handlers
+#include "distinguishing_sequence_fill.h"
+#include "overlap_fill_batch_wise.h"
+#include "overlap_fill.h"
 
 // parsers and input-data representations
 #include "abbadingoparser.h"
@@ -133,15 +138,32 @@ vector< shared_ptr<sul_base> > sul_factory::create_suls(){
 }
 
 /**
+ * @brief Creates the incomplete-information handler.
+ */
+shared_ptr<ii_base> ii_handler_factory::create_ii_handler(const shared_ptr<sul_base>& sul, string_view ii_name){
+  if(ii_name.size() == 0)
+    return shared_ptr<ii_base>(nullptr);
+  else if(ii_name == "distinguishing_sequence_fill")
+    return make_shared<distinguishing_sequence_fill>(sul);
+  else if(ii_name == "overlap_fill_batch_wise")
+    return make_shared<overlap_fill_batch_wise>(sul);
+  else if(ii_name == "overlap_fill")
+    return make_shared<overlap_fill>(sul);
+  else
+    throw logic_error("Invalid ii_handler name");
+}
+
+/**
  * @brief Does what you think it does.
  */
-unique_ptr<oracle_base> oracle_factory::create_oracle(const shared_ptr<sul_base>& sul, string_view oracle_name){
-  if(ORACLE == "active_sul_oracle")
-      return make_unique<active_sul_oracle>(sul);
-  else if(ORACLE == "input_file_oracle")
+unique_ptr<oracle_base> oracle_factory::create_oracle(const shared_ptr<sul_base>& sul, string_view oracle_name, const shared_ptr<ii_base>& ii_handler){
+  if(ORACLE == "discrete_output_sul_oracle")
+      return make_unique<discrete_output_sul_oracle>(sul);
+  
+  if(ORACLE == "input_file_oracle")
       return make_unique<input_file_oracle>(sul);
   else if(ORACLE == "paul_oracle")
-      return make_unique<paul_oracle>(sul);
+      return make_unique<paul_oracle>(sul, ii_handler);
   else if(ORACLE == "sqldb_sul_random_oracle")
       throw std::runtime_error("Invalid oracle: Not included at the moment");
       //return make_unique<sqldb_sul_random_oracle>(sul);
@@ -162,15 +184,22 @@ unique_ptr<algorithm_base> algorithm_factory::create_algorithm_obj(){
   vector< shared_ptr<sul_base> > sul_vec = sul_factory::create_suls(sul_factory::sul_key());
   assert(sul_vec.size() > 0 && sul_vec.size() <= 2);
 
-  std::unique_ptr<algorithm_base> res;
+  shared_ptr<ii_base> ii_handler = ii_handler_factory::create_ii_handler(sul_vec[0], II_NAME, ii_handler_factory::ii_handler_key());
+  if(ii_handler)
+      cout << "ii_handler name has been provided. It is being equipped with the SUL named in the first sul name." << endl;
+  
+  unique_ptr<algorithm_base> res;
   if(sul_vec.size()==1){
-    unique_ptr<oracle_base> oracle_1 = oracle_factory::create_oracle(sul_vec[0], ORACLE, oracle_factory::oracle_key());
-    res = create_algorithm_obj(move(oracle_1));
+    unique_ptr<oracle_base> oracle_1 = oracle_factory::create_oracle(sul_vec[0], ORACLE, ii_handler, oracle_factory::oracle_key());
+    res = create_algorithm_obj(move(oracle_1), ii_handler);
   }
   else if(sul_vec.size()==2){
-    unique_ptr<oracle_base> oracle_1 = oracle_factory::create_oracle(sul_vec[0], ORACLE, oracle_factory::oracle_key());
-    unique_ptr<oracle_base> oracle_2 = oracle_factory::create_oracle(sul_vec[1], ORACLE_2, oracle_factory::oracle_key());
-    res = create_algorithm_obj(initializer_list< std::unique_ptr<oracle_base> >{move(oracle_1), move(oracle_2)});
+    unique_ptr<oracle_base> oracle_1 = oracle_factory::create_oracle(sul_vec[0], ORACLE, ii_handler, oracle_factory::oracle_key());
+    unique_ptr<oracle_base> oracle_2 = oracle_factory::create_oracle(sul_vec[1], ORACLE_2, ii_handler, oracle_factory::oracle_key());
+    vector< unique_ptr<oracle_base> > oracles(2);
+    oracles[0] = move(oracle_1);
+    oracles[1] = move(oracle_2);
+    res = create_algorithm_obj(move(oracles), ii_handler);
   }
 
   assert(res); // nullptr check

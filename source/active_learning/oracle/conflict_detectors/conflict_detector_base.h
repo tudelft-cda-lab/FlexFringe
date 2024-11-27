@@ -13,6 +13,7 @@
 #define _AL_CONFLICT_DETECTOR_BASE_H_
 
 #include "sul_base.h"
+#include "source/active_learning/incomplete_information/ii_base.h" // why does it not find it?
 
 #include <memory>
 #include <vector>
@@ -24,7 +25,11 @@ class conflict_detector_base {
     std::shared_ptr<sul_base> sul;
 
   public:
-    conflict_detector_base(const std::shared_ptr<sul_base>& sul) : sul(sul) {}; 
+    conflict_detector_base(const std::shared_ptr<sul_base>& sul) : sul(sul) {};
+    conflict_detector_base(const std::shared_ptr<sul_base>& sul, const std::shared_ptr<ii_base>& ii_handler) : sul(sul) {
+      std::cerr << "Info: This SUL does not support an incomplete information handler. Are you certain you picked the correct one?" << std::endl;
+    };
+    
     virtual std::pair<bool, std::optional<sul_response> > creates_conflict(const std::vector<int>& substr, apta& hypothesis, inputdata& id) = 0;
 };
 

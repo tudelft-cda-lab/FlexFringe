@@ -16,7 +16,7 @@ using namespace std;
 #ifdef __FLEXFRINGE_PYTHON
 
 /**
- * @brief Getting a single float from the network, or a list of size 1 containing a float.
+ * @brief Getting a single double from the network, or a list of size 1 containing a double.
  */
 const sul_response nn_float_output_sul::do_query(const vector<int>& query_trace, inputdata& id) const {
     PyObject* p_list = PyList_New(query_trace.size());
@@ -30,7 +30,7 @@ const sul_response nn_float_output_sul::do_query(const vector<int>& query_trace,
     if(PyList_Check(p_result) && PyList_Size(p_result) == 1){
       PyObject* p_float = PyList_GET_ITEM(p_result, 0);
       if(!PyFloat_Check(p_float)){
-        cerr << "Error in return value of Python script. The list did not contain a proper float value. Terminating." << endl;
+        cerr << "Error in return value of Python script. The list did not contain a proper double value. Terminating." << endl;
         exit(EXIT_FAILURE);
       }
       res = static_cast<double>(PyFloat_AsDouble(p_float));
@@ -39,7 +39,7 @@ const sul_response nn_float_output_sul::do_query(const vector<int>& query_trace,
       res = static_cast<double>(PyFloat_AsDouble(p_result));
     }
     else{
-      throw std::runtime_error("Python script neither returned a list of length 1 nor a float value"); 
+      throw std::runtime_error("Python script neither returned a list of length 1 nor a double value"); 
     }
     
     Py_DECREF(p_list);
@@ -63,12 +63,12 @@ const sul_response nn_float_output_sul::do_query(const vector< vector<int> >& qu
     if (p_result == NULL || !PyList_Check(p_result))
         print_p_error();
 
-    vector<float> res(query_traces.size());
+    vector<double> res(query_traces.size());
     for(int i=0; i<query_traces.size(); i++){
 
         PyObject* p_float = PyList_GET_ITEM(p_result, static_cast<Py_ssize_t>(i));
-        if(!PyFloat_Check(p_type)){
-            cerr << "Problem with type as returned by Python script. Is it a proper float?" << endl;
+        if(!PyFloat_Check(p_float)){
+            cerr << "Problem with type as returned by Python script. Is it a proper double?" << endl;
             throw exception(); // force the catch block
         }
 

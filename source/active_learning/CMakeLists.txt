@@ -2,17 +2,16 @@ include_directories(
         "${CMAKE_CURRENT_SOURCE_DIR}"
         "${CMAKE_CURRENT_SOURCE_DIR}/algorithms"
         "${CMAKE_CURRENT_SOURCE_DIR}/databases"
+        "${CMAKE_CURRENT_SOURCE_DIR}/oracle"
+        "${CMAKE_CURRENT_SOURCE_DIR}/incomplete_information"
+        "${CMAKE_CURRENT_SOURCE_DIR}/oracle/cex_search_strategies"
+        "${CMAKE_CURRENT_SOURCE_DIR}/oracle/cex_conflict_search"
+        "${CMAKE_CURRENT_SOURCE_DIR}/oracle/conflict_detectors"
         "${CMAKE_CURRENT_SOURCE_DIR}/active_learning_util"
         "${CMAKE_CURRENT_SOURCE_DIR}/memory"
         "${CMAKE_CURRENT_SOURCE_DIR}/system_under_learning"
         "${CMAKE_CURRENT_SOURCE_DIR}/system_under_learning/neural_network_suls"
         "${CMAKE_CURRENT_SOURCE_DIR}/system_under_learning/benchmark_parsers"
-        "${CMAKE_CURRENT_SOURCE_DIR}/incomplete_information"
-        "${CMAKE_CURRENT_SOURCE_DIR}/oracle"
-        "${CMAKE_CURRENT_SOURCE_DIR}/oracle/cex_search_strategies"
-        "${CMAKE_CURRENT_SOURCE_DIR}/oracle/cex_conflict_search"
-        "${CMAKE_CURRENT_SOURCE_DIR}/oracle/cex_conflict_search/linear_searchers"
-        "${CMAKE_CURRENT_SOURCE_DIR}/oracle/conflict_detectors"
         )
 
 
@@ -28,6 +27,9 @@ add_library(ActiveLearning STATIC
             active_learning_util/random_int_generator.cpp
             active_learning_util/factories.h
             active_learning_util/factories.cpp
+
+            algorithms/algorithm_base.h
+            algorithms/algorithm_base.cpp
 
             # DFAs
             algorithms/lstar.h
@@ -53,17 +55,15 @@ add_library(ActiveLearning STATIC
             databases/prefix_tree_database.h
             databases/prefix_tree_database.cpp
 
-            # Equivalence oracles
+            # oracles
             oracle/oracle_base.h
             oracle/oracle_base.cpp
             oracle/input_file_oracle.h
             oracle/input_file_oracle.cpp
-            oracle/active_sul_oracle.h
-            oracle/active_sul_oracle.cpp
+            oracle/discrete_output_sul_oracle.h
+            oracle/discrete_output_sul_oracle.cpp
             oracle/string_probability_oracle.h
             oracle/string_probability_oracle.cpp
-            #oracle/weight_comparing_oracle.h
-            #oracle/weight_comparing_oracle.cpp
             #oracle/sqldb_sul_regex_oracle.h
             #oracle/sqldb_sul_regex_oracle.cpp
             #oracle/sqldb_sul_random_oracle.h
@@ -100,6 +100,8 @@ add_library(ActiveLearning STATIC
             oracle/conflict_detectors/conflict_detector_base.cpp
             oracle/conflict_detectors/type_conflict_detector.h
             oracle/conflict_detectors/type_conflict_detector.cpp
+            oracle/conflict_detectors/type_overlap_conflict_detector.h
+            oracle/conflict_detectors/type_overlap_conflict_detector.cpp
             oracle/conflict_detectors/string_probability_conflict_detector.h
             oracle/conflict_detectors/string_probability_conflict_detector.cpp
 

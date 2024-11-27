@@ -18,6 +18,7 @@
 
 #include <iostream>
 
+using namespace std;
 
 /**
  * @brief We give this one a sequence, and it asks for a reponse and adds it to the tree. Use by both query_node and add_child_node, 
@@ -27,10 +28,10 @@
  * @param seq The sequence of the node to add data to.
  * @param s_opt: If provided the child of n with edge is updated, else if nullopt then n itself is updated.
  */
-void overlap_fill::add_data_to_tree(std::unique_ptr<apta>& aut, active_learning_namespace::pref_suf_t& seq, std::unique_ptr<oracle_base>& oracle, apta_node* node, std::optional<int> s_opt){
+void overlap_fill::add_data_to_tree(unique_ptr<apta>& aut, active_learning_namespace::pref_suf_t& seq, apta_node* node, optional<int> s_opt){
   static inputdata& id = *(inputdata_locator::get());
 
-  std::pair<int, float> res = oracle->ask_sul(seq, id);
+  sul_response res = sul->do_query(seq, id);
   int reverse_type = res.GET_INT();
   double confidence = res.GET_DOUBLE();
   
@@ -58,29 +59,29 @@ void overlap_fill::add_data_to_tree(std::unique_ptr<apta>& aut, active_learning_
  * 
  * @param node The node to query.
  */
-void overlap_fill::complete_node(apta_node* node, std::unique_ptr<apta>& aut, std::unique_ptr<oracle_base>& oracle){  
+void overlap_fill::complete_node(apta_node* node, unique_ptr<apta>& aut){  
   trace* access_trace = node->get_access_trace();
   active_learning_namespace::pref_suf_t seq;
   seq = access_trace->get_input_sequence(true, false);
 
-  add_data_to_tree(aut, seq, oracle, node);
+  add_data_to_tree(aut, seq, node);
 }
 
 
 /**
  * @brief Adds a child node to node with the edge labeled with symbol. The new node is automatically
- * filled with information from the oracle (to avoid duplicate queries).
+ * filled with information from the sul (to avoid duplicate queries).
  * 
  * @param node The node.
  * @param symbol The symbol.
  */
-void overlap_fill::add_child_node(std::unique_ptr<apta>& aut, apta_node* node, std::unique_ptr<oracle_base>& oracle, const int symbol){
+void overlap_fill::add_child_node(unique_ptr<apta>& aut, apta_node* node, const int symbol){
   auto access_trace = node->get_access_trace();
   active_learning_namespace::pref_suf_t seq;
   seq = access_trace->get_input_sequence(true, true);
   seq[seq.size() - 1] = symbol;
             
-  add_data_to_tree(aut, seq, oracle, node, std::make_optional<int>(symbol));
+  add_data_to_tree(aut, seq, node, make_optional<int>(symbol));
 }
 
 
@@ -93,7 +94,7 @@ void overlap_fill::add_child_node(std::unique_ptr<apta>& aut, apta_node* node, s
  * Depth: We only want to walk until MAX_DEPTH starting from nodes to complete, therefore we give depth starting at nodes.
  * 
  */
-void overlap_fill::complement_nodes(std::unordered_set<apta_node*>& seen_nodes, std::unique_ptr<apta>& aut, std::unique_ptr<oracle_base>& oracle, apta_node* left, apta_node* right, const int depth){
+void overlap_fill::complement_nodes(unordered_set<apta_node*>& seen_nodes, unique_ptr<apta>& aut, apta_node* left, apta_node* right, const int depth){
   const static int max_search_depth = MAX_AL_SEARCH_DEPTH;
   if(max_search_depth > 0 && (left->get_depth() > max_search_depth || right->get_depth() > max_search_depth)) // making sure we don't bust the transformer
     return;
@@ -113,10 +114,10 @@ void overlap_fill::complement_nodes(std::unordered_set<apta_node*>& seen_nodes, 
   }
   
   if(!r_data->has_type()){
-    complete_node(right, aut, oracle);
+    complete_node(right, aut);
   }
   if(!l_data->has_type()){
-    complete_node(left, aut, oracle);
+    complete_node(left, aut);
   }
 
   // first do the right side
@@ -128,7 +129,7 @@ void overlap_fill::complement_nodes(std::unordered_set<apta_node*>& seen_nodes, 
     apta_guard* left_guard = left->guard(symbol, right_guard);
       
     if(left_guard == nullptr || left_guard->target == nullptr){
-      add_child_node(aut, left, oracle, symbol);
+      add_child_node(aut, left, symbol);
     } 
     else {
       apta_node* left_target = left_guard->target;
@@ -138,7 +139,7 @@ void overlap_fill::complement_nodes(std::unordered_set<apta_node*>& seen_nodes, 
       apta_node* right_child = right_target->find();
       
       if(left_child != right_child){
-        complement_nodes(seen_nodes, aut, oracle, left_child, right_child, depth+1);
+        complement_nodes(seen_nodes, aut, left_child, right_child, depth+1);
       }
     }
   }
@@ -154,7 +155,7 @@ void overlap_fill::complement_nodes(std::unordered_set<apta_node*>& seen_nodes, 
     apta_guard* right_guard = right->guard(symbol, left_guard);
       
     if(right_guard == nullptr || right_guard->target == nullptr){
-      add_child_node(aut, right, oracle, symbol);
+      add_child_node(aut, right, symbol);
     } 
     else {
       apta_node* left_target = left_guard->target;
@@ -164,7 +165,7 @@ void overlap_fill::complement_nodes(std::unordered_set<apta_node*>& seen_nodes, 
       apta_node* right_child = right_target->find();
       
       if(left_child != right_child){
-        complement_nodes(seen_nodes, aut, oracle, left_child, right_child, depth+1);
+        complement_nodes(seen_nodes, aut, left_child, right_child, depth+1);
       } 
     }
   }
@@ -174,14 +175,8 @@ void overlap_fill::complement_nodes(std::unordered_set<apta_node*>& seen_nodes, 
  * @brief Entry point to the overloaded function. Created a set of seen states and starts the main complement_nodes subroutine.
  * 
  * For a more detailed description see the overloaded function.
- * 
- * @param aut The apta. 
- * @param oracle The oracle. 
- * @param left Left node.
- * @param right Rigth node.
- * @param depth The depth to start at.
  */
-void overlap_fill::complement_nodes(std::unique_ptr<apta>& aut, std::unique_ptr<oracle_base>& oracle, apta_node* left, apta_node* right){
-  std::unordered_set<apta_node*> seen_nodes;
-  complement_nodes(seen_nodes, aut, oracle, left, right, 0);
+void overlap_fill::complement_nodes(unique_ptr<apta>& aut, apta_node* left, apta_node* right){
+  unordered_set<apta_node*> seen_nodes;
+  complement_nodes(seen_nodes, aut, left, right, 0);
 }

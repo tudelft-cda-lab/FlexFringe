@@ -19,10 +19,17 @@
 #include <utility>
 #include <initializer_list>
 #include <iostream>
+#include <fstream>
+#include <type_traits> // used in derived classes
 
 class algorithm_base {
   protected:
     std::unique_ptr<oracle_base> oracle;
+
+    // helper functions to deal with input data
+    inputdata* get_inputdata() const;
+    std::ifstream get_inputstream() const;
+    std::unique_ptr<parser> get_parser(std::ifstream& input_stream) const;
 
   public:
     algorithm_base(std::unique_ptr<oracle_base>&& oracle)

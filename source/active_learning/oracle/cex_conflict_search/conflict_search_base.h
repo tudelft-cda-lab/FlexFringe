@@ -14,7 +14,7 @@
 
 #include "source/input/inputdata.h"
 #include "sul_base.h"
-#include "conflict_detector_base.h"
+#include "conflict_detectors/conflict_detector_base.h" // why won't it find the path?
 
 #include <memory>
 #include <vector>

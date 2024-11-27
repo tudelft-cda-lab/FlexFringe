@@ -24,20 +24,20 @@
 
 class overlap_fill : public ii_base {
   private:
-    __attribute__((always_inline)) inline void add_data_to_tree(std::unique_ptr<apta>& aut, active_learning_namespace::pref_suf_t& seq, std::unique_ptr<oracle_base>& oracle, apta_node* n, std::optional<int> s_opt=std::nullopt);
+    __attribute__((always_inline)) inline void add_data_to_tree(std::unique_ptr<apta>& aut, active_learning_namespace::pref_suf_t& seq, apta_node* n, std::optional<int> s_opt=std::nullopt);
 
   protected:
-    const int MAX_DEPTH;
+    const int MAX_DEPTH = 25; // TODO: initialize better than here
 
-    inline void add_child_node(std::unique_ptr<apta>& aut, apta_node* node, std::unique_ptr<oracle_base>& oracle, const int symbol);
+    inline void add_child_node(std::unique_ptr<apta>& aut, apta_node* node, const int symbol);
 
   public:
-    overlap_fill(const int MAX_DEPTH=0) : MAX_DEPTH(MAX_DEPTH) {};
+    overlap_fill(const std::shared_ptr<sul_base>& sul) : ii_base(sul) {};
 
-    void complement_nodes(std::unique_ptr<apta>& aut, std::unique_ptr<oracle_base>& oracle, apta_node* left, apta_node* right) override;
-    void complement_nodes(std::unordered_set<apta_node*>& seen_nodes, std::unique_ptr<apta>& aut, std::unique_ptr<oracle_base>& oracle, apta_node* left, apta_node* right, const int depth);
+    void complement_nodes(std::unique_ptr<apta>& aut, apta_node* left, apta_node* right) override;
+    void complement_nodes(std::unordered_set<apta_node*>& seen_nodes, std::unique_ptr<apta>& aut, apta_node* left, apta_node* right, const int depth);
     
-    void complete_node(apta_node* node, std::unique_ptr<apta>& aut, std::unique_ptr<oracle_base>& oracle) override;
+    void complete_node(apta_node* node, std::unique_ptr<apta>& aut) override;
 };
 
 #endif

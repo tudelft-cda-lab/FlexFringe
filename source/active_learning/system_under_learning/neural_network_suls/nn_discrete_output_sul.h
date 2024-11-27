@@ -49,7 +49,6 @@ class nn_discrete_output_sul : public nn_sul_base {
     const sul_response do_query(const std::vector< std::vector<int> >& query_traces, inputdata& id) const override;
 
   public:
-    nn_discrete_output_sul() = default;
 };
 
 #endif // __FLEXFRINGE_PYTHON

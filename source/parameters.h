@@ -170,6 +170,7 @@ extern std::string ORACLE;
 extern std::string ORACLE_2;
 extern std::string SYSTEM_UNDER_LEARNING;
 extern std::string SYSTEM_UNDER_LEARNING_2;
+extern std::string II_NAME;
 
 extern int START_SYMBOL;
 extern int END_SYMBOL;

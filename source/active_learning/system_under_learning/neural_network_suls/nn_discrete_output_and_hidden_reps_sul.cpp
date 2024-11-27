@@ -9,7 +9,7 @@
  * 
  */
 
-#include "nn_discrete_and_float_output.h"
+#include "nn_discrete_output_and_hidden_reps_sul.h"
 
 #include <utility>
 
@@ -26,22 +26,22 @@ using namespace std;
  * @param p_result The result as returned by the network. p_results assumed to be a flattened out matrix,
  * i.e. a vector that we have to infer the shape from again via HIDDEN_STATE_SIZE.
  * @param offset The initial offset where we find HIDDEN_STATE_SIZE.
- * @return vector< vector<float> > The hidden representations, one per input symbol. Usually including <SOS> and <EOS>.
+ * @return vector< vector<double> > The hidden representations, one per input symbol. Usually including <SOS> and <EOS>.
  */
-vector<vector<float>> compile_hidden_rep(PyObject* p_result, const int offset) const {
+vector<vector<double>> compile_hidden_rep(PyObject* p_result, const int offset) {
 
     static const int HIDDEN_STATE_SIZE = static_cast<int>(PyLong_AsLong(
         PyList_GET_ITEM(p_result, static_cast<Py_ssize_t>(offset)))); // get first list, then return its length
     const int n_sequences = static_cast<int>((static_cast<int>(PyList_Size(p_result)) - 2) / HIDDEN_STATE_SIZE);
-    vector<vector<float>> representations(n_sequences);
+    vector<vector<double>> representations(n_sequences);
     for (int i = 0; i < n_sequences; ++i) {
-        vector<float> hidden_rep(HIDDEN_STATE_SIZE);
+        vector<double> hidden_rep(HIDDEN_STATE_SIZE);
 
         for (int j = 0; j < HIDDEN_STATE_SIZE; ++j) {
             int idx = i * HIDDEN_STATE_SIZE + j + offset + 1; // + offset + 1 because the first elements of p_result are
                                                               // predicted type, and eventually a confidence
             PyObject* s = PyList_GET_ITEM(p_result, static_cast<Py_ssize_t>(idx));
-            hidden_rep[j] = static_cast<float>(PyFloat_AsDouble(s));
+            hidden_rep[j] = static_cast<double>(PyFloat_AsDouble(s));
         }
 
         representations[i] = move(hidden_rep);
@@ -53,13 +53,13 @@ vector<vector<float>> compile_hidden_rep(PyObject* p_result, const int offset) c
 /**
  * @brief Gets the hidden representation from the network. For description of p_result see do_query().
  */
-vector<float> nn_discrete_output_and_hidden_reps_sul::compile_hidden_rep(PyObject* p_result, const int offset) const {
+vector<double> nn_discrete_output_and_hidden_reps_sul::compile_hidden_rep(PyObject* p_result) const {
     const static int res_size = PyList_Size(p_result);
     
-    vector<float> representations(res_size - 1); // by convention: index 0 = prediction
-    for (int i = 1; i < res_size; ++i) { // + 1 cause we start at index 1
+    vector<double> representations(res_size - 1); // by convention: index 0 = prediction
+    for (int idx = 1; idx < res_size; ++idx) { // + 1 cause we start at index 1
         PyObject* s = PyList_GET_ITEM(p_result, static_cast<Py_ssize_t>(idx));
-        representations[i] = static_cast<float>(PyFloat_AsDouble(s));
+        representations[idx] = static_cast<double>(PyFloat_AsDouble(s));
     }
 
     return representations;
@@ -84,7 +84,7 @@ const sul_response nn_discrete_output_and_hidden_reps_sul::do_query(const vector
     PyObject* p_type = PyList_GET_ITEM(p_result, static_cast<Py_ssize_t>(0));
     int type = pyobj_to_int(p_type, id);
 
-    vector<float> hidden_rep = compile_hidden_rep(p_result);
+    vector<double> hidden_rep = compile_hidden_rep(p_result);
     
     Py_DECREF(p_list);
     Py_DECREF(p_result);

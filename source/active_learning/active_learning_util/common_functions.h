@@ -16,12 +16,11 @@
 #include "count_types.h"
 #include "definitions.h"
 #include "evaluate.h"
-#include "inputdata.h"
+#include "input/inputdata.h" // why does it not find it?
 #include "parameters.h"
 #include "refinement.h"
-#include "tail.h"
-#include "trace.h"
-#include "oracle_base.h"
+#include "input/tail.h" // why does it not find it?
+#include "input/trace.h"
 
 #include <functional>
 #include <list>
@@ -38,10 +37,10 @@ bool aut_accepts_trace(trace* tr, apta* aut, const count_driven* const eval);
 const int predict_type_from_trace(trace* tr, apta* aut, inputdata& id);
 trace* concatenate_traces(trace* tr1, trace* tr2);
 
-/* inline */ void reset_apta(state_merger* merger, const std::list<refinement*>& refs);
-/* inline */ void do_operations(state_merger* merger, const std::list<refinement*>& refs);
-/* inline */ void minimize_apta(std::list<refinement*>& refs, state_merger* merger);
-/* inline */ void find_closed_automaton(std::list<refinement*>& performed_refs, std::unique_ptr<apta>& aut,
+void reset_apta(state_merger* merger, const std::list<refinement*>& refs);
+void do_operations(state_merger* merger, const std::list<refinement*>& refs);
+void minimize_apta(std::list<refinement*>& refs, state_merger* merger);
+void find_closed_automaton(std::list<refinement*>& performed_refs, std::unique_ptr<apta>& aut,
                                         std::unique_ptr<state_merger>& merger,
                                         double (*distance_func)(apta*, apta_node*, apta_node*));
 
@@ -54,14 +53,13 @@ std::vector<T> concatenate_vectors(const std::vector<T>& prefix, const std::vect
     return res;
 }
 
-/* __attribute__((always_inline)) */
-/* inline */ trace* vector_to_trace(const std::vector<int>& vec, inputdata& id, const int trace_type = 0);
+trace* vector_to_trace(const std::vector<int>& vec, inputdata& id, const int trace_type = 0);
 
 void add_sequence_to_trace(/*out*/ trace* new_trace, const std::vector<int> sequence);
 void update_tail(/*out*/ tail* t, const int symbol);
 
-const double get_probability_of_last_symbol(trace* tr, inputdata& id, const std::unique_ptr<oracle_base>& oracle,
-                                            apta* aut);
+//const double get_probability_of_last_symbol(trace* tr, inputdata& id, const std::unique_ptr<oracle_base>& oracle,
+//                                            apta* aut);
 
 const double get_sampled_probability(
     trace* tr, inputdata& id, apta* aut,

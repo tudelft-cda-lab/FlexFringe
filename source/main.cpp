@@ -549,6 +549,7 @@ int main(int argc, char *argv[]){
     app.add_option("--system_under_learning", SYSTEM_UNDER_LEARNING, "The system under learning. Has to be specified!");
     app.add_option("--system_under_learning_2", SYSTEM_UNDER_LEARNING_2, "The second system under learning. Used if more than one type of oracle queries have  to be used, see e.g. Ldot/DAALDer.");
     app.add_option("--cex_search_strategy", CEX_SEARCH_STRATEGY, "The strategy to search for counterexamples. Normally the random w-method will do, but depending on your case you might want to choose. Default: random_w_method.");
+    app.add_option("--ii_handler_name", II_NAME, "The name of the incomplete information instance. If left empty, then no ii handler is being created. Not all algorithms support ii handlers. Default: [empty].");
 
     // TODO: shall we delete the rejecting_label option?
     app.add_option("--rejecting_label", REJECTING_LABEL, "The label as a string that is used for rejecting (non-accepting) behavior. Only in active learning mode. DEFAULT: 0");

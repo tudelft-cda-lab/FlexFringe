@@ -34,7 +34,7 @@ const sul_response nn_float_vector_output_sul::do_query(const vector<int>& query
     for(int i=0; i<res_size; ++i){
       PyObject* p_float = PyList_GET_ITEM(p_result, i);
       if(!PyFloat_Check(p_float)){
-        cerr << "Error in return value of Python script. The list did not contain a proper float value. Terminating." << endl;
+        cerr << "Error in return value of Python script. The list did not contain a proper double value. Terminating." << endl;
         exit(EXIT_FAILURE);
       }
 

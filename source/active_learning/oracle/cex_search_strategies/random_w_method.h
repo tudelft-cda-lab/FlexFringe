@@ -32,7 +32,6 @@ class random_w_method : public search_base {
     int n_tested_nodes;
     int current_h_size;
 
-
     random_int_generator length_generator;
     random_int_generator alphabet_sampler;
 
@@ -41,9 +40,9 @@ class random_w_method : public search_base {
     int count_nodes();
 
   public:
-    random_w_method(const int max_depth) : search_base(max_depth), r_it(nullptr){
-        length_generator.set_limits(1, max_depth);
-        samples_for_current_node = 0;
+    random_w_method() : r_it(nullptr){
+      length_generator.set_limits(1, MAX_SEARCH_DEPTH);
+      samples_for_current_node = 0;
     };
 
     std::optional<std::vector<int>> next(const inputdata& id) override;

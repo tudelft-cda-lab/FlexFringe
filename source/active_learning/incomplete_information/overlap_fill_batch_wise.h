@@ -19,18 +19,19 @@
 
 class overlap_fill_batch_wise : public overlap_fill {
   private:
-    const int BATCH_SIZE;
+    const int BATCH_SIZE = 256; // TODO: init those two better than you do here
     
     // note: this is the same as in the base class, but to inline we need to copy.
     __attribute__((always_inline)) inline void add_data_to_tree(std::unique_ptr<apta>& aut, const std::vector<int>& seq, const int reverse_type, float confidence, apta_node* node, const int symbol);
-    void complement_nodes(std::vector< std::vector<int> >& query_traces, std::vector< std::pair<apta_node*, int> >& query_node_symbol_pairs, std::unordered_set<apta_node*>& seen_nodes, std::unique_ptr<apta>& aut, std::unique_ptr<oracle_base>& oracle, apta_node* left, apta_node* right, const int depth);
+    void complement_nodes(std::vector< std::vector<int> >& query_traces, std::vector< std::pair<apta_node*, int> >& query_node_symbol_pairs, std::unordered_set<apta_node*>& seen_nodes, std::unique_ptr<apta>& aut, apta_node* left, apta_node* right, const int depth);
 
   public:
-    overlap_fill_batch_wise(const int MAX_DEPTH=0, const int BATCH_SIZE=128) : overlap_fill(MAX_DEPTH), BATCH_SIZE(BATCH_SIZE)  {};
+    overlap_fill_batch_wise(const std::shared_ptr<sul_base>& sul) : overlap_fill(sul){};
 
-    void complement_nodes(std::unique_ptr<apta>& aut, std::unique_ptr<oracle_base>& oracle, apta_node* left, apta_node* right) override;
+
+    void complement_nodes(std::unique_ptr<apta>& aut, apta_node* left, apta_node* right) override;
     
-    void complete_node(apta_node* node, std::unique_ptr<apta>& aut, std::unique_ptr<oracle_base>& oracle) override;
+    void complete_node(apta_node* node, std::unique_ptr<apta>& aut) override;
 };
 
 #endif

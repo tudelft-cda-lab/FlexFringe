@@ -354,7 +354,7 @@ trace* active_learning_namespace::vector_to_trace(const vector<int>& vec, inputd
  * @param id The inputdata.
  * @return const double Probability.
  */
-const double active_learning_namespace::get_probability_of_last_symbol(trace* tr, inputdata& id,
+/*const double active_learning_namespace::get_probability_of_last_symbol(trace* tr, inputdata& id,
                                                                        const unique_ptr<oracle_base>& oracle,
                                                                        apta* aut) {
     static unordered_map<apta_node*, unordered_map<int, double>> node_response_map; // memoization
@@ -406,7 +406,7 @@ const double active_learning_namespace::get_probability_of_last_symbol(trace* tr
     }
 
     throw runtime_error("We should not reach here. What happened?");
-}
+}*/
 
 /**
  * @brief For debugging.

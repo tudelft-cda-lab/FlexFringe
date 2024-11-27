@@ -42,8 +42,8 @@ class fringe_walk : public search_base {
     std::vector<int> alphabet_vec;
 
   public:
-    fringe_walk(const int max_depth) : search_base(max_depth){
-        length_generator.set_limits(1, max_depth);
+    fringe_walk(){
+        length_generator.set_limits(1, MAX_SEARCH_DEPTH);
         samples_for_current_node = 0;
     };
 

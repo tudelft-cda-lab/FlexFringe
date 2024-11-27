@@ -44,8 +44,8 @@ class targeted_bfs_walk : public search_base {
     void add_nodes_to_queue(apta_node* node);
 
   public:
-    targeted_bfs_walk(const int max_depth) : search_base(max_depth), current_node(nullptr) {
-        length_generator.set_limits(1, max_depth);
+    targeted_bfs_walk() : current_node(nullptr) {
+        length_generator.set_limits(1, MAX_SEARCH_DEPTH);
         samples_for_current_node = 0;
     };
 

@@ -1,5 +1,5 @@
 /**
- * @file active_sul_oracle.h
+ * @file discrete_output_sul_oracle.h
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
  * @brief This class is for SULs that are queriable. It utilizes a search strategy.
  * @version 0.1
@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef _ACTIVE_SUL_ORACLE_H_
-#define _ACTIVE_SUL_ORACLE_H_
+#ifndef _DISCRETE_OUTPUT_SUL_ORACLE_H_
+#define _DISCRETE_OUTPUT_SUL_ORACLE_H_
 
 #include "oracle_base.h"
 #include "parameters.h"
@@ -21,18 +21,15 @@
 #include <optional>
 #include <utility>
 
-class active_sul_oracle : public oracle_base {
+class discrete_output_sul_oracle : public oracle_base {
   protected:
     void reset_sul() override {};
 
   public:
-    active_sul_oracle(const std::shared_ptr<sul_base>& sul) : oracle_base(sul) {
+    discrete_output_sul_oracle(const std::shared_ptr<sul_base>& sul) : oracle_base(sul) {
         conflict_detector = std::make_shared<type_conflict_detector>(sul);
         conflict_searcher = std::make_unique<linear_conflict_search>(conflict_detector);
     };
-
-    std::optional<std::pair<std::vector<int>, sul_response>>
-    equivalence_query(state_merger* merger) override;
 };
 
 #endif

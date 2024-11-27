@@ -20,14 +20,16 @@ using namespace active_learning_namespace;
  * 
  * @return int The response of the SUL.
  */
-int paul_oracle::get_sul_response(const vector< vector<int> >& query_string, inputdata& id) const {
-    vector< pair<int, float> > res = ask_type_confidence_batch(query_string, id);
+/* int paul_oracle::get_sul_response(const vector< vector<int> >& query_string, inputdata& id) const {
+    sul_response res = ask_sul(query_string, id);
     
-    int type = res[0].first;
-    float confidence = res[0].second;
+    vector< pair<int, float> >
+
+    int type = res.GET_INT_VEC()[0];
+    float confidence = res.GET_FLOAT_VEC()[0];
 
     return type;
-}
+} */
 
 /**
  * @brief This function does what you think it does.
@@ -35,7 +37,7 @@ int paul_oracle::get_sul_response(const vector< vector<int> >& query_string, inp
  * @param merger The merger.
  * @return std::optional< pair< vector<int>, int> > nullopt if no counterexample found, else the counterexample.
  */
-std::optional<pair<vector<int>, int>> paul_oracle::equivalence_query(state_merger* merger) {
+/* std::optional<pair<vector<int>, sul_response>> paul_oracle::equivalence_query(state_merger* merger) {
     // TODO: this one is going to look a little more complicated perhaps. 
     throw logic_error("EQ not implemented for PAUL oracle yet Perhaps do a sort of overlap driven conflict detector?");
 
@@ -83,3 +85,4 @@ std::optional<pair<vector<int>, int>> paul_oracle::equivalence_query(state_merge
 
     return nullopt;
 }
+ */

@@ -144,6 +144,7 @@ std::string ORACLE = "";
 std::string ORACLE_2 = "";
 std::string SYSTEM_UNDER_LEARNING = "";
 std::string SYSTEM_UNDER_LEARNING_2 = "";
+std::string II_NAME = "";
 
 int START_SYMBOL = -1;
 int END_SYMBOL = -1;

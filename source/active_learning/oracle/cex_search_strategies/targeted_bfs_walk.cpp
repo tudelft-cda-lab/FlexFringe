@@ -11,6 +11,7 @@
 
 #include "targeted_bfs_walk.h"
 #include "parameters.h"
+#include "probabilistic_heuristic_interface.h"
 
 #include <cassert>
 #include <iostream>
@@ -29,10 +30,17 @@ int targeted_bfs_walk::count_nodes(){
 
 void targeted_bfs_walk::add_nodes_to_queue(apta_node* node){
     static const auto mu = MU;
+    static bool tested = false;
 
-    auto data = node->get_data(); 
+    auto data = node->get_data();
+    if(!tested){
+        if(dynamic_cast<probabilistic_heuristic_interface_data*>(data) == nullptr)
+            throw logic_error("targeted_bfs_walk only works with heuristics inheriting from the probabilistic_heuristic_interface");
+        tested = true;
+    }
+
     for(int symbol: this->alphabet){
-        if(data->get_weight(symbol) == 0){
+        if(static_cast<probabilistic_heuristic_interface_data*>(data)->get_probability(symbol) == 0){
             ++n_tested_nodes;
             continue;
         }

@@ -28,7 +28,7 @@ unique_ptr<search_base> cex_search_strategy_factory::create_search_strategy() {
   else if(CEX_SEARCH_STRATEGY == "fringe_walk")
     return make_unique<fringe_walk>();
   else if(CEX_SEARCH_STRATEGY == "breadth_first_search")
-    return make_unique<breadth_first_search>();
+    return make_unique<bfs_strategy>();
   else if(CEX_SEARCH_STRATEGY == "targeted_bfs_walk")
     return make_unique<targeted_bfs_walk>();
   else if(CEX_SEARCH_STRATEGY == "random_string_search")

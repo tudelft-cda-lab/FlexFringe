@@ -18,6 +18,7 @@
 
 #include <iostream>
 
+using namespace std;
 
 /**
  * @brief We give this one a sequence, and it asks for a reponse and adds it to the tree. Use by both query_node and add_child_node, 
@@ -27,7 +28,7 @@
  * @param seq The sequence of the node to add data to.
  * @param s_opt: If provided the child of n with edge is updated, else if nullopt then n itself is updated.
  */
-void overlap_fill_batch_wise::add_data_to_tree(std::unique_ptr<apta>& aut, const std::vector<int>& seq, const int reverse_type, float confidence, apta_node* node, const int symbol){
+void overlap_fill_batch_wise::add_data_to_tree(unique_ptr<apta>& aut, const vector<int>& seq, const int reverse_type, float confidence, apta_node* node, const int symbol){
   static inputdata& id = *(inputdata_locator::get());
   
   if(confidence < 0.9){ // TODO: does this make sense?
@@ -48,25 +49,25 @@ void overlap_fill_batch_wise::add_data_to_tree(std::unique_ptr<apta>& aut, const
  * 
  * @param node The node to query.
  */
-void overlap_fill_batch_wise::complete_node(apta_node* node, std::unique_ptr<apta>& aut, std::unique_ptr<oracle_base>& oracle){  
-  ii_base::complete_node(node, aut, oracle);
+void overlap_fill_batch_wise::complete_node(apta_node* node, unique_ptr<apta>& aut){  
+  ii_base::complete_node(node, aut);
 }
 
 
 /**
  * @brief Adds a child node to node with the edge labeled with symbol. The new node is automatically
- * filled with information from the oracle (to avoid duplicate queries).
+ * filled with information from the sul (to avoid duplicate queries).
  * 
  * @param node The node.
  * @param symbol The symbol.
  */
-/* void overlap_fill_batch_wise::add_child_node(std::unique_ptr<apta>& aut, apta_node* node, std::unique_ptr<oracle_base>& oracle, const int symbol){
+/* void overlap_fill_batch_wise::add_child_node(unique_ptr<apta>& aut, apta_node* node, const int symbol){
   auto access_trace = node->get_access_trace();
   active_learning_namespace::pref_suf_t seq;
   seq = access_trace->get_input_sequence(true, true);
   seq[seq.size() - 1] = symbol;
             
-  add_data_to_tree(aut, seq, oracle, node, make_optional<int>(symbol));
+  add_data_to_tree(aut, seq, sul, node, make_optional<int>(symbol));
 }
  */
 
@@ -74,7 +75,7 @@ void overlap_fill_batch_wise::complete_node(apta_node* node, std::unique_ptr<apt
  * @brief Here we collect all the traces we want to ask the transformer.
  * Side effect: Unknown types of nodes in between still get filled, just like in base_class. 
  */
-void overlap_fill_batch_wise::complement_nodes(std::vector< std::vector<int> >& query_traces, std::vector< std::pair<apta_node*, int> >& query_node_symbol_pairs, std::unordered_set<apta_node*>& seen_nodes, std::unique_ptr<apta>& aut, std::unique_ptr<oracle_base>& oracle, apta_node* left, apta_node* right, const int depth){
+void overlap_fill_batch_wise::complement_nodes(vector< vector<int> >& query_traces, vector< pair<apta_node*, int> >& query_node_symbol_pairs, unordered_set<apta_node*>& seen_nodes, unique_ptr<apta>& aut, apta_node* left, apta_node* right, const int depth){
   const static int max_search_depth = MAX_AL_SEARCH_DEPTH;
   if(max_search_depth > 0 && (left->get_depth() > max_search_depth || right->get_depth() > max_search_depth)) // making sure we don't bust the transformer
     return;
@@ -95,10 +96,10 @@ void overlap_fill_batch_wise::complement_nodes(std::vector< std::vector<int> >& 
   
   // in these two following if-clauses the side effect happens (see description)
   if(!r_data->has_type()){
-    complete_node(right, aut, oracle);
+    complete_node(right, aut);
   }
   if(!l_data->has_type()){
-    complete_node(left, aut, oracle);
+    complete_node(left, aut);
   }
 
   // first do the right side
@@ -118,7 +119,7 @@ void overlap_fill_batch_wise::complement_nodes(std::vector< std::vector<int> >& 
       query_node_symbol_pairs.emplace_back(left, symbol);
 
       if(query_traces.size() == BATCH_SIZE){
-        const sul_response response = oracle->ask_sul(queries, *(inputdata_locator::get()));
+        const sul_response response = sul->do_query(query_traces, *(inputdata_locator::get()));
         const vector<int>& answers = response.GET_INT_VEC();
         const vector<double>& confidences = response.GET_DOUBLE_VEC();
 
@@ -138,7 +139,7 @@ void overlap_fill_batch_wise::complement_nodes(std::vector< std::vector<int> >& 
       apta_node* right_child = right_target->find();
       
       if(left_child != right_child){
-        complement_nodes(query_traces, query_node_symbol_pairs, seen_nodes, aut, oracle, left_child, right_child, depth+1);
+        complement_nodes(query_traces, query_node_symbol_pairs, seen_nodes, aut, left_child, right_child, depth+1);
       }
     }
   }
@@ -162,7 +163,7 @@ void overlap_fill_batch_wise::complement_nodes(std::vector< std::vector<int> >& 
       query_node_symbol_pairs.emplace_back(right, symbol);
 
       if(query_traces.size() == BATCH_SIZE){
-        const sul_response response = oracle->ask_sul(queries, *(inputdata_locator::get()));
+        const sul_response response = sul->do_query(query_traces, *(inputdata_locator::get()));
         const vector<int>& answers = response.GET_INT_VEC();
         const vector<double>& confidences = response.GET_DOUBLE_VEC();
 
@@ -182,7 +183,7 @@ void overlap_fill_batch_wise::complement_nodes(std::vector< std::vector<int> >& 
       apta_node* right_child = right_target->find();
       
       if(left_child != right_child){
-        complement_nodes(query_traces, query_node_symbol_pairs, seen_nodes, aut, oracle, left_child, right_child, depth+1);
+        complement_nodes(query_traces, query_node_symbol_pairs, seen_nodes, aut, left_child, right_child, depth+1);
       } 
     }
   }
@@ -192,25 +193,19 @@ void overlap_fill_batch_wise::complement_nodes(std::vector< std::vector<int> >& 
  * @brief Entry point to the overloaded function. Created a set of seen states and starts the main complement_nodes subroutine.
  * 
  * For a more detailed description see the overloaded function.
- * 
- * @param aut The apta. 
- * @param oracle The oracle. 
- * @param left Left node.
- * @param right Rigth node.
- * @param depth The depth to start at.
  */
-void overlap_fill_batch_wise::complement_nodes(std::unique_ptr<apta>& aut, std::unique_ptr<oracle_base>& oracle, apta_node* left, apta_node* right){
-  std::unordered_set<apta_node*> seen_nodes;
-  std::vector< std::vector<int> > query_traces;
-  std::vector< std::pair<apta_node*, int> > query_node_symbol_pairs;
+void overlap_fill_batch_wise::complement_nodes(unique_ptr<apta>& aut, apta_node* left, apta_node* right){
+  unordered_set<apta_node*> seen_nodes;
+  vector< vector<int> > query_traces;
+  vector< pair<apta_node*, int> > query_node_symbol_pairs;
 
-  complement_nodes(query_traces, query_node_symbol_pairs, seen_nodes, aut, oracle, left, right, 0);
+  complement_nodes(query_traces, query_node_symbol_pairs, seen_nodes, aut, left, right, 0);
 
   if(query_traces.size() == 0)
     return;
 
   // doing the remaining queries
-  const sul_response response = oracle->ask_sul(queries, *(inputdata_locator::get()));
+  const sul_response response = sul->do_query(query_traces, *(inputdata_locator::get()));
   const vector<int>& answers = response.GET_INT_VEC();
   const vector<double>& confidences = response.GET_DOUBLE_VEC();  
   

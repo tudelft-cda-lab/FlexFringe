@@ -36,47 +36,52 @@
  * 
  * 
  */
-class search_instance{
+/* class search_instance{
   private:
     // make sure that our underlying structures like the suffix trees do not collide
-    std::unique_ptr<ii_base> ii_handler;
-    std::unique_ptr<distinguishing_sequences> ds_ptr = std::make_unique<distinguishing_sequences>();
+    std::shared_ptr<ii_base> ii_handler;
+    std::unique_ptr<distinguishing_sequences> ds_ptr = std::make_shared<distinguishing_sequences>();
     inline static std::mutex m_mutex;
     const int MIN_BATCH_SIZE = 512;
     const int MAX_LEN = 30;
     
   public:
     search_instance(){
-      ii_handler = std::make_unique<distinguishing_sequence_fill>();
+      ii_handler = std::make_shared<distinguishing_sequence_fill>();
     }
 
     void operator()(std::promise<bool>&& out, std::unique_ptr<state_merger>& merger, std::unique_ptr<apta>& the_apta, const std::unique_ptr<oracle_base>& oracle, apta_node* red_node, apta_node* blue_node);
-};
+}; */
 
 class paul_algorithm : public algorithm_base {
   protected:
-    std::unique_ptr<ii_base> ii_handler;
+    std::shared_ptr<ii_base> ii_handler;
     refinement* get_best_refinement(std::unique_ptr<state_merger>& merger, std::unique_ptr<apta>& the_apta);
+
+    void load_input_data();
 
     /**
      * Relevant for parallelization.
      */
-    static bool merge_check(std::unique_ptr<ii_base>& ii_handler, std::unique_ptr<state_merger>& merger, std::unique_ptr<oracle_base>& oracle, std::unique_ptr<apta>& the_apta, apta_node* red_node, apta_node* blue_node);
+    static bool merge_check(std::shared_ptr<ii_base>& ii_handler, std::unique_ptr<state_merger>& merger, std::unique_ptr<oracle_base>& oracle, std::unique_ptr<apta>& the_apta, apta_node* red_node, apta_node* blue_node);
 
     std::list<refinement*> retry_merges(std::list<refinement*>& previous_refs, std::unique_ptr<state_merger>& merger, std::unique_ptr<apta>& the_apta);
     std::list<refinement*> find_hypothesis(std::list<refinement*>& previous_refs, std::unique_ptr<state_merger>& merger, std::unique_ptr<apta>& the_apta);
     void proc_counterex(inputdata& id, std::unique_ptr<apta>& the_apta, const std::vector<int>& counterex,
                         std::unique_ptr<state_merger>& merger, const refinement_list refs) const;
   public:
-    paul_algorithm(std::unique_ptr<oracle_base>&& oracle)
-        : algorithm_base(std::move(oracle)){
-          ii_handler = std::make_unique<distinguishing_sequence_fill>();
+    paul_algorithm(std::unique_ptr<oracle_base>&& oracle, const std::shared_ptr<ii_base>& ii_handler)
+        : algorithm_base(std::move(oracle)), ii_handler(ii_handler){
+          if(!ii_handler)
+            throw std::invalid_argument("ii handler not provided for paul algorithm, but it relies on it");
           STORE_ACCESS_STRINGS = true;
-        };
-    paul_algorithm(std::initializer_list< std::unique_ptr<oracle_base> >&& i_list) : paul_algorithm(std::move(*(i_list.begin()))){
+
+          load_input_data();
+        }
+
+    paul_algorithm(std::vector< std::unique_ptr<oracle_base> >&& i_list, const std::shared_ptr<ii_base>& ii_handler) 
+    : paul_algorithm(std::move(i_list[0]), ii_handler){
       std::cerr << "This algorithm does not support multiple oracles. Oracle 2 is ignored." << std::endl;
-      std::unique_ptr<oracle_base>& ptr = i_list.data()[0];
-      paul_algorithm(std::move(ptr));
     }
 
     void run(inputdata& id) override;

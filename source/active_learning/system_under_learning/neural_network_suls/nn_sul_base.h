@@ -50,7 +50,7 @@ class nn_sul_base : public sul_base {
   public:
     void pre(inputdata& id) override;
 
-    nn_sul_base()(const std::string& cf) : CONNECTOR_FILE(cf) {};
+    nn_sul_base() = default;
     ~nn_sul_base();
 };
 
@@ -61,8 +61,11 @@ class nn_sul_base : public sul_base {
     friend class oracle_base;
 
   protected:
-    const std::string CONNECTOR_FILE;
+    nn_sul_base() {
+      throw std::logic_error("Neural network SULs can only be used with Python flag enabled");
+    };
 
+  public:
   /*  const sul_response do_query(const std::vector<int>& query_trace, inputdata& id) const;
     void input_sequence_to_pylist(PyObject* p_list_out, const std::vector<int>& c_list) const {};
 
@@ -70,14 +73,6 @@ class nn_sul_base : public sul_base {
     void reset() = 0;
     virtual void init_types() const; */
 
-    nn_sul_base() {
-      throw std::logic_error("Neural network SULs can only be used with Python flag enabled");
-    };
-    nn_sul_base(const std::string& cf) : CONNECTOR_FILE(cf) {
-      throw std::logic_error("Neural network SULs can only be used with Python flag enabled");
-    };
-
-  public:
     void pre(inputdata& id) override;
 };
 

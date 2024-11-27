@@ -11,7 +11,6 @@
  * 
  */
 
-
 #ifndef _AL_STRING_PROBABILITY_CONFLICT_DETECTOR_H_
 #define _AL_STRING_PROBABILITY_CONFLICT_DETECTOR_H_
 
@@ -22,7 +21,9 @@ class string_probability_conflict_detector : public conflict_detector_base {
     inline const float get_string_prob(const std::vector<int>& substr, apta& hypothesis, inputdata& id) const;
 
   public:
-    string_probability_conflict_detector(const std::shared_ptr<sul_base>& sul) : conflict_detector_base(sul) {}; 
+    string_probability_conflict_detector(const std::shared_ptr<sul_base>& sul) : conflict_detector_base(sul) {};
+    string_probability_conflict_detector(const std::shared_ptr<sul_base>& sul, const std::shared_ptr<ii_base>& ii_handler) 
+    : conflict_detector_base(sul, ii_handler){};
     std::pair<bool, std::optional<sul_response> > creates_conflict(const std::vector<int>& substr, apta& hypothesis, inputdata& id) override;
 };
 

@@ -25,7 +25,7 @@ class bfs_strategy : public search_base {
     std::vector<int> vector_idxs; // stores the indices of the respective characters of the alphabet. Content goes from [0, alphabet.size()-1]
 
   public:
-    bfs_strategy(const int max_depth) : search_base(max_depth) { };
+    bfs_strategy() = default;
 
     std::optional<std::vector<int>> next(const inputdata& id) override;
 };

@@ -41,6 +41,7 @@ struct sul_response {
     /** Constructors  */
     explicit sul_response(const bool x) : bool_opt(x){};
     explicit sul_response(const int x) : int_opt(x){};
+    explicit sul_response(const int x, const double d) : int_opt(x), double_opt(d) {};
     explicit sul_response(const double x) : double_opt(x){};
 
     // e.g. for collecting a hidden representation of a network
@@ -73,17 +74,19 @@ class sul_base {
   protected:
     std::ifstream get_input_stream() const;
 
-  public:
-    /**
-     * @brief Initialize the sul class.
-     */
-    virtual void pre(inputdata& id) = 0;
+  public:    
+    sul_base() = default;
     virtual ~sul_base() = default; // making sure that the destructors of derived classes are called
 
     virtual const sul_response do_query(const std::vector<int>& query_trace, inputdata& id) const = 0;
     virtual const sul_response do_query(const std::vector< std::vector<int> >& query_trace, inputdata& id) const {
       throw std::logic_error("batched queries not implemented in this sul-class.");
     }
+
+    /**
+     * @brief Initialize the sul class.
+     */
+    virtual void pre(inputdata& id) = 0;
     
     virtual void reset() = 0;
 };

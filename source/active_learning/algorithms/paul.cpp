@@ -11,8 +11,11 @@
 
 #include "paul.h"
 #include "paul_heuristic.h"
-
 #include "common_functions.h"
+
+#include "inputdatalocator.h"
+#include "abbadingoparser.h"
+#include "csvparser.h"
 
 #include "greedy.h"
 #include "inputdata.h"
@@ -27,7 +30,6 @@
 // for the threading
 #include <functional>
 #include <thread>
-#include "inputdatalocator.h"
 
 using namespace std;
 using namespace active_learning_namespace;
@@ -35,7 +37,7 @@ using namespace active_learning_namespace;
 /**
  * @brief Used for multithreading.
  */
-void search_instance::operator()(promise<bool>&& out, std::unique_ptr<state_merger>& merger, std::unique_ptr<apta>& the_apta, const unique_ptr<oracle_base>& oracle, apta_node* red_node, apta_node* blue_node){
+/*void search_instance::operator()(promise<bool>&& out, std::unique_ptr<state_merger>& merger, std::unique_ptr<apta>& the_apta, const unique_ptr<oracle_base>& oracle, apta_node* red_node, apta_node* blue_node){
     //out.set_value(ii_handler->check_consistency(the_apta, oracle, red_node, blue_node));
     static inputdata& id = *inputdata_locator::get(); 
 
@@ -177,13 +179,38 @@ void search_instance::operator()(promise<bool>&& out, std::unique_ptr<state_merg
         return out.set_value(false);
     }
     return out.set_value(true);
+}*/
+
+/**
+ * @brief Get the input-data in the right format into the inputdata structure.
+ */
+void paul_algorithm::load_input_data() {
+    inputdata& id = *inputdata_locator::get();
+
+    bool read_csv = false;
+    if(INPUT_FILE.compare(INPUT_FILE.length() - 4, INPUT_FILE.length(), ".csv") == 0){
+        read_csv = true;
+    }
+
+    cout << "Loading from trace file " + INPUT_FILE << endl;
+    ifstream input_stream = get_inputstream();
+    if(read_csv) {
+        auto input_parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
+        id.read(&input_parser);
+    } else {
+        auto input_parser = abbadingoparser(input_stream);
+        id.read(&input_parser);
+    }
+
+    cout << "Traces loaded." << endl;
 }
+
 
 /**
  * Relevant for parallelization.
  */
-bool paul_algorithm::merge_check(unique_ptr<ii_base>& ii_handler, unique_ptr<state_merger>& merger, unique_ptr<oracle_base>& oracle, unique_ptr<apta>& the_apta, apta_node* red_node, apta_node* blue_node){
-    return ii_handler->check_consistency(the_apta, oracle, red_node, blue_node);
+bool paul_algorithm::merge_check(shared_ptr<ii_base>& ii_handler, unique_ptr<state_merger>& merger, unique_ptr<oracle_base>& oracle, unique_ptr<apta>& the_apta, apta_node* red_node, apta_node* blue_node){
+    return false; //ii_handler->check_consistency(the_apta, oracle, red_node, blue_node);
 }
 
 /**
@@ -214,7 +241,7 @@ refinement* paul_algorithm::get_best_refinement(unique_ptr<state_merger>& merger
         // pre-compute on all pairs to make pre_compute of blue node consistent with all the others
         if(!ii_handler->has_memoized() && ii_handler->size() < 400){
             for(apta_node* red_node: red_its){
-                ii_handler->pre_compute(the_apta, oracle, red_node, blue_node);
+                ii_handler->pre_compute(the_apta, red_node, blue_node);
             }
         }
         else if(!ii_handler->has_memoized()){
@@ -222,7 +249,7 @@ refinement* paul_algorithm::get_best_refinement(unique_ptr<state_merger>& merger
         }
 
         bool mergeable = false;
-        ii_handler->pre_compute(the_apta, oracle, blue_node);
+        ii_handler->pre_compute(the_apta, blue_node);
 
         if(N_THREADS == 1){
             for(apta_node* red_node: red_its){
@@ -231,10 +258,10 @@ refinement* paul_algorithm::get_best_refinement(unique_ptr<state_merger>& merger
 
                 // we only want to add data if they appear consistent so far
                 if(ADD_TRACES){
-                    ii_handler->complement_nodes(the_apta, oracle, red_node, blue_node);
+                    ii_handler->complement_nodes(the_apta, red_node, blue_node);
                     ref = merger->test_merge(red_node, blue_node);
                 }
-                else if(!ii_handler->check_consistency(the_apta, oracle, red_node, blue_node)){
+                else if(!ii_handler->check_consistency(the_apta, red_node, blue_node)){
                     continue;
                 }
                 
@@ -249,7 +276,7 @@ refinement* paul_algorithm::get_best_refinement(unique_ptr<state_merger>& merger
                     break;
             }
         }
-        else{
+        else{/*
             static vector<search_instance> search_instances(N_THREADS); // avoid redundant reconstruction of objects
 
             vector<thread> threads;
@@ -298,7 +325,7 @@ refinement* paul_algorithm::get_best_refinement(unique_ptr<state_merger>& merger
                     rs.insert(current_refs[i]);
                     mergeable = true;
                 }
-            }
+            }*/
         }
         
         if(!mergeable)

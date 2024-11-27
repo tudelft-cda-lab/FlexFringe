@@ -1,5 +1,5 @@
 /**
- * @file active_sul_oracle.cpp
+ * @file discrete_output_sul_oracle.cpp
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
  * @brief
  * @version 0.1
@@ -9,7 +9,7 @@
  *
  */
 
-#include "active_sul_oracle.h"
+#include "discrete_output_sul_oracle.h"
 #include "common_functions.h"
 
 using namespace std;
@@ -21,7 +21,7 @@ using namespace active_learning_namespace;
  * @param merger The merger.
  * @return std::optional< pair< vector<int>, int> > nullopt if no counterexample found, else the counterexample.
  */
-std::optional<pair<vector<int>, sul_response>> active_sul_oracle::equivalence_query(state_merger* merger) {
+/* std::optional<pair<vector<int>, sul_response>> discrete_output_sul_oracle::equivalence_query(state_merger* merger) {
     inputdata& id = *(merger->get_dat());
     apta& hypothesis = *(merger->get_aut());
 
@@ -34,7 +34,7 @@ std::optional<pair<vector<int>, sul_response>> active_sul_oracle::equivalence_qu
         int true_val = resp.GET_INT();
 
         if (true_val < 0)
-            return make_optional(query_string, resp); // target automaton cannot be parsed with this query string
+            return make_optional(make_pair(query_string, resp)); // target automaton cannot be parsed with this query string
 
         trace* test_tr = vector_to_trace(query_string, id, 0); // type-argument irrelevant here
 
@@ -46,7 +46,7 @@ std::optional<pair<vector<int>, sul_response>> active_sul_oracle::equivalence_qu
             if (n == nullptr) {
                 cout << "Counterexample because tree not parsable" << endl;
                 //cex_search_strategy->reset();
-                return make_optional<pair<vector<int>, int>>(make_pair(query_string, true_val));
+                return make_optional<pair<vector<int>, sul_response>>(make_pair(query_string, sul_response(true_val)));
             }
 
             t = t->future();
@@ -60,10 +60,10 @@ std::optional<pair<vector<int>, sul_response>> active_sul_oracle::equivalence_qu
                 cout << id.get_symbol(x) << " ";
             cout << endl;
             
-            pair< vector<int>, optional<response_wrapper> > conflict_rep_pair = conflict_searcher->get_conflict_string(query_string, hypothesis, id);
+            pair< vector<int>, optional<sul_response> > conflict_rep_pair = conflict_searcher->get_conflict_string(query_string, hypothesis, id);
             if(conflict_rep_pair.second == nullopt)
-                return make_optional<pair<vector<int>, int>>(make_pair(query_string, true_val));
-            return make_optional<pair<vector<int>, int>>(make_pair(conflict_rep_pair.first, conflict_rep_pair.second.value().get_int_response()));
+                return make_optional<pair<vector<int>, sul_response>>(make_pair(query_string, sul_response(true_val)));
+            return make_optional<pair<vector<int>, sul_response>>(make_pair(conflict_rep_pair.first, conflict_rep_pair.second.value()));
         }
 
         query_string_opt = cex_search_strategy->next(id);
@@ -71,3 +71,4 @@ std::optional<pair<vector<int>, sul_response>> active_sul_oracle::equivalence_qu
 
     return nullopt;
 }
+ */

@@ -15,6 +15,7 @@
 #include "source/input/inputdata.h"
 #include "sul_base.h"
 #include "state_merger.h"
+#include "parameters.h"
 
 #include <memory>
 #include <optional>
@@ -25,7 +26,10 @@ class search_base {
     const int MAX_SEARCH_DEPTH;
 
   public:
-    search_base(const int max_depth) : MAX_SEARCH_DEPTH(max_depth){};
+    search_base() : MAX_SEARCH_DEPTH(MAX_AL_SEARCH_DEPTH){
+      if(MAX_AL_SEARCH_DEPTH < 1)
+        throw std::invalid_argument("invalid input: maximum search depth must be greater than 1");
+    };
 
     virtual std::optional<std::vector<int>> next(const inputdata& id) = 0;
     virtual void reset(){};

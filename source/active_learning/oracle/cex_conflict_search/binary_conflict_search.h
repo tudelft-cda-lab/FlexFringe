@@ -17,7 +17,7 @@
 class binary_conflict_search : public conflict_search_base {
   public:
     binary_conflict_search(const std::shared_ptr<conflict_detector_base>& cd) : conflict_search_base(cd) {
-      throw std::exception("binary_conflict_search not implemented yet");
+      throw std::logic_error("binary_conflict_search not implemented yet");
     };
 };
 

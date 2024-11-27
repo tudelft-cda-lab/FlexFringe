@@ -138,11 +138,8 @@ class ldot_algorithm : public algorithm_base {
           STORE_ACCESS_STRINGS = true;
         };
 
-    ldot_algorithm(std::initializer_list< std::unique_ptr<oracle_base> >&& i_list){
-      // TODO: update this constructor 
-      //std::cerr << "This algorithm does not support multiple oracles. Oracle 2 is ignored." << std::endl;
-      //std::unique_ptr<oracle_base>& ptr = *(i_list.begin());
-      //ldot_algorithm(std::move(ptr));
+    ldot_algorithm(std::vector< std::unique_ptr<oracle_base> >&& i_list) : : ldot_algorithm(std::move(i_list[0])){
+      throw std::logic_error("constructor not implemented");
     }
 
     /**
