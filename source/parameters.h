@@ -171,6 +171,7 @@ extern std::string ORACLE_2;
 extern std::string SYSTEM_UNDER_LEARNING;
 extern std::string SYSTEM_UNDER_LEARNING_2;
 extern std::string II_NAME;
+extern int AL_BATCH_SIZE;
 
 extern int START_SYMBOL;
 extern int END_SYMBOL;

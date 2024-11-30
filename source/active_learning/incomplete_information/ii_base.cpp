@@ -54,16 +54,3 @@ void ii_base::complete_node(apta_node* node, unique_ptr<apta>& aut){
   data = dynamic_cast<paul_data*>(node->get_data());
   data->set_confidence(confidence);
 }
-
-/**
- * @brief To be overridden.
- */
-bool ii_base::check_consistency(unique_ptr<apta>& aut, apta_node* left, apta_node* right){
-  static bool init = false;
-  if(!init){
-    init = true;
-    cerr << "WARNING: This method does not support check_consistency() yet. Either change input parameters or implement this method." << endl;
-  }
-
-  return true;
-}

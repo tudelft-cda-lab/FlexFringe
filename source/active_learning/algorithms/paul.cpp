@@ -239,14 +239,14 @@ refinement* paul_algorithm::get_best_refinement(unique_ptr<state_merger>& merger
     for (auto blue_node: blue_its) {
         
         // pre-compute on all pairs to make pre_compute of blue node consistent with all the others
-        if(!ii_handler->has_memoized() && ii_handler->size() < 400){
+        //if(!ii_handler->has_memoized() && ii_handler->size() < 400){
             for(apta_node* red_node: red_its){
                 ii_handler->pre_compute(the_apta, red_node, blue_node);
             }
-        }
-        else if(!ii_handler->has_memoized()){
-            ii_handler->memoize();
-        }
+        //}
+        //else if(!ii_handler->has_memoized()){
+        //    ii_handler->memoize();
+        //}
 
         bool mergeable = false;
         ii_handler->pre_compute(the_apta, blue_node);
@@ -257,11 +257,7 @@ refinement* paul_algorithm::get_best_refinement(unique_ptr<state_merger>& merger
                 if(ref == nullptr) continue;
 
                 // we only want to add data if they appear consistent so far
-                if(ADD_TRACES){
-                    ii_handler->complement_nodes(the_apta, red_node, blue_node);
-                    ref = merger->test_merge(red_node, blue_node);
-                }
-                else if(!ii_handler->check_consistency(the_apta, red_node, blue_node)){
+                if(!ii_handler->check_consistency(the_apta, red_node, blue_node)){
                     continue;
                 }
                 

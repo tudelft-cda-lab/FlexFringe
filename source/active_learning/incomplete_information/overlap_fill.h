@@ -17,6 +17,7 @@
 #define __OVERLAP_FILL_H__
 
 #include "ii_base.h"
+#include "parameters.h"
 
 #include <optional>
 #include <unordered_set>
@@ -27,17 +28,18 @@ class overlap_fill : public ii_base {
     __attribute__((always_inline)) inline void add_data_to_tree(std::unique_ptr<apta>& aut, active_learning_namespace::pref_suf_t& seq, apta_node* n, std::optional<int> s_opt=std::nullopt);
 
   protected:
-    const int MAX_DEPTH = 25; // TODO: initialize better than here
+    const int MAX_DEPTH;
 
     inline void add_child_node(std::unique_ptr<apta>& aut, apta_node* node, const int symbol);
+    void complement_nodes(std::unordered_set<apta_node*>& seen_nodes, std::unique_ptr<apta>& aut, apta_node* left, apta_node* right, const int depth);
+    void complete_node(apta_node* node, std::unique_ptr<apta>& aut);
 
   public:
-    overlap_fill(const std::shared_ptr<sul_base>& sul) : ii_base(sul) {};
+    overlap_fill(const std::shared_ptr<sul_base>& sul) : ii_base(sul), MAX_DEPTH(MAX_AL_SEARCH_DEPTH) {};
 
-    void complement_nodes(std::unique_ptr<apta>& aut, apta_node* left, apta_node* right) override;
-    void complement_nodes(std::unordered_set<apta_node*>& seen_nodes, std::unique_ptr<apta>& aut, apta_node* left, apta_node* right, const int depth);
-    
-    void complete_node(apta_node* node, std::unique_ptr<apta>& aut) override;
+    void pre_compute(std::unique_ptr<apta>& aut, apta_node* left) override { /*Nothing to do here*/ };
+    void pre_compute(std::unique_ptr<apta>& aut, apta_node* left, apta_node* right) override;
+    bool check_consistency(std::unique_ptr<apta>& aut, apta_node* left, apta_node* right) override { return true; }
 };
 
 #endif

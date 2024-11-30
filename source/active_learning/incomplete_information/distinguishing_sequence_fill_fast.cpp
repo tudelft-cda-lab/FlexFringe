@@ -1,5 +1,5 @@
 /**
- * @file distinguishing_sequence_fill.cpp
+ * @file distinguishing_sequence_fill_fast.cpp
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
  * @brief 
  * @version 0.1
@@ -9,7 +9,7 @@
  * 
  */
 
-#include "distinguishing_sequence_fill.h"
+#include "distinguishing_sequence_fill_fast.h"
 #include "paul_heuristic.h"
 #include "parameters.h"
 
@@ -24,7 +24,7 @@ using namespace std;
  * @brief Takes the two nodes, walks through their subtrees, and stores all the suffixes for which the two subtree disagree. 
  * If a suffix in not in the set of distinguishing sequences at the moment, then it will be added 
  */
-void distinguishing_sequence_fill::pre_compute(list<int>& suffix, unordered_set<apta_node*>& seen_nodes, unique_ptr<apta>& aut, apta_node* left, apta_node* right, const int depth) {
+void distinguishing_sequence_fill_fast::pre_compute(list<int>& suffix, unordered_set<apta_node*>& seen_nodes, unique_ptr<apta>& aut, apta_node* left, apta_node* right, const int depth) {
   const static int max_search_depth = MAX_AL_SEARCH_DEPTH;
   if(max_search_depth > 0 && (left->get_depth() > max_search_depth || right->get_depth() > max_search_depth)) // making sure we don't bust the transformer
     return;
@@ -50,8 +50,10 @@ void distinguishing_sequence_fill::pre_compute(list<int>& suffix, unordered_set<
   }
 
   if(l_data->predict_type(nullptr) != r_data->predict_type(nullptr)){
-    //if(!ds_ptr->contains(suffix)) // TODO: We can use a bloom filter here for example...
-    ds_ptr->add_sequence(suffix);
+    if(!ds_ptr->contains(suffix)){ // inefficient like this, we can optimize by giving add sequence a return value to test on
+      m_suffixes.emplace_back(suffix.begin(), suffix.end());
+      ds_ptr->add_sequence(suffix);
+    }
   }
 
   // first do the right side
@@ -112,8 +114,8 @@ void distinguishing_sequence_fill::pre_compute(list<int>& suffix, unordered_set<
 /**
  * @brief Collect all sequences that distinguish the two states.
  */
-void distinguishing_sequence_fill::pre_compute(unique_ptr<apta>& aut, apta_node* left, apta_node* right){
-  list<int> suffix; // TODO: forward_list?
+void distinguishing_sequence_fill_fast::pre_compute(unique_ptr<apta>& aut, apta_node* left, apta_node* right){
+  list<int> suffix;
   unordered_set<apta_node*> seen_nodes;
   pre_compute(suffix, seen_nodes, aut, left, right, 0);
 }
@@ -121,7 +123,7 @@ void distinguishing_sequence_fill::pre_compute(unique_ptr<apta>& aut, apta_node*
 /**
  * @brief Helper function used to add sequences to the tree (putting the data into the node's information).
  */
-void distinguishing_sequence_fill::add_data_to_tree(unique_ptr<apta>& aut, const vector<int>& seq, const int reverse_type, const float confidence){
+void distinguishing_sequence_fill_fast::add_data_to_tree(unique_ptr<apta>& aut, const vector<int>& seq, const int reverse_type, const float confidence){
   static inputdata& id = *(inputdata_locator::get());
 
   trace* new_trace = active_learning_namespace::vector_to_trace(seq, id, reverse_type);
@@ -143,7 +145,7 @@ void distinguishing_sequence_fill::add_data_to_tree(unique_ptr<apta>& aut, const
  * @brief Memoizes the suffixes. Saves us recomputation at the expense of memory and possible accuracy.
  * 
  */
-/* void distinguishing_sequence_fill::memoize() noexcept {
+/* void distinguishing_sequence_fill_fast::memoize() noexcept {
   optional< vector<int> > suffix_opt = ds_ptr->next();
   while(suffix_opt){
     m_suffixes.push_back(move(suffix_opt.value()));
@@ -157,7 +159,7 @@ void distinguishing_sequence_fill::add_data_to_tree(unique_ptr<apta>& aut, const
  * @brief Prerequisite to check_consistency. We already compute the distribution for the red node, 
  * saving us recomputation of the same distribution over and over again.
  */
-void distinguishing_sequence_fill::pre_compute(unique_ptr<apta>& aut, apta_node* node) {
+void distinguishing_sequence_fill_fast::pre_compute(unique_ptr<apta>& aut, apta_node* node) {
   static inputdata& id = *inputdata_locator::get(); 
 
   auto right_access_trace = node->get_access_trace();
@@ -167,18 +169,16 @@ void distinguishing_sequence_fill::pre_compute(unique_ptr<apta>& aut, apta_node*
   unordered_set<int> no_pred_idxs;
   memoized_predictions.clear();
 
-  optional< vector<int> > suffix = ds_ptr->next();
-  while(suffix){
-    if(right_prefix.size() + suffix.value().size() > MAX_LEN){
-      suffix = ds_ptr->next();
+  for(const auto& suffix: m_suffixes){
+    if(right_prefix.size() + suffix.size() > MAX_LEN){
       no_pred_idxs.insert(queries.size()+no_pred_idxs.size()); // invalid prediction
       continue;
     }
 
-    queries.push_back(active_learning_namespace::concatenate_vectors(right_prefix, suffix.value()));
+    queries.push_back(active_learning_namespace::concatenate_vectors(right_prefix, suffix));
     if(queries.size() >= MIN_BATCH_SIZE){ // if min-batch size % 2 != 0 will be larger
       const sul_response response = sul->do_query(queries, *(inputdata_locator::get()));
-
+        
       int answers_idx = 0;
       const vector<int>& answers = response.GET_INT_VEC();
       for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
@@ -193,8 +193,6 @@ void distinguishing_sequence_fill::pre_compute(unique_ptr<apta>& aut, apta_node*
       queries.clear();
       no_pred_idxs.clear();
     }
-
-    suffix = ds_ptr->next();
   }
 
   if(queries.size() > 0){
@@ -218,7 +216,7 @@ void distinguishing_sequence_fill::pre_compute(unique_ptr<apta>& aut, apta_node*
  * @return true If consistent.
  * @return false If not consistent.
  */
-bool distinguishing_sequence_fill::check_consistency(unique_ptr<apta>& aut, apta_node* left, apta_node* right){
+bool distinguishing_sequence_fill_fast::check_consistency(unique_ptr<apta>& aut, apta_node* left, apta_node* right){
   static inputdata& id = *inputdata_locator::get(); 
 
   auto left_access_trace = left->get_access_trace();
@@ -228,18 +226,16 @@ bool distinguishing_sequence_fill::check_consistency(unique_ptr<apta>& aut, apta
   vector<int> predictions;
   unordered_set<int> no_pred_idxs;
 
-  optional< vector<int> > suffix = ds_ptr->next();
-  while(suffix){
-    if(left_prefix.size() + suffix.value().size() > MAX_LEN){
+  for(const auto& suffix: m_suffixes){
+    if(left_prefix.size() + suffix.size() > MAX_LEN){
       no_pred_idxs.insert(queries.size()+no_pred_idxs.size());
-      suffix = ds_ptr->next();
       continue;
     }
 
-    queries.push_back(active_learning_namespace::concatenate_vectors(left_prefix, suffix.value()));
+    queries.push_back(active_learning_namespace::concatenate_vectors(left_prefix, suffix));
     if(queries.size() >= MIN_BATCH_SIZE){
       const sul_response response = sul->do_query(queries, *(inputdata_locator::get()));
-        
+
       int answers_idx = 0;
       const vector<int>& answers = response.GET_INT_VEC();
       for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
@@ -254,8 +250,6 @@ bool distinguishing_sequence_fill::check_consistency(unique_ptr<apta>& aut, apta
       queries.clear();
       no_pred_idxs.clear();
     }
-
-    suffix = ds_ptr->next();
   }
 
   if(queries.size() > 0){
@@ -292,7 +286,7 @@ bool distinguishing_sequence_fill::check_consistency(unique_ptr<apta>& aut, apta
 
   float ratio = static_cast<float>(disagreed) / (static_cast<float>(disagreed) + static_cast<float>(agreed));
   static float threshold = CHECK_PARAMETER;
-  if(ratio > threshold){
+  if(ratio > threshold){ // TODO: set that threshold somewhere
     //cout << "Disagreed: " << disagreed << " | agreed: " << agreed << " | ratio: " << ratio << endl;
     return false;
   }
@@ -303,7 +297,7 @@ bool distinguishing_sequence_fill::check_consistency(unique_ptr<apta>& aut, apta
  * @brief Take all the distinguishing sequences you currently have, add them to the two nodes, and ask the transformer to fill those two out.
  * Afterwards, reset the distinguishing sequences back to their original state.
  */
-/*void distinguishing_sequence_fill::complement_nodes(unique_ptr<apta>& aut, apta_node* left, apta_node* right) {
+/*void distinguishing_sequence_fill_fast::complement_nodes(unique_ptr<apta>& aut, apta_node* left, apta_node* right) {
   return; // we currently do not want this option
 
   auto left_access_trace = left->get_access_trace();

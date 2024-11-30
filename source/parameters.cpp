@@ -152,6 +152,7 @@ std::string CEX_SEARCH_STRATEGY = "random_w_method";
 int MAX_AL_SEARCH_DEPTH = 10;
 int MAX_CEX_LENGTH = 10;
 int NUM_CEX_PARAM = 5000;
+int AL_BATCH_SIZE = 256;
 
 std::string POSTGRESQL_CONNSTRING = "";
 std::string POSTGRESQL_TBLNAME = "";

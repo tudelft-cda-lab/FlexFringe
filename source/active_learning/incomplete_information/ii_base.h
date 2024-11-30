@@ -26,7 +26,6 @@
 class ii_base {
   protected:
     std::shared_ptr<sul_base> sul;
-    inline static bool memoized = false; // set to true when memoize
 
   public:
     ii_base(const std::shared_ptr<sul_base>& sul) : sul(sul){};
@@ -39,30 +38,18 @@ class ii_base {
      * @brief Pre-computation on a node pair. For example relevant in distinguishing sequence approach, where we 
      * first collect a few distinguishing sequences before starting.
      */
-    virtual void pre_compute(std::unique_ptr<apta>& aut, apta_node* left, apta_node* right){
-      return;
-    }
+    virtual void pre_compute(std::unique_ptr<apta>& aut, apta_node* left, apta_node* right) = 0;
 
     /**
      * @brief Pre-computation on single node. For example relevant in distinguishing sequence approach, where we 
      * use this to memoize partial results to speed up computation.
      */
-    virtual void pre_compute(std::unique_ptr<apta>& aut, apta_node* node){
-      return;
-    }
-
-    /**
-     * @brief This function is meant to complement nodes when attempting to merge. Missing information that is needed to do a better merge will be 
-     * determined e.g. by the sul.
-     */
-    virtual void complement_nodes(std::unique_ptr<apta>& aut, apta_node* left, apta_node* right=nullptr){
-      return;
-    }
+    virtual void pre_compute(std::unique_ptr<apta>& aut, apta_node* node) = 0;
     
     /**
      * @brief We use this function similar to complement_nodes. The difference is that it does not add data to the tree.
      */
-    virtual bool check_consistency(std::unique_ptr<apta>& aut, apta_node* left, apta_node* right);
+    virtual bool check_consistency(std::unique_ptr<apta>& aut, apta_node* left, apta_node* right) = 0;
 
     /**
      * @brief This function completes a single node with the sul.
@@ -76,17 +63,6 @@ class ii_base {
      * @brief Size relevant for some optimizations.
      */
     virtual const int size() const {return -1;}
-
-    /**
-     * @brief Self explainatory.
-     */
-    virtual bool has_memoized() const noexcept {return memoized;}
-
-    /**
-     * @brief Specializations are important.
-     * 
-     */
-    virtual void memoize() noexcept {memoized = true;}
 };
 
 #endif // __II_BASE_H__

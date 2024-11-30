@@ -45,16 +45,6 @@ void overlap_fill_batch_wise::add_data_to_tree(unique_ptr<apta>& aut, const vect
 
 
 /**
- * @brief Queries the given node to give it the data it needs.
- * 
- * @param node The node to query.
- */
-void overlap_fill_batch_wise::complete_node(apta_node* node, unique_ptr<apta>& aut){  
-  ii_base::complete_node(node, aut);
-}
-
-
-/**
  * @brief Adds a child node to node with the edge labeled with symbol. The new node is automatically
  * filled with information from the sul (to avoid duplicate queries).
  * 
@@ -75,7 +65,7 @@ void overlap_fill_batch_wise::complete_node(apta_node* node, unique_ptr<apta>& a
  * @brief Here we collect all the traces we want to ask the transformer.
  * Side effect: Unknown types of nodes in between still get filled, just like in base_class. 
  */
-void overlap_fill_batch_wise::complement_nodes(vector< vector<int> >& query_traces, vector< pair<apta_node*, int> >& query_node_symbol_pairs, unordered_set<apta_node*>& seen_nodes, unique_ptr<apta>& aut, apta_node* left, apta_node* right, const int depth){
+void overlap_fill_batch_wise::pre_compute(vector< vector<int> >& query_traces, vector< pair<apta_node*, int> >& query_node_symbol_pairs, unordered_set<apta_node*>& seen_nodes, unique_ptr<apta>& aut, apta_node* left, apta_node* right, const int depth){
   const static int max_search_depth = MAX_AL_SEARCH_DEPTH;
   if(max_search_depth > 0 && (left->get_depth() > max_search_depth || right->get_depth() > max_search_depth)) // making sure we don't bust the transformer
     return;
@@ -139,7 +129,7 @@ void overlap_fill_batch_wise::complement_nodes(vector< vector<int> >& query_trac
       apta_node* right_child = right_target->find();
       
       if(left_child != right_child){
-        complement_nodes(query_traces, query_node_symbol_pairs, seen_nodes, aut, left_child, right_child, depth+1);
+        pre_compute(query_traces, query_node_symbol_pairs, seen_nodes, aut, left_child, right_child, depth+1);
       }
     }
   }
@@ -183,23 +173,23 @@ void overlap_fill_batch_wise::complement_nodes(vector< vector<int> >& query_trac
       apta_node* right_child = right_target->find();
       
       if(left_child != right_child){
-        complement_nodes(query_traces, query_node_symbol_pairs, seen_nodes, aut, left_child, right_child, depth+1);
+        pre_compute(query_traces, query_node_symbol_pairs, seen_nodes, aut, left_child, right_child, depth+1);
       } 
     }
   }
 }
 
 /**
- * @brief Entry point to the overloaded function. Created a set of seen states and starts the main complement_nodes subroutine.
+ * @brief Entry point to the overloaded function. Created a set of seen states and starts the main pre_compute subroutine.
  * 
  * For a more detailed description see the overloaded function.
  */
-void overlap_fill_batch_wise::complement_nodes(unique_ptr<apta>& aut, apta_node* left, apta_node* right){
+void overlap_fill_batch_wise::pre_compute(unique_ptr<apta>& aut, apta_node* left, apta_node* right){
   unordered_set<apta_node*> seen_nodes;
   vector< vector<int> > query_traces;
   vector< pair<apta_node*, int> > query_node_symbol_pairs;
 
-  complement_nodes(query_traces, query_node_symbol_pairs, seen_nodes, aut, left, right, 0);
+  pre_compute(query_traces, query_node_symbol_pairs, seen_nodes, aut, left, right, 0);
 
   if(query_traces.size() == 0)
     return;

@@ -114,6 +114,8 @@ add_library(ActiveLearning STATIC
             incomplete_information/overlap_fill_batch_wise.cpp
             incomplete_information/distinguishing_sequence_fill.h
             incomplete_information/distinguishing_sequence_fill.cpp
+            incomplete_information/distinguishing_sequence_fill_fast.h
+            incomplete_information/distinguishing_sequence_fill_fast.cpp
 
             # Everything related to memory and possible memoization techniques
             memory/observation_table.h

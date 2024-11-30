@@ -548,6 +548,7 @@ int main(int argc, char *argv[]){
     app.add_option("--oracle2", ORACLE_2, "In case we are using a second oracle.");
     app.add_option("--system_under_learning", SYSTEM_UNDER_LEARNING, "The system under learning. Has to be specified!");
     app.add_option("--system_under_learning_2", SYSTEM_UNDER_LEARNING_2, "The second system under learning. Used if more than one type of oracle queries have  to be used, see e.g. Ldot/DAALDer.");
+    app.add_option("--al_batch_size", AL_BATCH_SIZE, "The batch size as it is used in some of the active learning algorithms. Useful for example when querying networks, as it speeds up the inference on the networks. Trade-off is between speed and RAM size. Default: 256");
     app.add_option("--cex_search_strategy", CEX_SEARCH_STRATEGY, "The strategy to search for counterexamples. Normally the random w-method will do, but depending on your case you might want to choose. Default: random_w_method.");
     app.add_option("--ii_handler_name", II_NAME, "The name of the incomplete information instance. If left empty, then no ii handler is being created. Not all algorithms support ii handlers. Default: [empty].");
 

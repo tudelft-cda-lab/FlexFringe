@@ -176,7 +176,7 @@ void overlap_fill::complement_nodes(unordered_set<apta_node*>& seen_nodes, uniqu
  * 
  * For a more detailed description see the overloaded function.
  */
-void overlap_fill::complement_nodes(unique_ptr<apta>& aut, apta_node* left, apta_node* right){
+void overlap_fill::pre_compute(unique_ptr<apta>& aut, apta_node* left, apta_node* right){
   unordered_set<apta_node*> seen_nodes;
   complement_nodes(seen_nodes, aut, left, right, 0);
 }
