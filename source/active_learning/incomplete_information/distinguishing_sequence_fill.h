@@ -33,6 +33,11 @@ class distinguishing_sequence_fill : public ii_base {
     void pre_compute(std::list<int>& suffix, std::unordered_set<apta_node*>& seen_nodes, std::unique_ptr<apta>& aut, apta_node* left, apta_node* right, const int depth);
   
     void add_data_to_tree(std::unique_ptr<apta>& aut, const std::vector<int>& seq, const int reverse_type, const float confidence);
+    
+    std::vector<int> predict_node_with_automaton(apta& aut, apta_node* node) override;
+    std::vector<int> predict_node_with_sul(apta& aut, apta_node* node) override;
+
+    bool distributions_consistent(const std::vector<int>& v1, const std::vector<int>& v2) const override;
 
   public:
     distinguishing_sequence_fill(const std::shared_ptr<sul_base>& sul) 

@@ -154,10 +154,13 @@ void distinguishing_sequence_fill::add_data_to_tree(unique_ptr<apta>& aut, const
 } */
 
 /**
- * @brief Prerequisite to check_consistency. We already compute the distribution for the red node, 
- * saving us recomputation of the same distribution over and over again.
+ * @brief Gets a prediction of a node
+ * 
+ * @param aut 
+ * @param node 
+ * @return std::vector<int> 
  */
-void distinguishing_sequence_fill::pre_compute(unique_ptr<apta>& aut, apta_node* node) {
+vector<int> distinguishing_sequence_fill::predict_node_with_sul(apta& aut, apta_node* node){
   static inputdata& id = *inputdata_locator::get(); 
 
   auto right_access_trace = node->get_access_trace();
@@ -165,7 +168,7 @@ void distinguishing_sequence_fill::pre_compute(unique_ptr<apta>& aut, apta_node*
   
   vector< vector<int> > queries;
   unordered_set<int> no_pred_idxs;
-  memoized_predictions.clear();
+  vector<int> res;
 
   optional< vector<int> > suffix = ds_ptr->next();
   while(suffix){
@@ -183,10 +186,10 @@ void distinguishing_sequence_fill::pre_compute(unique_ptr<apta>& aut, apta_node*
       const vector<int>& answers = response.GET_INT_VEC();
       for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
         if(no_pred_idxs.contains(i)){
-          memoized_predictions.push_back(-1);
+          res.push_back(-1);
           continue;
         }
-        memoized_predictions.push_back(answers[answers_idx]);
+        res.push_back(answers[answers_idx]);
         ++answers_idx;
       }
           
@@ -204,53 +207,58 @@ void distinguishing_sequence_fill::pre_compute(unique_ptr<apta>& aut, apta_node*
     const vector<int>& answers = response.GET_INT_VEC();
     for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
       if(no_pred_idxs.contains(i)){
-        memoized_predictions.push_back(-1);
+        res.push_back(-1);
         continue;
       }
-      memoized_predictions.push_back(answers[answers_idx]);
+      res.push_back(answers[answers_idx]);
       ++answers_idx;
     }
   }
+
+  return res;
 }
 
 /**
- * @brief Throw in all the distinguishing sequences, and see how many disagreements you do have on that.
- * @return true If consistent.
- * @return false If not consistent.
+ * @brief Predicts the distribution emanating from node using the automaton using 
+ * the DS. If automaton cannot be parsed with the strings the prediction is -1.
  */
-bool distinguishing_sequence_fill::check_consistency(unique_ptr<apta>& aut, apta_node* left, apta_node* right){
+vector<int> distinguishing_sequence_fill::predict_node_with_automaton(apta& aut, apta_node* node){
   static inputdata& id = *inputdata_locator::get(); 
 
-  auto left_access_trace = left->get_access_trace();
-  const active_learning_namespace::pref_suf_t left_prefix = left_access_trace->get_input_sequence(true, false);
+  auto right_access_trace = node->get_access_trace();
+  const active_learning_namespace::pref_suf_t right_prefix = right_access_trace->get_input_sequence(true, false);
   
   vector< vector<int> > queries;
-  vector<int> predictions;
   unordered_set<int> no_pred_idxs;
+  vector<int> res;
 
   optional< vector<int> > suffix = ds_ptr->next();
   while(suffix){
-    if(left_prefix.size() + suffix.value().size() > MAX_LEN){
-      no_pred_idxs.insert(queries.size()+no_pred_idxs.size());
+    if(right_prefix.size() + suffix.value().size() > MAX_LEN){
       suffix = ds_ptr->next();
+      no_pred_idxs.insert(queries.size()+no_pred_idxs.size()); // invalid prediction
       continue;
     }
 
-    queries.push_back(active_learning_namespace::concatenate_vectors(left_prefix, suffix.value()));
-    if(queries.size() >= MIN_BATCH_SIZE){
-      const sul_response response = sul->do_query(queries, *(inputdata_locator::get()));
-        
+    queries.push_back(active_learning_namespace::concatenate_vectors(right_prefix, suffix.value()));
+    if(queries.size() >= MIN_BATCH_SIZE){ // if min-batch size % 2 != 0 will be larger
+      
       int answers_idx = 0;
-      const vector<int>& answers = response.GET_INT_VEC();
-      for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
-        if(no_pred_idxs.contains(i)){
-          predictions.push_back(-1);
-          continue;
-        }
-        predictions.push_back(answers[answers_idx]);
-        ++answers_idx;
+      vector<int> answers;
+      for(auto query : queries){
+        const int answer = active_learning_namespace::predict_type_from_trace(active_learning_namespace::vector_to_trace(query, id), &aut, id);
+        answers.push_back(answer);
       }
 
+      for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
+        if(no_pred_idxs.contains(i)){
+          res.push_back(-1);
+          continue;
+        }
+        res.push_back(answers[answers_idx]);
+        ++answers_idx;
+      }
+          
       queries.clear();
       no_pred_idxs.clear();
     }
@@ -259,32 +267,48 @@ bool distinguishing_sequence_fill::check_consistency(unique_ptr<apta>& aut, apta
   }
 
   if(queries.size() > 0){
-    //m_mutex.lock();
     const sul_response response = sul->do_query(queries, *(inputdata_locator::get()));
-    //m_mutex.unlock();
-
+    
     int answers_idx = 0;
-    const vector<int>& answers = response.GET_INT_VEC();
+    vector<int> answers;
+    for(auto query : queries){
+      const int answer = active_learning_namespace::predict_type_from_trace(active_learning_namespace::vector_to_trace(query, id), &aut, id);
+      answers.push_back(answer);
+    }
+
     for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
       if(no_pred_idxs.contains(i)){
-        predictions.push_back(-1);
+        res.push_back(-1);
         continue;
       }
-      predictions.push_back(answers[answers_idx]);
+      res.push_back(answers[answers_idx]);
       ++answers_idx;
     }
   }
 
-  if(memoized_predictions.size() != predictions.size()){
-    cerr << "Something weird happened." << endl;
-  }
+  return res;
+}
 
+
+/**
+ * @brief Avoids duplicate code.
+ */
+bool distinguishing_sequence_fill::distributions_consistent(const std::vector<int>& v1, const std::vector<int>& v2) const {
+  if(v1.size() != v2.size())
+    throw runtime_error("Something weird happened in predictions");
+  
   int agreed = 0;
   int disagreed = 0;
-  for(int i=0; i<predictions.size(); ++i){
-    if(memoized_predictions[i]==-1 || predictions[i]==-1)
+  for(int i=0; i<v1.size(); ++i){
+    if(v1[i]==-1 || v2[i]==-1){ // string could not be queried, perhaps too long for transformer?
+      //cerr << "Invalid prediction likely resulting from non-parsable string. Deeming inconsistent." << endl;
+      //return false;
       continue;
-    else if(memoized_predictions[i] == predictions[i])
+    }
+    else if(v1[i] < -1 || v2[i] < -1)
+      cerr << "Something weird happened in return value here. Please check." << endl;
+      
+    else if(v1[i] == v2[i])
       ++agreed;
     else
       ++disagreed;
@@ -297,6 +321,24 @@ bool distinguishing_sequence_fill::check_consistency(unique_ptr<apta>& aut, apta
     return false;
   }
   return true;
+}
+
+/**
+ * @brief Prerequisite to check_consistency. We already compute the distribution for the red node, 
+ * saving us recomputation of the same distribution over and over again.
+ */
+void distinguishing_sequence_fill::pre_compute(unique_ptr<apta>& aut, apta_node* node) {
+  memoized_predictions = predict_node_with_sul(*aut, node);
+}
+
+/**
+ * @brief Throw in all the distinguishing sequences, and see how many disagreements you do have on that.
+ * @return true If consistent.
+ * @return false If not consistent.
+ */
+bool distinguishing_sequence_fill::check_consistency(unique_ptr<apta>& aut, apta_node* left, apta_node* right){
+  vector<int> predictions = predict_node_with_sul(*aut, left);
+  return distributions_consistent(memoized_predictions, predictions);
 }
 
 /**

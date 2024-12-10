@@ -400,10 +400,10 @@ list<refinement*> paul_algorithm::find_hypothesis(list<refinement*>& previous_re
         } */
 
 //#ifndef NDEBUG
-/*         {
+        {
             static int c = 0;
             merger->print_dot("after_" + to_string(c++) + ".dot");
-        } */
+        }
 //#endif
 
         //delete best_ref;

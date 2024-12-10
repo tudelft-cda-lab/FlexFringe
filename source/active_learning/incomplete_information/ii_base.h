@@ -63,6 +63,30 @@ class ii_base {
      * @brief Size relevant for some optimizations.
      */
     virtual const int size() const {return -1;}
+
+    /**
+     * @brief Get a vector of responses starting from the desired node according to the criterion set 
+     * by the ii-handler. Predictions are based on the current automaton/hypothesis.
+     */
+    virtual std::vector<int> predict_node_with_automaton(apta& aut, apta_node* node){
+      throw std::invalid_argument("This ii-handler does not support predict_node_with_automaton function");
+    }
+    
+    /**
+     * @brief Get a vector of responses starting from the desired node according to the criterion set 
+     * by the ii-handler. Predictions are based on sul.
+     */
+    virtual std::vector<int> predict_node_with_sul(apta& aut, apta_node* node){
+      throw std::invalid_argument("This ii-handler does not support predict_node_with_sul function");
+    }
+
+    /**
+     * @brief A function determining whether the distributions as gained from predict_node_with_automaton
+     * and predict_node_with_sul are consistent.
+     */
+    virtual bool distributions_consistent(const std::vector<int>& v1, const std::vector<int>& v2) const {
+      throw std::invalid_argument("This ii-handler does not support distributions_consistent function");
+    }
 };
 
 #endif // __II_BASE_H__

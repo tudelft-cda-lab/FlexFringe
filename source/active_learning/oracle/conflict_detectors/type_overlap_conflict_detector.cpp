@@ -10,23 +10,24 @@
  */
 
 #include "type_overlap_conflict_detector.h"
+#include "common_functions.h"
 
 using namespace std;
+using namespace active_learning_namespace;
 
 pair<bool, optional<sul_response> > type_overlap_conflict_detector::creates_conflict(const vector<int>& substr, apta& hypothesis, inputdata& id) {
-  throw logic_error("type_overlap_conflict_detector::creates_conflict not implemented");
-  int true_val = sul->do_query(substr, id).GET_INT();
-  int pred_value = parse_dfa_for_type(substr, hypothesis, id); // TODO: we can do this one faster too via memoization
-
-  if(true_val != pred_value)
-    return make_pair(true, make_optional(sul_response(true_val)));
+  apta_node* n = get_last_node(substr, &hypothesis, id);
+  if(n==nullptr){
+    cout << "Conflict because automaton not parsable" << endl;
+    return make_pair(true, sul->do_query(substr, id));
+  }
   
-  return make_pair(false, nullopt);
-}
+  const vector<int> d1 = ii_handler->predict_node_with_automaton(hypothesis, n);
+  const vector<int> d2 = ii_handler->predict_node_with_sul(hypothesis, n);
 
-/**
- * @brief What you think it does.
- */
-void type_overlap_conflict_detector::set_ii_handler(const std::shared_ptr<ii_base>& ii_handler) noexcept {
-  this->ii_handler = ii_handler;
+  // TODO: we possibly tolerate mispredictions here. Dangerous game
+  if(ii_handler->distributions_consistent(d1, d2))
+    make_pair(false, nullopt);
+
+  return make_pair(true, make_optional(sul->do_query(substr, id)));
 }

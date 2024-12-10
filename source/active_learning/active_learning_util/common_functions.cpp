@@ -91,6 +91,26 @@ const int active_learning_namespace::predict_type_from_trace(trace* tr, apta* au
     return ending_state->get_data()->predict_type(ending_tail);
 }
 
+apta_node* active_learning_namespace::get_last_node(trace* tr, apta* aut, inputdata& id){
+    apta_node* n = aut->get_root();
+    tail* t = tr->get_head(); // TODO: get
+    for (int j = 0; j < t->get_length(); j++) {
+        n = get_child_node(n, t);
+        if (n == nullptr) {
+            return nullptr; // Invariant: inputdata will never map to negative values.
+        }
+        t = t->future();
+    }
+
+    apta_node* ending_state = n;
+    return ending_state;
+}
+
+apta_node* active_learning_namespace::get_last_node(const vector<int>& str, apta* aut, inputdata& id){
+    trace* tr = vector_to_trace(str, id);
+    return get_last_node(tr, aut, id);
+}
+
 /**
  * @brief Concatenates the two traces. Append tr2 to tr1. Takes the trace object of tr1 and appends the tails of tr2 on
  * it, if tr1 is a valid trace. If tr1 is uninitizalized (e.g. the access trace of the root node), is simply returns
