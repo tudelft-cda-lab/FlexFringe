@@ -11,6 +11,27 @@
 REGISTER_DEF_TYPE(lsharp_eval);
 REGISTER_DEF_DATATYPE(lsharp_data);
 
+/**
+ * @brief Compares the two maps, and if the types match return true, else false.
+ */
+bool lsharp_eval::types_match(const std::unordered_map<int, int>& m1, const std::unordered_map<int, int>& m2) const noexcept {
+    for(const auto& counts : m1){
+        const int type = counts.first;
+        const int count = counts.second;
+        
+        if(count != 0){
+            for(auto& counts2 : m2){
+                const int type2 = counts2.first;
+                const int count2 = counts2.second;
+                
+                if(count2 != 0 && type2 != type)
+                    return false;
+            }
+        }
+    }
+
+    return true;
+}
 
 /**
  * @brief Checks the final types (the types of the nodes), and merges only if those are consistent.
@@ -21,34 +42,9 @@ bool lsharp_eval::consistent(state_merger *merger, apta_node* left, apta_node* r
     auto* l = (count_data*)left->get_data();
     auto* r = (count_data*)right->get_data();
 
-    for(auto & final_count : l->final_counts){
-        int type = final_count.first;
-        int count = final_count.second;
-        if(count != 0){
-            for(auto & final_count2 : r->final_counts){
-                int type2 = final_count2.first;
-                int count2 = final_count2.second;
-                if(count2 != 0 && type2 != type){
-                    inconsistency_found = true;
-                    return false;
-                }
-            }
-        }
-    }
-
-    for(auto & final_count : r->final_counts){
-        int type = final_count.first;
-        int count = final_count.second;
-        if(count != 0){
-            for(auto & final_count2 : l->final_counts){
-                int type2 = final_count2.first;
-                int count2 = final_count2.second;
-                if(count2 != 0 && type2 != type){
-                    inconsistency_found = true;
-                    return false;
-                }
-            }
-        }
+    if(!types_match(r->final_counts, l->final_counts) || !types_match(l->final_counts, r->final_counts)){
+        inconsistency_found = true;
+        return false;
     }
     
     return true;

@@ -17,7 +17,7 @@
 class linear_conflict_search : public conflict_search_base {
   protected:
     std::vector<int> current_substring;
-    inline std::vector<int> update_current_substring(const std::vector<int>& cex) noexcept;
+    inline void update_current_substring(const std::vector<int>& cex) noexcept;
     
   public:
     linear_conflict_search(const std::shared_ptr<conflict_detector_base>& cd) : conflict_search_base(cd) {};

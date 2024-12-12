@@ -33,7 +33,7 @@ typedef std::set<apta_node*, size_compare> state_set;
 typedef std::list<int> int_list;
 typedef std::list<double> double_list;
 
-typedef std::map<int, int> num_map;
+typedef std::unordered_map<int, int> num_map;
 
 typedef std::multimap<int, apta_guard*> guard_map;
 typedef std::map<int, double> bound_map;

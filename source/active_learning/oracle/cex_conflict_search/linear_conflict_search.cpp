@@ -26,18 +26,20 @@ using namespace std;
 pair< vector<int>, sul_response> linear_conflict_search::get_conflict_string(const vector<int>& cex, apta& hypothesis, inputdata& id) {
   current_substring.clear();
 
-  pair<bool, optional<sul_response>> resp = conflict_detector->creates_conflict(current_substring, hypothesis, id);
-  while(!resp.first){
+  bool resp = conflict_detector->creates_conflict(current_substring, hypothesis, id).first;
+  while(!resp){ // works because cex has been determined to lead to conflict already
     update_current_substring(cex);
+    resp = conflict_detector->creates_conflict(current_substring, hypothesis, id).first;
   }
 
-  return make_pair(current_substring, resp.second.value());
+  optional<sul_response> sul_resp = conflict_detector->creates_conflict(current_substring, hypothesis, id).second; 
+  return make_pair(current_substring, sul_resp.value());
 }
 
 /**
  * @brief Easy to read.
  */
-vector<int> linear_conflict_search::update_current_substring(const vector<int>& cex) noexcept {
+void linear_conflict_search::update_current_substring(const vector<int>& cex) noexcept {
   int idx = current_substring.size();
   current_substring.push_back(cex[idx]);
 }

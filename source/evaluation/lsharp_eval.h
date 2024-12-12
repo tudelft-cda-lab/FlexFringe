@@ -21,6 +21,8 @@ class lsharp_eval: public count_driven {
 protected:
   REGISTER_DEC_TYPE(lsharp_eval);
 
+  bool types_match(const std::unordered_map<int, int>& m1, const std::unordered_map<int, int>& m2) const noexcept;
+
 public:
   bool consistent(state_merger *merger, apta_node* left, apta_node* right, int depth) override;
   double compute_score(state_merger* merger, apta_node* left, apta_node* right) override;

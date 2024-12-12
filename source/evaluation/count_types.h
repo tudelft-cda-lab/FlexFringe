@@ -3,7 +3,7 @@
 
 #include "evaluate.h"
 
-typedef std::map<int, int> num_map;
+typedef std::unordered_map<int, int> num_map;
 
 /* The data contained in every node of the prefix tree or DFA */
 class count_data: public evaluation_data {
