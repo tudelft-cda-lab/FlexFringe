@@ -122,6 +122,7 @@ list<refinement*> lsharp_algorithm::find_complete_base(unique_ptr<state_merger>&
                                                                 unique_ptr<apta>& the_apta, inputdata& id,
                                                                 const vector<int>& alphabet) {
     static const bool COUNTEREXAMPLE_STRATEGY = false;
+    static const bool merge_root = MERGE_ROOT;
 
     int n_red_nodes = 1; // for the root node
     static const int MAX_RED_NODES = 2500; // TODO: shall we make something like this an input parameter?
@@ -132,7 +133,6 @@ list<refinement*> lsharp_algorithm::find_complete_base(unique_ptr<state_merger>&
     while (true) { // cancel when either not red node identified or max number of nodes is reached
 
         unordered_set<apta_node*> blue_nodes;
-        unordered_set<apta_node*> red_nodes;
 
         cout << ++n_iter << " iterations for this round. Red nodes: " << n_red_nodes << endl;
         
@@ -141,15 +141,15 @@ list<refinement*> lsharp_algorithm::find_complete_base(unique_ptr<state_merger>&
             blue_nodes.insert(blue_node);
         }
 
-        for (red_state_iterator r_it = red_state_iterator(the_apta->get_root()); *r_it != nullptr; ++r_it) {
-            const auto red_node = *r_it;
-            red_nodes.insert(red_node);
-        }
-
         bool identified_red_node = false;
         for (auto blue_node : blue_nodes) {
             refinement_set possible_merges;
-            for(auto red_node: red_nodes){
+
+            for(red_state_iterator r_it = red_state_iterator(the_apta->get_root()); *r_it != nullptr; ++r_it){
+                const auto red_node = *r_it;
+                if(!merge_root && red_node == the_apta->get_root())
+                    continue;
+
                 refinement* ref = merger->test_merge(red_node, blue_node);
                 if (ref != nullptr)
                     possible_merges.insert(ref);
@@ -237,8 +237,14 @@ void lsharp_algorithm::run(inputdata& id) {
 
     {
         // init the root node, s.t. we have blue states to iterate over
+        if(MERGE_ROOT){
+            pref_suf_t seq;
+            const int answer = oracle->ask_sul(seq, id).GET_INT();
+            trace* new_trace = vector_to_trace(seq, id, answer);
+            id.add_trace_to_apta(new_trace, merger->get_aut(), false);
+        }
+
         auto root_node = the_apta->get_root();
-        pref_suf_t seq;
         extend_fringe(merger, root_node, the_apta, id, alphabet);
     }
 
@@ -247,7 +253,7 @@ void lsharp_algorithm::run(inputdata& id) {
     //    print_current_automaton(merger.get(), "model.", "root");
     //}
 
-   while (ENSEMBLE_RUNS > 0 && n_runs <= ENSEMBLE_RUNS) {
+    while (ENSEMBLE_RUNS > 0 && n_runs <= ENSEMBLE_RUNS) {
         if (n_runs % 100 == 0)
             cout << "Iteration " << n_runs + 1 << endl;
 
