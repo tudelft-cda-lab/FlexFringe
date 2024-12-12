@@ -1,5 +1,5 @@
 /**
- * @file l_star_evaluation.cpp
+ * @file lstar_evaluation.cpp
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
  * @brief 
  * @version 0.1
@@ -9,6 +9,6 @@
  * 
  */
 
-#include "l_star_evaluation.h"
+#include "lstar_evaluation.h"
 
 // TODO

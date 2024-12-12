@@ -531,6 +531,7 @@ int main(int argc, char *argv[]){
 
     app.add_option("--batchsize", BATCH_SIZE, "Batchsize for streaming. Default=500");
 
+    // mainly for space-save heuristic
     app.add_option("-e,--epsilon", EPSILON, "Epsilon parameter, determining approximation error.");
     app.add_option("-D,--delta", DELTA, "Delta param, the error rate.");
     app.add_option("--mu", MU, "Distinguishability parameter.");
@@ -539,7 +540,7 @@ int main(int argc, char *argv[]){
     app.add_option("--bootstrap_R", R, "The number of bootstrapped examples.");
     
     // active learning parameters
-    app.add_option("--active_learning_algorithm", ACTIVE_LEARNING_ALGORITHM, "The basic algorithm that runs through. Current options are (l_star). DEFAULT: l_star");
+    app.add_option("--active_learning_algorithm", ACTIVE_LEARNING_ALGORITHM, "The basic algorithm that runs through. Current options are (lstar). DEFAULT: lstar");
     app.add_option("--use_active_learning", DO_ACTIVE_LEARNING, "Perform active learning on top of the normal learner. 1 for true, 0 for false. Default: 0");
     app.add_option("--max_al_search_depth", MAX_AL_SEARCH_DEPTH, "The active learning search depth. Some uses can be disabled with a value <= 0. Critical in models where a maximum-string-length occurs, such as transformer-models. Default: 25");
     app.add_option("--num_cex_search", NUM_CEX_PARAM, "Samples parameter indicating a number in the counterexample search. For example, in the random w-method the number of strings per node,\\

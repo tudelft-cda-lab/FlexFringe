@@ -11,6 +11,11 @@ protected:
 public:
 };
 
+/**
+ * @brief This is a minor deviation from count_driven. It does the same, but it only checks for final distributions, 
+ * making sure that the types of the nodes are consistent. Another deviation is that in the compute_score function it 
+ * does merge blue nodes into lower layers if multiple merges are possible, see also the compute_score implementation.
+ */
 class lsharp_eval: public count_driven {
 
 protected:

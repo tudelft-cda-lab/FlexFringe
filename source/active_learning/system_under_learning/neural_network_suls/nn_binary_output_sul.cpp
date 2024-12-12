@@ -62,7 +62,7 @@ const sul_response nn_binary_output_sul::do_query(const vector<int>& query_trace
 
 #else
 
-const sul_response nn_binary_output_sul::do_query(const vector<int>& query_trace, inputdata& id) const {
+const sul_response nn_binary_output_sul::do_query(const std::vector<int>& query_trace, inputdata& id) const {
     nn_sul_base::do_query(query_trace, id);
 }
 

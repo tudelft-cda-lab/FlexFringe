@@ -33,7 +33,7 @@ class input_file_oracle : public oracle_base {
 
   public:
     input_file_oracle(const std::shared_ptr<sul_base>& sul) : oracle_base(sul) {
-      if(dynamic_cast<input_file_sul*>(sul.get()) != nullptr)
+      if(dynamic_cast<input_file_sul*>(sul.get()) == nullptr)
         throw std::logic_error("input_file_oracle needs an input_file_sul");
     };
 

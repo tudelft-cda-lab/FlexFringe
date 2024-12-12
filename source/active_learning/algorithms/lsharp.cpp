@@ -124,7 +124,7 @@ list<refinement*> lsharp_algorithm::find_complete_base(unique_ptr<state_merger>&
     static const bool COUNTEREXAMPLE_STRATEGY = false;
 
     int n_red_nodes = 1; // for the root node
-    static const int MAX_RED_NODES = 2500;
+    static const int MAX_RED_NODES = 2500; // TODO: shall we make something like this an input parameter?
     bool termination_reached = false;
     int n_iter = -1;
 

@@ -137,7 +137,7 @@ int R = 0;
 int K = 0;
 
 // active learning parameters
-std::string ACTIVE_LEARNING_ALGORITHM = "l_star";
+std::string ACTIVE_LEARNING_ALGORITHM = "lstar";
 bool DO_ACTIVE_LEARNING = false;
 std::string REJECTING_LABEL = "0";
 std::string ORACLE = "";

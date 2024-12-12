@@ -60,20 +60,17 @@ class nn_sul_base : public sul_base {
 class nn_sul_base : public sul_base {
     friend class oracle_base;
 
-  protected:
+  public:
+    const sul_response do_query(const std::vector<int>& query_trace, inputdata& id) const override;
+    const sul_response do_query(const std::vector< std::vector<int> >& query_trace, inputdata& id) const override;
+
+    void reset() override {};
+
+    void pre(inputdata& id) override;
+    
     nn_sul_base() {
       throw std::logic_error("Neural network SULs can only be used with Python flag enabled");
     };
-
-  public:
-  /*  const sul_response do_query(const std::vector<int>& query_trace, inputdata& id) const;
-    void input_sequence_to_pylist(PyObject* p_list_out, const std::vector<int>& c_list) const {};
-
-    void print_p_error() const;
-    void reset() = 0;
-    virtual void init_types() const; */
-
-    void pre(inputdata& id) override;
 };
 
 #endif /* __FLEXFRINGE_PYTHON */

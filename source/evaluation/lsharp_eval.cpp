@@ -13,12 +13,11 @@ REGISTER_DEF_DATATYPE(lsharp_data);
 
 
 /**
- * @brief TODO: write comment how it works here
+ * @brief Checks the final types (the types of the nodes), and merges only if those are consistent.
  */
-/* default evaluation, count number of performed merges */
 bool lsharp_eval::consistent(state_merger *merger, apta_node* left, apta_node* right, int depth){
     if(inconsistency_found) return false;    
-    if(!TYPE_CONSISTENT) return true;    
+    //if(!TYPE_CONSISTENT) return true; // TODO: what to do with this one? 
     auto* l = (count_data*)left->get_data();
     auto* r = (count_data*)right->get_data();
 

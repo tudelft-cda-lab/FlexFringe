@@ -17,12 +17,12 @@ add_library(Evaluation STATIC
             gini.cpp
             kldistance.h
             kldistance.cpp
-            l_star_evaluation.h
-            l_star_evaluation.cpp
             likelihood.h
             likelihood.cpp
             lsharp_eval.h
             lsharp_eval.cpp
+            lstar_evaluation.h
+            lstar_evaluation.cpp
             mealy.h
             mealy.cpp
             membership_state_comparator.h

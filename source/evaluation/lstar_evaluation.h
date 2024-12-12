@@ -1,5 +1,5 @@
 /**
- * @file l_star_evaluation.h
+ * @file lstar_evaluation.h
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
  * @brief Evaluation function of L* algortihm. Checks if outgoing strings are equal, else false.
  * @version 0.1
@@ -15,21 +15,21 @@
 #include "evaluate.h"
 
 /* The data contained in every node of the prefix tree or DFA */
-class l_star_evaluation_data: public evaluation_data {
+class lstar_evaluation_data: public evaluation_data {
 
 protected:
 
-    REGISTER_DEC_DATATYPE(l_star_evaluation_data);
+    REGISTER_DEC_DATATYPE(lstar_evaluation_data);
 
 public:
     virtual void update(evaluation_data* right){}; // no need for those, works directly on prefix tree
     virtual void undo(evaluation_data* right){}; // no need for those, works directly on prefix tree
 };
 
-class l_star_evaluation: public evaluation_function {
+class lstar_evaluation: public evaluation_function {
 
 protected:
-    REGISTER_DEC_TYPE(l_star_evaluation);
+    REGISTER_DEC_TYPE(lstar_evaluation);
 
 public:
 

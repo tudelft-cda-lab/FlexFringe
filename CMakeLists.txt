@@ -180,10 +180,9 @@ if(NOT SKIP_TESTS)
     include_directories(
         "${PROJECT_SOURCE_DIR}/source/active_learning/active_learning_util"
         "${PROJECT_SOURCE_DIR}/source/active_learning/memory"
-        "${PROJECT_SOURCE_DIR}/source/active_learning/teacher"
         "${PROJECT_SOURCE_DIR}/source/active_learning/system_under_learning"
         "${PROJECT_SOURCE_DIR}/source/active_learning/counterexample_strategies"
-        "${PROJECT_SOURCE_DIR}/source/active_learning/equivalence_oracle"
+        "${PROJECT_SOURCE_DIR}/source/active_learning/oracle"
         "${PROJECT_SOURCE_DIR}/source/active_learning/algorithms"
         )
 

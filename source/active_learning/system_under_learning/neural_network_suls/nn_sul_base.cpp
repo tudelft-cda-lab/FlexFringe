@@ -285,6 +285,10 @@ const sul_response nn_sul_base::do_query(const vector<int>& query_trace, inputda
     throw std::logic_error("Enable this feature with -DENABLE_PYTHON=ON on cmake.");
 }
 
+const sul_response nn_sul_base::do_query(const vector< vector<int> >& query_trace, inputdata& id) const {
+    throw std::logic_error("Enable this feature with -DENABLE_PYTHON=ON on cmake.");
+}
+
 /* void nn_sul_base::init_types() const {
     throw std::logic_error("Enable this feature with -DENABLE_PYTHON=ON on cmake.");
 }
