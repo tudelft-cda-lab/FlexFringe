@@ -35,13 +35,17 @@ void nn_sul_base::print_p_error() const {
 
 /**
  * @brief Initialize the types to 0 and 1. Which is which depends on how the network was trained.
+ * Normally for binary output 
  * 
  * TODO: Is there a better way to deal with this?
  *
  */
 void nn_sul_base::init_types() const {
-    inputdata_locator::get()->add_type(std::string("Type_0"));
-    inputdata_locator::get()->add_type(std::string("Type_1"));
+    string t1 = std::string("Type_0");
+    string t2 = std::string("Type_1");
+
+    inputdata_locator::get()->add_type(t1);
+    inputdata_locator::get()->add_type(t2);
 }
 
 /**
@@ -51,15 +55,37 @@ void nn_sul_base::init_types() const {
  * flexfringe mapped internal integer representation in case a string has been received. The mapping
  * is done according to the alphabet/r_alphabet twin structure in the inputdata object.
  */
-int nn_sul_base::pyobj_to_int(PyObject* p_obj, inputdata& id) const{
+int nn_sul_base::pyobj_to_int(PyObject* p_obj, inputdata& id) const {
     int type;
 
     // first check on string: This is the hot path
     if(PyUnicode_CheckExact(p_obj)){
       type = id.get_reverse_type(PyUnicode_AsUTF8(p_obj));
-      if(type > id.get_alphabet_size()){
+      if(type > id.get_types_size())
           id.add_type(PyUnicode_AsUTF8(p_obj));
-      }
+    }
+    else if(PyLong_CheckExact(p_obj)){
+        type = PyLong_AsLong(p_obj);
+
+        static unordered_map<int, int> type_map;
+        if(!type_map.contains(type)){            
+            
+            // making sure we stay consistent with the types we already have
+            static bool map_initialized = false;
+            int types_idx = id.get_types_size();
+            if(!map_initialized){
+                for (int idx = 0; idx < types_idx; ++idx)
+                    type_map[idx] = idx;
+                map_initialized = true;
+            }
+            type_map[type]  = types_idx;
+
+            string nt = "Type_" + to_string(types_idx);
+            cout << "Found new type from network: " << type << ", output as: " << nt << endl;
+            id.add_type(nt);
+        }
+
+        type = type_map[type];
     }
     else{
         cerr << "Problem with type as returned by Python script. Type must be string or int value." << endl;
