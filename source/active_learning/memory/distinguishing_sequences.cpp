@@ -11,11 +11,13 @@
 
 #include "distinguishing_sequences.h"
 
-
 /**
  * @brief Does what you think it does.
+ * 
+ * Returns true if a new suffix has been added, else false.
  */
-void distinguishing_sequences::add_sequence(const std::list<int>& s) noexcept {
-  if(s.size() == 0) return;
-  seq_store.add_suffix(s);
+bool distinguishing_sequences::add_sequence(const std::list<int>& s) noexcept {
+  if(s.size() == 0) return false;
+  bool new_suffix_found = seq_store.add_suffix(s);
+  return new_suffix_found;
 }

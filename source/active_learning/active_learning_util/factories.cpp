@@ -47,6 +47,7 @@
 
 // the ii_handlers
 #include "distinguishing_sequence_fill.h"
+#include "distinguishing_sequence_fill_fast.h"
 #include "overlap_fill_batch_wise.h"
 #include "overlap_fill.h"
 
@@ -145,6 +146,8 @@ shared_ptr<ii_base> ii_handler_factory::create_ii_handler(const shared_ptr<sul_b
     return shared_ptr<ii_base>(nullptr);
   else if(ii_name == "distinguishing_sequence_fill")
     return make_shared<distinguishing_sequence_fill>(sul);
+  else if(ii_name == "distinguishing_sequence_fill_fast")
+    return make_shared<distinguishing_sequence_fill_fast>(sul);
   else if(ii_name == "overlap_fill_batch_wise")
     return make_shared<overlap_fill_batch_wise>(sul);
   else if(ii_name == "overlap_fill")

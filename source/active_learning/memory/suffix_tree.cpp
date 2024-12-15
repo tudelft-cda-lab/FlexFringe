@@ -19,8 +19,9 @@ using namespace std;
  * @brief Adds the suffix to the tree.
  * 
  * @param suffix The suffix.
+ * @return True if suffix has not already been added before (if number of suffixes increased by one), else false. 
  */
-void suffix_tree::add_suffix(const list<int>& suffix){
+bool suffix_tree::add_suffix(const list<int>& suffix){
   sf_tree_node* node = root;
 
   int depth = 0;
@@ -33,14 +34,16 @@ void suffix_tree::add_suffix(const list<int>& suffix){
 
       node->add_child(symbol, child);
     }
-
     node = node->get_child(symbol);
   }
 
   if(!node->is_final()){
     ++n_final;
     node->finalize();
+    return true;
   }
+
+  return false;
 }
 
 bool suffix_tree::contains(const list<int>& suffix){

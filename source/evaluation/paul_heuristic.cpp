@@ -15,11 +15,11 @@ REGISTER_DEF_DATATYPE(paul_data);
 
 void paul_data::print_state_label(std::iostream& output){
     count_data::print_state_label(output);
-    output << "\nc : " << std::to_string(lm_confidence) << " | nm : " << std::to_string(num_merged) << "\n";
+/*     output << "\nc : " << std::to_string(lm_confidence) << " | nm : " << std::to_string(num_merged) << "\n";
 
     for(auto c: all_confidences){
         output << std::to_string(c.first) << " | " << std::to_string(c.second) << "\n";
-    }
+    } */
 };
 
 void paul_data::add_tail(tail* t) {

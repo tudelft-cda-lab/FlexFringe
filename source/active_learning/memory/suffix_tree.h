@@ -59,7 +59,7 @@ class suffix_tree {
     int last_depth = 0;
 
   public:
-    void add_suffix(const std::list<int>& suffix);
+    bool add_suffix(const std::list<int>& suffix);
     bool contains(const std::list<int>& suffix);
 
     std::optional< std::vector<int> > next() noexcept;

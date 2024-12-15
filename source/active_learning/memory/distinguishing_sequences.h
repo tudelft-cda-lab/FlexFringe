@@ -26,7 +26,7 @@ class distinguishing_sequences {
     suffix_tree seq_store; // maps a distinguishing sequence to a node (identified by node->get_number())
 
   public:
-    virtual void add_sequence(const std::list<int>& s) noexcept;
+    virtual bool add_sequence(const std::list<int>& s) noexcept;
     virtual std::optional< std::vector<int> > next() {
       return seq_store.next();
     }

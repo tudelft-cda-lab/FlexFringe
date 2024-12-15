@@ -456,9 +456,6 @@ void paul_algorithm::proc_counterex(inputdata& id, unique_ptr<apta>& the_apta, c
         n = n_child;
         mem_store::delete_trace(parse_trace);
     }
-    
-    cerr << "Killing program. Delete this line after profiling." << endl;
-    exit(0);
 }
 
 void paul_algorithm::run(inputdata& id) {

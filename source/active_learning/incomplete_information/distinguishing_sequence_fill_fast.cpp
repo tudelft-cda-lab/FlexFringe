@@ -50,10 +50,8 @@ void distinguishing_sequence_fill_fast::pre_compute(list<int>& suffix, unordered
   }
 
   if(l_data->predict_type(nullptr) != r_data->predict_type(nullptr)){
-    if(!ds_ptr->contains(suffix)){ // inefficient like this, we can optimize by giving add sequence a return value to test on
+    if(ds_ptr->add_sequence(suffix))
       m_suffixes.emplace_back(suffix.begin(), suffix.end());
-      ds_ptr->add_sequence(suffix);
-    }
   }
 
   // first do the right side
@@ -111,55 +109,12 @@ void distinguishing_sequence_fill_fast::pre_compute(list<int>& suffix, unordered
   }
 }
 
-/**
- * @brief Collect all sequences that distinguish the two states.
- */
-void distinguishing_sequence_fill_fast::pre_compute(unique_ptr<apta>& aut, apta_node* left, apta_node* right){
-  list<int> suffix;
-  unordered_set<apta_node*> seen_nodes;
-  pre_compute(suffix, seen_nodes, aut, left, right, 0);
-}
-
-/**
- * @brief Helper function used to add sequences to the tree (putting the data into the node's information).
- */
-void distinguishing_sequence_fill_fast::add_data_to_tree(unique_ptr<apta>& aut, const vector<int>& seq, const int reverse_type, const float confidence){
-  static inputdata& id = *(inputdata_locator::get());
-
-  trace* new_trace = active_learning_namespace::vector_to_trace(seq, id, reverse_type);
-  id.add_trace_to_apta(new_trace, aut.get(), false);
-
-  // the target should exist because we just added that state
-  apta_node* node = aut->get_root();
-  tail* iter = new_trace->head;
-  while(!iter->is_final()){
-    node = node->get_child(iter->get_symbol())->find();
-    iter = iter->future();
-  }
-
-  paul_data* data = dynamic_cast<paul_data*>(node->get_data());
-  data->set_confidence(confidence);
-}
-
-/**
- * @brief Memoizes the suffixes. Saves us recomputation at the expense of memory and possible accuracy.
- * 
- */
-/* void distinguishing_sequence_fill_fast::memoize() noexcept {
-  optional< vector<int> > suffix_opt = ds_ptr->next();
-  while(suffix_opt){
-    m_suffixes.push_back(move(suffix_opt.value()));
-    suffix_opt = ds_ptr->next();
-  }
-
-  memoized = true;
-} */
 
 /**
  * @brief Prerequisite to check_consistency. We already compute the distribution for the red node, 
  * saving us recomputation of the same distribution over and over again.
  */
-void distinguishing_sequence_fill_fast::pre_compute(unique_ptr<apta>& aut, apta_node* node) {
+vector<int> distinguishing_sequence_fill_fast::predict_node_with_sul(apta& aut, apta_node* node) {
   static inputdata& id = *inputdata_locator::get(); 
 
   auto right_access_trace = node->get_access_trace();
@@ -167,7 +122,7 @@ void distinguishing_sequence_fill_fast::pre_compute(unique_ptr<apta>& aut, apta_
   
   vector< vector<int> > queries;
   unordered_set<int> no_pred_idxs;
-  memoized_predictions.clear();
+  vector<int> res;
 
   for(const auto& suffix: m_suffixes){
     if(right_prefix.size() + suffix.size() > MAX_LEN){
@@ -183,10 +138,10 @@ void distinguishing_sequence_fill_fast::pre_compute(unique_ptr<apta>& aut, apta_
       const vector<int>& answers = response.GET_INT_VEC();
       for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
         if(no_pred_idxs.contains(i)){
-          memoized_predictions.push_back(-1);
+          res.push_back(-1);
           continue;
         }
-        memoized_predictions.push_back(answers[answers_idx]);
+        res.push_back(answers[answers_idx]);
         ++answers_idx;
       }
           
@@ -202,145 +157,80 @@ void distinguishing_sequence_fill_fast::pre_compute(unique_ptr<apta>& aut, apta_
     const vector<int>& answers = response.GET_INT_VEC();
     for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
       if(no_pred_idxs.contains(i)){
-        memoized_predictions.push_back(-1);
+        res.push_back(-1);
         continue;
       }
-      memoized_predictions.push_back(answers[answers_idx]);
+      res.push_back(answers[answers_idx]);
       ++answers_idx;
     }
   }
+
+  return res;
 }
 
 /**
- * @brief Throw in all the distinguishing sequences, and see how many disagreements you do have on that.
- * @return true If consistent.
- * @return false If not consistent.
+ * @brief Predicts the distribution emanating from node using the automaton using 
+ * the DS. If automaton cannot be parsed with the strings the prediction is -1.
  */
-bool distinguishing_sequence_fill_fast::check_consistency(unique_ptr<apta>& aut, apta_node* left, apta_node* right){
+vector<int> distinguishing_sequence_fill_fast::predict_node_with_automaton(apta& aut, apta_node* node){
   static inputdata& id = *inputdata_locator::get(); 
 
-  auto left_access_trace = left->get_access_trace();
-  const active_learning_namespace::pref_suf_t left_prefix = left_access_trace->get_input_sequence(true, false);
+  auto right_access_trace = node->get_access_trace();
+  const active_learning_namespace::pref_suf_t right_prefix = right_access_trace->get_input_sequence(true, false);
   
   vector< vector<int> > queries;
-  vector<int> predictions;
   unordered_set<int> no_pred_idxs;
+  vector<int> res;
 
   for(const auto& suffix: m_suffixes){
-    if(left_prefix.size() + suffix.size() > MAX_LEN){
-      no_pred_idxs.insert(queries.size()+no_pred_idxs.size());
+    if(right_prefix.size() + suffix.size() > MAX_LEN){
+      no_pred_idxs.insert(queries.size()+no_pred_idxs.size()); // invalid prediction
       continue;
     }
 
-    queries.push_back(active_learning_namespace::concatenate_vectors(left_prefix, suffix));
-    if(queries.size() >= MIN_BATCH_SIZE){
-      const sul_response response = sul->do_query(queries, *(inputdata_locator::get()));
-
+    queries.push_back(active_learning_namespace::concatenate_vectors(right_prefix, suffix));
+    if(queries.size() >= MIN_BATCH_SIZE){ // if min-batch size % 2 != 0 will be larger
+      
       int answers_idx = 0;
-      const vector<int>& answers = response.GET_INT_VEC();
-      for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
-        if(no_pred_idxs.contains(i)){
-          predictions.push_back(-1);
-          continue;
-        }
-        predictions.push_back(answers[answers_idx]);
-        ++answers_idx;
+      vector<int> answers;
+      for(auto query : queries){
+        const int answer = active_learning_namespace::predict_type_from_trace(active_learning_namespace::vector_to_trace(query, id), &aut, id);
+        answers.push_back(answer);
       }
 
+      for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
+        if(no_pred_idxs.contains(i)){
+          res.push_back(-1);
+          continue;
+        }
+        res.push_back(answers[answers_idx]);
+        ++answers_idx;
+      }
+          
       queries.clear();
       no_pred_idxs.clear();
     }
   }
 
   if(queries.size() > 0){
-    //m_mutex.lock();
     const sul_response response = sul->do_query(queries, *(inputdata_locator::get()));
-    //m_mutex.unlock();
-
+    
     int answers_idx = 0;
-    const vector<int>& answers = response.GET_INT_VEC();
+    vector<int> answers;
+    for(auto query : queries){
+      const int answer = active_learning_namespace::predict_type_from_trace(active_learning_namespace::vector_to_trace(query, id), &aut, id);
+      answers.push_back(answer);
+    }
+
     for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
       if(no_pred_idxs.contains(i)){
-        predictions.push_back(-1);
+        res.push_back(-1);
         continue;
       }
-      predictions.push_back(answers[answers_idx]);
+      res.push_back(answers[answers_idx]);
       ++answers_idx;
     }
   }
 
-  if(memoized_predictions.size() != predictions.size()){
-    cerr << "Something weird happened." << endl;
-  }
-
-  int agreed = 0;
-  int disagreed = 0;
-  for(int i=0; i<predictions.size(); ++i){
-    if(memoized_predictions[i]==-1 || predictions[i]==-1)
-      continue;
-    else if(memoized_predictions[i] == predictions[i])
-      ++agreed;
-    else
-      ++disagreed;
-  }
-
-  float ratio = static_cast<float>(disagreed) / (static_cast<float>(disagreed) + static_cast<float>(agreed));
-  static float threshold = CHECK_PARAMETER;
-  if(ratio > threshold){ // TODO: set that threshold somewhere
-    //cout << "Disagreed: " << disagreed << " | agreed: " << agreed << " | ratio: " << ratio << endl;
-    return false;
-  }
-  return true;
+  return res;
 }
-
-/**
- * @brief Take all the distinguishing sequences you currently have, add them to the two nodes, and ask the transformer to fill those two out.
- * Afterwards, reset the distinguishing sequences back to their original state.
- */
-/*void distinguishing_sequence_fill_fast::complement_nodes(unique_ptr<apta>& aut, apta_node* left, apta_node* right) {
-  return; // we currently do not want this option
-
-  auto left_access_trace = left->get_access_trace();
-  auto right_access_trace = right->get_access_trace();
-  
-  const active_learning_namespace::pref_suf_t left_prefix = left_access_trace->get_input_sequence(true, false);
-  const active_learning_namespace::pref_suf_t right_prefix = right_access_trace->get_input_sequence(true, false);
-  
-  vector< vector<int> > queries;
-  optional< vector<int> > suffix = ds_ptr->next();
-
-  while(suffix){
-    auto full_sequence = active_learning_namespace::concatenate_vectors(left_prefix, suffix.value());
-    if(full_sequence.size() < MAX_LEN)
-      queries.push_back(move(full_sequence));
-
-    full_sequence = active_learning_namespace::concatenate_vectors(right_prefix, suffix.value());
-    if(full_sequence.size() < MAX_LEN)
-      queries.push_back(move(full_sequence));
-
-    if(queries.size() >= MIN_BATCH_SIZE){ // MIN_BATCH_SIZE might be violated by plus one, hence min
-      const sul_response response = sul->do_query(queries, *(inputdata_locator::get()));
-      const vector<int>& answers = response.GET_INT_VEC();
-      const vector<double>& confidences = response.GET_DOUBLE_VEC();
-      
-      for(int i=0; i < queries.size(); ++i){
-        add_data_to_tree(aut, queries[i], answers[i], confidences[i]);
-      }
-
-      queries.clear();
-    }
-
-    suffix = ds_ptr->next();
-  }
-
-  if(queries.size() == 0)
-    return;
-
-  const sul_response response = sul->do_query(queries, *(inputdata_locator::get()));
-  const vector<int>& answers = response.GET_INT_VEC();
-  const vector<double>& confidences = response.GET_DOUBLE_VEC();
-
-  for(int i=0; i < queries.size(); ++i){
-    add_data_to_tree(aut, queries[i], answers[i], confidences[i]);
-  }
-}*/
