@@ -17,9 +17,8 @@
 #include "abbadingoparser.h"
 #include "csvparser.h"
 
-#include "greedy.h"
 #include "inputdata.h"
-#include "main_helpers.h"
+#include "common.h"
 #include "mem_store.h"
 #include "parameters.h"
 #include "state_merger.h"
@@ -424,10 +423,30 @@ void paul_algorithm::proc_counterex(inputdata& id, unique_ptr<apta>& the_apta, c
     active_learning_namespace::reset_apta(merger.get(), refs);
     vector<int> substring;
     apta_node* n = the_apta->get_root();
+
+    if(counterex.size()==0){ // special case: Train data had no empty string. TODO: introduce a flag for this?
+        vector< vector<int> > query(1);
+        query[0] = substring;
+        const sul_response res = oracle->ask_sul(query, id);
+
+        int reverse_type = res.GET_INT_VEC()[0];
+        double confidence = res.GET_DOUBLE_VEC()[0];
+        assert(res.GET_INT_VEC().size() == 1);
+
+        trace* new_trace = active_learning_namespace::vector_to_trace(substring, id, reverse_type);
+        id.add_trace_to_apta(new_trace, the_apta.get(), false);
+
+        paul_data* data;
+        data = dynamic_cast<paul_data*>(n->get_data());
+        data->set_confidence(confidence);
+
+        return;
+    }
+
     for (auto s : counterex) {
         substring.push_back(s);
         trace* parse_trace = vector_to_trace(substring, id, 0); // TODO: inefficient like this, since we redo traces from scratch again. Sidenote: 0 is a dummy type that does not matter
-        tail* t = /* substring.size() == 0 ? parse_trace->get_end() :  */ parse_trace->get_end()->past_tail; // TODO: can case 1 ever happen?
+        tail* t = parse_trace->get_end()->past_tail;
         apta_node* n_child = active_learning_namespace::get_child_node(n, t);
 
         if (n_child == nullptr) {
@@ -436,7 +455,7 @@ void paul_algorithm::proc_counterex(inputdata& id, unique_ptr<apta>& the_apta, c
             seq[-1] = t->get_symbol();
 
             vector< vector<int> > query(1);
-            query[0] = move(seq);
+            query[0] = seq;
             const sul_response res = oracle->ask_sul(query, id);
 
             int reverse_type = res.GET_INT_VEC()[0];
@@ -508,6 +527,12 @@ void paul_algorithm::run(inputdata& id) {
             cout << id.get_symbol(s) << " ";
         cout << endl;        
         proc_counterex(id, the_apta, cex, merger, performed_refs);
+
+        {
+            static int model_nr = 0;
+            cout << "printing model " << model_nr  << endl;
+            print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_cex");
+        }
 
         ++n_runs;
     }

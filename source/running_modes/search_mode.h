@@ -1,4 +1,12 @@
 /*
+ * @file search_mode.h
+ * @author Sicco Verwer (s.e.verwer@tudelft.nl)
+ * @brief 
+ * @version 0.1
+ * @date 2024-12-18
+ * 
+ * @copyright Copyright (c) 2024
+ * 
  *  RTI (real-time inference)
  *  Searcher.cpp, the header file for the search routines
  *  Currently, only a simple greedy (best-first) routine is implemented, search routines will be added later.
@@ -25,15 +33,23 @@
 #ifndef _SEARCHER_H_
 #define _SEARCHER_H_
 
+#include "running_mode_base.h"
+#include "state_merger.h"
+#include "refinement.h"
+
 #include <fstream>
 #include <iostream>
 #include <list>
 #include <queue>
 #include <map>
 
-#include "state_merger.h"
-#include "refinement.h"
+class search_mode : public running_mode_base {
+  // TODO: Take the other methods, make them class methods
+  public:
+    int run() override;
+    void initialize() override;
+    void generate_output() override;
+}
 
-void bestfirst(state_merger* merger);
 
 #endif /* _SEARCHER_H_ */

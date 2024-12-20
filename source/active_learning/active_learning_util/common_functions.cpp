@@ -66,7 +66,7 @@ bool active_learning_namespace::aut_accepts_trace(trace* tr, apta* aut) {
 }
 
 /**
- * @brief Predicts type from trace. Code is a subset of the predict.cpp functions, hence duplicate code. TODO: clean
+ * @brief Predicts type from trace. Code is a subset of the predict_mode.cpp functions, hence duplicate code. TODO: clean
  * that up
  *
  * @param tr The trace.
@@ -306,7 +306,7 @@ void active_learning_namespace::update_tail(tail* t, const int symbol) {
 
     int num_symbol_attributes = 0; // inputdata::get_num_symbol_attributes();
     if (num_symbol_attributes > 0) {
-        // TODO: we do not treat this one yet
+        cout << "This branch is not implemented yet" << endl;
     }
 }
 

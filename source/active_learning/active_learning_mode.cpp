@@ -1,5 +1,5 @@
 /**
- * @file active_learning_main.cpp
+ * @file active_learning_mode.cpp
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
  * @brief The main subroutine that is starting the active learning.
  * @version 0.1
@@ -9,7 +9,7 @@
  *
  */
 
-#include "active_learning_main.h"
+#include "active_learning_mode.h"
 #include "algorithm_base.h" 
 #include "factories.h"
 
@@ -23,6 +23,16 @@
 #include <string>
 
 using namespace std;
+
+void active_learning_mode::initialize(){
+    if(OUTPUT_FILE.empty()) {
+        if (!POSTGRESQL_TBLNAME.empty()) {
+            OUTPUT_FILE = POSTGRESQL_TBLNAME + ".ff";
+        } else {
+            OUTPUT_FILE = INPUT_FILE + ".ff";
+        }
+    }
+}
 
 /* ifstream active_learning_main_func::get_inputstream() const {
     ifstream input_stream(INPUT_FILE);
@@ -59,7 +69,7 @@ inputdata* active_learning_main_func::get_inputdata() const {
  * @brief Selects the parameters the algorithm runs with and runs the algorithm.
  *
  */
-void active_learning_main_func::run_active_learning() {
+int active_learning_mode::run() {
     inputdata id;
     inputdata_locator::provide(&id);
     if(ENSEMBLE_RUNS <= 0) // TODO: delete this one?
@@ -74,4 +84,5 @@ void active_learning_main_func::run_active_learning() {
 
         sul->pre(id);
         algorithm->run(id); */
+    return EXIT_SUCCESS;
 }

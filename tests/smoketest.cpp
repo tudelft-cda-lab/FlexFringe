@@ -2,7 +2,6 @@
 #include "catch.hpp"
 
 #include "evaluate.h"
-#include "greedy.h"
 #include "evaluation_factory.h"
 #include "parameters.h"
 #include "input/inputdata.h"

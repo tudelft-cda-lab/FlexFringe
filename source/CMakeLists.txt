@@ -1,4 +1,6 @@
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/evaluation"
+include_directories(
+        "${CMAKE_CURRENT_SOURCE_DIR}/evaluation"
+        "${CMAKE_CURRENT_SOURCE_DIR}/running_modes"
         "${CMAKE_CURRENT_SOURCE_DIR}/evaluation/probabilistic_heuristics"
         "${CMAKE_CURRENT_SOURCE_DIR}/utility"
         "${CMAKE_CURRENT_SOURCE_DIR}/input"
@@ -38,36 +40,52 @@ add_library(Source STATIC
         apta.cpp
         apta.h
         common.h
+        common.cpp
         conflict_graph.cpp
         conflict_graph.h
-        dfasat.cpp
-        dfasat.h
         evaluation_factory.cpp
         evaluation_factory.h
         evaluators.h
         gitversion.cpp
-        interactive.cpp
-        interactive.h
         parameters.cpp
         parameters.h
-        greedy.cpp
-        greedy.h
         refinement.cpp
         refinement.h
-        searcher.cpp
-        searcher.h
         state_merger.cpp
         state_merger.h
-        stream.cpp
-        stream.h
         mem_store.cpp
         mem_store.h
-        predict.cpp predict.h
-        differencing.cpp differencing.h
-        ensemble.cpp ensemble.h
-        dfa_properties.cpp dfa_properties.h
-        refinement_selection_strategies.h refinement_selection_strategies.cpp
-        regex_builder.h regex_builder.cpp
+        dfa_properties.cpp 
+        dfa_properties.h
+        refinement_selection_strategies.h 
+        refinement_selection_strategies.cpp
+        regex_builder.cpp
+        regex_builder.h 
+
+        running_mode_factory.h
+        running_mode_factory.cpp
+        running_modes/dfasat_mode.h
+        running_modes/dfasat_mode.cpp
+        running_modes/differencing_mode.h
+        running_modes/differencing_mode.cpp
+        running_modes/ensemble_mode.h
+        running_modes/ensemble_mode.cpp
+        running_modes/greedy_mode.h
+        running_modes/greedy_mode.cpp
+        running_modes/interactive_mode.h
+        running_modes/interactive_mode.cpp
+        running_modes/predict_mode.h
+        running_modes/predict_mode.cpp
+        running_modes/regex_mode.h
+        running_modes/regex_mode.cpp
+        running_modes/running_mode_base.h
+        running_modes/running_mode_base.cpp
+        running_modes/search_mode.h
+        running_modes/search_mode.cpp
+        running_modes/stream_mode.h
+        running_modes/stream_mode.cpp
+        running_modes/subgraphextraction_mode.h
+        running_modes/subgraphextraction_mode.cpp
 
         input/trace.cpp
         input/trace.h
@@ -98,9 +116,6 @@ add_library(Source STATIC
         input/streaming.h
         input/parsers/reader_strategy.cpp
         input/parsers/reader_strategy.h
-
-        main_helpers.h # TODO: do we need these two?
-        main_helpers.cpp
 
         misc/printutil.h
         misc/utils.h

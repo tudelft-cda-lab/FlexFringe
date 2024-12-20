@@ -15,7 +15,7 @@
 #include "input/parsers/reader_strategy.h"
 #include "input/parsers/abbadingoparser.h"
 #include "state_merger.h"
-#include "main_helpers.h"
+#include "common.h"
 
 
 

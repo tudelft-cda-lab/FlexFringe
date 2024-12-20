@@ -1,8 +1,34 @@
-#include <queue>
-#include "searcher.h"
+/**
+ * @file search_mode.cpp
+ * @author Sicco Verwer (s.e.verwer@tudelft.nl)
+ * @brief 
+ * @version 0.1
+ * @date 2024-12-18
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
+
+#include "search_mode.h"
 #include "parameters.h"
 
+#include <queue>
+
 using namespace std;
+
+void search_mode::initialize(){
+    running_mode_base::initialize();
+    read_input_file();
+
+    eval->initialize_before_adding_traces();
+    id.add_traces_to_apta(the_apta);
+    eval->initialize_after_adding_traces(merger);
+}
+
+void search_mode::generate_output(){
+    cout << "Printing output to " << OUTPUT_FILE << ".final" << endl;
+    print_current_automaton(merger, OUTPUT_FILE, ".final");
+}
 
 /* queue used for searching */
 struct refinement_list_compare{ bool operator()(const pair<double, refinement_list*> &a, const pair<double, refinement_list*> &b) const{ return a.first > b.first; } };
@@ -137,7 +163,7 @@ void change_refinement_list(state_merger* merger, refinement_list* new_list){
 	current_refinements = new_list;
 }
 
-void bestfirst(state_merger* merger){
+int search_mode::run(){
 	start_size = merger->get_final_apta_size();
     best_solution = -1;
     current_run = new refinement_list();
@@ -168,4 +194,6 @@ void bestfirst(state_merger* merger){
 
         add_to_q(merger);
 	}
+
+    return EXIT_SUCCESS;
 }

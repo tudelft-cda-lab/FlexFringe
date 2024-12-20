@@ -1,15 +1,43 @@
+/**
+ * @file ensemble_mode.cpp
+ * @author Sicco Verwer (s.e.verwer@tudelft.nl)
+ * @brief 
+ * @version 0.1
+ * @date 2024-12-19
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
+
+#include "ensemble_mode.h"
+#include "refinement.h"
+#include "parameters.h"
+
 #include <stdio.h>
 #include <sstream>
 #include <fstream>
 #include <cstdlib>
 
-#include "refinement.h"
-#include "greedy.h"
-#include "parameters.h"
+using namespace std;
 
 /** todo: work in progress */
 
-refinement_list* greedy(state_merger* merger){
+void ensemble_mode::initialize(){
+    throw invalid_argument("ensemble mode not finished implementing yet.");
+    running_mode_base::initialize();
+    read_input_file();
+
+    eval->initialize_before_adding_traces();
+    id.add_traces_to_apta(the_apta);
+    eval->initialize_after_adding_traces(merger);
+}
+
+int ensemble_mode::run(){
+    throw invalid_argument("ensemble mode not finished implementing yet.");
+    // TODO: call bagging method
+}
+
+refinement_list* ensemble_mode::greedy(){
     std::cerr << "starting greedy merging" << std::endl;
     merger->get_eval()->initialize_after_adding_traces(merger);
 
@@ -30,7 +58,7 @@ refinement_list* greedy(state_merger* merger){
     return all_refs;
 };
 
-void bagging(state_merger* merger, std::string output_file, int nr_estimators){
+void ensemble_mode::bagging(std::string output_file, int nr_estimators){
     std::cerr << "starting bagging" << std::endl;
     for(int i = 0; i < nr_estimators; ++i){
         refinement_list* all_refs = greedy(merger);

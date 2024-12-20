@@ -20,7 +20,7 @@
 /**
  * @brief A conflict detector that also work with an ii_handler.
  */
-class type_overlap_conflict_detector: public type_conflict_detector {
+class type_overlap_conflict_detector : public type_conflict_detector {
   protected:
     std::shared_ptr<ii_base> ii_handler;
 

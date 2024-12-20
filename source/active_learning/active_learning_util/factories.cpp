@@ -57,7 +57,7 @@
 #include "input/abbadingoreader.h"
 #include "inputdata.h"
 #include "inputdatalocator.h"
-#include "main_helpers.h"
+#include "common.h"
 #include "parameters.h"
 
 #include <initializer_list>

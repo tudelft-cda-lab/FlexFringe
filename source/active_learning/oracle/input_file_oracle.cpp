@@ -11,7 +11,7 @@
 
 #include "input_file_oracle.h"
 #include "common_functions.h"
-#include "predict.h"
+#include "predict_mode.h"
 
 #include <optional>
 

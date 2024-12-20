@@ -16,8 +16,8 @@ include_directories(
 
 
 add_library(ActiveLearning STATIC
-            active_learning_main.h
-            active_learning_main.cpp
+            active_learning_mode.h
+            active_learning_mode.cpp
 
             active_learning_util/definitions.h
             active_learning_util/definitions.cpp

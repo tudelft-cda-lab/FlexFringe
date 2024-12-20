@@ -4,7 +4,7 @@
 
 #include "sqldb_sul_regex_oracle.h"
 #include "input/inputdatalocator.h"
-#include "main_helpers.h"
+#include "common.h"
 #include "misc/printutil.h"
 #include "misc/sqldb.h"
 #include "misc/trim.h"

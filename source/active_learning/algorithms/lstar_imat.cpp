@@ -12,9 +12,8 @@
 #include "lstar_imat.h"
 #include "common_functions.h"
 
-#include "greedy.h"
 #include "inputdata.h"
-#include "main_helpers.h"
+#include "common.h"
 #include "mem_store.h"
 #include "parameters.h"
 #include "state_merger.h"

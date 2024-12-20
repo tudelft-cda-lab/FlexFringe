@@ -25,8 +25,7 @@ sys.path.append("../util")
 from distillbert_for_language_model import DistilBertForTokenClassification
 #from transformers import DistilBertForTokenClassification
 
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-#DEVICE = "cpu" # we do not do batch processing, so CPU should be good enough
+DEVICE = "cpu" # we do not do batch processing, so CPU should be good enough
 
 # we need these variables globally, as they represent the status of our program
 model = None 
@@ -40,12 +39,9 @@ MAXLEN = None # max length of a sequence. Used for padding and set by get_alphab
 ALPHABET_SIZE = None
 
 ALPH_MAPPING = dict()
-INT_TO_TYPE_DICT = dict()
-
 
 def make_dict(**kwargs):
     return kwargs
-
 
 def init_global_variables(path_to_model: str):
   global MAXLEN, ALPHABET_SIZE, SOS, EOS, PAD
@@ -65,7 +61,6 @@ def init_global_variables(path_to_model: str):
   EOS = dataset_dict["EOS"]
   PAD = dataset_dict["PAD"]
   MAXLEN = dataset_dict["maxlen"]
-
 
 def load_nn_model(path_to_model: str):
   """Loads a model and writes it into the global model-variable
@@ -103,12 +98,9 @@ def load_nn_model(path_to_model: str):
   print("Load state dict")
   model.load_state_dict(torch.load(path_to_model, map_location=torch.device(DEVICE)))
   print("Params")
-  #for param in model.parameters():
-  #    param.requires_grad = False
+  for param in model.parameters():
+      param.requires_grad = False
   print("Model successfully loaded")
-  model.to(DEVICE)
-  print(f"Model moved to {DEVICE}")
-
 
 def make_tensor_causal_masks(words:torch.Tensor):
     masks = (words != PAD) # 1 : pass, 0 : blocked
@@ -118,7 +110,6 @@ def make_tensor_causal_masks(words:torch.Tensor):
     x *= torch.ones(l,l, dtype=torch.bool, device=x.device).tril() 
     x += torch.eye(l,dtype=torch.bool, device=x.device)
     return x.type(torch.int8)
-
 
 def get_representation(output, last_token_idx):
   """Gets the attention. Make sure to keep the convention: Keys go from 1...number of attention vectors, 
@@ -130,23 +121,22 @@ def get_representation(output, last_token_idx):
   DO_FIRST_ONLY = True
 
   if DO_FIRST_ONLY:
-    attn = torch.squeeze(output["hidden_states"][1].detach().cpu()).numpy() # (b_size, maxlen_seq, hidden_dim); b_size here will always be 1 and squeezed out!
+    attn = torch.squeeze(output["hidden_states"][1].detach()).numpy() # (b_size, maxlen_seq, hidden_dim); b_size here will always be 1 and squeezed out!
     #attn = torch.squeeze(output["attentions"][0].detach()).numpy() # (b_size, n_heads, maxlen_seq, maxlen_seq); b_size here will always be 1 and squeezed out!
     #attn = np.mean(attn, axis=0) # using the attn and not the states
   elif False:
     pass # placeholder for different strategy
   else: # concatenate all of them
-    attn = output.hidden_states[1].detach().cpu()
+    attn = output.hidden_states[1]
     for i in range(2, len(output.hidden_states)):
       attn = torch.cat((attn, output.hidden_states[i]), dim=-1)    
-    attn = torch.squeeze(attn.detach().detach().cpu()).numpy()
+    attn = torch.squeeze(attn.detach()).numpy()
   
   res = list()
   for i in range(last_token_idx+1):
     res.extend(list(attn[i]))
 
   return res
-
 
 def do_query(input_seq: list):
   """This is the main function, performed on a sequence.
@@ -159,61 +149,40 @@ def do_query(input_seq: list):
   Args:
       seq (list): List of ints.
   """
-  if(len(input_seq) == 0):
-    input_seq = [input_seq]
+  seq = [SOS] +  [ALPH_MAPPING[s] for s in input_seq] + [EOS]
+  
+  padding = [PAD] * (MAXLEN - len(seq) - 1)
+  padded_seq = seq + padding
+  last_token_idx = len(seq) - 1
 
-  last_token_idxs = list()
-  for i in range(len(input_seq)):
-    seq = [SOS] +  [ALPH_MAPPING[s] for s in input_seq[i]] + [EOS]
-    last_token_idxs.append(len(seq) - 1)
-
-    padding = [PAD] * (MAXLEN - len(seq) - 1)
-
-    padded_seq = seq + padding
-    input_seq[i] = padded_seq
-
-  if len(input_seq) == 1:
-    query_string = torch.reshape(torch.tensor(input_seq), (1, -1))
-  else:
-    query_string = torch.tensor(input_seq)
-
-  query_string = query_string.to(DEVICE)
+  query_string = torch.reshape(torch.tensor(padded_seq), (1, -1))
   mask = make_tensor_causal_masks(query_string)
 
   with torch.no_grad():
     model.eval()
-    output = model(input_ids=query_string, attention_mask=mask, return_dict=True, output_attentions=False)
-  logits = output.logits.detach().cpu()
+    output = model(input_ids=query_string, attention_mask=mask, return_dict=True, output_attentions=False, output_hidden_states=True)
+  logits = torch.squeeze(output.logits)
 
+  preds = torch.argmax(logits[last_token_idx])
+  if(logits.size(-1) > PAD + 1):
+      preds = preds - PAD - 1
+  if preds < 0 or preds > 1:
+     print("Erroneous prediction: ", preds) # what now?
 
-  res = list()
-  for i in range(len(last_token_idxs)):
-    preds = torch.argmax(logits[i, last_token_idxs[i]]).detach()
-    confidence = torch.max(softmax(logits[i, last_token_idxs[i]], dim=0)).detach()
-    if(logits.size(-1) > PAD + 1):
-        preds = preds - PAD - 1
-    if preds < 0 or preds > 1:
-      print("Erroneous prediction: ", preds) # what now?
+  representations = get_representation(output, last_token_idx)
+  embedding_dim = int(len(representations) / len(seq))
 
-    if preds.item() in INT_TO_TYPE_DICT: 
-      pred_type = INT_TO_TYPE_DICT[preds.item()]
-    else:
-      print("Transformer did output an invalid type. Changed to unknown type")
-      pred_type = "<UNK>"
-
-    res.append(pred_type)
-    res.append(confidence.item())
-
-  #representations = get_representation(output, last_token_idx)
-  #embedding_dim = int(len(representations) / len(seq))
+  #res = list()
+  #res.append(confidence.item())
+  #res.append(preds.item())
+  res = [preds.item()] #, embedding_dim]
+  #res.extend(representations)
 
   return res
 
 
 def get_alphabet(path_to_model: str):
   """Returns the alphabet, so we can set the internal alphabet of Flexfringe accordingly.
-  Additionally, initializes the return types in the python script to return strings. 
-
   Alphabet must a list of int objects, representing the possible inputs of the network. 
   Flexfringe will take care of the internals.
 
@@ -224,7 +193,7 @@ def get_alphabet(path_to_model: str):
   Returns:
       alphabet: list(int): The possible inputs the network can take.
   """
-  global ALPH_MAPPING, INT_TO_TYPE_DICT
+  global ALPH_MAPPING
 
   path_split = os.path.split(path_to_model)
   data_dir = os.path.join(*path_split[:-1])
@@ -240,7 +209,6 @@ def get_alphabet(path_to_model: str):
 
   alphabet = [k for k in symbol_dict.keys() if not k=="<SOS>" and not k=="<EOS>"]
   ALPH_MAPPING = symbol_dict
-  INT_TO_TYPE_DICT = {v: k for k, v in dataset_dict["label_dict"].items()}
   
   assert(alphabet is not None)
   print("The alphabet: ", alphabet)
@@ -265,24 +233,20 @@ def get_hidden_representation(res: list):
     print(len(reps[-1]))
   
   return reps
+    
 
 if __name__ == "__main__":
-  import random
-
   # {'c': 0, 'b': 1, 'd': 2, 'a': 3}
   model_path = "/home/robert/Documents/code/Flexfringe/data/active_learning/mlregtest/trained_models/distilbert_problem_04.04.SL.2.1.0_mid.pk.finetuned"
   get_alphabet(model_path)
   load_nn_model(model_path)
-  
-  i = 0
-  symbols = ["a", "b", "c", "d"]
-  while True:
-    length = random.randint(0, 25)
-    b_size = random.randint(1, 512)
-    seq = [[random.choice(symbols) for _ in range(length)] for _ in range(b_size)]
-    res = do_query(seq)
-    i += 1
-    if i % 100 == 0:
-      print(i)
+  #seq = [4, 1, 1, 5]
+  seq = [4, 1, 3, 3, 1, 5]
+  res = do_query(seq)
+  print(type(res), len(res))
+  print("here come the hidden reps: ")
+  hreps = get_hidden_representation(res)
+  for i in range(len(hreps)):
+     print("Index: {}, char: {}, hreps: {}\n\n\n".format(i, seq[i], hreps[i][:3]))
 
   raise Exception("This is not a standalone script.")

@@ -1,38 +1,62 @@
-// TODO: those are a lot of includes. Do we need them all?
-#include "stream.h"
-#include <cstdlib>
+/**
+ * @file stream_mode.cpp
+ * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
+ * @brief 
+ * @version 0.1
+ * @date 2024-12-19
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
 
-#include "greedy.h"
+#include "stream_mode.h"
 #include "state_merger.h"
 #include "evaluate.h"
-#include "dfasat.h"
-#include "evaluation_factory.h"
-#include "searcher.h"
 #include "refinement_selection_strategies.h"
-
-#include "main_helpers.h" // TODO: only for debugging
+#include "input/abbadingoreader.h"
+#include "common.h"
 
 #include <vector>
 #include <cmath>
 #include <string>
 #include "parameters.h"
-#include "input/abbadingoreader.h"
 #include <sstream>
 #include <iostream>
 #include <cstdlib>
 #include <stack>
 #include <optional>
 
-#include <chrono> // for measuring performance
-#include <fstream> // for measuring performance
+#include <chrono>
+#include <fstream>
 
-int P_PERCENT = 0; // to get each i-th percentage. We print the model then
 const bool RETRY_MERGES = true;
 const bool EXPERIMENTAL_RUN = true;
 
 using namespace std;
 
-refinement* stream_object::determine_next_refinement(state_merger* merger){
+void stream_mode::initialize() {
+  running_mode_base::initialize();
+
+  bool read_csv = false;
+  if(INPUT_FILE.compare(INPUT_FILE.length() - 4, INPUT_FILE.length(), ".csv") == 0){
+      read_csv = true;
+  }
+
+  if(read_csv) {
+      input_parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
+  } else {
+      input_parser = abbadingoparser(input_stream);
+  }
+
+  eval->initialize_before_adding_traces();
+}
+
+void stream_mode::generate_output(){
+    cout << "Printing output to " << OUTPUT_FILE << ".final" << endl;
+    print_current_automaton(merger, OUTPUT_FILE, ".final");
+}
+
+refinement* stream_mode::determine_next_refinement(state_merger* merger){
   if(!DO_ACTIVE_LEARNING) return merger->get_best_refinement();
 
   static bool initialized = false;
@@ -66,9 +90,7 @@ refinement* stream_object::determine_next_refinement(state_merger* merger){
   return res;
 }
 
-void stream_object::greedyrun_no_undo(state_merger* merger, const int seq_nr, const bool last_sequence, const int n_runs){
-    static int count_batches = 0;
-    static int count_printouts = 1;
+void stream_mode::greedyrun_no_undo(state_merger* merger){
     refinement* top_ref;
     top_ref = determine_next_refinement(merger);
     while(top_ref != 0){
@@ -76,13 +98,7 @@ void stream_object::greedyrun_no_undo(state_merger* merger, const int seq_nr, co
       top_ref = merger->get_best_refinement();
     }
 
-    // print out the state machine before undoing all the merges
-    ++count_batches;
-
-    if(seq_nr > count_printouts * P_PERCENT || last_sequence){
-      std::cout << "Processed " << count_printouts * 10 << " percent" << std::endl;
-      ++count_printouts;
-    }
+    // TODO: delete the top_refs
 }
 
 /**
@@ -91,7 +107,7 @@ void stream_object::greedyrun_no_undo(state_merger* merger, const int seq_nr, co
  * 
  * @param ref The refinement whose states we want to remember.
  */
-void stream_object::remember_state(refinement* ref){
+void stream_mode::remember_state(refinement* ref){
   this->states_to_append_to.insert(ref->red->get_number());
   
   if(ref->type() == refinement_type::merge_rf_type){
@@ -125,7 +141,7 @@ void print_current_automaton_stream(state_merger* merger, const string& output_f
     }
 }
 
-void stream_object::greedyrun_retry_merges(state_merger* merger, const int seq_nr, const bool last_sequence, const int n_runs){
+void stream_mode::greedyrun_retry_merges(state_merger* merger, const int seq_nr, const bool last_sequence, const int n_runs){
     static int count_printouts = 1;
     static int c = 0;
 
@@ -225,30 +241,22 @@ void stream_object::greedyrun_retry_merges(state_merger* merger, const int seq_n
  * @param id Input-data wrapper object. 
  * @return int 
  */
-int stream_object::stream_mode(state_merger* merger, std::ifstream& input_stream, inputdata* id, parser* input_parser) {
-    const int BATCH_SIZE = 500;
+int stream_mode::run() {
+    const int THIS_BATCH_SIZE = BATCH_SIZE;
+    
     unsigned int seq_nr = 0;
     bool last_sequence = false;
-    if(DO_ACTIVE_LEARNING) cout << "Using active learning in conjuntion with streaming." << endl;
-
-    P_PERCENT = static_cast<int>(id->get_max_sequences() / 10); // to track the percent
-    std::cout << "P_PERCENT: " << P_PERCENT << std::endl;
-
-    std::ofstream time_doc("times_per_batch.txt");
-    //merger->eval->initialize(merger);
-
-    // for performance measurement
-    unsigned int n_runs = 0;
-
     while(true) {
-      int read_lines = 0;
-      while (read_lines < BATCH_SIZE){
-        if(input_stream.eof()){
-          last_sequence = true;
-          break; // TODO: for experiments, delete afterwards since this will terminate the algortithm, but not necessarily the stream
-        }
+      int n_seq_batch = 0;
+      while (n_seq_batch < THIS_BATCH_SIZE){
+        
+        if(input_stream.eof())
+          cout << "Reached end of input stream. Waiting for new data." << endl;
 
-        ++read_lines;
+        while(input_stream.eof())
+          this_thread::sleep_for(chrono::seconds(2));
+
+        ++n_seq_batch;
         ++seq_nr;
         
         std::optional<trace*> trace_opt = id->read_trace(*input_parser, *parser_strategy);
@@ -263,26 +271,23 @@ int stream_object::stream_mode(state_merger* merger, std::ifstream& input_stream
         trace* new_trace = trace_opt.value();
         new_trace->sequence = seq_nr;
 
-        //states_to_append_to.insert(merger->get_aut()->get_root()->get_number());
         id->add_trace_to_apta(new_trace, merger->get_aut(), true, &(this->states_to_append_to));
-        
-        //static int x = 0;
-        //print_current_automaton(merger, "automaton_", std::to_string(++x));
-
         if(!ADD_TAILS) new_trace->erase();
       }
 
-      if(RETRY_MERGES) greedyrun_retry_merges(merger, seq_nr, last_sequence, n_runs);
-      else greedyrun_no_undo(merger, seq_nr, last_sequence, n_runs);
-      ++(this->batch_number);
-      ++n_runs;
+      n_seq_batch = 0;
 
-      //print_current_automaton(merger, "Batch_", to_string(this->batch_number));
+      if(RETRY_MERGES) greedyrun_retry_merges(merger);
+      else greedyrun_no_undo(merger);
+      ++(this->batch_number);
+
+      if(DEBUGGING)
+        print_current_automaton(merger, "Batch_", to_string(this->batch_number));
 
       if(input_stream.eof()){
         if(RETRY_MERGES){
           // one more step, because we undid refinements earlier
-          greedyrun_retry_merges(merger, seq_nr, last_sequence, n_runs); // TODO: is this one needed?
+          greedyrun_retry_merges(merger); // TODO: is this one needed?
 
           for(auto top_ref: *currentrun){
               top_ref->doref(merger);
@@ -290,9 +295,8 @@ int stream_object::stream_mode(state_merger* merger, std::ifstream& input_stream
         }
 
         std::cout << "Finished parsing file. End of program." << std::endl;
-        time_doc.close();
-        return 0;
+        return EXIT_SUCCESS;
       }
     }
-    return 0;
+    return EXIT_SUCCESS;
 }

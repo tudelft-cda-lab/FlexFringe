@@ -1,11 +1,33 @@
-/// @file interactive.cpp
-/// @brief All the functions and definitions for interactive merge mode.
-/// @author Christian Hammerschmidt, hammerschmidt@posteo.de
+/**
+ * @file interactive_mode.cpp
+ * @author Christian Hammerschmidt (hammerschmidt@posteo.de)
+ * @brief 
+ * @version 0.1
+ * @date 2024-12-18
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
+
+#include "interactive_mode.h"
+#include "refinement.h"
+#include "parameters.h"
 
 #include <sstream>
-#include "refinement.h"
-#include "greedy.h"
-#include "parameters.h"
+
+void interactive_mode::initialize() {
+    running_mode_base::initialize();
+    read_input_file();
+    
+    eval->initialize_before_adding_traces();
+    id.add_traces_to_apta(the_apta);
+    eval->initialize_after_adding_traces(merger);
+}
+
+void interactive_mode::generate_output(){
+    std::cout << "Printing output to " << OUTPUT_FILE << ".final" << std::endl;
+    print_current_automaton(merger, OUTPUT_FILE, ".final");
+}
 
 /*! @brief Main loop for interactive mode.
  *         
@@ -14,9 +36,8 @@
  *  Outputs into two dot files to visualize current step/last step (merged) APTA.
  * @param[in] merger state_merger* object
  * @param[in] param  parameters* object to set global variables
- * @return refinement_list* list of refinments executed by the state merger
  */
-refinement_list* interactive(state_merger* merger){
+void interactive_mode::run(){
     std::cerr << "starting greedy merging" << std::endl; // cerr?
     int num = 1;
     refinement_list* all_refs = new refinement_list();
@@ -188,7 +209,6 @@ refinement_list* interactive(state_merger* merger){
     int size =  merger->get_final_apta_size();
     int red_size = merger->get_num_red_states();
     std::cout << std::endl << "Found heuristic solution with " << size << " states, of which " << red_size << " are red states." << std::endl;
-    return all_refs;
 };
 
 

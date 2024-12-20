@@ -14,7 +14,7 @@
 #include "common_functions.h"
 #include "evaluate.h"
 #include "input/trace.h"
-#include "main_helpers.h"
+#include "common.h"
 #include "misc/printutil.h"
 #include "parameters.h"
 #include "refinement.h"

@@ -1,15 +1,20 @@
 /**
- * @file main_helpers.cpp
- * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
+ * @file common.cpp
+ * @author Sicco Verwer (s.e.verwer@tudelft.nl)
  * @brief 
  * @version 0.1
- * @date 2023-03-06
+ * @date 2024-12-20
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2024
  * 
  */
 
-#include "main_helpers.h"
+#include "common.h"
+
+#include <vector>
+#include <string>
+
+#include <iostream>
 
 void print_current_automaton(state_merger* merger, const std::string& output_file, const std::string& append_string){
     if (OUTPUT_TYPE == "dot" || OUTPUT_TYPE == "both") {
@@ -38,6 +43,8 @@ void print_current_automaton(state_merger* merger, const std::string& output_fil
 }
 
 evaluation_function* get_evaluation(){
+    std::cout << "Using evaluation class " << HEURISTIC_NAME << std::endl;
+
     evaluation_function *eval = nullptr;
     if(debugging_enabled){
         for(auto & myit : *DerivedRegister<evaluation_function>::getMap()) {

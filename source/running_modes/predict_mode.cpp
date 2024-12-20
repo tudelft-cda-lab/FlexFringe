@@ -1,58 +1,60 @@
-//
-// Created by sicco on 23/04/2021.
-//
+/**
+ * @file predict_mode.cpp
+ * @author Sicco Verwer (s.e.verwer@tudelft.nl)
+ * @brief 
+ * @version 0.1
+ * @date 2024-12-19
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
 
-#include "predict.h"
+#include "predict_mode.h"
 #include "dfa_properties.h"
 #include "input/inputdatalocator.h"
 #include "input/parsers/abbadingoparser.h"
 #include "input/parsers/reader_strategy.h"
 
-#include <optional>
-#include <queue>
-#include "input/inputdatalocator.h"
-#include <sstream>
-#include <map>
 #include "misc/trim.h"
 #include "misc/printutil.h"
 #include "utility/loguru.hpp"
 #include "misc/zip.h"
 
-struct tail_state_compare{ bool operator()(const std::pair<double, std::pair<apta_node*, tail*>> &a, const std::pair<double, std::pair<apta_node*, tail*>> &b) const{ return a.first < b.first; } };
+#include <optional>
+#include <queue>
+#include <sstream>
+#include <map>
+#include <memory>
 
-int rownr = 0;
-std::map<int,double> sw_score_per_symbol;
-std::map<tail*,double> sw_individual_tail_score;
+struct predict_mode::tail_state_compare { 
+    bool operator()(const std::pair<double, std::pair<apta_node*, tail*>> &a, const std::pair<double, std::pair<apta_node*, tail*>> &b) const { 
+        return a.first < b.first; 
+    } 
+};
 
-double compute_skip_penalty(apta_node* node){
+double predict_mode::compute_skip_penalty(apta_node* node){
     if(ALIGN_SKIP_PENALTY != 0) return 1.0 + ALIGN_SKIP_PENALTY;
     return 1.0;
 }
 
-double compute_jump_penalty(apta_node* old_node, apta_node* new_node){
+double predict_mode::compute_jump_penalty(apta_node* old_node, apta_node* new_node){
     if(ALIGN_DISTANCE_PENALTY != 0) return 1.0 + (ALIGN_DISTANCE_PENALTY * (double)(merged_apta_distance(old_node, new_node, -1)));
     return 1.0;
 }
 
-double compute_score(apta_node* next_node, tail* next_tail){
+double predict_mode::compute_score(apta_node* next_node, tail* next_tail){
     //if(PREDICT_ALIGN){ cerr << next_node->get_data()->align_score(next_tail) << endl; }
     if(PREDICT_ALIGN){ return next_node->get_data()->align_score(next_tail); }
     return next_node->get_data()->predict_score(next_tail);
 }
 
-double update_score(double old_score, apta_node* next_node, tail* next_tail){
+double predict_mode::update_score(double old_score, apta_node* next_node, tail* next_tail){
     double score = compute_score(next_node, next_tail);
     if(PREDICT_MINIMUM) return std::min(old_score, score);
     return old_score + score;
 }
 
-std::list<int> state_sequence;
-std::list<double> score_sequence;
-std::list<bool> align_sequence;
-apta_node* ending_state = nullptr;
-tail* ending_tail = nullptr;
-
-void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
+void predict_mode::align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
     apta_node *n = m->get_aut()->get_root();
 
     double score;
@@ -234,7 +236,7 @@ void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
     }
 }
 
-double prob_single_parallel(tail* p, tail* t, apta_node* n, double prod_prob, bool flag){
+double predict_mode::prob_single_parallel(tail* p, tail* t, apta_node* n, double prod_prob, bool flag){
     double result = -100000;
     if(n == nullptr) return result;
     if(t == p) t = t->future();
@@ -262,7 +264,7 @@ double prob_single_parallel(tail* p, tail* t, apta_node* n, double prod_prob, bo
     return -100000;
 }
 
-void store_visited_states(apta_node* n, tail* t, state_set* states){
+void predict_mode::store_visited_states(apta_node* n, tail* t, state_set* states){
     while(t != nullptr && n != nullptr){
         states->insert(n);
         apta_node* child = n->child(t);
@@ -274,7 +276,7 @@ void store_visited_states(apta_node* n, tail* t, state_set* states){
     }
 }
 
-std::pair<int,int> visited_node_sizes(apta_node* n, tail* t){
+std::pair<int,int> predict_mode::visited_node_sizes(apta_node* n, tail* t){
     std::pair<int,int> size_num = std::pair<int,int>(0,0);
     while(t != nullptr && n != nullptr){
         size_num.first += n->get_size();
@@ -292,7 +294,7 @@ std::pair<int,int> visited_node_sizes(apta_node* n, tail* t){
     return size_num;
 }
 
-apta_node* single_step(apta_node* n, tail* t, apta* a){
+apta_node* predict_mode::single_step(apta_node* n, tail* t, apta* a){
     apta_node* child = n->child(t);
     if(child == 0){
         if(PREDICT_RESET) return a->get_root();
@@ -302,7 +304,7 @@ apta_node* single_step(apta_node* n, tail* t, apta* a){
     return child->find();
 }
 
-[[maybe_unused]] double predict_trace(state_merger* m, trace* tr){
+[[maybe_unused]] double predict_mode::predict_trace(state_merger* m, trace* tr){
     apta_node* n = m->get_aut()->get_root();
     tail* t = tr->get_head();
     double score = 0.0;
@@ -321,7 +323,7 @@ apta_node* single_step(apta_node* n, tail* t, apta* a){
     return score;
 }
 
-double add_visits(state_merger* m, trace* tr){
+double predict_mode::add_visits(state_merger* m, trace* tr){
     apta_node* n = m->get_aut()->get_root();
     tail* t = tr->get_head();
     double score = 0.0;
@@ -334,7 +336,7 @@ double add_visits(state_merger* m, trace* tr){
     return score;
 }
 
-void predict_trace_update_sequences(state_merger* m, tail* t){
+void predict_mode::predict_trace_update_sequences(state_merger* m, tail* t){
     apta_node* n = m->get_aut()->get_root();
     double score = 0.0;
 
@@ -368,25 +370,8 @@ void predict_trace_update_sequences(state_merger* m, tail* t){
         ending_tail = ending_tail->past();
 }
 
-template <typename T>
-void write_list(std::list<T>& list_to_write, std::ostream& output){
-    if(list_to_write.empty()){
-        output << "[]";
-        return;
-    }
 
-    output << "[";
-    bool first = true;
-    for(auto val : list_to_write) {
-        if (!first) { output << ","; }
-        else first = false;
-        output << val;
-    }
-    output << "]";
-}
-
-
-void predict_trace(state_merger* m, std::ostream& output, trace* tr){
+void predict_mode::predict_trace(state_merger* m, std::ostream& output, trace* tr){
     if(REVERSE_TRACES) tr->reverse();
 
     static int rownr = 1;
@@ -412,6 +397,9 @@ void predict_trace(state_merger* m, std::ostream& output, trace* tr){
     write_list(score_sequence, output);
 
     if(SLIDING_WINDOW) {
+        static std::map<int,double> sw_score_per_symbol;
+        static std::map<tail*,double> sw_individual_tail_score;
+
         auto score_it = score_sequence.begin();
         auto state_it = state_sequence.begin();
         auto align_it = align_sequence.begin();
@@ -537,7 +525,7 @@ void predict_trace(state_merger* m, std::ostream& output, trace* tr){
     output << std::endl;
 }
 
-void predict_header(std::ostream& output) {
+void predict_mode::predict_header(std::ostream& output) {
     output << "row nr; abbadingo trace; state sequence; score sequence";
     if(SLIDING_WINDOW) output << "; score per sw tail; score first sw tail; root cause sw tail score; row nrs first sw tail";
     if(PREDICT_ALIGN) output << "; alignment; num misaligned";
@@ -547,7 +535,7 @@ void predict_header(std::ostream& output) {
     output << std::endl;
 }
 
-void predict_streaming(state_merger* m, parser& parser, reader_strategy& strategy, std::ofstream& output) {
+void predict_mode::predict_streaming(state_merger* m, parser& parser, reader_strategy& strategy, std::ofstream& output) {
     predict_header(output);
 
     inputdata idat = inputdata::with_alphabet_from(*inputdata_locator::get());
@@ -567,7 +555,7 @@ void predict_streaming(state_merger* m, parser& parser, reader_strategy& strateg
     }
 }
 
-void predict(state_merger* m, inputdata& idat, std::ostream& output, parser* input_parser){
+void predict_mode::predict(state_merger* m, inputdata& idat, std::ostream& output, parser* input_parser){
     predict_header(output);
 
     auto strategy = in_order();
@@ -578,8 +566,8 @@ void predict(state_merger* m, inputdata& idat, std::ostream& output, parser* inp
     }
 }
 
-// TODO: Refactor predict.cpp so that this is easier to do.
-std::unordered_map<std::string, std::string> get_prediction_mapping(state_merger* m, trace* tr) {
+// TODO: Refactor predict_mode.cpp so that this is easier to do.
+std::unordered_map<std::string, std::string> predict_mode::get_prediction_mapping(state_merger* m, trace* tr) {
     std::stringstream ss;
     predict_header(ss);
 
@@ -611,4 +599,42 @@ std::unordered_map<std::string, std::string> get_prediction_mapping(state_merger
         data.insert(std::make_pair(k, v));
     }
     return data;
+}
+
+
+void predict_mode::intialize() {
+    if(APTA_FILE.empty())
+        throw std::invalid_argument("require a json formatted apta file to make predictions");
+    // First, we read the apta file into the global inputdata, so we can obtain the alphabet mapping
+    std::ifstream input_apta_stream(APTA_FILE);
+    std::cerr << "reading apta file - " << APTA_FILE << std::endl;
+    the_apta->read_json(input_apta_stream);
+    std::cout << "Finished reading apta file." << std::endl;
+}
+
+int predict_mode::run(){
+    // Set up the reading strategy. Currently only sliding window and in-order traces are supported
+    // TODO: add support for sentinel symbol reading strategy
+    std::unique_ptr<reader_strategy> strategy;
+    if (SLIDING_WINDOW) {
+        strategy = std::make_unique<slidingwindow>(SLIDING_WINDOW_SIZE, SLIDING_WINDOW_STRIDE, SLIDING_WINDOW_TYPE);
+    } else {
+        strategy = std::make_unique<in_order>();
+    }
+
+    // We stream the to predict traces into inputdata one by one to save memory
+    // Set up the parser for the input stream
+    //std::ifstream input_stream(INPUT_FILE);
+    std::unique_ptr<parser> input_parser;
+    if(INPUT_FILE.ends_with(".csv")) {
+        input_parser = std::make_unique<csv_parser>(input_stream, csv::CSVFormat().trim({' '}));
+    } else {
+        input_parser = std::make_unique<abbadingoparser>(input_stream);
+    }
+
+    cout << "Writing prediction output to " << APTA_FILE << ".result" << endl;
+    std::ofstream output(APTA_FILE + ".result");
+    predict_streaming(merger, *input_parser, *strategy, output);
+    
+    return EXIT_SUCCESS;
 }
