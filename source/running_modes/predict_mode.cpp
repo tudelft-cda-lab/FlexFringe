@@ -10,7 +10,9 @@
  */
 
 #include "predict_mode.h"
+#include "common.h"
 #include "dfa_properties.h"
+
 #include "input/inputdatalocator.h"
 #include "input/parsers/abbadingoparser.h"
 #include "input/parsers/reader_strategy.h"
@@ -40,18 +42,6 @@ double predict_mode::compute_skip_penalty(apta_node* node){
 double predict_mode::compute_jump_penalty(apta_node* old_node, apta_node* new_node){
     if(ALIGN_DISTANCE_PENALTY != 0) return 1.0 + (ALIGN_DISTANCE_PENALTY * (double)(merged_apta_distance(old_node, new_node, -1)));
     return 1.0;
-}
-
-double predict_mode::compute_score(apta_node* next_node, tail* next_tail){
-    //if(PREDICT_ALIGN){ cerr << next_node->get_data()->align_score(next_tail) << endl; }
-    if(PREDICT_ALIGN){ return next_node->get_data()->align_score(next_tail); }
-    return next_node->get_data()->predict_score(next_tail);
-}
-
-double predict_mode::update_score(double old_score, apta_node* next_node, tail* next_tail){
-    double score = compute_score(next_node, next_tail);
-    if(PREDICT_MINIMUM) return std::min(old_score, score);
-    return old_score + score;
 }
 
 void predict_mode::align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
@@ -292,16 +282,6 @@ std::pair<int,int> predict_mode::visited_node_sizes(apta_node* n, tail* t){
         t = t->future();
     }
     return size_num;
-}
-
-apta_node* predict_mode::single_step(apta_node* n, tail* t, apta* a){
-    apta_node* child = n->child(t);
-    if(child == 0){
-        if(PREDICT_RESET) return a->get_root();
-        else if(PREDICT_REMAIN) return n;
-        else return nullptr;
-    }
-    return child->find();
 }
 
 [[maybe_unused]] double predict_mode::predict_trace(state_merger* m, trace* tr){

@@ -61,9 +61,9 @@ add_library(Source STATIC
         refinement_selection_strategies.cpp
         regex_builder.cpp
         regex_builder.h 
-
         running_mode_factory.h
         running_mode_factory.cpp
+
         running_modes/dfasat_mode.h
         running_modes/dfasat_mode.cpp
         running_modes/differencing_mode.h

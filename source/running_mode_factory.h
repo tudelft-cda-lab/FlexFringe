@@ -16,6 +16,7 @@
 #include "running_mode_base.h"
 
 #include <memory>
+#include <string>
 #include <stdexcept>
 
 /**
@@ -26,6 +27,7 @@ class running_mode_factory {
   public:
     running_mode_factory() = delete;
     static std::unique_ptr<running_mode_base> get_mode();
+    static std::unique_ptr<running_mode_base> get_mode(const std::string& mode);
 };
 
 #endif

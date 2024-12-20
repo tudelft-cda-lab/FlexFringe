@@ -10,6 +10,7 @@
  */
 
 #include "greedy_mode.h"
+#include "common.h"
 #include "refinement.h"
 #include "parameters.h"
 

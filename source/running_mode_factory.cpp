@@ -29,50 +29,50 @@ using namespace std;
 /**
  * @brief Selects a mode and initializes it.
  */
-unique_ptr<running_mode_base> running_mode_factory::get_mode(){
+unique_ptr<running_mode_base> running_mode_factory::get_mode(const string& operation_mode){
   unique_ptr<running_mode_base> mode;
 
-  if(OPERATION_MODE == "active_learning"){
+  if(operation_mode == "active_learning"){
     cout << "Active learning mode selected" << endl;
     mode = make_unique<active_learning_mode>();
   }
-  else if(OPERATION_MODE == "dfasat"){
+  else if(operation_mode == "dfasat"){
     cout << "SAT solver mode selected" << endl;
     mode = make_unique<dfasat_mode>();
   }
-  else if(OPERATION_MODE == "differencing"){
+  else if(operation_mode == "differencing"){
     cout << "Behavioral differencing mode selected" << endl;
     mode = make_unique<differencing_mode>();
   }
-  else if(OPERATION_MODE == "bagging"){
+  else if(operation_mode == "bagging"){
     cout << "Ensemble mode selected" << endl;
     mode = make_unique<ensemble_mode>();
   }
-  else if(OPERATION_MODE == "greedy"){
+  else if(operation_mode == "greedy"){
     cout << "Greedy mode selected" << endl;
     mode = make_unique<greedy_mode>();
   }
-  else if(OPERATION_MODE == "interactive"){
+  else if(operation_mode == "interactive"){
     cout << "Interactive mode selected" << endl;
     mode = make_unique<interactive_mode>();
   }
-  else if(OPERATION_MODE == "predict"){
+  else if(operation_mode == "predict"){
     cout << "Predict mode selected" << endl;
     mode = make_unique<predict_mode>();
   }
-  else if(OPERATION_MODE == "regex"){
+  else if(operation_mode == "regex"){
     cout << "Regex mode selected" << endl;
     mode = make_unique<regex_mode>();
   }
-  else if(OPERATION_MODE == "search"){
+  else if(operation_mode == "search"){
     cout << "Search mode selected" << endl;
     mode = make_unique<search_mode>();
   }
-  else if(OPERATION_MODE == "streaming"){
+  else if(operation_mode == "streaming"){
     cout << "Stream mode selected" << endl;
     mode = make_unique<stream_mode>();
   }
-  else if(OPERATION_MODE == "subgraphextraction"){
+  else if(operation_mode == "subgraphextraction"){
     cout << "subgraphextraction mode selected" << endl;
     mode = make_unique<subgraphextraction_mode>(); // TODO: the state merger
   }
@@ -81,4 +81,8 @@ unique_ptr<running_mode_base> running_mode_factory::get_mode(){
   
   mode->initialize();
   return mode;
+}
+
+unique_ptr<running_mode_base> running_mode_factory::get_mode(){
+  return running_mode_factory::get_mode(OPERATION_MODE);
 }

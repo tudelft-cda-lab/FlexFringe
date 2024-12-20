@@ -10,6 +10,7 @@
  */
 
 #include "interactive_mode.h"
+#include "common.h"
 #include "refinement.h"
 #include "parameters.h"
 
@@ -37,7 +38,7 @@ void interactive_mode::generate_output(){
  * @param[in] merger state_merger* object
  * @param[in] param  parameters* object to set global variables
  */
-void interactive_mode::run(){
+int interactive_mode::run(){
     std::cerr << "starting greedy merging" << std::endl; // cerr?
     int num = 1;
     refinement_list* all_refs = new refinement_list();
@@ -204,11 +205,12 @@ void interactive_mode::run(){
 
         execute = false;
     }
-    std::cout << std::endl;
 
     int size =  merger->get_final_apta_size();
     int red_size = merger->get_num_red_states();
-    std::cout << std::endl << "Found heuristic solution with " << size << " states, of which " << red_size << " are red states." << std::endl;
+    std::cout << << "\n\nFound heuristic solution with " << size << " states, of which " << red_size << " are red states." << std::endl;
+
+    return EXIT_SUCCESS;
 };
 
 
