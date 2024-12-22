@@ -11,8 +11,10 @@
 
 #include "regex_mode.h"
 #include "regex_builder.h"
+#include "inputdatalocator.h" 
 
 #include <iostream>
+#include <ranges>
 
 void regex_mode::initialize(){
   running_mode_base::initialize();

@@ -11,6 +11,7 @@
 
 #include "search_mode.h"
 #include "parameters.h"
+#include "common.h"
 
 #include <queue>
 

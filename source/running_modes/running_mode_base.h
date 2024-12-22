@@ -30,20 +30,19 @@ class running_mode_base {
     apta* the_apta = nullptr;
     evaluation_function* eval= nullptr;
     state_merger* merger = nullptr; // must be set from within constructor
-    parser* input_parser = nullptr;
 
     void read_input_file();
 
   public:
-
-    running_mode_base(){
-      the_apta = new apta();
-      //merger = new state_merger();
-      throw std::runtime_error("Not implemented yet");
-    }
-
     ~running_mode_base(){
-      throw std::runtime_error("Not implemented yet");
+      if(the_apta != nullptr)
+        delete the_apta;
+      if(merger != nullptr)
+        delete merger;
+      //if (input_parser != nullptr)
+      //  delete input_parser;
+      if (eval != nullptr)
+        delete eval;
     }
 
     

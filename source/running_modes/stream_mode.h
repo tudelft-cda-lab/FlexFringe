@@ -56,13 +56,13 @@ class stream_mode : public running_mode_base {
     stream_mode(){
       currentrun = new refinement_list();
       nextrun = new refinement_list();
-      parser_strategy = new in_order();
+      parser_strategy = new in_order(); // TODO: more generic? 
     }
 
     ~stream_mode(){
       delete currentrun;
       delete nextrun;
-      delete parser_strategy;
+      delete parser_strategy;        
     }
 
     //__attribute__((flatten)) // inlines all subsequent functions into this one, (potentially) increases speed at cost of larger code and compile time

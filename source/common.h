@@ -31,6 +31,7 @@ evaluation_function* get_evaluation();
 
 double update_score(double old_score, apta_node* next_node, tail* next_tail);
 double compute_score(apta_node* next_node, tail* next_tail);
+double compute_score(apta_node* old_node, apta_node* new_node);
 
 apta_node* single_step(apta_node* n, tail* t, apta* a);
 

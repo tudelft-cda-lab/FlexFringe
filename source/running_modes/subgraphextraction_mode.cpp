@@ -10,13 +10,29 @@
  */
 
 #include "subgraphextraction_mode.h"
+#include "csv.hpp"
+#include "common.h"
 
+#include "input/abbadingoreader.h"
+#include "input/parsers/abbadingoparser.h"
+#include "input/parsers/csvparser.h"
+
+#include <fstream>
 
 void subgraphextraction_mode::initialize(){
   // TODO: do this one
 }
 
 int subgraphextraction_mode::run(){
+  std::ifstream input_stream(INPUT_FILE);    
+  if(!input_stream) {
+      LOG_S(ERROR) << "Input file not found, aborting";
+      std::cerr << "Input file not found, aborting" << std::endl;
+      exit(-1);
+  } else {
+      std::cout << "Using input file: " << INPUT_FILE << std::endl;
+  }
+
   if(!APTA_FILE.empty()){
     std::ifstream input_apta_stream(APTA_FILE);
     std::cout << "reading apta file - " << APTA_FILE << std::endl;
@@ -43,7 +59,7 @@ int subgraphextraction_mode::run(){
             apta_node* n = merger->get_aut()->get_root();
             tail* t = tr->get_head();
 
-            or(int j = 0; j < t->get_length(); j++){
+            for(int j = 0; j < t->get_length(); j++){
                apta_guard* g = n->guard(t->get_symbol());
                traversed_guards.insert(g);
 

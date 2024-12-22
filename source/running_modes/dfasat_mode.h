@@ -37,7 +37,8 @@ class dfasat_mode : public running_mode_base {
     class dfasat_status;
 
     inline void run_dfasat(std::string sat_program, int best_solution);
-
+    void start_sat_solver(std::string sat_program);
+    
   public: 
     int run() override;
     void initialize() override;

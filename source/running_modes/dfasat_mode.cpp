@@ -11,6 +11,7 @@
 
 #include "dfasat_mode.h"
 #include "parameters.h"
+#include "common.h"
 #include "conflict_graph.h"
 #include "input/inputdatalocator.h"
 
@@ -1255,7 +1256,7 @@ void dfasat_mode::dfasat_status::read_solution(FILE* sat_file, int best_solution
     delete_literals();
 }
 
-void start_sat_solver(std::string sat_program){
+void dfasat_mode::start_sat_solver(std::string sat_program){
 #ifdef _WIN32
     std::cerr << "DFASAT does not work under Windows OS" << std::endl;
 #else

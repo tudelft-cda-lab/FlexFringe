@@ -13,7 +13,7 @@
 #ifndef __RUNNING_MODE_FACTORY_H_
 #define __RUNNING_MODE_FACTORY_H_
 
-#include "running_mode_base.h"
+#include "running_modes/running_mode_base.h"
 
 #include <memory>
 #include <string>

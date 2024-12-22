@@ -14,6 +14,9 @@
 
 #include "running_mode_base.h"
 
+#include "misc/sqldb.h"
+#include "misc/utils.h"
+
 class regex_mode : public running_mode_base {
   public:
     void initialize() override;

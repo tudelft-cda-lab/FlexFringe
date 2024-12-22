@@ -12,9 +12,11 @@
 #include "predict_mode.h"
 #include "common.h"
 #include "dfa_properties.h"
+#include "csv.hpp"
 
 #include "input/inputdatalocator.h"
 #include "input/parsers/abbadingoparser.h"
+#include "input/parsers/csvparser.h"
 #include "input/parsers/reader_strategy.h"
 
 #include "misc/trim.h"
@@ -582,7 +584,7 @@ std::unordered_map<std::string, std::string> predict_mode::get_prediction_mappin
 }
 
 
-void predict_mode::intialize() {
+void predict_mode::initialize() {
     if(APTA_FILE.empty())
         throw std::invalid_argument("require a json formatted apta file to make predictions");
     // First, we read the apta file into the global inputdata, so we can obtain the alphabet mapping
@@ -604,17 +606,19 @@ int predict_mode::run(){
 
     // We stream the to predict traces into inputdata one by one to save memory
     // Set up the parser for the input stream
-    //std::ifstream input_stream(INPUT_FILE);
-    std::unique_ptr<parser> input_parser;
+    std::ifstream input_stream(INPUT_FILE);
+    std::ofstream output(APTA_FILE + ".result");
+    std::cout << "Writing prediction output to " << APTA_FILE << ".result" << std::endl;
+
     if(INPUT_FILE.ends_with(".csv")) {
-        input_parser = std::make_unique<csv_parser>(input_stream, csv::CSVFormat().trim({' '}));
+        auto input_parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
+        predict_streaming(merger, input_parser, *strategy, output);
     } else {
-        input_parser = std::make_unique<abbadingoparser>(input_stream);
+        auto input_parser = abbadingoparser(input_stream);
+        predict_streaming(merger, input_parser, *strategy, output);
     }
 
-    cout << "Writing prediction output to " << APTA_FILE << ".result" << endl;
-    std::ofstream output(APTA_FILE + ".result");
-    predict_streaming(merger, *input_parser, *strategy, output);
+    
     
     return EXIT_SUCCESS;
 }

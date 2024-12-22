@@ -12,37 +12,39 @@
 #ifndef __REGEX_BUILDER_H__
 #define __REGEX_BUILDER_H__
 
+#include "apta.h"
+#include "state_merger.h"
+#include "running_modes/predict_mode.h"
+
 #include <string>
 #include <map>
 #include <set>
 #include <queue>
-#include "apta.h"
-#include "state_merger.h"
+#include <memory>
 
-
+/**
+ * @brief Builds a class that for every output symbol constructs a regex to mach strings that output that output symbol.
+ *
+ * Please note that symbols by apta are internally hold as single points.
+ * To keep this in the regex, the single points must be converted to single characters.
+ * Provide a lambda or a mapping that can convert this. // TODO: override this somehow.
+ *
+ * This would mean that a regex conversion for how traces are usually encoded will only 
+ * work when its alphabet only consists of single letter symbols (ie 0-9).
+ * For a larger alphabet, you could for example use the (also limited) ascii conversions
+ * from sqldb.cpp. Which increases it to about some more than 50.
+ *
+ * TODO: You can extend its range with UTF8.
+ * See: https://stackoverflow.com/questions/26074090/iterating-through-a-utf-8-string-in-c11
+ */
 class regex_builder{
 public:
-
-    /**
-     * @brief Builds a class that for every output symbol constructs a regex to mach strings that output that output symbol.
-     *
-     * Please note that symbols by apta are internally hold as single points.
-     * To keep this in the regex, the single points must be converted to single characters.
-     * Provide a lambda or a mapping that can convert this. // TODO: override this somehow.
-     *
-     * This would mean that a regex conversion for how traces are usually encoded will only 
-     * work when its alphabet only consists of single letter symbols (ie 0-9).
-     * For a larger alphabet, you could for example use the (also limited) ascii conversions
-     * from sqldb.cpp. Which increases it to about some more than 50.
-     *
-     * TODO: You can extend its range with UTF8.
-     * See: https://stackoverflow.com/questions/26074090/iterating-through-a-utf-8-string-in-c11
-     */
-    
     explicit regex_builder(apta& the_apta, state_merger& merger, std::tuple<bool, bool, bool>& coloring, std::map<int, char>& mapping);
     explicit regex_builder(apta& the_apta, state_merger& merger, std::tuple<bool, bool, bool>& coloring, const std::function<char(int)>& mapping_func);
 
     std::map<std::string, std::vector<apta_node*>> get_types_map() const { return types_map; }
+
+    std::unique_ptr<predict_mode> predict_mode_ptr = std::make_unique<predict_mode>();
 
     void initialize(apta& the_apta, state_merger& merger, std::tuple<bool, bool, bool>& coloring, const std::function<char(int)>& mapping_func);
 
@@ -84,6 +86,11 @@ public:
     std::string add_maybe_brackets(const std::string& regex);
 
     void print_my_transitions(std::map<apta_node*, std::map<apta_node*, std::string>> trans);
+
+    regex_builder(){
+        predict_mode_ptr->initialize();
+        throw std::runtime_error("TODO: make sure in your implementation that predict mode and regex builder point to the same input file here");
+    }
 };
 
 #endif

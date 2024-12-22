@@ -24,6 +24,9 @@
 #include <string>
 #include <memory>
 
+// TODO: Is this necessary?
+std::string COMMAND;
+
 /**
  * @brief Main run method. Branches out based on the type of session to run.
  */

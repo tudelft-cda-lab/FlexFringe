@@ -11,7 +11,11 @@
 
 #include "running_mode_base.h"
 #include "parameters.h"
+#include "common.h"
+
 #include "inputdatalocator.h"
+#include "input/parsers/csvparser.h"
+#include "input/parsers/abbadingoparser.h"
 
 #include <memory>
 
@@ -36,19 +40,20 @@ void running_mode_base::read_input_file() {
         read_csv = true;
     }
 
+    unique_ptr<parser> input_parser;
     if(read_csv) {
-        parser = make_unique<csv_parser>(input_stream, csv::CSVFormat().trim({' '}));
+        input_parser = make_unique<csv_parser>(input_stream, csv::CSVFormat().trim({' '}));
     } else {
-        parser = make_unique<abbadingoparser>(input_stream);
+        input_parser = make_unique<abbadingoparser>(input_stream);
     }
 
     if (SLIDING_WINDOW) {
-        id.read_slidingwindow(parser.get(),
+        id.read_slidingwindow(input_parser.get(),
                                SLIDING_WINDOW_SIZE,
                                SLIDING_WINDOW_STRIDE,
                                SLIDING_WINDOW_TYPE);
     } else {
-        id.read(parser.get());
+        id.read(input_parser.get());
     }
 }
 
@@ -57,11 +62,11 @@ void running_mode_base::read_input_file() {
  * 
  */
 void running_mode_base::initialize(){
-  // Initialize main classes.
   inputdata_locator::provide(&id);
-  apta* the_apta = new apta();
-  evaluation_function *eval = get_evaluation();
-  state_merger* merger = new state_merger(&id, eval, the_apta);
+
+  the_apta = new apta();
+  eval = get_evaluation();
+  merger = new state_merger(&id, eval, the_apta);
 
   the_apta->set_context(merger);
   eval->set_context(merger);

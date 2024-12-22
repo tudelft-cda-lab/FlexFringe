@@ -13,8 +13,12 @@
 #include "state_merger.h"
 #include "evaluate.h"
 #include "refinement_selection_strategies.h"
-#include "input/abbadingoreader.h"
 #include "common.h"
+#include "csv.hpp"
+
+#include "input/parsers/csvparser.h"
+#include "input/parsers/abbadingoparser.h"
+#include "input/abbadingoreader.h"
 
 #include <vector>
 #include <cmath>
@@ -35,20 +39,6 @@ const bool EXPERIMENTAL_RUN = true;
 using namespace std;
 
 void stream_mode::initialize() {
-  running_mode_base::initialize();
-
-  bool read_csv = false;
-  if(INPUT_FILE.compare(INPUT_FILE.length() - 4, INPUT_FILE.length(), ".csv") == 0){
-      read_csv = true;
-  }
-
-  if(read_csv) {
-      input_parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
-  } else {
-      input_parser = abbadingoparser(input_stream);
-  }
-
-  eval->initialize_before_adding_traces();
 }
 
 void stream_mode::generate_output(){
@@ -141,8 +131,7 @@ void print_current_automaton_stream(state_merger* merger, const string& output_f
     }
 }
 
-void stream_mode::greedyrun_retry_merges(state_merger* merger, const int seq_nr, const bool last_sequence, const int n_runs){
-    static int count_printouts = 1;
+void stream_mode::greedyrun_retry_merges(state_merger* merger){
     static int c = 0;
 
     stack< refinement* > refinement_stack;
@@ -207,15 +196,6 @@ void stream_mode::greedyrun_retry_merges(state_merger* merger, const int seq_nr,
       top_ref = determine_next_refinement(merger);
     }
 
-    ++count_printouts;
-    if(count_printouts % 100 == 0  || last_sequence){
-      cout << "Processed " << count_printouts << " batches" << endl;
-    }
-
-    if(count_printouts % 1000 == 0){
-      print_current_automaton_stream(merger, "model_batch_nr_", to_string(count_printouts));
-    }
-
     // undo the merges
     while(!refinement_stack.empty()){
       top_ref = refinement_stack.top();
@@ -242,6 +222,28 @@ void stream_mode::greedyrun_retry_merges(state_merger* merger, const int seq_nr,
  * @return int 
  */
 int stream_mode::run() {
+  ifstream input_stream(INPUT_FILE);
+  if(!input_stream) {
+      LOG_S(ERROR) << "Input file not found, aborting";
+      std::cerr << "Input file not found, aborting" << std::endl;
+      exit(-1);
+  } else {
+      std::cout << "Using input file: " << INPUT_FILE << std::endl;
+  }
+
+  bool read_csv = false;
+  if(INPUT_FILE.compare(INPUT_FILE.length() - 4, INPUT_FILE.length(), ".csv") == 0){
+    read_csv = true;
+  }
+
+  parser* input_parser;
+  if(read_csv) {
+    input_parser = new csv_parser(input_stream, csv::CSVFormat().trim({' '}));
+  } else {
+    input_parser = new abbadingoparser(input_stream);
+  }
+
+  eval->initialize_before_adding_traces();
     const int THIS_BATCH_SIZE = BATCH_SIZE;
     
     unsigned int seq_nr = 0;
@@ -259,19 +261,19 @@ int stream_mode::run() {
         ++n_seq_batch;
         ++seq_nr;
         
-        std::optional<trace*> trace_opt = id->read_trace(*input_parser, *parser_strategy);
+        std::optional<trace*> trace_opt = id.read_trace(*input_parser, *parser_strategy);
 
         if(EXPERIMENTAL_RUN && !trace_opt){
           last_sequence = true;
           break;
         }
         else{
-          while(!trace_opt) trace_opt = id->read_trace(*input_parser, *parser_strategy); // making sure we got a value; for real streaming
+          while(!trace_opt) trace_opt = id.read_trace(*input_parser, *parser_strategy); // making sure we got a value; for real streaming
         }
         trace* new_trace = trace_opt.value();
         new_trace->sequence = seq_nr;
 
-        id->add_trace_to_apta(new_trace, merger->get_aut(), true, &(this->states_to_append_to));
+        id.add_trace_to_apta(new_trace, merger->get_aut(), true, &(this->states_to_append_to));
         if(!ADD_TAILS) new_trace->erase();
       }
 
@@ -284,7 +286,7 @@ int stream_mode::run() {
       if(DEBUGGING)
         print_current_automaton(merger, "Batch_", to_string(this->batch_number));
 
-      if(input_stream.eof()){
+/*       if(input_stream.eof()){
         if(RETRY_MERGES){
           // one more step, because we undid refinements earlier
           greedyrun_retry_merges(merger); // TODO: is this one needed?
@@ -296,7 +298,10 @@ int stream_mode::run() {
 
         std::cout << "Finished parsing file. End of program." << std::endl;
         return EXIT_SUCCESS;
-      }
+      } */
     }
+    
+    delete input_parser;
+
     return EXIT_SUCCESS;
 }

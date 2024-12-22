@@ -109,7 +109,7 @@ void regex_builder::initialize(apta& the_apta, state_merger& merger, std::tuple<
     // Gather type predictions
     for (apta_node* n : states) {
         auto* tr = n->get_access_trace();
-        auto data = get_prediction_mapping(&merger, tr); // TODO: this is problematic
+        auto data = predict_mode_ptr->get_prediction_mapping(&merger, tr);
         std::string type;
         try {
             type = data["predicted trace type"];

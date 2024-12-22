@@ -61,7 +61,7 @@ refinement_list* ensemble_mode::greedy(){
 void ensemble_mode::bagging(std::string output_file, int nr_estimators){
     std::cerr << "starting bagging" << std::endl;
     for(int i = 0; i < nr_estimators; ++i){
-        refinement_list* all_refs = greedy(merger);
+        refinement_list* all_refs = greedy();
 
         for(refinement_list::reverse_iterator it = all_refs->rbegin(); it != all_refs->rend(); ++it){
             (*it)->undo(merger);

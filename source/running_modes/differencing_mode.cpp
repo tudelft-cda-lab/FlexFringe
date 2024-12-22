@@ -10,6 +10,7 @@
  */
 
 #include "parameters.h"
+#include "common.h"
 #include "predict_mode.h"
 #include "differencing_mode.h"
 
@@ -80,6 +81,6 @@ double differencing_mode::difference(apta* apta1, apta* apta2){
     return kl_diff;
 }
 
-double symmetric_difference(apta* a1, apta* a2){
+double differencing_mode::symmetric_difference(apta* a1, apta* a2){
     return difference(a1, a2) + difference(a2, a1);
 }

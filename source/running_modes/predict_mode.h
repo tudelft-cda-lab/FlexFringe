@@ -30,14 +30,9 @@ class predict_mode : public running_mode_base {
     apta_node* ending_state = nullptr;
     tail* ending_tail = nullptr;
 
-    double compute_score(apta_node* old_node, apta_node* new_node);
-    double compute_score(apta_node* next_node, tail* next_tail);
-    double update_score(double old_score, apta_node* next_node, tail* next_tail);
-
     void align(state_merger* m, tail* t, bool always_follow, double lower_bound);
     double prob_single_parallel(tail* p, tail* t, apta_node* n, double prod_prob, bool flag);
 
-    apta_node* single_step(apta_node* n, tail* t, apta* a);
     double compute_skip_penalty(apta_node* node);
     double compute_jump_penalty(apta_node* old_node, apta_node* new_node);
 
@@ -49,7 +44,6 @@ class predict_mode : public running_mode_base {
     void predict_trace(state_merger* m, std::ostream& output, trace* tr);
     [[maybe_unused]] double predict_trace(state_merger* m, trace* tr);
     void predict_header(std::ostream& output);
-    std::unordered_map<std::string, std::string> get_prediction_mapping(state_merger* m, trace* tr);
 
     void store_visited_states(apta_node* n, tail* t, state_set* states);
     double add_visits(state_merger* m, trace* tr);
@@ -62,6 +56,8 @@ class predict_mode : public running_mode_base {
   public:
     int run() override;
     void initialize() override;
+
+    std::unordered_map<std::string, std::string> get_prediction_mapping(state_merger* m, trace* tr);
 };
 
 template <typename T>

@@ -208,7 +208,7 @@ int interactive_mode::run(){
 
     int size =  merger->get_final_apta_size();
     int red_size = merger->get_num_red_states();
-    std::cout << << "\n\nFound heuristic solution with " << size << " states, of which " << red_size << " are red states." << std::endl;
+    std::cout << "\n\nFound heuristic solution with " << size << " states, of which " << red_size << " are red states." << std::endl;
 
     return EXIT_SUCCESS;
 };
