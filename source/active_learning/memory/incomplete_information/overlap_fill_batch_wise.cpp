@@ -66,7 +66,7 @@ void overlap_fill_batch_wise::add_data_to_tree(unique_ptr<apta>& aut, const vect
  * Side effect: Unknown types of nodes in between still get filled, just like in base_class. 
  */
 void overlap_fill_batch_wise::pre_compute(vector< vector<int> >& query_traces, vector< pair<apta_node*, int> >& query_node_symbol_pairs, unordered_set<apta_node*>& seen_nodes, unique_ptr<apta>& aut, apta_node* left, apta_node* right, const int depth){
-  const static int max_search_depth = MAX_AL_SEARCH_DEPTH;
+  const static int max_search_depth = AL_MAX_SEARCH_DEPTH;
   if(max_search_depth > 0 && (left->get_depth() > max_search_depth || right->get_depth() > max_search_depth)) // making sure we don't bust the transformer
     return;
   
@@ -108,7 +108,7 @@ void overlap_fill_batch_wise::pre_compute(vector< vector<int> >& query_traces, v
       query_traces.push_back(move(seq));
       query_node_symbol_pairs.emplace_back(left, symbol);
 
-      if(query_traces.size() == BATCH_SIZE){
+      if(query_traces.size() == STREAMING_BATCH_SIZE){
         const sul_response response = sul->do_query(query_traces, *(inputdata_locator::get()));
         const vector<int>& answers = response.GET_INT_VEC();
         const vector<double>& confidences = response.GET_DOUBLE_VEC();
@@ -152,7 +152,7 @@ void overlap_fill_batch_wise::pre_compute(vector< vector<int> >& query_traces, v
       query_traces.push_back(move(seq));
       query_node_symbol_pairs.emplace_back(right, symbol);
 
-      if(query_traces.size() == BATCH_SIZE){
+      if(query_traces.size() == STREAMING_BATCH_SIZE){
         const sul_response response = sul->do_query(query_traces, *(inputdata_locator::get()));
         const vector<int>& answers = response.GET_INT_VEC();
         const vector<double>& confidences = response.GET_DOUBLE_VEC();

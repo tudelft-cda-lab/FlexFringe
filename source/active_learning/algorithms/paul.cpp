@@ -180,30 +180,6 @@ using namespace active_learning_namespace;
     return out.set_value(true);
 }*/
 
-/**
- * @brief Get the input-data in the right format into the inputdata structure.
- */
-void paul_algorithm::load_input_data() {
-    inputdata& id = *inputdata_locator::get();
-
-    bool read_csv = false;
-    if(INPUT_FILE.compare(INPUT_FILE.length() - 4, INPUT_FILE.length(), ".csv") == 0){
-        read_csv = true;
-    }
-
-    cout << "Loading from trace file " + INPUT_FILE << endl;
-    ifstream input_stream = get_inputstream();
-    if(read_csv) {
-        auto input_parser = csv_parser(input_stream, csv::CSVFormat().trim({' '}));
-        id.read(&input_parser);
-    } else {
-        auto input_parser = abbadingoparser(input_stream);
-        id.read(&input_parser);
-    }
-
-    cout << "Traces loaded." << endl;
-}
-
 
 /**
  * Relevant for parallelization.
@@ -542,4 +518,28 @@ void paul_algorithm::run(inputdata& id) {
 
     cout << "Reached maximum number of runs. Printing current hypothesis and terminating." << endl;
     print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
+}
+
+void paul_algorithm::load_inputdata(){
+    ifstream input_stream(INPUT_FILE);
+    cout << "Input file: " << INPUT_FILE << endl;
+    if (!input_stream) {
+        cerr << "Input file not found, aborting" << endl;
+        exit(-1);
+    } else {
+        cout << "Using input file: " << INPUT_FILE << endl;
+    }
+
+    unique_ptr<parser> input_parser; 
+    if (INPUT_FILE.ends_with(".csv")) {
+        input_parser = make_unique<csv_parser>(input_stream, csv::CSVFormat().trim({' '}));
+    } else {
+        input_parser = make_unique<abbadingoparser>(input_stream);
+    }
+
+    cout << "Loading input data into apta" << endl;
+    inputdata* id = inputdata_locator::get();
+    id->read(input_parser.get());
+    input_stream.close();
+    cout << "Loaded input data into apta" << endl;
 }

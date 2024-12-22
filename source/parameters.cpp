@@ -110,7 +110,7 @@ bool PREDICT_SYMBOL = false;
 bool PREDICT_TRACE = true;
 bool PREDICT_DATA = false;
 
-int BATCH_SIZE = 500;
+int STREAMING_BATCH_SIZE = 500;
 
 // the count-min-sketches
 int NROWS_SKETCHES = 0;
@@ -139,19 +139,19 @@ int K = 0;
 // active learning parameters
 std::string ACTIVE_LEARNING_ALGORITHM = "lstar";
 bool DO_ACTIVE_LEARNING = false;
-std::string REJECTING_LABEL = "0";
-std::string ORACLE = "";
-std::string ORACLE_2 = "";
-std::string SYSTEM_UNDER_LEARNING = "";
-std::string SYSTEM_UNDER_LEARNING_2 = "";
-std::string II_NAME = "";
+std::string AL_REJECTING_LABEL = "0";
+std::string AL_ORACLE = "";
+std::string AL_ORACLE_2 = "";
+std::string AL_SYSTEM_UNDER_LEARNING = "";
+std::string AL_SYSTEM_UNDER_LEARNING_2 = "";
+std::string AL_II_NAME = "";
 
-int START_SYMBOL = -1;
-int END_SYMBOL = -1;
-std::string CEX_SEARCH_STRATEGY = "random_w_method";
-int MAX_AL_SEARCH_DEPTH = 10;
+int AL_START_SYMBOL = -1;
+int AL_END_SYMBOL = -1;
+std::string AL_CEX_SEARCH_STRATEGY = "random_w_method";
+int AL_MAX_SEARCH_DEPTH = 10;
 int MAX_CEX_LENGTH = 10;
-int NUM_CEX_PARAM = 5000;
+int AL_NUM_CEX_PARAM = 5000;
 int AL_BATCH_SIZE = 256;
 
 std::string POSTGRESQL_CONNSTRING = "";

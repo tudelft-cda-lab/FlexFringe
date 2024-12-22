@@ -117,15 +117,15 @@ shared_ptr<sul_base> sul_factory::select_sul(string_view sul_name){
  * @brief SUL is based only on the input parameters. Returns one or more SULs, based on how many are desired.
  */
 vector< shared_ptr<sul_base> > sul_factory::create_suls(){
-  if(SYSTEM_UNDER_LEARNING.size() == 0)
+  if(AL_SYSTEM_UNDER_LEARNING.size() == 0)
     throw logic_error("System under learning must be specified. Aborting program.");
 
   vector< shared_ptr<sul_base> > res;
-  res.push_back(select_sul(SYSTEM_UNDER_LEARNING));
+  res.push_back(select_sul(AL_SYSTEM_UNDER_LEARNING));
   
-  if(SYSTEM_UNDER_LEARNING_2.size() > 0 && SYSTEM_UNDER_LEARNING != SYSTEM_UNDER_LEARNING_2)
-    res.push_back(select_sul(SYSTEM_UNDER_LEARNING_2));
-  else if (SYSTEM_UNDER_LEARNING_2.size() > 0)
+  if(AL_SYSTEM_UNDER_LEARNING_2.size() > 0 && AL_SYSTEM_UNDER_LEARNING != AL_SYSTEM_UNDER_LEARNING_2)
+    res.push_back(select_sul(AL_SYSTEM_UNDER_LEARNING_2));
+  else if (AL_SYSTEM_UNDER_LEARNING_2.size() > 0)
     res.push_back(res[0]); // we do a copy of the first shared pointer
 
   inputdata* id = inputdata_locator::get();
@@ -160,20 +160,20 @@ shared_ptr<ii_base> ii_handler_factory::create_ii_handler(const shared_ptr<sul_b
  * @brief Does what you think it does.
  */
 unique_ptr<oracle_base> oracle_factory::create_oracle(const shared_ptr<sul_base>& sul, string_view oracle_name, const shared_ptr<ii_base>& ii_handler){
-  if(ORACLE == "discrete_output_sul_oracle")
+  if(AL_ORACLE == "discrete_output_sul_oracle")
       return make_unique<discrete_output_sul_oracle>(sul);
   
-  if(ORACLE == "input_file_oracle")
+  if(AL_ORACLE == "input_file_oracle")
       return make_unique<input_file_oracle>(sul);
-  else if(ORACLE == "paul_oracle")
+  else if(AL_ORACLE == "paul_oracle")
       return make_unique<paul_oracle>(sul, ii_handler);
-  else if(ORACLE == "sqldb_sul_random_oracle")
+  else if(AL_ORACLE == "sqldb_sul_random_oracle")
       throw std::runtime_error("Invalid oracle: Not included at the moment");
       //return make_unique<sqldb_sul_random_oracle>(sul);
-  else if(ORACLE == "sqldb_sul_regex_oracle")
+  else if(AL_ORACLE == "sqldb_sul_regex_oracle")
       throw std::logic_error("Not implemented yet");
       //return make_unique<sqldb_sul_regex_oracle>(sul);
-  else if(ORACLE == "string_probability_oracle")
+  else if(AL_ORACLE == "string_probability_oracle")
       return make_unique<string_probability_oracle>(sul);
   else
     throw std::invalid_argument("One of the oracle specifying input parameters was not recognized by the oracle factory.");
@@ -187,18 +187,18 @@ unique_ptr<algorithm_base> algorithm_factory::create_algorithm_obj(){
   vector< shared_ptr<sul_base> > sul_vec = sul_factory::create_suls(sul_factory::sul_key());
   assert(sul_vec.size() > 0 && sul_vec.size() <= 2);
 
-  shared_ptr<ii_base> ii_handler = ii_handler_factory::create_ii_handler(sul_vec[0], II_NAME, ii_handler_factory::ii_handler_key());
+  shared_ptr<ii_base> ii_handler = ii_handler_factory::create_ii_handler(sul_vec[0], AL_II_NAME, ii_handler_factory::ii_handler_key());
   if(ii_handler)
       cout << "ii_handler name has been provided. It is being equipped with the SUL named in the first sul name." << endl;
   
   unique_ptr<algorithm_base> res;
   if(sul_vec.size()==1){
-    unique_ptr<oracle_base> oracle_1 = oracle_factory::create_oracle(sul_vec[0], ORACLE, ii_handler, oracle_factory::oracle_key());
+    unique_ptr<oracle_base> oracle_1 = oracle_factory::create_oracle(sul_vec[0], AL_ORACLE, ii_handler, oracle_factory::oracle_key());
     res = create_algorithm_obj(move(oracle_1), ii_handler);
   }
   else if(sul_vec.size()==2){
-    unique_ptr<oracle_base> oracle_1 = oracle_factory::create_oracle(sul_vec[0], ORACLE, ii_handler, oracle_factory::oracle_key());
-    unique_ptr<oracle_base> oracle_2 = oracle_factory::create_oracle(sul_vec[1], ORACLE_2, ii_handler, oracle_factory::oracle_key());
+    unique_ptr<oracle_base> oracle_1 = oracle_factory::create_oracle(sul_vec[0], AL_ORACLE, ii_handler, oracle_factory::oracle_key());
+    unique_ptr<oracle_base> oracle_2 = oracle_factory::create_oracle(sul_vec[1], AL_ORACLE_2, ii_handler, oracle_factory::oracle_key());
     vector< unique_ptr<oracle_base> > oracles(2);
     oracles[0] = move(oracle_1);
     oracles[1] = move(oracle_2);

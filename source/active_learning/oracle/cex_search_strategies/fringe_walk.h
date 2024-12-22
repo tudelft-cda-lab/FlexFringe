@@ -31,7 +31,7 @@ class fringe_walk : public search_base {
     std::unordered_set<apta_node*> tested_nodes;
     std::unordered_set<apta_node*> fringe_nodes;
 
-    const int SAMPLES_PER_NODE = NUM_CEX_PARAM;
+    const int SAMPLES_PER_NODE = AL_NUM_CEX_PARAM;
     int samples_for_current_node;
     int n_tested_nodes;
     int current_h_size;

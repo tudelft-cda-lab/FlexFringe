@@ -20,14 +20,14 @@
 
 class overlap_fill_batch_wise : public overlap_fill {
   private:
-    const int BATCH_SIZE; // TODO: init those two better than you do here
+    const int STREAMING_BATCH_SIZE; // TODO: init those two better than you do here
     
     // note: this is the same as in the base class, but to inline we need to copy.
     __attribute__((always_inline)) inline void add_data_to_tree(std::unique_ptr<apta>& aut, const std::vector<int>& seq, const int reverse_type, float confidence, apta_node* node, const int symbol);
     void pre_compute(std::vector< std::vector<int> >& query_traces, std::vector< std::pair<apta_node*, int> >& query_node_symbol_pairs, std::unordered_set<apta_node*>& seen_nodes, std::unique_ptr<apta>& aut, apta_node* left, apta_node* right, const int depth);
 
   public:
-    overlap_fill_batch_wise(const std::shared_ptr<sul_base>& sul) : overlap_fill(sul), BATCH_SIZE(AL_BATCH_SIZE) {};
+    overlap_fill_batch_wise(const std::shared_ptr<sul_base>& sul) : overlap_fill(sul), STREAMING_BATCH_SIZE(AL_BATCH_SIZE) {};
 
     void pre_compute(std::unique_ptr<apta>& aut, apta_node* left, apta_node* right) override;
     

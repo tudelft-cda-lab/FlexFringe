@@ -3,12 +3,12 @@ include_directories(
         "${CMAKE_CURRENT_SOURCE_DIR}/algorithms"
         "${CMAKE_CURRENT_SOURCE_DIR}/databases"
         "${CMAKE_CURRENT_SOURCE_DIR}/oracle"
-        "${CMAKE_CURRENT_SOURCE_DIR}/incomplete_information"
         "${CMAKE_CURRENT_SOURCE_DIR}/oracle/cex_search_strategies"
         "${CMAKE_CURRENT_SOURCE_DIR}/oracle/cex_conflict_search"
         "${CMAKE_CURRENT_SOURCE_DIR}/oracle/conflict_detectors"
         "${CMAKE_CURRENT_SOURCE_DIR}/active_learning_util"
         "${CMAKE_CURRENT_SOURCE_DIR}/memory"
+        "${CMAKE_CURRENT_SOURCE_DIR}/memory/incomplete_information"
         "${CMAKE_CURRENT_SOURCE_DIR}/system_under_learning"
         "${CMAKE_CURRENT_SOURCE_DIR}/system_under_learning/neural_network_suls"
         "${CMAKE_CURRENT_SOURCE_DIR}/system_under_learning/benchmark_parsers"
@@ -106,16 +106,16 @@ add_library(ActiveLearning STATIC
             oracle/conflict_detectors/string_probability_conflict_detector.cpp
 
             # Methods to deal with incomplete information
-            incomplete_information/ii_base.h
-            incomplete_information/ii_base.cpp
-            incomplete_information/overlap_fill.h
-            incomplete_information/overlap_fill.cpp
-            incomplete_information/overlap_fill_batch_wise.h
-            incomplete_information/overlap_fill_batch_wise.cpp
-            incomplete_information/distinguishing_sequence_fill.h
-            incomplete_information/distinguishing_sequence_fill.cpp
-            incomplete_information/distinguishing_sequence_fill_fast.h
-            incomplete_information/distinguishing_sequence_fill_fast.cpp
+            memory/incomplete_information/ii_base.h
+            memory/incomplete_information/ii_base.cpp
+            memory/incomplete_information/overlap_fill.h
+            memory/incomplete_information/overlap_fill.cpp
+            memory/incomplete_information/overlap_fill_batch_wise.h
+            memory/incomplete_information/overlap_fill_batch_wise.cpp
+            memory/incomplete_information/distinguishing_sequence_fill.h
+            memory/incomplete_information/distinguishing_sequence_fill.cpp
+            memory/incomplete_information/distinguishing_sequence_fill_fast.h
+            memory/incomplete_information/distinguishing_sequence_fill_fast.cpp
 
             # Everything related to memory and possible memoization techniques
             memory/observation_table.h

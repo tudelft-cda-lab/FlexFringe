@@ -24,7 +24,7 @@
 class distinguishing_sequence_fill : public ii_base {
   protected:
     const int MIN_BATCH_SIZE = AL_BATCH_SIZE;
-    const int MAX_LEN = MAX_AL_SEARCH_DEPTH;
+    const int MAX_LEN = AL_MAX_SEARCH_DEPTH;
 
     std::vector<int> memoized_predictions;
     std::unique_ptr<distinguishing_sequences> ds_ptr = std::make_unique<distinguishing_sequences>();
@@ -40,7 +40,7 @@ class distinguishing_sequence_fill : public ii_base {
 
   public:
     distinguishing_sequence_fill(const std::shared_ptr<sul_base>& sul) 
-    : ii_base(sul), MIN_BATCH_SIZE(AL_BATCH_SIZE), MAX_LEN(MAX_AL_SEARCH_DEPTH) {};
+    : ii_base(sul), MIN_BATCH_SIZE(AL_BATCH_SIZE), MAX_LEN(AL_MAX_SEARCH_DEPTH) {};
 
     void pre_compute(std::unique_ptr<apta>& aut, apta_node* node) override;
     void pre_compute(std::unique_ptr<apta>& aut, apta_node* left, apta_node* right) override;

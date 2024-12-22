@@ -35,7 +35,7 @@ class overlap_fill : public ii_base {
     void complete_node(apta_node* node, std::unique_ptr<apta>& aut);
 
   public:
-    overlap_fill(const std::shared_ptr<sul_base>& sul) : ii_base(sul), MAX_DEPTH(MAX_AL_SEARCH_DEPTH) {};
+    overlap_fill(const std::shared_ptr<sul_base>& sul) : ii_base(sul), MAX_DEPTH(AL_MAX_SEARCH_DEPTH) {};
 
     void pre_compute(std::unique_ptr<apta>& aut, apta_node* left) override { /*Nothing to do here*/ };
     void pre_compute(std::unique_ptr<apta>& aut, apta_node* left, apta_node* right) override;

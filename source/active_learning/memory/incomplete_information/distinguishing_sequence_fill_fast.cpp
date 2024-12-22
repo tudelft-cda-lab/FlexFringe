@@ -25,7 +25,7 @@ using namespace std;
  * If a suffix in not in the set of distinguishing sequences at the moment, then it will be added 
  */
 void distinguishing_sequence_fill_fast::pre_compute(list<int>& suffix, unordered_set<apta_node*>& seen_nodes, unique_ptr<apta>& aut, apta_node* left, apta_node* right, const int depth) {
-  const static int max_search_depth = MAX_AL_SEARCH_DEPTH;
+  const static int max_search_depth = AL_MAX_SEARCH_DEPTH;
   if(max_search_depth > 0 && (left->get_depth() > max_search_depth || right->get_depth() > max_search_depth)) // making sure we don't bust the transformer
     return;
     

@@ -32,7 +32,7 @@ class targeted_bfs_walk : public search_base {
     std::unordered_set<apta_node*> tested_nodes; // nodes that have been extensively tested
     std::unordered_set<apta_node*> queued_nodes; // nodes that have been visited since last call of initialize()/reset()
 
-    const int SAMPLES_PER_NODE = NUM_CEX_PARAM;
+    const int SAMPLES_PER_NODE = AL_NUM_CEX_PARAM;
     int samples_for_current_node;
     int n_tested_nodes;
     int current_h_size;

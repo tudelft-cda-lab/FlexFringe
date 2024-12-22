@@ -23,15 +23,15 @@ using namespace std;
  * @brief Does what you think it does.
  */
 unique_ptr<search_base> cex_search_strategy_factory::create_search_strategy() {
-  if(CEX_SEARCH_STRATEGY == "random_w_method")
+  if(AL_CEX_SEARCH_STRATEGY == "random_w_method")
     return make_unique<random_w_method>();
-  else if(CEX_SEARCH_STRATEGY == "fringe_walk")
+  else if(AL_CEX_SEARCH_STRATEGY == "fringe_walk")
     return make_unique<fringe_walk>();
-  else if(CEX_SEARCH_STRATEGY == "breadth_first_search")
+  else if(AL_CEX_SEARCH_STRATEGY == "breadth_first_search")
     return make_unique<bfs_strategy>();
-  else if(CEX_SEARCH_STRATEGY == "targeted_bfs_walk")
+  else if(AL_CEX_SEARCH_STRATEGY == "targeted_bfs_walk")
     return make_unique<targeted_bfs_walk>();
-  else if(CEX_SEARCH_STRATEGY == "random_string_search")
+  else if(AL_CEX_SEARCH_STRATEGY == "random_string_search")
     return make_unique<random_string_search>();
   else
     throw invalid_argument("cex_search_strategy input argument not recognized.");

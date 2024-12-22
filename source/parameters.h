@@ -114,7 +114,7 @@ extern int DIFF_MAX_LENGTH;
 
 extern bool STORE_ACCESS_STRINGS;
 
-extern int BATCH_SIZE;
+extern int STREAMING_BATCH_SIZE;
 
 // Count-min-sketches
 extern int NROWS_SKETCHES;
@@ -165,26 +165,26 @@ extern bool SINK_TYPE;
 // active learning parameters
 extern std::string ACTIVE_LEARNING_ALGORITHM;
 extern bool DO_ACTIVE_LEARNING;
-extern std::string REJECTING_LABEL;
-extern std::string ORACLE;
-extern std::string ORACLE_2;
-extern std::string SYSTEM_UNDER_LEARNING;
-extern std::string SYSTEM_UNDER_LEARNING_2;
-extern std::string II_NAME;
+extern std::string AL_REJECTING_LABEL;
+extern std::string AL_ORACLE;
+extern std::string AL_ORACLE_2;
+extern std::string AL_SYSTEM_UNDER_LEARNING;
+extern std::string AL_SYSTEM_UNDER_LEARNING_2;
+extern std::string AL_II_NAME;
 extern int AL_BATCH_SIZE;
 
-extern int START_SYMBOL;
-extern int END_SYMBOL;
-extern std::string CEX_SEARCH_STRATEGY;
+extern int AL_START_SYMBOL;
+extern int AL_END_SYMBOL;
+extern std::string AL_CEX_SEARCH_STRATEGY;
 extern int MAX_CEX_LENGTH;
-extern int NUM_CEX_PARAM;
+extern int AL_NUM_CEX_PARAM;
 
 extern std::string POSTGRESQL_CONNSTRING;
 extern std::string POSTGRESQL_TBLNAME;
 extern bool POSTGRESQL_DROPTBLS;
 
-extern int MAX_AL_SEARCH_DEPTH;
-extern int NUM_CEX_PARAM;
+extern int AL_MAX_SEARCH_DEPTH;
+extern int AL_NUM_CEX_PARAM;
 
 extern std::string PRINT_MODEL_PREFIX; // TODO: delete this one
 

@@ -183,7 +183,7 @@ int main(int argc, char *argv[]){
     app.add_option("--minhashsize", MINHASH_SIZE, "Perform Min-Hash scheme on the ngrams. Only works in conjunction with --conditionalprob turned on. Default=false");
     app.add_option("--alphabetsize", ALPHABET_SIZE, "An upper estimate on the alphabet size. Only needed with minhash-function turned on, in order to perform the permutation. Larger estimate increases runtime. Default=0");
 
-    app.add_option("--batchsize", BATCH_SIZE, "Batchsize for streaming. Default=500");
+    app.add_option("--streaming_batchsize", STREAMING_BATCH_SIZE, "Batchsize for streaming. Default=500");
 
     // mainly for space-save heuristic
     app.add_option("-e,--epsilon", EPSILON, "Epsilon parameter, determining approximation error.");
@@ -196,21 +196,21 @@ int main(int argc, char *argv[]){
     // active learning parameters
     app.add_option("--active_learning_algorithm", ACTIVE_LEARNING_ALGORITHM, "The basic algorithm that runs through. Current options are (lstar). DEFAULT: lstar");
     app.add_option("--use_active_learning", DO_ACTIVE_LEARNING, "Perform active learning on top of the normal learner. 1 for true, 0 for false. Default: 0");
-    app.add_option("--max_al_search_depth", MAX_AL_SEARCH_DEPTH, "The active learning search depth. Some uses can be disabled with a value <= 0. Critical in models where a maximum-string-length occurs, such as transformer-models. Default: 25");
-    app.add_option("--num_cex_search", NUM_CEX_PARAM, "Samples parameter indicating a number in the counterexample search. For example, in the random w-method the number of strings per node,\\
+    app.add_option("--al_max_search_depth", AL_MAX_SEARCH_DEPTH, "The active learning search depth. Some uses can be disabled with a value <= 0. Critical in models where a maximum-string-length occurs, such as transformer-models. Default: 25");
+    app.add_option("--al_num_cex_search", AL_NUM_CEX_PARAM, "Samples parameter indicating a number in the counterexample search. For example, in the random w-method the number of strings per node,\\
                                                                 and in random string search it is the delay. Default: 5000");
-    app.add_option("--oracle", ORACLE, "The oracle that we're using. Has to be specified!");
-    app.add_option("--oracle2", ORACLE_2, "In case we are using a second oracle.");
-    app.add_option("--system_under_learning", SYSTEM_UNDER_LEARNING, "The system under learning. Has to be specified!");
-    app.add_option("--system_under_learning_2", SYSTEM_UNDER_LEARNING_2, "The second system under learning. Used if more than one type of oracle queries have  to be used, see e.g. Ldot/DAALDer.");
+    app.add_option("--al_oracle", AL_ORACLE, "The oracle that we're using. Has to be specified!");
+    app.add_option("--al_oracle2", AL_ORACLE_2, "In case we are using a second oracle.");
+    app.add_option("--al_system_under_learning", AL_SYSTEM_UNDER_LEARNING, "The system under learning. Has to be specified!");
+    app.add_option("--al_system_under_learning_2", AL_SYSTEM_UNDER_LEARNING_2, "The second system under learning. Used if more than one type of oracle queries have  to be used, see e.g. Ldot/DAALDer.");
     app.add_option("--al_batch_size", AL_BATCH_SIZE, "The batch size as it is used in some of the active learning algorithms. Useful for example when querying networks, as it speeds up the inference on the networks. Trade-off is between speed and RAM size. Default: 256");
-    app.add_option("--cex_search_strategy", CEX_SEARCH_STRATEGY, "The strategy to search for counterexamples. Normally the random w-method will do, but depending on your case you might want to choose. Default: random_w_method.");
-    app.add_option("--ii_handler_name", II_NAME, "The name of the incomplete information instance. If left empty, then no ii handler is being created. Not all algorithms support ii handlers. Default: [empty].");
+    app.add_option("--al_cex_search_strategy", AL_CEX_SEARCH_STRATEGY, "The strategy to search for counterexamples. Normally the random w-method will do, but depending on your case you might want to choose. Default: random_w_method.");
+    app.add_option("--al_ii_handler_name", AL_II_NAME, "The name of the incomplete information instance. If left empty, then no ii handler is being created. Not all algorithms support ii handlers. Default: [empty].");
 
     // TODO: shall we delete the rejecting_label option?
-    app.add_option("--rejecting_label", REJECTING_LABEL, "The label as a string that is used for rejecting (non-accepting) behavior. Only in active learning mode. DEFAULT: 0");
-    app.add_option("--start_symbol", START_SYMBOL, "The <SOS> symbol (as per NLP convention) represented by an int value. A value of -1 means that it is unused. Only in active learning mode when querying networks. DEFAULT: -1");
-    app.add_option("--end_symbol", END_SYMBOL, "The <SOS> symbol (as per NLP convention) represented by an int value. A value of -1 means that it is unused. Only in active learning mode when querying networks. DEFAULT: -1");
+    app.add_option("--al_rejecting_label", AL_REJECTING_LABEL, "The label as a string that is used for rejecting (non-accepting) behavior. Only in active learning mode. DEFAULT: 0");
+    app.add_option("--al_start_symbol", AL_START_SYMBOL, "The <SOS> symbol (as per NLP convention) represented by an int value. A value of -1 means that it is unused. Only in active learning mode when querying networks. DEFAULT: -1");
+    app.add_option("--al_end_symbol", AL_END_SYMBOL, "The <SOS> symbol (as per NLP convention) represented by an int value. A value of -1 means that it is unused. Only in active learning mode when querying networks. DEFAULT: -1");
     
     app.add_option("--postgresql-connstring", POSTGRESQL_CONNSTRING,
                    "The string that connects to a postgresql database. This is either a key value pairing or a URI. "

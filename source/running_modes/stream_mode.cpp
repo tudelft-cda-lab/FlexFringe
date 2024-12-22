@@ -244,7 +244,7 @@ int stream_mode::run() {
   }
 
   eval->initialize_before_adding_traces();
-    const int THIS_BATCH_SIZE = BATCH_SIZE;
+    const int THIS_BATCH_SIZE = STREAMING_BATCH_SIZE;
     
     unsigned int seq_nr = 0;
     bool last_sequence = false;

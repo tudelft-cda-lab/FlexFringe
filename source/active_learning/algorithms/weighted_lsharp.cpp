@@ -74,8 +74,8 @@ void weighted_lsharp_algorithm::query_weights(unique_ptr<state_merger>& merger, 
     static unordered_set<apta_node*> completed_nodes;
     if (completed_nodes.contains(n))
         return;
-    static const int SOS = START_SYMBOL;
-    static const int EOS = END_SYMBOL;
+    static const int SOS = AL_START_SYMBOL;
+    static const int EOS = AL_END_SYMBOL;
 
     auto* data = static_cast<weight_comparator_data*>(n->get_data());
     data->initialize_weights(alphabet);

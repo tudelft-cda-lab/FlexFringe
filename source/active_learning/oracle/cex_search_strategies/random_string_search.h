@@ -26,7 +26,7 @@ class random_string_search : public search_base {
 
     int delay_counter = 0;
     const int delay =
-        NUM_CEX_PARAM; // if within the last [delay] suggested counterexamples None of them was one, we terminate the algorithm
+        AL_NUM_CEX_PARAM; // if within the last [delay] suggested counterexamples None of them was one, we terminate the algorithm
 
     random_int_generator length_generator;
     random_int_generator alphabet_sampler;

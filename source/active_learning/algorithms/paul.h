@@ -58,7 +58,7 @@ class paul_algorithm : public algorithm_base {
     std::shared_ptr<ii_base> ii_handler;
     refinement* get_best_refinement(std::unique_ptr<state_merger>& merger, std::unique_ptr<apta>& the_apta);
 
-    void load_input_data();
+    void load_inputdata();
 
     /**
      * Relevant for parallelization.
@@ -76,7 +76,7 @@ class paul_algorithm : public algorithm_base {
             throw std::invalid_argument("ii handler not provided for paul algorithm, but it relies on it");
           STORE_ACCESS_STRINGS = true;
 
-          load_input_data();
+          load_inputdata();
         }
 
     paul_algorithm(std::vector< std::unique_ptr<oracle_base> >&& i_list, const std::shared_ptr<ii_base>& ii_handler) 

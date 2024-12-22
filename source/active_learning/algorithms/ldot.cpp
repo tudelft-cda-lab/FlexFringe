@@ -440,7 +440,7 @@ void ldot_algorithm::run(inputdata& id) {
             }
         }
 
-        // MERGING FINISHED, CONTINUE WITH EQUIVALENCE ORACLE;
+        // MERGING FINISHED, CONTINUE WITH EQUIVALENCE AL_ORACLE;
 
 #ifndef NDEBUG
         test_access_traces();

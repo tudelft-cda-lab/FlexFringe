@@ -25,7 +25,7 @@ using namespace active_learning_namespace;
 /* bool
 weight_comparing_oracle::test_trace_accepted(apta& hypothesis, trace* const tr, inputdata& id){
     static const auto mu = static_cast<double>(MU);
-    static const auto EOS = END_SYMBOL;
+    static const auto EOS = AL_END_SYMBOL;
 
     apta_node* n = hypothesis.get_root();
     tail* t = tr->get_head();
@@ -100,7 +100,7 @@ weight_comparing_oracle::equivalence_query(state_merger* merger) {
 
     static const auto& alphabet = id.get_alphabet();
     static const auto mu = static_cast<double>(MU);
-    static const auto EOS = END_SYMBOL;
+    static const auto EOS = AL_END_SYMBOL;
 
     // for debugging only
     static const bool CHECK_ACCESS_STRINGS = false;

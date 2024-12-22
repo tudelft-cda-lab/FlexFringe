@@ -26,8 +26,8 @@ class search_base {
     const int MAX_SEARCH_DEPTH;
 
   public:
-    search_base() : MAX_SEARCH_DEPTH(MAX_AL_SEARCH_DEPTH){
-      if(MAX_AL_SEARCH_DEPTH < 1)
+    search_base() : MAX_SEARCH_DEPTH(AL_MAX_SEARCH_DEPTH){
+      if(AL_MAX_SEARCH_DEPTH < 1)
         throw std::invalid_argument("invalid input: maximum search depth must be greater than 1");
     };
 
