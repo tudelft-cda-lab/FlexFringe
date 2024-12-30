@@ -32,7 +32,6 @@ std::string COMMAND;
  */
 void run() {
     std::unique_ptr<running_mode_base> mode = running_mode_factory::get_mode();
-    mode->initialize();
     mode->run();
     mode->generate_output();
 }

@@ -5,7 +5,7 @@
 
 class inputdata_locator {
 private:
-    static inputdata* reader_;
+    inline static inputdata* reader_ = nullptr;
 
 public:
     static void provide(inputdata* reader);

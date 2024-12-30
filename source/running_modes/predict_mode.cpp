@@ -585,6 +585,8 @@ std::unordered_map<std::string, std::string> predict_mode::get_prediction_mappin
 
 
 void predict_mode::initialize() {
+    running_mode_base::initialize();
+
     if(APTA_FILE.empty())
         throw std::invalid_argument("require a json formatted apta file to make predictions");
     // First, we read the apta file into the global inputdata, so we can obtain the alphabet mapping
@@ -618,7 +620,5 @@ int predict_mode::run(){
         predict_streaming(merger, input_parser, *strategy, output);
     }
 
-    
-    
     return EXIT_SUCCESS;
 }

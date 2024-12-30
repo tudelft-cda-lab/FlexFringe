@@ -54,6 +54,8 @@ class predict_mode : public running_mode_base {
     void write_list(std::list<T>& list_to_write, std::ostream& output);
   
   public:
+    predict_mode() = default; // no copies allowed
+    
     int run() override;
     void initialize() override;
 
