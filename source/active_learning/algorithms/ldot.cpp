@@ -15,12 +15,16 @@
 #include "evaluate.h"
 #include "input/trace.h"
 #include "common.h"
-#include "misc/printutil.h"
 #include "parameters.h"
 #include "refinement.h"
+#include "output_manager.h"
+
 #include "sqldb_sul.h"
 #include "sqldb_sul_random_oracle.h"
+
 #include "utility/loguru.hpp"
+#include "misc/printutil.h"
+
 #include <filesystem>
 #include <fmt/format.h>
 #include <memory>
@@ -53,7 +57,7 @@ void ldot_algorithm::proc_counter_record(inputdata& id, const psql::record& rec,
 #ifndef NDEBUG
     DLOG_S(1) << n_runs << ": Undoing (for cex) " << refs.size() << " refs.";
     // printing the model each time
-    print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.", std::to_string(n_runs) + ".zzz");
+    output_manager::print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.", std::to_string(n_runs) + ".zzz");
 #endif
 
     performed_refinements.clear();
@@ -108,11 +112,11 @@ bool ldot_algorithm::add_trace(inputdata& id, const psql::record& r) {
 
 void ldot_algorithm::merge_processed_ref(refinement* ref) {
 #ifndef NDEBUG
-    print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.",
+    output_manager::print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.",
                             std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) + ".pro_a");
     ref->doref(my_merger.get());
     performed_refinements.push_back(ref);
-    print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.",
+    output_manager::print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.",
                             std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) + ".pro_b");
 
     DLOG_S(2) << n_runs << ":uni:" << printAddress(performed_refinements);
@@ -320,7 +324,7 @@ void ldot_algorithm::run(inputdata& id) {
     complete_state(id, my_apta->get_root());
 
 #ifndef NDEBUG
-    print_current_automaton(my_merger.get(), DEBUG_DIR + "/debug", "");
+    output_manager::print_current_automaton(my_merger.get(), DEBUG_DIR + "/debug", "");
 #endif
 
     std::vector<int> prev_cex = {-1};
@@ -336,7 +340,7 @@ void ldot_algorithm::run(inputdata& id) {
         // printing the model each time (once per n_runs).
         static int x = -1;
         if (x != n_runs)
-            print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.", std::to_string(n_runs) + ".bef");
+            output_manager::print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.", std::to_string(n_runs) + ".bef");
         x = n_runs;
 #endif
 
@@ -366,11 +370,11 @@ void ldot_algorithm::run(inputdata& id) {
 
 #ifndef NDEBUG
                 test_access_traces();
-                print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.",
+                output_manager::print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.",
                                         std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) + ".ext_a");
                 ref->doref(my_merger.get());
                 performed_refinements.push_back(ref);
-                print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.",
+                output_manager::print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.",
                                         std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) + ".ext_b");
                 DLOG_S(2) << n_runs << ":extend:" << printAddress(performed_refinements);
 #else
@@ -384,11 +388,11 @@ void ldot_algorithm::run(inputdata& id) {
                 refinement* ref = *possible_refs.begin();
 #ifndef NDEBUG
                 test_access_traces();
-                print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.",
+                output_manager::print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.",
                                         std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) + ".one_a");
                 ref->doref(my_merger.get());
                 performed_refinements.push_back(ref);
-                print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.",
+                output_manager::print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.",
                                         std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) + ".one_b");
                 DLOG_S(2) << n_runs << ":one:" << printAddress(performed_refinements);
 #else
@@ -421,7 +425,7 @@ void ldot_algorithm::run(inputdata& id) {
 #ifndef NDEBUG
             DLOG_S(1) << n_runs << ": Undoing (for completion) " << performed_refinements.size() << " refs.";
             // printing the model each time
-            print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.", std::to_string(n_runs) + ".com");
+            output_manager::print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.", std::to_string(n_runs) + ".com");
 #endif
             for (auto* ref : performed_refinements)
                 ref->erase();
@@ -446,7 +450,7 @@ void ldot_algorithm::run(inputdata& id) {
         test_access_traces();
         const std::size_t selected_refs_nr = performed_refinements.size();
         // printing the model each time
-        print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.", std::to_string(n_runs) + ".sel");
+        output_manager::print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.", std::to_string(n_runs) + ".sel");
 #endif
 
         // build hypothesis -> try to reduce the apta.
@@ -456,13 +460,13 @@ void ldot_algorithm::run(inputdata& id) {
         DLOG_S(1) << n_runs << ": Got " << selected_refs_nr << " refs from selection and a total of "
                   << performed_refinements.size() << " after minimizing.";
         // printing the model each time
-        print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.", std::to_string(n_runs) + ".xxx");
+        output_manager::print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.", std::to_string(n_runs) + ".xxx");
 #endif
 
         // Check if we go for a next run.
         if (ENSEMBLE_RUNS > 0 && n_runs == ENSEMBLE_RUNS) {
             LOG_S(INFO) << n_runs << ":END: Maximum of runs reached. Printing automaton to " << OUTPUT_FILE;
-            print_current_automaton(my_merger.get(), OUTPUT_FILE, ".final");
+            output_manager::print_final_automaton(my_merger.get(), ".final");
             return;
         }
 
@@ -479,7 +483,7 @@ void ldot_algorithm::run(inputdata& id) {
 
                 if (!query_result) {
                     LOG_S(INFO) << n_runs << ":END: Found consistent automaton => Print to " << OUTPUT_FILE;
-                    print_current_automaton(my_merger.get(), OUTPUT_FILE,
+                    output_manager::print_final_automaton(my_merger.get(),
                                             ".final"); // printing the final model.
                     return;                            // Solved!
                 }
@@ -517,7 +521,7 @@ void ldot_algorithm::run(inputdata& id) {
                 if (exc.find("too complex") != std::string::npos) {
                     // Regex got too big, print and return.
                     LOG_S(INFO) << n_runs << ":END: Regex too big. Printing automaton to " << OUTPUT_FILE;
-                    print_current_automaton(my_merger.get(), OUTPUT_FILE, ".partial");
+                    output_manager::print_current_automaton(my_merger.get(), OUTPUT_FILE, ".partial");
                     return;
                 }
 
@@ -527,7 +531,7 @@ void ldot_algorithm::run(inputdata& id) {
                         << ":END: Got repeated counterexample. The equivalence builder sends a default one if all "
                            "regex fails (namely ^(.*)$ from root node.) Write to "
                         << OUTPUT_FILE;
-                    print_current_automaton(my_merger.get(), OUTPUT_FILE, ".partial");
+                    output_manager::print_current_automaton(my_merger.get(), OUTPUT_FILE, ".partial");
                     return;
                 }
 

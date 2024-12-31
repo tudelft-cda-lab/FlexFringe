@@ -15,6 +15,7 @@
 #include "refinement_selection_strategies.h"
 #include "common.h"
 #include "csv.hpp"
+#include "output_manager.h"
 
 #include "input/parsers/csvparser.h"
 #include "input/parsers/abbadingoparser.h"
@@ -33,17 +34,14 @@
 #include <chrono>
 #include <fstream>
 
+// TODO: throw out those two flags, make them input parameters as well.
 const bool RETRY_MERGES = true;
 const bool EXPERIMENTAL_RUN = true;
 
 using namespace std;
 
 void stream_mode::initialize() {
-}
-
-void stream_mode::generate_output(){
-    cout << "Printing output to " << OUTPUT_FILE << ".final" << endl;
-    print_current_automaton(merger, OUTPUT_FILE, ".final");
+  // nothing to do here
 }
 
 refinement* stream_mode::determine_next_refinement(state_merger* merger){
@@ -80,6 +78,10 @@ refinement* stream_mode::determine_next_refinement(state_merger* merger){
   return res;
 }
 
+/**
+ * @brief Streaming framework as described in "Learning state machines via efficient hashing of future traces",
+ * Baumgartner and Verwer, LearnAUT 2022
+ */
 void stream_mode::greedyrun_no_undo(state_merger* merger){
     refinement* top_ref;
     top_ref = determine_next_refinement(merger);
@@ -105,32 +107,10 @@ void stream_mode::remember_state(refinement* ref){
   }
 }
 
-void print_current_automaton_stream(state_merger* merger, const string& output_file, const string& append_string){
-    if (OUTPUT_TYPE == "dot" || OUTPUT_TYPE == "both") {
-        merger->print_dot(output_file + append_string + ".dot");
-    }
-    if (OUTPUT_TYPE == "json" || OUTPUT_TYPE == "both") {
-        merger->print_json(output_file + append_string + ".json");
-    }
-    if(OUTPUT_SINKS && !PRINT_WHITE){
-        bool red_undo = PRINT_RED;
-        PRINT_RED = false;
-        bool white_undo = PRINT_WHITE;
-        PRINT_WHITE= true;
-        bool blue_undo = PRINT_BLUE;
-        PRINT_BLUE = true;
-        if (OUTPUT_TYPE == "dot" || OUTPUT_TYPE == "both") {
-            merger->print_dot(output_file + append_string + "sinks.dot");
-        }
-        if (OUTPUT_TYPE == "json" || OUTPUT_TYPE == "both") {
-            merger->print_json(output_file + append_string + "sinks.json");
-        }
-        PRINT_RED = red_undo;
-        PRINT_WHITE = white_undo;
-        PRINT_BLUE = blue_undo;
-    }
-}
-
+/**
+ * @brief Streaming framework as described in "Learning state machines from data streams: A generic strategy and an improved heuristic",
+ * Baumgartner and Verwer, ICGI 2023
+ */
 void stream_mode::greedyrun_retry_merges(state_merger* merger){
     static int c = 0;
 
@@ -284,7 +264,7 @@ int stream_mode::run() {
       ++(this->batch_number);
 
       if(DEBUGGING)
-        print_current_automaton(merger, "Batch_", to_string(this->batch_number));
+        output_manager::print_current_automaton(merger, "Batch_", to_string(this->batch_number));
 
 /*       if(input_stream.eof()){
         if(RETRY_MERGES){

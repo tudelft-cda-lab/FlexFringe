@@ -13,6 +13,7 @@
 #include "common.h"
 #include "refinement.h"
 #include "parameters.h"
+#include "output_manager.h"
 
 #include <sstream>
 #include <iostream>
@@ -20,7 +21,6 @@
 using namespace std;
 
 void greedy_mode::initialize(){
-    cout << "Greedy mode selected" << endl;
     running_mode_base::initialize();
     read_input_file();
     
@@ -29,7 +29,7 @@ void greedy_mode::initialize(){
     eval->initialize_after_adding_traces(merger);
 
     cout << "Printing initial tree to " << OUTPUT_FILE << ".init" << endl;
-    print_current_automaton(merger, OUTPUT_FILE, ".init");
+    output_manager::print_current_automaton(merger, OUTPUT_FILE, ".init");
 }
 
 int greedy_mode::run(){
@@ -66,9 +66,4 @@ int greedy_mode::run(){
 
     std::cout << "no more possible merges" << std::endl;
     return EXIT_SUCCESS;
-}
-
-void greedy_mode::generate_output(){
-    cout << "Printing output to " << OUTPUT_FILE << ".final" << endl;
-    print_current_automaton(merger, OUTPUT_FILE, ".final");
 }

@@ -607,7 +607,7 @@ int predict_mode::run(){
     }
 
     // We stream the to predict traces into inputdata one by one to save memory
-    // Set up the parser for the input stream
+    // TODO: somehow encapsulate this logic in the the output_manager structure. 
     std::ifstream input_stream(INPUT_FILE);
     std::ofstream output(APTA_FILE + ".result");
     std::cout << "Writing prediction output to " << APTA_FILE << ".result" << std::endl;
@@ -621,4 +621,18 @@ int predict_mode::run(){
     }
 
     return EXIT_SUCCESS;
+}
+
+/**
+ * @brief Does nothing at the moment.
+ * 
+ * Note by Robert: Predict mode needs some refactoring for sure.
+ * It is hard to maintain, and some other running-modes need access to what it does as well.
+ * Currently the solution is to run an instance of predict mode within them, but this is 
+ * not optimal for obvious reasons. Therefore, make predict mode more legible, but also more modular, 
+ * maintainable, and easier to use.
+ * 
+ */
+void predict_mode::generate_output(){
+    // nothing to do here at the moment
 }

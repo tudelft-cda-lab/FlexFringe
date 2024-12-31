@@ -49,11 +49,6 @@ int dfasat_mode::run(){
   return EXIT_SUCCESS;
 }
 
-void dfasat_mode::generate_output(){
-    cout << "Printing output to " << OUTPUT_FILE << ".final" << endl;
-    print_current_automaton(merger, OUTPUT_FILE, ".final");
-}
-
 void dfasat_mode::run_dfasat(string sat_program, int best_solution){
 #ifdef _WIN32
     cerr << "DFASAT does not work under Windows OS" << endl;

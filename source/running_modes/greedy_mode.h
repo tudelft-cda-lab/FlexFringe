@@ -34,7 +34,6 @@ class greedy_mode : public running_mode_base {
   public:
     void initialize() override;
     int run() override;
-    void generate_output() override;
 };
 
 #endif /* _RANDOM_GREEDY_H_ */

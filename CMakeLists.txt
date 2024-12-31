@@ -117,6 +117,7 @@ endif()
 include_directories("${PROJECT_SOURCE_DIR}"
                     "${PROJECT_SOURCE_DIR}/source"
                     "${PROJECT_SOURCE_DIR}/source/evaluation"
+                    "${PROJECT_SOURCE_DIR}/source/running_modes"
                     "${PROJECT_SOURCE_DIR}/source/utility"
                     "${PROJECT_SOURCE_DIR}/source/utility/lexy/include"
                     "${PROJECT_SOURCE_DIR}/source/utility/fmt-11.0.2/include")

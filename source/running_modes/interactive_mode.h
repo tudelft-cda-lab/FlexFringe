@@ -26,7 +26,6 @@ class interactive_mode : public running_mode_base {
   public:
     int run() override;
     void initialize() override;
-    void generate_output() override;
 };
 
 #endif /* _INTERACTIVE_MODE_H_ */

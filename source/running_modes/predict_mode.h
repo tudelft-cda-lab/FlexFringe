@@ -58,6 +58,7 @@ class predict_mode : public running_mode_base {
     
     int run() override;
     void initialize() override;
+    void generate_output() override;
 
     std::unordered_map<std::string, std::string> get_prediction_mapping(state_merger* m, trace* tr);
 };

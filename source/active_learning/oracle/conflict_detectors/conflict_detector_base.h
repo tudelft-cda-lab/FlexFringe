@@ -13,7 +13,7 @@
 #define _AL_CONFLICT_DETECTOR_BASE_H_
 
 #include "sul_base.h"
-#include "memory/incomplete_information/ii_base.h" // why does it not find it?
+#include "memory/incomplete_information/ii_base.h"
 
 #include <memory>
 #include <vector>

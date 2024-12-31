@@ -68,7 +68,6 @@ class stream_mode : public running_mode_base {
     //__attribute__((flatten)) // inlines all subsequent functions into this one, (potentially) increases speed at cost of larger code and compile time
     int run() override;
     void initialize() override;
-    void generate_output() override;
 };
 
 #endif

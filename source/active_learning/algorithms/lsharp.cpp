@@ -14,6 +14,7 @@
 #include "common_functions.h"
 
 #include "inputdata.h"
+#include "output_manager.h"
 #include "common.h"
 #include "mem_store.h"
 #include "parameters.h"
@@ -192,7 +193,7 @@ list<refinement*> lsharp_algorithm::find_complete_base(unique_ptr<state_merger>&
         if(termination_reached){
             cout << "Max number of states reached and counterexample strategy disabled. Printing the automaton with " << n_red_nodes << " states." << endl;
             find_closed_automaton(performed_refs, the_apta, merger, evidence_driven::get_score);
-            print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
+            output_manager::print_final_automaton(merger.get(), ".final");
             cout << "Printed. Terminating" << endl;
             exit(0);
         }
@@ -200,7 +201,7 @@ list<refinement*> lsharp_algorithm::find_complete_base(unique_ptr<state_merger>&
         //{
         //    static int model_nr = 0;
         //    cout << "printing model " << model_nr  << endl;
-        //    print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_refs");
+        //    output_manager::print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_refs");
         //}
 
         if(!identified_red_node){
@@ -209,7 +210,7 @@ list<refinement*> lsharp_algorithm::find_complete_base(unique_ptr<state_merger>&
             //if(n_h==10){
             //    cout << "Max number of hypotheses reached. Printing the automaton with " << n_red_nodes << " states." << endl;
             //    find_closed_automaton(performed_refs, the_apta, merger, evidence_driven::get_score);
-            //    print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
+            //    output_manager::print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
             //    cout << "Printed. Terminating" << endl;
             //    exit(0);
             //}
@@ -249,7 +250,7 @@ void lsharp_algorithm::run(inputdata& id) {
 
     //{
     //    static int model_nr = 0;
-    //    print_current_automaton(merger.get(), "model.", "root");
+    //    output_manager::print_current_automaton(merger.get(), "model.", "root");
     //}
 
     while (ENSEMBLE_RUNS > 0 && n_runs <= ENSEMBLE_RUNS) {
@@ -261,7 +262,7 @@ void lsharp_algorithm::run(inputdata& id) {
 
         {
             static int model_nr = 0;
-            print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".before_cex");
+            output_manager::print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".before_cex");
         }
 
         // only merges performed, hence we can test our hypothesis
@@ -274,7 +275,7 @@ void lsharp_algorithm::run(inputdata& id) {
             optional<pair<vector<int>, sul_response>> query_result = oracle->equivalence_query(merger.get());
             if (!query_result) {
                 cout << "Found consistent automaton => Print." << endl;
-                print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
+                output_manager::print_final_automaton(merger.get(), ".final"); // printing the final model each time
                 return;
             }
 
@@ -292,7 +293,7 @@ void lsharp_algorithm::run(inputdata& id) {
 
             {
                 static int model_nr = 0;
-                print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_cex");
+                output_manager::print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_cex");
             }
 
             break;

@@ -25,11 +25,6 @@ void interactive_mode::initialize() {
     eval->initialize_after_adding_traces(merger);
 }
 
-void interactive_mode::generate_output(){
-    std::cout << "Printing output to " << OUTPUT_FILE << ".final" << std::endl;
-    print_current_automaton(merger, OUTPUT_FILE, ".final");
-}
-
 /*! @brief Main loop for interactive mode.
  *         
  *  Constructs batch APTA, gets and prints possible merges, prompts user for interaction, executes command.

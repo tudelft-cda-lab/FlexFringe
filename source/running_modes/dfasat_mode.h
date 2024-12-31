@@ -42,7 +42,6 @@ class dfasat_mode : public running_mode_base {
   public: 
     int run() override;
     void initialize() override;
-    void generate_output() override;
 };
 
 class dfasat_mode::dfasat_status {

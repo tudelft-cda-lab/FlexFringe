@@ -16,6 +16,7 @@
 #include "apta.h"
 #include "input/inputdata.h"
 #include "evaluate.h"
+#include "output_manager.h"
 
 #include <fstream>
 #include <stdexcept>
@@ -35,6 +36,10 @@ class running_mode_base {
 
   public:
     ~running_mode_base(){
+      std::cout << "TODO: fix this destructor" << std::endl;
+      return;
+
+      throw std::runtime_error("TODO: The descructor of the apta gets stuck in a loop");
       if(the_apta != nullptr)
         delete the_apta;
       if(merger != nullptr)
@@ -48,7 +53,7 @@ class running_mode_base {
     
     virtual int run() = 0;
     virtual void initialize();
-    virtual void generate_output(){};
+    virtual void generate_output();
 };
 
 #endif

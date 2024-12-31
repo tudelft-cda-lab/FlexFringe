@@ -17,6 +17,7 @@
 #include "mem_store.h"
 #include "parameters.h"
 #include "state_merger.h"
+#include "output_manager.h"
 
 #include "string_probability_estimator.h"
 
@@ -314,8 +315,8 @@ list<refinement*> probabilistic_lsharp_algorithm::find_complete_base(unique_ptr<
         } else if (depth == MAX_DEPTH) {
             cout << "Max-depth reached. Minimize and print the automaton." << endl;
             find_closed_automaton(performed_refs, the_apta, merger, probabilistic_heuristic_interface::get_merge_distance_access_trace);
-            print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
-            exit(0);
+            output_manager::print_final_automaton(merger.get(), ".final");
+            exit(EXIT_SUCCESS); // TODO: not the best solution
         }
 
         // go through each newly found fringe node, see if you can merge or extend
@@ -357,7 +358,7 @@ list<refinement*> probabilistic_lsharp_algorithm::find_complete_base(unique_ptr<
 
         {
             static int model_nr = 0;
-            print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_refs");
+            output_manager::print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_refs");
         }
 
         if (!identified_red_node) {
@@ -421,7 +422,7 @@ void probabilistic_lsharp_algorithm::run(inputdata& id) {
             optional<pair<vector<int>, sul_response>> query_result = oracle->equivalence_query(merger.get());
             if (!query_result) {
                 cout << "Found consistent automaton => Print." << endl;
-                print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
+                output_manager::print_final_automaton(merger.get(), ".final");
                 return;
             }
 
@@ -445,7 +446,7 @@ void probabilistic_lsharp_algorithm::run(inputdata& id) {
         ++n_runs;
         if (ENSEMBLE_RUNS > 0 && n_runs == ENSEMBLE_RUNS) {
             cout << "Maximum of runs reached. Printing automaton." << endl;
-            print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
+            output_manager::print_final_automaton(merger.get(), ".final");
             return;
         }
     }

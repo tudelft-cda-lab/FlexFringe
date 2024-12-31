@@ -26,7 +26,6 @@ extern char* gitversion;
   if (debugging_enabled) { std::cerr << x << std::endl; } \
 } while (0)
 
-void print_current_automaton(state_merger* merger, const std::string& output_file, const std::string& append_string);
 evaluation_function* get_evaluation();
 
 double update_score(double old_score, apta_node* next_node, tail* next_tail);

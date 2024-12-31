@@ -26,11 +26,6 @@ void search_mode::initialize(){
     eval->initialize_after_adding_traces(merger);
 }
 
-void search_mode::generate_output(){
-    cout << "Printing output to " << OUTPUT_FILE << ".final" << endl;
-    print_current_automaton(merger, OUTPUT_FILE, ".final");
-}
-
 /* queue used for searching */
 struct refinement_list_compare{ bool operator()(const pair<double, refinement_list*> &a, const pair<double, refinement_list*> &b) const{ return a.first > b.first; } };
 priority_queue< pair<double, refinement_list*>, vector< pair<double, refinement_list*> >, refinement_list_compare> Q;

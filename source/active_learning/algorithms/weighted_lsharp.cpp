@@ -17,6 +17,7 @@
 #include "mem_store.h"
 #include "parameters.h"
 #include "state_merger.h"
+#include "output_manager.h"
 
 #include "weight_comparator.h"
 
@@ -233,15 +234,15 @@ list<refinement*> weighted_lsharp_algorithm::find_complete_base(unique_ptr<state
         if(termination_reached){
             cout << "Max number of states reached and counterexample strategy disabled. Printing the automaton with " << n_red_nodes << " states." << endl;
             find_closed_automaton(performed_refs, the_apta, merger, probabilistic_heuristic_interface::get_merge_distance_access_trace);
-            print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
+            output_manager::print_final_automaton(merger.get(), ".final");
             cout << "Printed. Terminating" << endl;
-            exit(0);
+            exit(EXIT_SUCCESS); // TODO: Not the best design solution
         }
 
         //{
         //    static int model_nr = 0;
         //    cout << "printing model " << model_nr  << endl;
-        //    print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_refs");
+        //    output_manager::print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_refs");
         //}
 
         if(!identified_red_node){
@@ -250,7 +251,7 @@ list<refinement*> weighted_lsharp_algorithm::find_complete_base(unique_ptr<state
             //if(n_h==50){
             //    cout << "Max number of hypotheses reached. Printing the automaton with " << n_red_nodes << " states." << endl;
             //    find_closed_automaton(performed_refs, the_apta, merger, weight_comparator::get_distance);
-            //    print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
+            //    output_manager::print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
             //    cout << "Printed. Terminating" << endl;
             //    exit(0);
             //}
@@ -267,7 +268,7 @@ list<refinement*> weighted_lsharp_algorithm::find_complete_base(unique_ptr<state
         //    c_iter++;
         //    if(c_iter==MAX_ITER){
         //        cout << "Max number of iterations reached. Printing automaton." << endl;
-        //        print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
+        //        output_manager::print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
         //        exit(0);
         //    }
         //    return performed_refs;
@@ -309,7 +310,7 @@ void weighted_lsharp_algorithm::run(inputdata& id) {
 
     //{
     //    static int model_nr = 0;
-    //    print_current_automaton(merger.get(), "model.", "root");
+    //    output_manager::print_current_automaton(merger.get(), "model.", "root");
     //}
 
     while (ENSEMBLE_RUNS > 0 && n_runs <= ENSEMBLE_RUNS) {
@@ -329,7 +330,7 @@ void weighted_lsharp_algorithm::run(inputdata& id) {
             optional<pair<vector<int>, sul_response>> query_result = oracle->equivalence_query(merger.get());
             if (!query_result) {
                 cout << "Found consistent automaton => Print." << endl;
-                print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
+                output_manager::print_final_automaton(merger.get(), ".final"); // printing the final model each time
                 return;
             }
 
@@ -352,7 +353,7 @@ void weighted_lsharp_algorithm::run(inputdata& id) {
         ++n_runs;
         if (ENSEMBLE_RUNS > 0 && n_runs == ENSEMBLE_RUNS) {
             cout << "Maximum of runs reached. Printing automaton." << endl;
-            print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
+            output_manager::print_final_automaton(merger.get(), ".final");
             return;
         }
     }

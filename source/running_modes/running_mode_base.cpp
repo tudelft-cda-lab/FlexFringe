@@ -71,3 +71,11 @@ void running_mode_base::initialize(){
   the_apta->set_context(merger);
   eval->set_context(merger);
 }
+
+/**
+ * @brief Prints the last model to the output file + .final ending.
+ */
+void running_mode_base::generate_output(){
+    cout << "Printing output to " << output_manager::get_outfile_path() << ".final" << endl;
+    output_manager::output_manager::print_final_automaton(merger, ".final");
+}

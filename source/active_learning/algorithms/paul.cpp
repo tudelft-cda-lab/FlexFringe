@@ -16,6 +16,7 @@
 #include "inputdatalocator.h"
 #include "abbadingoparser.h"
 #include "csvparser.h"
+#include "output_manager.h"
 
 #include "inputdata.h"
 #include "common.h"
@@ -193,7 +194,6 @@ bool paul_algorithm::merge_check(shared_ptr<ii_base>& ii_handler, unique_ptr<sta
  * @return refinement* The best currently possible operation according to the heuristic.
  */
 refinement* paul_algorithm::get_best_refinement(unique_ptr<state_merger>& merger, unique_ptr<apta>& the_apta){
-    const static bool ADD_TRACES = false; // if true we add sequences to the tree, else we only test, see down the code
     const static bool MERGE_WITH_LARGEST = true;
     const static int N_THREADS = 1;
     
@@ -346,6 +346,7 @@ list<refinement*> paul_algorithm::retry_merges(list<refinement*>& previous_refs,
  * @return list<refinement*> A list of performed refinements.
  */
 list<refinement*> paul_algorithm::find_hypothesis(list<refinement*>& previous_refs, unique_ptr<state_merger>& merger, unique_ptr<apta>& the_apta) {
+    static bool resetted = false;
     list<refinement*> performed_refs;
     if(previous_refs.size() > 0)
         performed_refs = retry_merges(previous_refs, merger, the_apta);
@@ -376,15 +377,23 @@ list<refinement*> paul_algorithm::find_hypothesis(list<refinement*>& previous_re
 
 //#ifndef NDEBUG
         {
-            static int c = 0;
-            merger->print_dot("after_" + to_string(c++) + ".dot");
+            if(resetted){
+                static int c = 0;
+                merger->print_dot("after_" + to_string(c++) + ".dot");
+            }
         }
 //#endif
 
         //delete best_ref;
         best_ref = paul_algorithm::get_best_refinement(merger, the_apta);
-
         num++;
+
+        if(num == 10){
+            cout << "Initialized the DS. Resetting apta and starting anew: " << ii_handler->size() << endl;
+            active_learning_namespace::reset_apta(merger.get(), performed_refs);
+            performed_refs = list<refinement*>();
+            resetted = true;
+        }
     }
 
     return performed_refs;
@@ -481,13 +490,13 @@ void paul_algorithm::run(inputdata& id) {
         {
             static int model_nr = 0;
             cout << "printing model " << model_nr  << endl;
-            print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_refs");
+            output_manager::print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_refs");
         }
 
         optional<pair<vector<int>, sul_response>> query_result = oracle->equivalence_query(merger.get());
         if (!query_result) {
             cout << "Found consistent automaton => Print." << endl;
-            print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
+            output_manager::print_final_automaton(merger.get(), ".final");
 
             for(auto ref: performed_refs)
                 mem_store::delete_refinement(ref);
@@ -507,7 +516,7 @@ void paul_algorithm::run(inputdata& id) {
         {
             static int model_nr = 0;
             cout << "printing model " << model_nr  << endl;
-            print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_cex");
+            output_manager::print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_cex");
         }
 
         ++n_runs;
@@ -517,7 +526,7 @@ void paul_algorithm::run(inputdata& id) {
         mem_store::delete_refinement(ref);
 
     cout << "Reached maximum number of runs. Printing current hypothesis and terminating." << endl;
-    print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
+    output_manager::print_final_automaton(merger.get(), ".final");
 }
 
 void paul_algorithm::load_inputdata(){

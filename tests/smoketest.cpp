@@ -56,7 +56,7 @@ TEST_CASE( "Smoke test: greedy alergia on stamina 1_training", "[smoke]" ) {
 
     mode.run();
 
-    // print_current_automaton(&merger, "/tmp/flexfringe_test_out", ".final");
+    // output_manager::print_current_automaton(&merger, "/tmp/flexfringe_test_out", ".final");
 
     //TODO: verify learned state machine is reasonable
 
@@ -94,7 +94,7 @@ TEST_CASE( "Smoke test: greedy edsm on stamina 1_training", "[smoke]" ) {
 
     mode.run();
 
-    //print_current_automaton(merger, "/tmp/flexfringe_test_out", ".final");
+    //output_manager::print_current_automaton(merger, "/tmp/flexfringe_test_out", ".final");
 
     //TODO: verify learned state machine is reasonable
 

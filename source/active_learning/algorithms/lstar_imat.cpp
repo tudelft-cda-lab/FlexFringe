@@ -18,6 +18,7 @@
 #include "parameters.h"
 #include "state_merger.h"
 #include "observation_table_imat.h"
+#include "output_manager.h"
 
 #include <iostream>
 #include <optional>
@@ -130,7 +131,7 @@ void lstar_imat_algorithm::run(inputdata& id) {
 
             if (PRINT_ALL_MODELS) {
                 static int model_nr = 0;
-                print_current_automaton(merger.get(), "model.",
+                output_manager::print_current_automaton(merger.get(), "model.",
                                         to_string(++model_nr) + ".not_final"); // printing the final model each time
                 cout << "Model nr " << model_nr << endl;
             }
@@ -143,7 +144,7 @@ void lstar_imat_algorithm::run(inputdata& id) {
                 optional<pair<vector<int>, sul_response>> query_result = oracle->equivalence_query(merger.get());
                 if (!query_result) {
                     cout << "Found consistent automaton => Print." << endl;
-                    print_current_automaton(merger.get(), OUTPUT_FILE, ".final"); // printing the final model each time
+                    output_manager::print_final_automaton(merger.get(), ".final"); // printing the final model each time
                     return;
                 }
 
@@ -173,7 +174,7 @@ void lstar_imat_algorithm::run(inputdata& id) {
             for (auto* top_ref : refs) {
                 top_ref->doref(merger.get());
             }
-            print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
+            output_manager::print_final_automaton(merger.get(), ".final");
             return;
         }
     }

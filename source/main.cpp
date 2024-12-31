@@ -10,11 +10,12 @@
  */
 
 #include "running_mode_factory.h"
-//#include "misc/printutil.h"
 #include "utility/loguru.hpp"
 #include "CLI11.hpp"
 
 #include "parameters.h"
+#include "output_manager.h"
+
 #include "misc/sqldb.h"
 #include "misc/utils.h"
 
@@ -24,16 +25,19 @@
 #include <string>
 #include <memory>
 
-// TODO: Is this necessary?
-std::string COMMAND;
+std::string COMMAND; // TODO: Is this necessary? Put it somewhere else, e.g. common.h or output_manager.h
 
 /**
  * @brief Main run method. Branches out based on the type of session to run.
  */
 void run() {
+    output_manager::init_outfile_path();
     std::unique_ptr<running_mode_base> mode = running_mode_factory::get_mode();
     mode->run();
+
+    // different modes can have different types of output (or possibly none in case of interactive mode)
     mode->generate_output();
+    std::cout << "Finished running successfully. Ending program." << std::endl;
 }
 
 /**

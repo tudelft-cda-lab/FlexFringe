@@ -86,3 +86,20 @@ int active_learning_mode::run() {
         algorithm->run(id); */
     return EXIT_SUCCESS;
 }
+
+/**
+ * @brief Nothing to do here. Printing happens in the respective algorithms. 
+ * 
+ * Note from Robert:
+ * This is refactorable, but no priority on this one, since it would cost some time. 
+ * At the time of changing the design of the main function to have all the modes encapsulated
+ * in a separate class the active learning sublibrary did not fit very well, having a set of separate
+ * subclasses and methods that are selected, and each one taking care of its own so far.
+ * 
+ * While this can be changed it is not a dealbreaker at the moment, and there are more pressing TODOs 
+ * than this one. For the future perhaps, if somebody finds the time for it.
+ * 
+ */
+void active_learning_mode::generate_output(){
+    // nothing to do here
+}

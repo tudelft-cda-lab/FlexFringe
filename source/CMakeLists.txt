@@ -41,6 +41,8 @@ add_library(Source STATIC
         apta.h
         common.h
         common.cpp
+        output_manager.h
+        output_manager.cpp
         conflict_graph.cpp
         conflict_graph.h
         evaluation_factory.cpp

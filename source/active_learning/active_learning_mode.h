@@ -18,6 +18,7 @@ class active_learning_mode : public running_mode_base {
   public:
     void initialize() override;
     int run() override;
+    void generate_output() override;
 };
 
 #endif
