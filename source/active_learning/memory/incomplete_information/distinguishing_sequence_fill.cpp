@@ -113,7 +113,7 @@ void distinguishing_sequence_fill::pre_compute(list<int>& suffix, unordered_set<
  * @brief Collect all sequences that distinguish the two states.
  */
 void distinguishing_sequence_fill::pre_compute(unique_ptr<apta>& aut, apta_node* left, apta_node* right){
-  list<int> suffix; // TODO: forward_list?
+  list<int> suffix; // need to pop from back element, therefore no forward list
   unordered_set<apta_node*> seen_nodes;
   pre_compute(suffix, seen_nodes, aut, left, right, 0);
 }
@@ -340,6 +340,63 @@ bool distinguishing_sequence_fill::check_consistency(unique_ptr<apta>& aut, apta
   vector<int> predictions = predict_node_with_sul(*aut, left);
   return distributions_consistent(memoized_predictions, predictions);
 }
+
+/**
+ * @brief Collect a set of distinguishing sequences already, to make better decisions at the root level of 
+ * the tree.
+ */
+void distinguishing_sequence_fill::initialize(std::unique_ptr<apta>& aut){
+  cout << "Collecting some distinguishing sequences" << endl;
+  const int MAX_INIT_DEPTH = 2;
+  int count = 0;
+
+  stack<apta_node*> l_stack;
+  stack<apta_node*> r_stack;
+
+  l_stack.push(aut->get_root());
+  while(!l_stack.empty()){
+    apta_node* left = l_stack.top();
+    l_stack.pop();
+
+    cout << ++count << ",";
+    cout.flush();
+
+    r_stack.push(aut->get_root());
+    while(!r_stack.empty()){
+      apta_node* right = r_stack.top();
+      r_stack.pop();
+
+      pre_compute(aut, left, right); // collects the sequences
+
+      if(right->get_depth() < MAX_INIT_DEPTH){
+        for(apta_node* n_child : get_child_nodes_apta(right))
+          r_stack.push(n_child);
+      }
+    }
+
+    if(left->get_depth() < MAX_INIT_DEPTH){
+      for(apta_node* n_child : get_child_nodes_apta(left))
+        l_stack.push(n_child);
+    }
+  }
+
+  cout << endl;
+}
+
+/**
+ * @brief Gets the child nodes of an apta node. The child nodes are the nodes of the unmerged apta.
+ */
+list<apta_node*> distinguishing_sequence_fill::get_child_nodes_apta(apta_node* n){
+  list<apta_node*> res;
+  for(guard_map::iterator it = n->guards.begin();it != n->guards.end(); ++it) {
+    apta_node *target = it->second->target;
+    if (target != nullptr && target->source == n) {
+      res.push_back(target);
+    }
+  }
+  return res;
+}
+
 
 /**
  * @brief Take all the distinguishing sequences you currently have, add them to the two nodes, and ask the transformer to fill those two out.

@@ -37,11 +37,13 @@ class distinguishing_sequence_fill : public ii_base {
     std::vector<int> predict_node_with_sul(apta& aut, apta_node* node) override;
 
     bool distributions_consistent(const std::vector<int>& v1, const std::vector<int>& v2) const override;
+    inline std::list<apta_node*> get_child_nodes_apta(apta_node* n);
 
   public:
     distinguishing_sequence_fill(const std::shared_ptr<sul_base>& sul) 
     : ii_base(sul), MIN_BATCH_SIZE(AL_BATCH_SIZE), MAX_LEN(AL_MAX_SEARCH_DEPTH) {};
 
+    void initialize(std::unique_ptr<apta>& aut) override;
     void pre_compute(std::unique_ptr<apta>& aut, apta_node* node) override;
     void pre_compute(std::unique_ptr<apta>& aut, apta_node* left, apta_node* right) override;
     bool check_consistency(std::unique_ptr<apta>& aut, apta_node* left, apta_node* right) override;

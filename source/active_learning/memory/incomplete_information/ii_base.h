@@ -32,7 +32,11 @@ class ii_base {
 
     ii_base(){
       throw std::logic_error("Error: ii_base must be equipped with a SUL");
-    } 
+    }
+
+    virtual void initialize(std::unique_ptr<apta>& aut){
+      std::cout << "This ii-handler does not need initialization, or it is not implemented yet." << std::endl;
+    }
 
     /**
      * @brief Pre-computation on a node pair. For example relevant in distinguishing sequence approach, where we 

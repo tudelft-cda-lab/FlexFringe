@@ -387,13 +387,6 @@ list<refinement*> paul_algorithm::find_hypothesis(list<refinement*>& previous_re
         //delete best_ref;
         best_ref = paul_algorithm::get_best_refinement(merger, the_apta);
         num++;
-
-        if(num == 10){
-            cout << "Initialized the DS. Resetting apta and starting anew: " << ii_handler->size() << endl;
-            active_learning_namespace::reset_apta(merger.get(), performed_refs);
-            performed_refs = list<refinement*>();
-            resetted = true;
-        }
     }
 
     return performed_refs;
@@ -477,6 +470,10 @@ void paul_algorithm::run(inputdata& id) {
     
     id.add_traces_to_apta(the_apta.get());
     eval->initialize_after_adding_traces(merger.get());
+
+    cout << "Initializing ii_handler" << endl;
+    ii_handler->initialize(the_apta); // must happen after traces have been added to apta!
+    cout << "ii_handler is initialized" << endl;
 
     const vector<int> alphabet = id.get_alphabet();
     cout << "Alphabet: ";
