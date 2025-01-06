@@ -346,7 +346,6 @@ list<refinement*> paul_algorithm::retry_merges(list<refinement*>& previous_refs,
  * @return list<refinement*> A list of performed refinements.
  */
 list<refinement*> paul_algorithm::find_hypothesis(list<refinement*>& previous_refs, unique_ptr<state_merger>& merger, unique_ptr<apta>& the_apta) {
-    static bool resetted = false;
     list<refinement*> performed_refs;
     if(previous_refs.size() > 0)
         performed_refs = retry_merges(previous_refs, merger, the_apta);
@@ -377,10 +376,8 @@ list<refinement*> paul_algorithm::find_hypothesis(list<refinement*>& previous_re
 
 //#ifndef NDEBUG
         {
-            if(resetted){
-                static int c = 0;
-                merger->print_dot("after_" + to_string(c++) + ".dot");
-            }
+            static int c = 0;
+            merger->print_dot("after_" + to_string(c++) + ".dot");
         }
 //#endif
 
