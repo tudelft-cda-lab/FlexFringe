@@ -25,13 +25,33 @@ We tested the toolchains on Linux (Debian 12+), MacOS (10.14), and Windows 10.
 
 You can build and compile the flexfringe project by running in the main directory:
 
-`$ mkdir build && cd build && cmake ..`
+`$ mkdir build && cd build && cmake -DENABLE_PYTHON=On ..`
 
 `$ make`
 
 This builds the executable named *flexfringe*.
 
 Only run the last command in the build folder during development when you change the code.
+
+### Troubleshooting on MacOSX
+
+#### CMake does not find the C- and CXX-compilers
+You need to install XCode. Additionally, you need to accept XCode's license. You'll be prompted to accept the license when you try to run it or a module that gets installed.
+
+#### Python packages cannot be found
+
+In this case likely either at least one of the Python_LIBRARIES or Python_INCLUDE_DIRS variables is empty. In this case you need to set them 
+manually. 
+
+1. Find out which Python version is used (see CMake output)
+2. Find out where this Python instance finds its includes (e.g. via printing the sys.path variable from within the interpreter)
+3. The PYTHON_INCLUDE_DIRS variable needs to point to the directory where Python.h resides. PYTHON_LIBRARIES will likely need to point to libpython.[version_number].so or libpython.[version_number].dylib. However, PYTHON_LIBRARIES has always been found in our settings, therefore we cannot comfirm to cover all possible outcomes with this.
+
+Alternatively, you can also simply disable the Python interface, in which case you won't be able to use it (used e.g. for neural network inference). You can disable it via
+
+`$ cmake -DENABLE_PYTHON=Off ..`
+
+from within the build directory.
 
 ## Windows
 

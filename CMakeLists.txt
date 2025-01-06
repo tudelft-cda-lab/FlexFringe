@@ -111,8 +111,39 @@ add_subdirectory(source/utility/fmt-11.0.2)
 
 # needed for the Neural Network, to call Python scripts
 if (ENABLE_PYTHON)
-  find_package(PythonLibs REQUIRED)
+  # Automatic path setting does not work on Apple Silicon
+  if(APPLE)
+    message("Getting PythonLibs on Apple (MacOSX) path")
+    set(CMAKE_FIND_FRAMEWORK NEVER)
+    find_package(Python 3 REQUIRED COMPONENTS Interpreter Development)
+    
+    message("Python_VERSION:${Python_VERSION}")
+    message("Python_LIBRARIES:${Python_LIBRARIES}")
+    message("Python_INCLUDE_DIRS:${${Python_INCLUDE_DIRS}}")
+
+    set(PYTHON_LIBRARIES ${Python_LIBRARIES})
+    string(COMPARE EQUAL "${PYTHON_LIBRARIES}" "" PYTHONLIBS_EMPTY)
+    if(PYTHONLIBS_EMPTY)
+      message(FATAL_ERROR "Problem: PYTHON_LIBRARIES not found. Do you have Python installed on your machine?")
+    endif()
+
+    string(COMPARE EQUAL "${Python_INCLUDE_DIRS}" "" PYTHONDIRS_EMPTY)
+    if(PYTHONDIRS_EMPTY)
+      message("Failed to automatically find Python_INCLUDE_DIRS. Setting the PYTHON_INCLUDE_DIRS variable manually. If this crashes please adjust the following
+              path to the path where Python.h resides (the one matching the found Python instance). Paths must be consistent iff multiple Python versions on machine.")
+      set(PYTHON_H_PATH "/usr/local/opt/python@3.13/Frameworks/Python.framework/Versions/3.13/include/python3.13")
+      set(PYTHON_INCLUDE_DIRS "${PYTHON_H_PATH}")
+    else()
+      set(PYTHON_INCLUDE_DIRS ${Python_INCLUDE_DIRS})
+    endif()
+    #FindPython3()
+    message("Apple - Using Python:${Python_VERSION_MAJOR} - Libraries:${PYTHON_LIBRARIES} - IncludeDirs: ${PYTHON_INCLUDE_DIRS}")
+  else()
+    message("Getting PythonLibs on Linux or Windows path")
+    find_package(PythonLibs REQUIRED)
+  endif()
   include_directories(${PYTHON_INCLUDE_DIRS})
+  message("Using Python:${Python_VERSION_MAJOR} - Libraries:${PYTHON_LIBRARIES} - IncludeDirs: ${PYTHON_INCLUDE_DIRS}")
 endif()
 include_directories("${PROJECT_SOURCE_DIR}"
                     "${PROJECT_SOURCE_DIR}/source"
