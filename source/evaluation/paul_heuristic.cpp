@@ -189,7 +189,7 @@ bool paul_heuristic::consistent(state_merger *merger, apta_node* left, apta_node
     auto* l = (paul_data*)left->get_data();
     auto* r = (paul_data*)right->get_data();  
 
-    if(l->label_is_queried() && r->label_is_queried()){
+/*     if(l->label_is_queried() && r->label_is_queried()){
         n_inferred_inferred_mismatches = check_for_consistency(l, r, n_inferred_inferred_mismatches);
         ++n_inferred_inferred_pairs;
 
@@ -200,7 +200,7 @@ bool paul_heuristic::consistent(state_merger *merger, apta_node* left, apta_node
         ++n_real_inferred_pairs; 
 
         return true;
-    }
+    } */
 
     // real_real must match, else inconsistent
     if(check_for_consistency(l, r) > 0){
