@@ -15,49 +15,11 @@
 
 using namespace std;
 
-/**
- * @brief Adds the suffix to the tree.
- * 
- * @param suffix The suffix.
- * @return True if suffix has not already been added before (if number of suffixes increased by one), else false. 
- */
-bool suffix_tree::add_suffix(const list<int>& suffix){
-  sf_tree_node* node = root;
+template bool suffix_tree::add_suffix(const vector<int>& suffix);
+template bool suffix_tree::add_suffix(const list<int>& suffix);
 
-  int depth = 0;
-  for(auto symbol: suffix){
-    ++depth;
-
-    if(!node->has_child(symbol)){
-      node_store.push_back(sf_tree_node(depth));
-      sf_tree_node& child = node_store.back();
-
-      node->add_child(symbol, child);
-    }
-    node = node->get_child(symbol);
-  }
-
-  if(!node->is_final()){
-    ++n_final;
-    node->finalize();
-    return true;
-  }
-
-  return false;
-}
-
-bool suffix_tree::contains(const list<int>& suffix){
-  sf_tree_node* node = root;
-
-  for(auto symbol: suffix){
-    if(node->has_child(symbol))
-      sf_tree_node* child = node->get_child(symbol);
-    else
-      return false;
-  }
-
-  return node->is_final();
-}
+template bool suffix_tree::contains(const vector<int>& suffix);
+template bool suffix_tree::contains(const list<int>& suffix);
 
 /**
  * @brief We do a DFS search* here, looking for the next sequence to return. If the

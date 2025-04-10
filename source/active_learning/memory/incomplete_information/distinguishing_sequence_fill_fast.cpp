@@ -20,13 +20,23 @@
 
 using namespace std;
 
+// -------------------------------- Instantiate all the templated methods for suffixes_t --------------------------------
+template void distinguishing_sequence_fill_fast::suffixes_t::add_suffix(const vector<int>&);
+template void distinguishing_sequence_fill_fast::suffixes_t::add_suffix(const list<int>&);
+
+template std::size_t distinguishing_sequence_fill_fast::suffixes_t::get_hash(const vector<uint32_t>&) const;
+template std::size_t distinguishing_sequence_fill_fast::suffixes_t::get_hash(const list<uint32_t>&) const;
+
+
+// -------------------------------- Implementations of distinguishing_sequence_fill_fast --------------------------------
+
 /**
  * @brief Takes the two nodes, walks through their subtrees, and stores all the suffixes for which the two subtree disagree. 
  * If a suffix in not in the set of distinguishing sequences at the moment, then it will be added 
  */
 void distinguishing_sequence_fill_fast::pre_compute(list<int>& suffix, unordered_set<apta_node*>& seen_nodes, unique_ptr<apta>& aut, apta_node* left, apta_node* right, const int depth) {
   const static int max_search_depth = AL_MAX_SEARCH_DEPTH;
-  if(max_search_depth > 0 && (left->get_depth() > max_search_depth || right->get_depth() > max_search_depth)) // making sure we don't bust the transformer
+  if((LTD_LENGTH > 0 && suffix.size() == LTD_LENGTH) || (max_search_depth > 0 && (left->get_depth() > max_search_depth) || right->get_depth() > max_search_depth)) // making sure we don't bust the transformer
     return;
     
   else if(seen_nodes.contains(left))
@@ -50,8 +60,7 @@ void distinguishing_sequence_fill_fast::pre_compute(list<int>& suffix, unordered
   }
 
   if(l_data->predict_type(nullptr) != r_data->predict_type(nullptr)){
-    if(ds_ptr->add_sequence(suffix))
-      m_suffixes.emplace_back(suffix.begin(), suffix.end());
+    m_suffixes.add_suffix(suffix);
   }
 
   // first do the right side
@@ -124,7 +133,7 @@ vector<int> distinguishing_sequence_fill_fast::predict_node_with_sul(apta& aut, 
   unordered_set<int> no_pred_idxs;
   vector<int> res;
 
-  for(const auto& suffix: m_suffixes){
+  for(const auto& suffix: m_suffixes.get_suffixes()){
     if(right_prefix.size() + suffix.size() > MAX_LEN){
       no_pred_idxs.insert(queries.size()+no_pred_idxs.size()); // invalid prediction
       continue;
@@ -182,7 +191,7 @@ vector<int> distinguishing_sequence_fill_fast::predict_node_with_automaton(apta&
   unordered_set<int> no_pred_idxs;
   vector<int> res;
 
-  for(const auto& suffix: m_suffixes){
+  for(const auto& suffix: m_suffixes.get_suffixes()){
     if(right_prefix.size() + suffix.size() > MAX_LEN){
       no_pred_idxs.insert(queries.size()+no_pred_idxs.size()); // invalid prediction
       continue;

@@ -9,6 +9,8 @@ include_directories(
         "${CMAKE_CURRENT_SOURCE_DIR}/active_learning_util"
         "${CMAKE_CURRENT_SOURCE_DIR}/memory"
         "${CMAKE_CURRENT_SOURCE_DIR}/memory/incomplete_information"
+        "${CMAKE_CURRENT_SOURCE_DIR}/memory/incomplete_information/initializers"
+        "${CMAKE_CURRENT_SOURCE_DIR}/memory/incomplete_information/initializers/distinguishing_sequences"
         "${CMAKE_CURRENT_SOURCE_DIR}/system_under_learning"
         "${CMAKE_CURRENT_SOURCE_DIR}/system_under_learning/neural_network_suls"
         "${CMAKE_CURRENT_SOURCE_DIR}/system_under_learning/benchmark_parsers"
@@ -116,6 +118,16 @@ add_library(ActiveLearning STATIC
             memory/incomplete_information/distinguishing_sequence_fill.cpp
             memory/incomplete_information/distinguishing_sequence_fill_fast.h
             memory/incomplete_information/distinguishing_sequence_fill_fast.cpp
+
+            memory/incomplete_information/initializers/ds_initializer_factory.h
+            memory/incomplete_information/initializers/ds_initializer_factory.cpp
+            memory/incomplete_information/initializers/ds_initializer_registration.h
+            memory/incomplete_information/initializers/ds_initializer_registration.cpp
+            memory/incomplete_information/initializers/distinguishing_sequences/ds_initializer_base.h
+            memory/incomplete_information/initializers/distinguishing_sequences/ds_initializer_pre_generate_sequences.h
+            memory/incomplete_information/initializers/distinguishing_sequences/ds_initializer_pre_generate_sequences.cpp
+            memory/incomplete_information/initializers/distinguishing_sequences/ds_initializer_collect_from_apta.h
+            memory/incomplete_information/initializers/distinguishing_sequences/ds_initializer_collect_from_apta.cpp
 
             # Everything related to memory and possible memoization techniques
             memory/observation_table.h

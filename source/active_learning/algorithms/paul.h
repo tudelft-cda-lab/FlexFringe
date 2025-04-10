@@ -31,39 +31,12 @@
 #include <future>
 #include <mutex>
 
-/**
- * @brief Helper class for us to achieve concurency.
- * 
- * 
- */
-/* class search_instance{
-  private:
-    // make sure that our underlying structures like the suffix trees do not collide
-    std::shared_ptr<ii_base> ii_handler;
-    std::unique_ptr<distinguishing_sequences> ds_ptr = std::make_shared<distinguishing_sequences>();
-    inline static std::mutex m_mutex;
-    const int MIN_BATCH_SIZE = 512;
-    const int MAX_LEN = 30;
-    
-  public:
-    search_instance(){
-      ii_handler = std::make_shared<distinguishing_sequence_fill>();
-    }
-
-    void operator()(std::promise<bool>&& out, std::unique_ptr<state_merger>& merger, std::unique_ptr<apta>& the_apta, const std::unique_ptr<oracle_base>& oracle, apta_node* red_node, apta_node* blue_node);
-}; */
-
 class paul_algorithm : public algorithm_base {
   protected:
     std::shared_ptr<ii_base> ii_handler;
     refinement* get_best_refinement(std::unique_ptr<state_merger>& merger, std::unique_ptr<apta>& the_apta);
 
     void load_inputdata();
-
-    /**
-     * Relevant for parallelization.
-     */
-    static bool merge_check(std::shared_ptr<ii_base>& ii_handler, std::unique_ptr<state_merger>& merger, std::unique_ptr<oracle_base>& oracle, std::unique_ptr<apta>& the_apta, apta_node* red_node, apta_node* blue_node);
 
     std::list<refinement*> retry_merges(std::list<refinement*>& previous_refs, std::unique_ptr<state_merger>& merger, std::unique_ptr<apta>& the_apta);
     std::list<refinement*> find_hypothesis(std::list<refinement*>& previous_refs, std::unique_ptr<state_merger>& merger, std::unique_ptr<apta>& the_apta);

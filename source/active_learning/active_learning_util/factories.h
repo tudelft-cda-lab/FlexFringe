@@ -36,7 +36,7 @@
 class algorithm_factory {
   private:
     template<typename T>
-    static std::unique_ptr<algorithm_base> create_algorithm_obj(T&& oracle, const std::shared_ptr<ii_base>& ii_handler);
+    static std::unique_ptr<algorithm_base> create_algorithm_obj(T&& oracle, const std::shared_ptr<ii_base>& ii_handler); // ii_handlers are not allowed to be unique 
 
   public:
     algorithm_factory() = delete;

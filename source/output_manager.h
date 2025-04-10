@@ -22,7 +22,7 @@
  * @brief Manages the output path.
  * 
  */
-class output_manager {
+class output_manager final {
   private:
     inline static std::string outfile_path = ""; 
 

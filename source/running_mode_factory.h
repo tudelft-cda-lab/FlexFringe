@@ -23,7 +23,7 @@
  * @brief (Abstract) base class for all the modes that flexfringe can run.
  * 
  */
-class running_mode_factory {
+class running_mode_factory final {
   public:
     running_mode_factory() = delete;
     static std::unique_ptr<running_mode_base> get_mode();

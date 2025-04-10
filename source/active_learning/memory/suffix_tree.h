@@ -13,16 +13,15 @@
 #ifndef _SUFFIX_TREE_H_
 #define _SUFFIX_TREE_H_
 
-#include <stdexcept>
-#include <unordered_map>
-
 #include <vector>
-#include <unordered_map>
 #include <list>
+#include <unordered_map>
+#include <stack>
+#include <optional>
 
 #include <utility>
-#include <optional>
-#include <stack>
+#include <concepts>
+#include <stdexcept>
 
 struct sf_tree_node {
   private:
@@ -59,8 +58,11 @@ class suffix_tree {
     int last_depth = 0;
 
   public:
-    bool add_suffix(const std::list<int>& suffix);
-    bool contains(const std::list<int>& suffix);
+    template<class T> requires (std::is_same_v<T, std::list<int>> || std::is_same_v<T, std::vector<int>>)
+    bool add_suffix(const T& suffix);
+
+    template<class T> requires (std::is_same_v<T, std::list<int>> || std::is_same_v<T, std::vector<int>>)
+    bool contains(const T& suffix);
 
     std::optional< std::vector<int> > next() noexcept;
     int size() const noexcept { return n_final; }
@@ -77,6 +79,50 @@ class suffix_tree {
     suffix_tree(suffix_tree&& other) = delete;
 };
 
+/**
+ * @brief Adds the suffix to the tree.
+ * 
+ * @param suffix The suffix.
+ * @return True if suffix has not already been added before (if number of suffixes increased by one), else false. 
+ */
+template<typename T> requires (std::is_same_v<T, std::list<int>> || std::is_same_v<T, std::vector<int>>)
+bool suffix_tree::add_suffix(const T& suffix){
+  sf_tree_node* node = root;
 
+  int depth = 0;
+  for(auto symbol: suffix){
+    ++depth;
+
+    if(!node->has_child(symbol)){
+      node_store.push_back(sf_tree_node(depth));
+      sf_tree_node& child = node_store.back();
+
+      node->add_child(symbol, child);
+    }
+    node = node->get_child(symbol);
+  }
+
+  if(!node->is_final()){
+    ++n_final;
+    node->finalize();
+    return true;
+  }
+
+  return false;
+}
+
+template<typename T> requires (std::is_same_v<T, std::list<int>> || std::is_same_v<T, std::vector<int>>)
+bool suffix_tree::contains(const T& suffix){
+  sf_tree_node* node = root;
+
+  for(auto symbol: suffix){
+    if(node->has_child(symbol))
+      sf_tree_node* child = node->get_child(symbol);
+    else
+      return false;
+  }
+
+  return node->is_final();
+}
 
 #endif

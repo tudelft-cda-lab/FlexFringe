@@ -35,161 +35,6 @@ using namespace std;
 using namespace active_learning_namespace;
 
 /**
- * @brief Used for multithreading.
- */
-/*void search_instance::operator()(promise<bool>&& out, std::unique_ptr<state_merger>& merger, std::unique_ptr<apta>& the_apta, const unique_ptr<oracle_base>& oracle, apta_node* red_node, apta_node* blue_node){
-    //out.set_value(ii_handler->check_consistency(the_apta, oracle, red_node, blue_node));
-    static inputdata& id = *inputdata_locator::get(); 
-
-    vector< vector<int> > queries;
-    vector<int> predictions;
-    unordered_set<int> no_pred_idxs;
-
-    auto left_access_trace = red_node->get_access_trace();
-    const active_learning_namespace::pref_suf_t left_prefix = left_access_trace->get_input_sequence(true, false);
-
-    if(ii_handler->has_memoized()){
-        static const vector< vector<int> >& m_suffixes = dynamic_cast<distinguishing_sequence_fill*>(ii_handler.get())->get_m_suffixes(); 
-        for(const auto& suffix: m_suffixes){
-            if(left_prefix.size() + suffix.size() > MAX_LEN){
-                no_pred_idxs.insert(queries.size()+no_pred_idxs.size());
-                continue;
-            }
-
-            vector<int> left_sequence(left_prefix.size() + suffix.size()); 
-            left_sequence.insert(left_sequence.end(), left_prefix.begin(), left_prefix.end());
-            left_sequence.insert(left_sequence.end(), suffix.begin(), suffix.end());
-            
-            queries.push_back(move(left_sequence));
-            if(queries.size() >= MIN_BATCH_SIZE){
-                m_mutex.lock();
-                const sul_response response = oracle->ask_sul(queries, *(inputdata_locator::get()));
-                m_mutex.unlock();
-
-                const vector<int>& answers = response.GET_INT_VEC();
-                //const vector<double>& confidences = response.GET_DOUBLE_VEC();
-
-                int answers_idx = 0;
-                for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
-                    if(no_pred_idxs.contains(i)){
-                        predictions.push_back(-1);
-                        continue;
-                    }
-                    predictions.push_back(answers[answers_idx]);
-                    ++answers_idx;
-                }
-
-                queries.clear();
-                no_pred_idxs.clear();
-            }
-        }
-
-        if(queries.size() > 0){
-            m_mutex.lock();
-            const sul_response response = oracle->ask_sul(queries, *(inputdata_locator::get()));
-            m_mutex.unlock();
-
-            const vector<int>& answers = response.GET_INT_VEC();
-            int answers_idx = 0;
-            for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
-                if(no_pred_idxs.contains(i)){
-                    predictions.push_back(-1);
-                    continue;
-                }
-                predictions.push_back(answers[answers_idx]);
-                ++answers_idx;
-            }
-        }
-    }
-    else{
-        optional< vector<int> > suffix_opt = ds_ptr->next();
-        while(suffix_opt){
-            if(left_prefix.size() + suffix_opt.value().size() > MAX_LEN){
-                no_pred_idxs.insert(queries.size()+no_pred_idxs.size());
-                suffix_opt = ds_ptr->next();
-                continue;
-            }
-
-            const vector<int>& suffix = suffix_opt.value(); 
-            vector<int> left_sequence(left_prefix.size() + suffix.size()); 
-            left_sequence.insert(left_sequence.end(), left_prefix.begin(), left_prefix.end());
-            left_sequence.insert(left_sequence.end(), suffix.begin(), suffix.end());
-            
-            queries.push_back(move(left_sequence));
-            if(queries.size() >= MIN_BATCH_SIZE){
-                m_mutex.lock();
-                const sul_response response = oracle->ask_sul(queries, *(inputdata_locator::get()));
-                m_mutex.unlock();
-
-                const vector<int>& answers = response.GET_INT_VEC();
-                int answers_idx = 0;
-                for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
-                    if(no_pred_idxs.contains(i)){
-                        predictions.push_back(-1);
-                        continue;
-                    }
-                    predictions.push_back(answers[answers_idx]);
-                    ++answers_idx;
-                }
-
-                queries.clear();
-                no_pred_idxs.clear();
-            }
-
-            suffix_opt = ds_ptr->next();
-        }
-
-        if(queries.size() > 0){
-            m_mutex.lock();
-            const sul_response response = oracle->ask_sul(queries, *(inputdata_locator::get()));
-            m_mutex.unlock();
-
-            int answers_idx = 0;
-            const vector<int>& answers = response.GET_INT_VEC();
-            for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
-                if(no_pred_idxs.contains(i)){
-                    predictions.push_back(-1);
-                    continue;
-                }
-                predictions.push_back(answers[answers_idx]);
-                ++answers_idx;
-            }
-        }
-    }
-
-    const auto& memoized_predictions = static_cast<distinguishing_sequence_fill*>(ii_handler.get())->get_memoized_predictions();
-    if(memoized_predictions.size() != predictions.size()){
-        cerr << "Something weird happened." << endl;
-    }
-
-    int agreed = 0;
-    int disagreed = 0;
-    for(int i=0; i<predictions.size(); ++i){
-        if(memoized_predictions[i]==-1 || predictions[i]==-1)
-            continue;
-        else if(memoized_predictions[i] == predictions[i])
-            ++agreed;
-        else
-            ++disagreed;
-    }
-
-    float ratio = static_cast<float>(disagreed) / (static_cast<float>(disagreed) + static_cast<float>(agreed));
-    if(ratio > 0.01){
-        //cout << "Disagreed: " << disagreed << " | agreed: " << agreed << " | ratio: " << ratio << endl;
-        return out.set_value(false);
-    }
-    return out.set_value(true);
-}*/
-
-
-/**
- * Relevant for parallelization.
- */
-bool paul_algorithm::merge_check(shared_ptr<ii_base>& ii_handler, unique_ptr<state_merger>& merger, unique_ptr<oracle_base>& oracle, unique_ptr<apta>& the_apta, apta_node* red_node, apta_node* blue_node){
-    return false; //ii_handler->check_consistency(the_apta, oracle, red_node, blue_node);
-}
-
-/**
  * @brief The strategy to find the best operation as explained in the paper.
  * @return refinement* The best currently possible operation according to the heuristic.
  */
@@ -197,7 +42,7 @@ refinement* paul_algorithm::get_best_refinement(unique_ptr<state_merger>& merger
     const static bool MERGE_WITH_LARGEST = true;
     const static int N_THREADS = 1;
     
-    unordered_set<apta_node*> blue_its; // = state_set(); // state-set is ordered, we don't need that
+    unordered_set<apta_node*> blue_its;
     state_set red_its = state_set();
     
     for (blue_state_iterator it = blue_state_iterator(the_apta->get_root()); *it != nullptr; ++it){
@@ -470,6 +315,12 @@ void paul_algorithm::run(inputdata& id) {
 
     cout << "Initializing ii_handler" << endl;
     ii_handler->initialize(the_apta); // must happen after traces have been added to apta!
+    try{
+        dynamic_cast<paul_heuristic*>(eval.get())->provide_ii_handler(ii_handler);    
+    }
+    catch(...){
+        throw invalid_argument("Cannot provide heuristic with ii_handler. Using paul heuristic?");
+    }
     cout << "ii_handler is initialized" << endl;
 
     const vector<int> alphabet = id.get_alphabet();

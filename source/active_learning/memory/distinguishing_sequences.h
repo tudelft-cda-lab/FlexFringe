@@ -26,12 +26,16 @@ class distinguishing_sequences {
     suffix_tree seq_store; // maps a distinguishing sequence to a node (identified by node->get_number())
 
   public:
-    virtual bool add_sequence(const std::list<int>& s) noexcept;
+    // virtual templates not permitted in current C++ versions, therefore two versions of the same function
+    virtual bool add_suffix(const std::list<int>& s) noexcept;
+    virtual bool add_suffix(const std::vector<int>& s) noexcept;
+
     virtual std::optional< std::vector<int> > next() {
       return seq_store.next();
     }
 
     virtual bool contains(const std::list<int>& s){return seq_store.contains(s);}
+    virtual bool contains(const std::vector<int>& s){return seq_store.contains(s);}
     virtual int size() const noexcept { return seq_store.size(); }
 };
 

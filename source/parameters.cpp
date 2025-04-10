@@ -145,6 +145,7 @@ std::string AL_ORACLE_2 = "";
 std::string AL_SYSTEM_UNDER_LEARNING = "";
 std::string AL_SYSTEM_UNDER_LEARNING_2 = "";
 std::string AL_II_NAME = "";
+std::string AL_II_INITIALIZER_NAME = "";
 
 int AL_START_SYMBOL = -1;
 int AL_END_SYMBOL = -1;
@@ -153,6 +154,7 @@ int AL_MAX_SEARCH_DEPTH = 10;
 int MAX_CEX_LENGTH = 10;
 int AL_NUM_CEX_PARAM = 5000;
 int AL_BATCH_SIZE = 256;
+int AL_LONG_TERM_DEPENDENCY_WINSIZE = 1;
 
 std::string POSTGRESQL_CONNSTRING = "";
 std::string POSTGRESQL_TBLNAME = "";

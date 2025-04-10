@@ -171,7 +171,9 @@ extern std::string AL_ORACLE_2;
 extern std::string AL_SYSTEM_UNDER_LEARNING;
 extern std::string AL_SYSTEM_UNDER_LEARNING_2;
 extern std::string AL_II_NAME;
+extern std::string AL_II_INITIALIZER_NAME;
 extern int AL_BATCH_SIZE;
+extern int AL_LONG_TERM_DEPENDENCY_WINSIZE;
 
 extern int AL_START_SYMBOL;
 extern int AL_END_SYMBOL;

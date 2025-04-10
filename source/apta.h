@@ -6,6 +6,7 @@
 #include <vector>
 #include <set>
 #include <list>
+#include <forward_list>
 #include <map>
 #include <unordered_map>
 #include <string>
@@ -361,6 +362,9 @@ public:
         if(rep->child(c) != 0) return rep->child(c)->find();
         return nullptr;
     };
+
+    
+    std::forward_list<apta_node*> get_unmerged_child_nodes();
 
     std::list<int> get_all_transition_symbols() const {
         std::list<int> res;

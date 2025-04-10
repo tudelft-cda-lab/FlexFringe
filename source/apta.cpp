@@ -581,6 +581,20 @@ set<apta_node*>* apta_node::get_sources(){
 }
 
 /**
+ * @brief Gets the child nodes of this apta node. The child nodes are the nodes of the unmerged apta.
+ */
+forward_list<apta_node*> apta_node::get_unmerged_child_nodes(){
+    forward_list<apta_node*> res;
+    for(guard_map::iterator it = this->guards.begin();it != this->guards.end(); ++it) {
+        apta_node *target = it->second->target;
+        if (target != nullptr && target->source == this) {
+            res.push_front(target);
+        }
+    }
+    return res;
+}
+
+/**
  * @brief Sifts the apta from a given trace on, returns the corresponding state after parsing.
  * Can be used to e.g. find a state using its access trace. 
  * 

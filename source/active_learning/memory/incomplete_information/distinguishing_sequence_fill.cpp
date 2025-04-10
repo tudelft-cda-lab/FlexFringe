@@ -10,7 +10,10 @@
  */
 
 #include "distinguishing_sequence_fill.h"
+
 #include "paul_heuristic.h"
+#include "ds_initializer_factory.h"
+#include "ds_initializer_registration.h"
 #include "parameters.h"
 
 #include "inputdatalocator.h"
@@ -51,7 +54,7 @@ void distinguishing_sequence_fill::pre_compute(list<int>& suffix, unordered_set<
 
   if(l_data->predict_type(nullptr) != r_data->predict_type(nullptr)){
     //if(!ds_ptr->contains(suffix)) // TODO: We can use a bloom filter here for example...
-    ds_ptr->add_sequence(suffix);
+    ds_ptr->add_suffix(suffix);
   }
 
   // first do the right side
@@ -113,6 +116,9 @@ void distinguishing_sequence_fill::pre_compute(list<int>& suffix, unordered_set<
  * @brief Collect all sequences that distinguish the two states.
  */
 void distinguishing_sequence_fill::pre_compute(unique_ptr<apta>& aut, apta_node* left, apta_node* right){
+  if(!collect_suffixes())
+    return;
+
   list<int> suffix; // need to pop from back element, therefore no forward list
   unordered_set<apta_node*> seen_nodes;
   pre_compute(suffix, seen_nodes, aut, left, right, 0);
@@ -316,6 +322,7 @@ bool distinguishing_sequence_fill::distributions_consistent(const std::vector<in
 
   float ratio = static_cast<float>(disagreed) / (static_cast<float>(disagreed) + static_cast<float>(agreed));
   static float threshold = CHECK_PARAMETER;
+  //std::cout << "\n ratio: " << ratio << ", threshold: " << threshold << "size: " << v1.size() << std::endl;
   if(ratio > threshold){
     //cout << "Disagreed: " << disagreed << " | agreed: " << agreed << " | ratio: " << ratio << endl;
     return false;
@@ -346,56 +353,38 @@ bool distinguishing_sequence_fill::check_consistency(unique_ptr<apta>& aut, apta
  * the tree.
  */
 void distinguishing_sequence_fill::initialize(std::unique_ptr<apta>& aut){
-  cout << "Collecting some distinguishing sequences" << endl;
-  const int MAX_INIT_DEPTH = 2;
-  int count = 0;
-
-  stack<apta_node*> l_stack;
-  stack<apta_node*> r_stack;
-
-  l_stack.push(aut->get_root());
-  while(!l_stack.empty()){
-    apta_node* left = l_stack.top();
-    l_stack.pop();
-
-    cout << ++count << ",";
-    cout.flush();
-
-    r_stack.push(aut->get_root());
-    while(!r_stack.empty()){
-      apta_node* right = r_stack.top();
-      r_stack.pop();
-
-      pre_compute(aut, left, right); // collects the sequences
-
-      if(right->get_depth() < MAX_INIT_DEPTH){
-        for(apta_node* n_child : get_child_nodes_apta(right))
-          r_stack.push(n_child);
-      }
-    }
-
-    if(left->get_depth() < MAX_INIT_DEPTH){
-      for(apta_node* n_child : get_child_nodes_apta(left))
-        l_stack.push(n_child);
-    }
-  }
-
-  cout << endl;
+  auto initializer = ds_initializer_factory::get_initializer(AL_II_INITIALIZER_NAME);
+  initializer->init(shared_from_this(), aut);
 }
 
 /**
- * @brief Gets the child nodes of an apta node. The child nodes are the nodes of the unmerged apta.
+ * @brief Adds the sequence given as the vector to the set of distinguishing sequences.
+ * 
+ * @param seq The sequence to add.
  */
-list<apta_node*> distinguishing_sequence_fill::get_child_nodes_apta(apta_node* n){
-  list<apta_node*> res;
-  for(guard_map::iterator it = n->guards.begin();it != n->guards.end(); ++it) {
-    apta_node *target = it->second->target;
-    if (target != nullptr && target->source == n) {
-      res.push_back(target);
-    }
-  }
-  return res;
+void distinguishing_sequence_fill::add_suffix(const std::vector<int>& seq){
+  ds_ptr->add_suffix(seq);
 }
+
+/**
+ * @brief Under some circumstances, suffixes should not be collected anymore at some point.
+ * 
+ * @return true Collect suffixes still.
+ * @return false Disable collecting suffixes.
+ */
+const bool distinguishing_sequence_fill::collect_suffixes() const {
+  bool res = false;
+  try{
+    // if we use this initializer, we already collect a large set of sequences and rely on that
+    res = AL_II_INITIALIZER_NAME != ds_initializer_registration::get_initializer_name(ds_initializer_registration::ds_initializers_t::pre_generate_sequences);
+  }
+  catch(...){
+    throw invalid_argument("Do you have a valid initializer name for the ii_handler?");
+  }
+
+  return res;
+} 
+
 
 
 /**

@@ -1,5 +1,5 @@
 /**
- * @file paul_heuristic.h
+ * @file paul_heuristic_2.h
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
  * @brief 
  * @version 0.1
@@ -9,11 +9,13 @@
  * 
  */
 
-#ifndef __PAUL_HEURISTIC__
-#define __PAUL_HEURISTIC__
+#ifndef __PAUL_HEURISTIC_2__
+#define __PAUL_HEURISTIC_2__
 
 #include "count_types.h"
 #include "ii_base.h"
+
+//#include "source/active_learning/memory/incomplete_information/ii_base.h"
 
 #include <map> // TODO: for debugging only
 #include <memory>
@@ -21,12 +23,12 @@
 class ii_base;
 
 /* The data contained in every node of the prefix tree or DFA */
-class paul_data: public count_data {
+class paul_data_2: public count_data {
 
-  friend class paul_heuristic;
+  friend class paul_heuristic_2;
 
 protected:
-  REGISTER_DEC_DATATYPE(paul_data);
+  REGISTER_DEC_DATATYPE(paul_data_2);
   float lm_confidence = -1; // confidence in prediction. -1 to check if initialized
   
   std::map<float, int> all_confidences; // TODO: for debugging only
@@ -63,16 +65,16 @@ public:
   void undo(evaluation_data* right) override;
 };
 
-class paul_heuristic : public count_driven {
+class paul_heuristic_2 : public count_driven {
 
 private:
   std::shared_ptr<ii_base> ii_handler;
 
 protected:
 
-  int check_for_consistency(paul_data* left, paul_data* right, int mismatch_count=0) const;
+  int check_for_consistency(paul_data_2* left, paul_data_2* right, int mismatch_count=0) const;
 
-  REGISTER_DEC_TYPE(paul_heuristic);
+  REGISTER_DEC_TYPE(paul_heuristic_2);
 
   int n_inferred_inferred_pairs=0;
   int n_inferred_inferred_mismatches=0;

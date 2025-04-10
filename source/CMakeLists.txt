@@ -129,7 +129,26 @@ add_library(Source STATIC
 
 ## create CMakeLists.txt in evaluation directory
 set(cmakelists_eval "evaluation/CMakeLists.txt")
-file(WRITE "${cmakelists_eval}" "add_library(Evaluation STATIC")
+
+# open up parts of the active learning lib. 
+# We want to use those structures to augment some eval-funcs
+file(WRITE "${cmakelists_eval}" "#including those directories enables us to use active learning structures in heuristics as well\n")
+file(APPEND "${cmakelists_eval}" "include_directories(\n")
+file(APPEND "${cmakelists_eval}" "  \"../active_learning/active_learning_util\"\n")
+file(APPEND "${cmakelists_eval}" "  \"../active_learning/memory\"\n")
+file(APPEND "${cmakelists_eval}" "  \"../active_learning/memory/incomplete_information\"\n")
+file(APPEND "${cmakelists_eval}" "  \"../active_learning/system_under_learning\"\n")
+file(APPEND "${cmakelists_eval}" "  \"../active_learning/system_under_learning/neural_network_suls\"\n")
+file(APPEND "${cmakelists_eval}" "  \"../active_learning/system_under_learning/benchmark_parsers\"\n")
+file(APPEND "${cmakelists_eval}" ")\n\n\n")
+
+#  "${CMAKE_CURRENT_SOURCE_DIR}/../active_learning//oracle/cex_search_strategies"
+#  "${CMAKE_CURRENT_SOURCE_DIR}/../active_learning//oracle/cex_conflict_search"
+#  "${CMAKE_CURRENT_SOURCE_DIR}/../active_learning//oracle/conflict_detectors"
+#  "${CMAKE_CURRENT_SOURCE_DIR}/../active_learning//active_learning_util"
+
+#file(WRITE "${cmakelists_eval}" "add_library(Evaluation STATIC")
+file(APPEND "${cmakelists_eval}" "add_library(Evaluation STATIC")
 file(GLOB CPPFiles "${CMAKE_CURRENT_SOURCE_DIR}/evaluation/*.cpp")
 
 foreach (Filepath ${Files})

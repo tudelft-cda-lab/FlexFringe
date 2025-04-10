@@ -1,3 +1,14 @@
+#including those directories enables us to use active learning structures in heuristics as well
+include_directories(
+  "../active_learning/active_learning_util"
+  "../active_learning/memory"
+  "../active_learning/memory/incomplete_information"
+  "../active_learning/system_under_learning"
+  "../active_learning/system_under_learning/neural_network_suls"
+  "../active_learning/system_under_learning/benchmark_parsers"
+)
+
+
 add_library(Evaluation STATIC
             aic.h
             aic.cpp
@@ -35,6 +46,8 @@ add_library(Evaluation STATIC
             overlap4logs.cpp
             paul_heuristic.h
             paul_heuristic.cpp
+            paul_heuristic_2.h
+            paul_heuristic_2.cpp
             rti+.h
             rti+.cpp
             space-saving.h
