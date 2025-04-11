@@ -26,6 +26,8 @@ in the main directory to build the executable named *flexfringe*. There is also 
 
 ## How to run it ##
 
+**NOTE:** This branch of FlexFringe contains the code for the streaming mode of FlexFringe. Running the streaming mode is different from the default version of FlexFringe. Please have a look at the `docs/streaming_mode.md` file for more information.
+
 Run ./flexfringe --help to get help.
 
 We provide several .ini files as a shortcut to storing commonly used settings.
