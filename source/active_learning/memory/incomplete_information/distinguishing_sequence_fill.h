@@ -21,7 +21,8 @@
 #include <list>
 #include <unordered_set>
 
-class distinguishing_sequence_fill : public ii_base, std::enable_shared_from_this<distinguishing_sequence_fill> {
+class distinguishing_sequence_fill : public ii_base, 
+                                     public std::enable_shared_from_this<distinguishing_sequence_fill>{
   private:
     std::unique_ptr<distinguishing_sequences> ds_ptr = std::make_unique<distinguishing_sequences>();
   

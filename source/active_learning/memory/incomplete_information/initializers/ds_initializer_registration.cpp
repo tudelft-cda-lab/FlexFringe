@@ -23,7 +23,7 @@ string_view ds_initializer_registration::get_initializer_name(const ds_initializ
   // warning: keys must match with ds_initializers_t
   static std::unordered_map<int, std::string> initializer_name_map {
     {0, "ds_init_collect_from_apta"},
-    {1, "ds_init_pre_generate_sequence"}
+    {1, "ds_init_pre_generate_sequences"}
   };
 
   string_view res;

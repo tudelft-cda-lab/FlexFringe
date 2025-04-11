@@ -30,7 +30,7 @@ unique_ptr<ds_initializer_base> ds_initializer_factory::get_initializer(string_v
   else if(name == ds_initializer_registration::get_initializer_name(ds_init_t::collect_from_apta)){
     return make_unique<ds_initializer_collect_from_apta>();
   }
-  else if(name == ds_initializer_registration::get_initializer_name(ds_init_t::collect_from_apta)){
+  else if(name == ds_initializer_registration::get_initializer_name(ds_init_t::pre_generate_sequences)){
     return make_unique<ds_initializer_pre_generate_sequences>();
   }
   else{

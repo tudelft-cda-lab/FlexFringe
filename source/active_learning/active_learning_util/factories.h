@@ -91,7 +91,7 @@ class oracle_factory {
 };
 
 /**
- * @brief 
+ * @brief Gets the incomplete information handler.
  */
 class ii_handler_factory {
   private:
