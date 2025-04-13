@@ -49,9 +49,11 @@ class distinguishing_sequence_fill_fast : public distinguishing_sequence_fill {
       
       public:
         const auto& get_suffixes() const { return m_suffixes; }
+        int size() const noexcept { return m_suffixes.size(); }
 
         template<typename T> requires (std::is_same_v<T, std::vector<int>> || std::is_same_v<T, std::list<int>>)
         void add_suffix(const T& seq);
+
     };
 
     suffixes_t m_suffixes;
@@ -61,6 +63,8 @@ class distinguishing_sequence_fill_fast : public distinguishing_sequence_fill {
 
     std::vector<int> predict_node_with_automaton(apta& aut, apta_node* node) override;
     std::vector<int> predict_node_with_sul(apta& aut, apta_node* node) override;
+
+    const int size() const override {return m_suffixes.size();}
 
   public:
     distinguishing_sequence_fill_fast(const std::shared_ptr<sul_base>& sul) : distinguishing_sequence_fill(sul){};

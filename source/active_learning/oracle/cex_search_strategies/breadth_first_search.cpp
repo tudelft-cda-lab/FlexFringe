@@ -64,7 +64,7 @@ std::vector<int> bfs_strategy::get_next_vector(const vector<int>& alphabet) {
         }
         else{
             const int idx = vector_idxs[depth];
-            vector_idxs[depth] = alphabet[idx+1];
+            vector_idxs[depth] = idx+1;
         }
 
         return get_vector_from_indices(alphabet, true);
@@ -72,7 +72,7 @@ std::vector<int> bfs_strategy::get_next_vector(const vector<int>& alphabet) {
     else{
         // we increase only the last one and that's it
         const int idx = vector_idxs[vector_idxs.size()-1];
-        vector_idxs[vector_idxs.size()-1] = alphabet[idx+1];
+        vector_idxs[vector_idxs.size()-1] = idx+1;
         
         return get_vector_from_indices(alphabet, false);
     }
