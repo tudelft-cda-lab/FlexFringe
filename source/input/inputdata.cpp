@@ -1,11 +1,12 @@
 #include "input/inputdata.h"
 #include "apta.h"
 #include "stringutil.h"
+#include "misc/printutil.h"
 
 #include <unordered_map>
 #include <unordered_set>
 #include <algorithm>
-#include "misc/printutil.h"
+#include <ranges>
 #include <sstream>
 
 //#include "inputdatalocator.h"
@@ -160,6 +161,18 @@ const vector<int> inputdata::get_types() const {
 }
 
 int inputdata::get_reverse_type(std::string a) {
+    if(!r_types.contains(a)){
+        unordered_set<int> known_r_types;
+        for(const auto rt: r_types | std::views::values)
+            known_r_types.insert(rt);
+        
+        int type_maybe = 0;
+        while(known_r_types.contains(type_maybe)) 
+            type_maybe++;
+        
+        r_types[a] = type_maybe;
+    }
+
     return r_types[a];
 }
 

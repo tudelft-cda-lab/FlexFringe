@@ -34,18 +34,11 @@ void nn_sul_base::print_p_error() const {
 }
 
 /**
- * @brief Initialize the types to 0 and 1. Which is which depends on how the network was trained.
- * Normally for binary output 
- * 
- * TODO: Is there a better way to deal with this?
- *
+ * @brief Legacy, originally used to give generic types.
+ * Will probably be used to give a better UX later on.
  */
 void nn_sul_base::init_types() const {
-    string t1 = std::string("Type_0");
-    string t2 = std::string("Type_1");
-
-    inputdata_locator::get()->add_type(t1);
-    inputdata_locator::get()->add_type(t2);
+    return;
 }
 
 /**

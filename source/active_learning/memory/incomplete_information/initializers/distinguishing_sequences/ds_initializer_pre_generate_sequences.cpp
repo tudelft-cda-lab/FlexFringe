@@ -35,13 +35,8 @@ void ds_initializer_pre_generate_sequences::recurse_layer(/*out*/ vector<int>& c
 
     recurse_layer(current_vector, depth+1, max_depth, alphabet);
 
-    if(depth == max_depth-1){
+    if(depth == max_depth-1)
         ii_handler->add_suffix(current_vector);
-/*         cout << "Adding ";
-        for(auto x: current_vector)
-            cout << x << " ";
-        cout << endl; */
-    }
   }
 }
 
