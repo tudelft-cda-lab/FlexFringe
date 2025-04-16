@@ -17,146 +17,65 @@ REGISTER_DEF_DATATYPE(paul_data);
 
 void paul_data::print_state_label(std::iostream& output){
     count_data::print_state_label(output);
-/*     output << "\nc : " << std::to_string(lm_confidence) << " | nm : " << std::to_string(num_merged) << "\n";
-
-    for(auto c: all_confidences){
-        output << std::to_string(c.first) << " | " << std::to_string(c.second) << "\n";
-    } */
 };
 
 void paul_data::add_tail(tail* t) {
-    // protects against multiple types that can result from distinguishing sequences
-    if(final_counts.size() > 0)
-        return;
-
     count_data::add_tail(t);
 }
 
-void paul_data::update(evaluation_data* right){
-    auto r_data = static_cast<paul_data*>(right);
-
-    for(auto c: r_data->all_confidences){
-        if(c.first == -1) continue;
-
-        float q_c = map_confidence(c.first);
-        if(all_confidences.contains(q_c))
-            all_confidences[q_c] += c.second;
-        else
-            all_confidences[q_c] = c.second;
+/**
+ * @brief Two ways. If we have real labeled data, e.g. from the training data, then we 
+ * use that information. If not, we check for the inferred type. If both fail we omit this one.
+ */
+int paul_data::predict_type(tail* t) {
+    if(final_counts.size()>0)
+        return count_data::predict_type(t);
+    
+    // predict the maximum
+    int res = 0;
+    double max_count = -1;
+    for(int i = 0; i < inputdata_locator::get()->get_types_size(); ++i){ // -1 is the unknown type
+        double prob = predict_type_score(i);
+        if(max_count == -1 || max_count < prob){
+            max_count = prob;
+            res = i;
+        }
     }
-
-    if(!this->label_is_queried()){
-        return;
-    }
-    else if(!r_data->label_is_queried()){ // the right one is from real data, while left (this) is not
-
-        if(num_merged==0){
-            final_counts_backup = final_counts; // do a copy
-            final_counts.clear();
-        }
-
-        for(auto & final_count : r_data->final_counts){
-            int type = final_count.first;
-            int count = final_count.second;
-            if(final_counts.contains(type)){
-                final_counts[type] += count;
-            } else {
-                final_counts[type] = count;
-            }
-        }
-
-        for(auto & path_count : r_data->path_counts){
-            int type = path_count.first;
-            int count = path_count.second;
-            if(path_counts.contains(type)){
-                path_counts[type] += count;
-            } else {
-                path_counts[type] = count;
-            }
-        }
-
-        total_paths += r_data->total_paths;
-        total_final += r_data->total_final;
-
-    }
-    else{ // both nodes are inferred by the transformer
-        for(auto & final_count : r_data->final_counts){
-            int type = final_count.first;
-            int count = final_count.second;
-            if(final_counts.contains(type)){
-                final_counts[type] += count;
-            } else {
-                final_counts[type] = count;
-            }
-        }
-
-        for(auto & path_count : r_data->path_counts){
-            int type = path_count.first;
-            int count = path_count.second;
-            if(path_counts.contains(type)){
-                path_counts[type] += count;
-            } else {
-                path_counts[type] = count;
-            }
-        }
-        
-        total_paths += r_data->total_paths;
-        total_final += r_data->total_final;
-    }
-
-    num_merged++;
+    return res;
 }
 
+void paul_data::update(evaluation_data* right){
+    count_data::update(right);
 
+    auto r_data = static_cast<paul_data*>(right);
+    for(auto const& [type, count]: r_data->inferred_final_counts){
+        inferred_final_counts[type] += count;
+        inferred_total_final += count;
+    }
+}
+
+/**
+ * @brief Does what you think it does.
+ */
+void paul_data::set_confidence(const float confidence) noexcept { 
+  lm_confidence = confidence;
+};
+
+/**
+ * @brief Does what you think it does.
+ */
+void paul_data::add_inferred_type(const int t) noexcept{
+    inferred_final_counts[t]++;
+    inferred_total_final++;
+}
 
 void paul_data::undo(evaluation_data* right){
+    count_data::undo(right);
+
     auto r_data = static_cast<paul_data*>(right);
-    //this->lm_confidence -= r_data->lm_confidence;
-    
-    for(auto c: r_data->all_confidences){
-        if(c.first == -1) continue;
-
-        float q_c = map_confidence(c.first);
-        all_confidences[q_c] -= c.second;
-    }
-
-    num_merged--;
-    if(!this->label_is_queried()){
-        return;
-    }
-
-    else if(!r_data->label_is_queried()){ // the right one is from real data, while left (this) is inferred
-        if(num_merged == 0){
-            final_counts = final_counts_backup;
-            return;
-        }
-
-        for(auto & final_count : r_data->final_counts){
-            int type = final_count.first;
-            int count = final_count.second;
-            final_counts[type] -= count;
-        }
-        for(auto & path_count : r_data->path_counts){
-            int type = path_count.first;
-            int count = path_count.second;
-            path_counts[type] -= count;
-        }
-        total_paths -= r_data->total_paths;
-        total_final -= r_data->total_final;
-    }
-    else{ // both are inferred
-        for(auto & final_count : r_data->final_counts){
-            int type = final_count.first;
-            int count = final_count.second;
-            final_counts[type] -= count;
-        }
-        for(auto & path_count : r_data->path_counts){
-            int type = path_count.first;
-            int count = path_count.second;
-            path_counts[type] -= count;
-        }
-        total_paths -= r_data->total_paths;
-        total_final -= r_data->total_final;
+    for(auto const& [type, count]: r_data->inferred_final_counts){
+        inferred_final_counts[type] -= count;
+        inferred_total_final -= count;
     }
 }
 
@@ -191,26 +110,13 @@ bool paul_heuristic::consistent(state_merger *merger, apta_node* left, apta_node
     auto* l = (paul_data*)left->get_data();
     auto* r = (paul_data*)right->get_data();  
 
-/*     if(l->label_is_queried() && r->label_is_queried()){
-        n_inferred_inferred_mismatches = check_for_consistency(l, r, n_inferred_inferred_mismatches);
-        ++n_inferred_inferred_pairs;
-
-        return true;
-    }
-    else if(l->label_is_queried() || r->label_is_queried()){
-        n_real_inferred_mismatches = check_for_consistency(l, r, n_real_inferred_mismatches);
-        ++n_real_inferred_pairs; 
-
-        return true;
-    } */
-
     // real_real must match, else inconsistent
     if(check_for_consistency(l, r) > 0){
         inconsistency_found = true;
         return false;
     }
 
-    const static int MAX_C_DEPTH = -1;
+/*     const static int MAX_C_DEPTH = -1;
     if(MAX_C_DEPTH < 0 || depth <= MAX_C_DEPTH){
         auto l_distribution = ii_handler->predict_node_with_sul(*(merger->get_aut()), left);
         auto r_distribution = ii_handler->predict_node_with_sul(*(merger->get_aut()), right);
@@ -220,7 +126,7 @@ bool paul_heuristic::consistent(state_merger *merger, apta_node* left, apta_node
             inconsistency_found = true;
             return false;
         }
-    }
+    } */
 
     ++n_real_real_pairs;
     return true;

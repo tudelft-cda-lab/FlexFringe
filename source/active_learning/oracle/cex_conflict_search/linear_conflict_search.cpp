@@ -26,7 +26,12 @@ using namespace std;
 pair< vector<int>, sul_response> linear_conflict_search::get_conflict_string(const vector<int>& cex, apta& hypothesis, inputdata& id) {
   current_substring.clear();
 
-  bool resp = conflict_detector->creates_conflict(current_substring, hypothesis, id).first;
+  bool resp = false;
+  if(AL_TEST_EMTPY_STRING) // IMPORTANT: The underlying oracle also needs to check this
+    resp = conflict_detector->creates_conflict(current_substring, hypothesis, id).first;
+  else if(!AL_TEST_EMTPY_STRING && cex.empty())
+    throw invalid_argument("WARNING: al_test_empty_string set to false, but oracle tests empty string. Check your implementation.");
+  
   while(!resp){ // works because cex has been determined to lead to conflict already
     update_current_substring(cex);
     resp = conflict_detector->creates_conflict(current_substring, hypothesis, id).first;

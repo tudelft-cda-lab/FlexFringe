@@ -172,21 +172,22 @@ extern std::string AL_SYSTEM_UNDER_LEARNING;
 extern std::string AL_SYSTEM_UNDER_LEARNING_2;
 extern std::string AL_II_NAME;
 extern std::string AL_II_INITIALIZER_NAME;
+
 extern int AL_BATCH_SIZE;
 extern int AL_LONG_TERM_DEPENDENCY_WINSIZE;
-
 extern int AL_START_SYMBOL;
 extern int AL_END_SYMBOL;
 extern std::string AL_CEX_SEARCH_STRATEGY;
 extern int MAX_CEX_LENGTH;
 extern int AL_NUM_CEX_PARAM;
+extern int AL_MAX_SEARCH_DEPTH;
+extern int AL_TEST_EMTPY_STRING;
 
 extern std::string POSTGRESQL_CONNSTRING;
 extern std::string POSTGRESQL_TBLNAME;
 extern bool POSTGRESQL_DROPTBLS;
 
-extern int AL_MAX_SEARCH_DEPTH;
-extern int AL_NUM_CEX_PARAM;
+
 
 extern std::string PRINT_MODEL_PREFIX; // TODO: delete this one
 

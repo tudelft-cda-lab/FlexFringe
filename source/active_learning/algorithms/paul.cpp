@@ -244,25 +244,6 @@ void paul_algorithm::proc_counterex(inputdata& id, unique_ptr<apta>& the_apta, c
     vector<int> substring;
     apta_node* n = the_apta->get_root();
 
-    if(counterex.size()==0){ // special case: Train data had no empty string. TODO: introduce a flag for this?
-        vector< vector<int> > query(1);
-        query[0] = substring;
-        const sul_response res = oracle->ask_sul(query, id);
-
-        int reverse_type = res.GET_INT_VEC()[0];
-        double confidence = res.GET_DOUBLE_VEC()[0];
-        assert(res.GET_INT_VEC().size() == 1);
-
-        trace* new_trace = active_learning_namespace::vector_to_trace(substring, id, reverse_type);
-        id.add_trace_to_apta(new_trace, the_apta.get(), false);
-
-        paul_data* data;
-        data = dynamic_cast<paul_data*>(n->get_data());
-        data->set_confidence(confidence);
-
-        return;
-    }
-
     for (auto s : counterex) {
         substring.push_back(s);
         trace* parse_trace = vector_to_trace(substring, id, 0); // TODO: inefficient like this, since we redo traces from scratch again. Sidenote: 0 is a dummy type that does not matter
@@ -287,9 +268,11 @@ void paul_algorithm::proc_counterex(inputdata& id, unique_ptr<apta>& the_apta, c
             n_child = active_learning_namespace::get_child_node(n, t);
             assert(n_child != nullptr);
 
-            paul_data* data;
-            data = dynamic_cast<paul_data*>(n_child->get_data());
-            data->set_confidence(confidence);
+            paul_data* data = dynamic_cast<paul_data*>(n_child->get_data());
+            if(!data->has_type()){
+                data->set_confidence(confidence);
+                data->add_inferred_type(reverse_type);
+            }
         }
 
         n = n_child;
@@ -312,6 +295,14 @@ void paul_algorithm::run(inputdata& id) {
     
     id.add_traces_to_apta(the_apta.get());
     eval->initialize_after_adding_traces(merger.get());
+
+    const auto& rtypes = id.get_r_types();
+    cout << "\nType prediction mapping is as follows:\n";
+    for(auto& [k, v]: rtypes){
+        cout << ": " << k << " : " << v << "\n";
+    }
+    cout << endl;
+
 
     cout << "Initializing ii_handler" << endl;
     ii_handler->initialize(the_apta); // must happen after traces have been added to apta!

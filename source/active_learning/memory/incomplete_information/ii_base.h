@@ -27,6 +27,12 @@ class ii_base {
   protected:
     std::shared_ptr<sul_base> sul;
 
+    enum class heuristic_type{
+      UNINITIALIZED,
+      PAUL_H,
+      OTHER
+    };
+
   public:
     ii_base(const std::shared_ptr<sul_base>& sul) : sul(sul){};
 

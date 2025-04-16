@@ -29,10 +29,8 @@ protected:
   REGISTER_DEC_DATATYPE(paul_data);
   float lm_confidence = -1; // confidence in prediction. -1 to check if initialized
   
-  std::map<float, int> all_confidences; // TODO: for debugging only
-  int num_merged = 0; // TODO: delete?
-
-  num_map final_counts_backup;
+  num_map inferred_final_counts;    
+  int inferred_total_final;
 
   // TODO: delete function
   inline float map_confidence(const float c){
@@ -46,18 +44,17 @@ protected:
 public:
   void print_state_label(std::iostream& output) override;
 
-  void set_confidence(const float confidence) noexcept { 
-    lm_confidence = confidence;
-    float q_c = map_confidence(confidence);
-    all_confidences[confidence] = 1; 
-  };
+  void set_confidence(const float confidence) noexcept;
+  void add_inferred_type(const int t) noexcept;
 
   void add_tail(tail* t) override;
 
   float get_confidence() const noexcept { return lm_confidence; };
 
   inline bool has_type() const noexcept { return num_final() > 0; }
-  inline bool label_is_queried() const noexcept { return lm_confidence != -1; }
+  inline bool label_is_queried() const noexcept { return num_final() == 0; }
+
+  int predict_type(tail* t) override;
 
   void update(evaluation_data* right) override;
   void undo(evaluation_data* right) override;
@@ -65,10 +62,8 @@ public:
 
 class paul_heuristic : public count_driven {
 
-private:
-  std::shared_ptr<ii_base> ii_handler;
-
 protected:
+  std::shared_ptr<ii_base> ii_handler;
 
   int check_for_consistency(paul_data* left, paul_data* right, int mismatch_count=0) const;
 
