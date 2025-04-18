@@ -15,7 +15,6 @@
 #include "base_oracle.h"
 #include "parameters.h"
 
-#include "linear_conflict_search.h"
 #include "type_overlap_conflict_detector.h"
 #include "suffix_tree.h"
 
@@ -54,8 +53,8 @@ class paul_oracle : public base_oracle {
       if(!ii_handler)
         throw std::invalid_argument("ERROR: ii_handler not provided to paul oracle, but it depends on it.");
 
-      conflict_detector = std::make_shared<type_overlap_conflict_detector>(sul, ii_handler);
-      conflict_searcher = std::make_unique<linear_conflict_search>(conflict_detector);
+      //conflict_detector = conflict_detector_factory::create_detector(sul); // TODO: perhaps use the one with the ii_handler?
+      //conflict_searcher = std::make_unique<linear_conflict_search>(conflict_detector);
       
       tested_strings = std::make_unique<suffix_tree>();
     };

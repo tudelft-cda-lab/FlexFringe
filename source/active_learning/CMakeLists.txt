@@ -94,6 +94,8 @@ add_library(ActiveLearning STATIC
             oracle/cex_conflict_search/binary_conflict_search.cpp
 
             # conflict detectors
+            oracle/conflict_detectors/conflict_detector_factory.h
+            oracle/conflict_detectors/conflict_detector_factory.cpp
             oracle/conflict_detectors/conflict_detector_base.h
             oracle/conflict_detectors/conflict_detector_base.cpp
             oracle/conflict_detectors/type_conflict_detector.h

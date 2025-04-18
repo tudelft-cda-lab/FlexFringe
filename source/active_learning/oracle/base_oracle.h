@@ -15,8 +15,10 @@
 #include "parameters.h"
 #include "cex_search_strategies/cex_search_strategy_factory.h" // TODO: won't eat those two without the path. Why?
 #include "cex_conflict_search/conflict_search_base.h" // TODO: won't eat those two without the path. Why?
-#include "conflict_detectors/conflict_detector_base.h" // TODO: won't eat those two without the path. Why?
+#include "conflict_detectors/conflict_detector_factory.h" // TODO: won't eat those two without the path. Why?
+
 #include "sul_base.h"
+#include "linear_conflict_search.h"
 
 #include "apta.h"
 #include "state_merger.h"
@@ -42,7 +44,9 @@ class base_oracle {
 
   public:
     base_oracle(const std::shared_ptr<sul_base>& sul) : sul(sul) {
+      conflict_detector = conflict_detector_factory::create_detector(sul);
       cex_search_strategy = cex_search_strategy_factory::create_search_strategy();
+      conflict_searcher = std::make_unique<linear_conflict_search>(conflict_detector);
     }
 
     // For logic behind this see e.g. https://stackoverflow.com/a/10001573/11956515
