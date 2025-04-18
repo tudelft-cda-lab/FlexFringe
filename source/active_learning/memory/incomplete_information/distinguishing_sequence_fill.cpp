@@ -299,7 +299,7 @@ vector<int> distinguishing_sequence_fill::predict_node_with_automaton(apta& aut,
 /**
  * @brief Avoids duplicate code.
  */
-bool distinguishing_sequence_fill::distributions_consistent(const std::vector<int>& v1, const std::vector<int>& v2) const {
+bool distinguishing_sequence_fill::distributions_consistent(const std::vector<int>& v1, const std::vector<int>& v2) {
   if(v1.size() != v2.size())
     throw runtime_error("Something weird happened in predictions");
   
@@ -321,12 +321,16 @@ bool distinguishing_sequence_fill::distributions_consistent(const std::vector<in
   }
 
   float ratio = static_cast<float>(disagreed) / (static_cast<float>(disagreed) + static_cast<float>(agreed));
+
   static float threshold = CHECK_PARAMETER;
   //std::cout << "\n ratio: " << ratio << ", threshold: " << threshold << "size: " << v1.size() << std::endl;
   if(ratio > threshold){
-    //cout << "Disagreed: " << disagreed << " | agreed: " << agreed << " | ratio: " << ratio << endl;
+    last_overlap = 0;
+    cout << "Disagreed: " << disagreed << " | agreed: " << agreed << " | ratio: " << ratio << endl;
     return false;
   }
+  
+  last_overlap = 1-ratio;
   return true;
 }
 
@@ -346,6 +350,13 @@ void distinguishing_sequence_fill::pre_compute(unique_ptr<apta>& aut, apta_node*
 bool distinguishing_sequence_fill::check_consistency(unique_ptr<apta>& aut, apta_node* left, apta_node* right){
   vector<int> predictions = predict_node_with_sul(*aut, left);
   return distributions_consistent(memoized_predictions, predictions);
+}
+
+/**
+ * @brief Computes the overlap and returns it.
+ */
+double distinguishing_sequence_fill::get_score(){
+  return last_overlap;
 }
 
 /**

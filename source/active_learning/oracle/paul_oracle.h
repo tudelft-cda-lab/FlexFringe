@@ -48,6 +48,8 @@ class paul_oracle : public base_oracle {
     inline resp_t get_sul_response(const std::vector< std::vector<int> >& query_string, inputdata& id) const;
     inline bool check_test_string_interesting(const double confidence) const noexcept;
 
+    std::optional<apta_node*> get_next_blue_node(std::unique_ptr<apta>& the_apta);
+
   public:
     paul_oracle(const std::shared_ptr<sul_base>& sul, const std::shared_ptr<ii_base>& ii_handler) : base_oracle(sul) {
       if(!ii_handler)

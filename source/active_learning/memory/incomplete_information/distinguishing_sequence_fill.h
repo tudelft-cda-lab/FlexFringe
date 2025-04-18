@@ -31,6 +31,8 @@ class distinguishing_sequence_fill : public ii_base,
     const int MAX_LEN = AL_MAX_SEARCH_DEPTH;
     const int LTD_LENGTH = -1; // window size of long term dependency
 
+    double last_overlap = 0;
+
     std::vector<int> memoized_predictions;
 
     virtual void pre_compute(std::list<int>& suffix, std::unordered_set<apta_node*>& seen_nodes, std::unique_ptr<apta>& aut, apta_node* left, apta_node* right, const int depth);
@@ -40,7 +42,7 @@ class distinguishing_sequence_fill : public ii_base,
     std::vector<int> predict_node_with_automaton(apta& aut, apta_node* node) override;
     std::vector<int> predict_node_with_sul(apta& aut, apta_node* node) override;
 
-    bool distributions_consistent(const std::vector<int>& v1, const std::vector<int>& v2) const override;
+    bool distributions_consistent(const std::vector<int>& v1, const std::vector<int>& v2) override;
 
   public:
     distinguishing_sequence_fill(const std::shared_ptr<sul_base>& sul) 
@@ -52,6 +54,8 @@ class distinguishing_sequence_fill : public ii_base,
     void pre_compute(std::unique_ptr<apta>& aut, apta_node* node) override;
     void pre_compute(std::unique_ptr<apta>& aut, apta_node* left, apta_node* right) override;
     bool check_consistency(std::unique_ptr<apta>& aut, apta_node* left, apta_node* right) override;
+    double get_score() override;
+
 
     const int size() const override {return ds_ptr->size();}
     

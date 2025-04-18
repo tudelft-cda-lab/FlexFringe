@@ -62,6 +62,11 @@ class ii_base {
     virtual bool check_consistency(std::unique_ptr<apta>& aut, apta_node* left, apta_node* right) = 0;
 
     /**
+     * @brief Used e.g. by distinguishing sequences. Can be used to set the score of a refinement.
+     */
+    virtual double get_score(){};
+
+    /**
      * @brief This function completes a single node with the sul.
      * 
      * An example use case would be when the train set lacks prefixes to sequences it actually contains. In the APTA those will be unlabelled states 
@@ -94,7 +99,7 @@ class ii_base {
      * @brief A function determining whether the distributions as gained from predict_node_with_automaton
      * and predict_node_with_sul are consistent.
      */
-    virtual bool distributions_consistent(const std::vector<int>& v1, const std::vector<int>& v2) const {
+    virtual bool distributions_consistent(const std::vector<int>& v1, const std::vector<int>& v2) {
       throw std::invalid_argument("This ii-handler does not support distributions_consistent function");
     }
 };

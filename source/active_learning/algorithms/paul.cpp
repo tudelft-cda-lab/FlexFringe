@@ -25,7 +25,6 @@
 #include "state_merger.h"
 
 #include <list>
-#include <unordered_set>
 
 // for the threading
 #include <functional>
@@ -35,64 +34,46 @@ using namespace std;
 using namespace active_learning_namespace;
 
 /**
- * @brief The strategy to find the best operation as explained in the paper.
- * @return refinement* The best currently possible operation according to the heuristic.
+ * @brief Checks if blue node has any merge partner among the red nodes, given by red_its. 
+ * If blue node does not find a merge partner, then return a nullptr.
  */
-refinement* paul_algorithm::get_best_refinement(unique_ptr<state_merger>& merger, unique_ptr<apta>& the_apta){
-    const static bool MERGE_WITH_LARGEST = true;
+refinement* paul_algorithm::check_blue_node_for_merge_partner(apta_node* blue_node, unique_ptr<state_merger>& merger, unique_ptr<apta>& the_apta,
+                                                              const state_set& red_its){
     const static int N_THREADS = 1;
-    
-    unordered_set<apta_node*> blue_its;
-    state_set red_its = state_set();
-    
-    for (blue_state_iterator it = blue_state_iterator(the_apta->get_root()); *it != nullptr; ++it){
-        auto blue_node = *it;
-        if(blue_node->get_size() != 0) blue_its.insert(blue_node);
-    }
 
-    for (red_state_iterator it = red_state_iterator(the_apta->get_root()); *it != nullptr; ++it){
-        auto red_node = *it;
-        if(red_node->get_size() != 0) red_its.insert(red_node);
+    for(apta_node* red_node: red_its){
+        ii_handler->pre_compute(the_apta, red_node, blue_node);
     }
+    ii_handler->pre_compute(the_apta, blue_node);
 
     refinement_set rs;
-    for (auto blue_node: blue_its) {
-        
-        // pre-compute on all pairs to make pre_compute of blue node consistent with all the others
-        //if(!ii_handler->has_memoized() && ii_handler->size() < 400){
-            for(apta_node* red_node: red_its){
-                ii_handler->pre_compute(the_apta, red_node, blue_node);
+    bool mergeable = false;
+    if(N_THREADS == 1){
+        for(apta_node* red_node: red_its){
+            refinement* ref = merger->test_merge(red_node, blue_node);
+            if(ref == nullptr){
+                continue;
             }
-        //}
-        //else if(!ii_handler->has_memoized()){
-        //    ii_handler->memoize();
-        //}
+            // we only want to add data if they appear consistent so far
+            if(!ii_handler->check_consistency(the_apta, red_node, blue_node)){
+                continue;
+            }
+            
+            ref->score = ii_handler->get_score();
+            if(ref->score > 0){
+                rs.insert(ref);
+                mergeable = true;
+            }
+            else{
+                mem_store::delete_refinement(ref);
+            }
 
-        bool mergeable = false;
-        ii_handler->pre_compute(the_apta, blue_node);
-
-        if(N_THREADS == 1){
-            for(apta_node* red_node: red_its){
-                refinement* ref = merger->test_merge(red_node, blue_node);
-                if(ref == nullptr) continue;
-
-                // we only want to add data if they appear consistent so far
-                if(!ii_handler->check_consistency(the_apta, red_node, blue_node)){
-                    continue;
-                }
-                
-                if(ref->score > 0){ // TODO: why does it need to be larger than 0?
-                    rs.insert(ref); // TODO: should we erase the refs somewhere as well?
-                    mergeable = true;
-                }
-                else{
-                    mem_store::delete_refinement(ref);
-                }
-                if(MERGE_WITH_LARGEST && mergeable)
-                    break;
+            if(MERGE_WITH_LARGEST && mergeable){
+                //return *(rs.begin());
             }
         }
-        else{/*
+    }
+    else{/*
             static vector<search_instance> search_instances(N_THREADS); // avoid redundant reconstruction of objects
 
             vector<thread> threads;
@@ -143,9 +124,79 @@ refinement* paul_algorithm::get_best_refinement(unique_ptr<state_merger>& merger
                 }
             }*/
         }
+    
+    refinement* r = nullptr;
+    if (!rs.empty()){
+        r = *(rs.begin());
+        for(auto it = rs.begin(); it != rs.end(); ++it){
+            auto rf = *it;
+            if(r != rf) rf->erase();
+        }
+    }
+
+    return r;
+}
+
+/**
+ * @brief The strategy to find the best operation as explained in the paper.
+ * @return refinement* The best currently possible operation according to the heuristic.
+ */
+refinement* paul_algorithm::get_best_refinement(unique_ptr<state_merger>& merger, unique_ptr<apta>& the_apta){
+
+    state_set red_its = state_set();
+    unordered_set<apta_node*> blue_its;
+    static unordered_set<apta_node*> non_mergeable_blue_its;
+
+    for (blue_state_iterator it = blue_state_iterator(the_apta->get_root()); *it != nullptr; ++it){
+        auto blue_node = *it;
+        if(blue_node->get_size() != 0 && !non_mergeable_blue_its.contains(blue_node)) blue_its.insert(blue_node);
+    }
+
+    for (red_state_iterator it = red_state_iterator(the_apta->get_root()); *it != nullptr; ++it){
+        auto red_node = *it;
+        if(red_node->get_size() != 0) red_its.insert(red_node);
+    }
+
+/*     {
+        cout << "\nSize blue nodes: " << blue_its.size() << "\n";
+        cout << "Size red nodes: " << red_its.size() << "\n" << endl;
+    } */
+
+    refinement_set rs;
+    for (auto blue_node: blue_its) {
+        static const bool MERGE_WITH_LARGEST_BLUE = MERGE_MOST_VISITED;
+        refinement* ref = check_blue_node_for_merge_partner(blue_node, merger, the_apta, red_its);
         
-        if(!mergeable)
+        if(ref == nullptr){
             rs.insert(mem_store::create_extend_refinement(merger.get(), blue_node));
+            non_mergeable_blue_its.insert(blue_node);
+        }
+        else if(MERGE_WITH_LARGEST_BLUE)
+            return ref;
+        else
+            rs.insert(ref);
+    }
+
+    unordered_set<apta_node*> mergeable_nodes;
+    for (auto blue_node: non_mergeable_blue_its) {
+        refinement* ref = check_blue_node_for_merge_partner(blue_node, merger, the_apta, red_its);
+        
+        if(ref == nullptr){
+            rs.insert(mem_store::create_extend_refinement(merger.get(), blue_node));
+            non_mergeable_blue_its.insert(blue_node);
+        }
+        else if(MERGE_WITH_LARGEST){
+            non_mergeable_blue_its.erase(blue_node);
+            return ref;
+        }
+        else{
+            rs.insert(ref);
+            mergeable_nodes.insert(blue_node);
+        }
+    }
+
+    for(auto blue_node: mergeable_nodes){
+        non_mergeable_blue_its.erase(blue_node);
     }
 
     refinement *r = nullptr;
@@ -155,6 +206,10 @@ refinement* paul_algorithm::get_best_refinement(unique_ptr<state_merger>& merger
             auto rf = *it;
             if(r != rf) rf->erase();
         }
+    }
+
+    if(r!=nullptr && non_mergeable_blue_its.contains(r->red)){
+        non_mergeable_blue_its.erase(r->red);
     }
 
     return r;
@@ -299,10 +354,17 @@ void paul_algorithm::run(inputdata& id) {
     const auto& rtypes = id.get_r_types();
     cout << "\nType prediction mapping is as follows:\n";
     for(auto& [k, v]: rtypes){
-        cout << ": " << k << " : " << v << "\n";
+        cout << "(k,v) - " << k << " : " << v << "\n";
     }
     cout << endl;
 
+    {    
+        int n_states = 0;
+        for (APTA_iterator it = APTA_iterator(the_apta->get_root()); *it != nullptr; ++it){
+            ++n_states;
+        }
+        cout << "Size of raw APTA: " << n_states << endl;
+    }
 
     cout << "Initializing ii_handler" << endl;
     ii_handler->initialize(the_apta); // must happen after traces have been added to apta!

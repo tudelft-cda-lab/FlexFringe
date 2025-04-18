@@ -26,6 +26,7 @@
 #include "distinguishing_sequence_fill.h"
 
 #include <list>
+#include <unordered_set>
 #include <memory>
 
 #include <future>
@@ -34,7 +35,11 @@
 class paul_algorithm : public algorithm_base {
   protected:
     std::shared_ptr<ii_base> ii_handler;
+    const bool MERGE_WITH_LARGEST = true;
+
     refinement* get_best_refinement(std::unique_ptr<state_merger>& merger, std::unique_ptr<apta>& the_apta);
+    refinement* check_blue_node_for_merge_partner(apta_node* blue_node, std::unique_ptr<state_merger>& merger, std::unique_ptr<apta>& the_apta,
+                                                  const state_set& red_its);
 
     void load_inputdata();
 
