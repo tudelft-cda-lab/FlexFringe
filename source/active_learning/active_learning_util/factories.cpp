@@ -40,7 +40,7 @@
 
 // the oracles
 #include "input_file_oracle.h"
-#include "discrete_output_sul_oracle.h"
+#include "base_oracle.h"
 //#include "sqldb_sul_random_oracle.h"
 //#include "sqldb_sul_regex_oracle.h"
 #include "paul_oracle.h"
@@ -159,9 +159,9 @@ shared_ptr<ii_base> ii_handler_factory::create_ii_handler(const shared_ptr<sul_b
 /**
  * @brief Does what you think it does.
  */
-unique_ptr<oracle_base> oracle_factory::create_oracle(const shared_ptr<sul_base>& sul, string_view oracle_name, const shared_ptr<ii_base>& ii_handler){
-  if(AL_ORACLE == "discrete_output_sul_oracle")
-      return make_unique<discrete_output_sul_oracle>(sul);
+unique_ptr<base_oracle> oracle_factory::create_oracle(const shared_ptr<sul_base>& sul, string_view oracle_name, const shared_ptr<ii_base>& ii_handler){
+  if(AL_ORACLE == "base_oracle")
+      return make_unique<base_oracle>(sul);
   
   if(AL_ORACLE == "input_file_oracle")
       return make_unique<input_file_oracle>(sul);
@@ -173,8 +173,6 @@ unique_ptr<oracle_base> oracle_factory::create_oracle(const shared_ptr<sul_base>
   else if(AL_ORACLE == "sqldb_sul_regex_oracle")
       throw std::logic_error("Not implemented yet");
       //return make_unique<sqldb_sul_regex_oracle>(sul);
-  else if(AL_ORACLE == "string_probability_oracle")
-      return make_unique<string_probability_oracle>(sul);
   else
     throw std::invalid_argument("One of the oracle specifying input parameters was not recognized by the oracle factory.");
 }
@@ -193,13 +191,13 @@ unique_ptr<algorithm_base> algorithm_factory::create_algorithm_obj(){
   
   unique_ptr<algorithm_base> res;
   if(sul_vec.size()==1){
-    unique_ptr<oracle_base> oracle_1 = oracle_factory::create_oracle(sul_vec[0], AL_ORACLE, ii_handler, oracle_factory::oracle_key());
+    unique_ptr<base_oracle> oracle_1 = oracle_factory::create_oracle(sul_vec[0], AL_ORACLE, ii_handler, oracle_factory::oracle_key());
     res = create_algorithm_obj(move(oracle_1), ii_handler);
   }
   else if(sul_vec.size()==2){
-    unique_ptr<oracle_base> oracle_1 = oracle_factory::create_oracle(sul_vec[0], AL_ORACLE, ii_handler, oracle_factory::oracle_key());
-    unique_ptr<oracle_base> oracle_2 = oracle_factory::create_oracle(sul_vec[1], AL_ORACLE_2, ii_handler, oracle_factory::oracle_key());
-    vector< unique_ptr<oracle_base> > oracles(2);
+    unique_ptr<base_oracle> oracle_1 = oracle_factory::create_oracle(sul_vec[0], AL_ORACLE, ii_handler, oracle_factory::oracle_key());
+    unique_ptr<base_oracle> oracle_2 = oracle_factory::create_oracle(sul_vec[1], AL_ORACLE_2, ii_handler, oracle_factory::oracle_key());
+    vector< unique_ptr<base_oracle> > oracles(2);
     oracles[0] = move(oracle_1);
     oracles[1] = move(oracle_2);
     res = create_algorithm_obj(move(oracles), ii_handler);

@@ -14,15 +14,14 @@
 
 #include "algorithm_base.h"
 #include "lsharp.h"
+#include "base_oracle.h"
 
 #include "definitions.h"
-#include "oracle_base.h"
 #include "inputdata.h"
 #include "refinement.h"
 #include "state_merger.h"
 #include "tail.h"
 #include "trace.h"
-#include "string_probability_oracle.h"
 
 #include <list>
 #include <memory>
@@ -46,13 +45,10 @@ class weighted_lsharp_algorithm : public lsharp_algorithm {
                                          const std::vector<int>& alphabet) override;
 
   public:
-    weighted_lsharp_algorithm(std::unique_ptr<oracle_base>&& oracle) : lsharp_algorithm(std::move(oracle)), use_sinks(USE_SINKS) {
-        if(dynamic_cast<string_probability_oracle*>(oracle.get()) == nullptr)
-          throw std::logic_error("Weighted L# only works with weight_comparing_oracle");
-
+    weighted_lsharp_algorithm(std::unique_ptr<base_oracle>&& oracle) : lsharp_algorithm(std::move(oracle)), use_sinks(USE_SINKS) {
         STORE_ACCESS_STRINGS = true;
     };
-    weighted_lsharp_algorithm(std::vector< std::unique_ptr<oracle_base> >&& i_list) : weighted_lsharp_algorithm(std::move(i_list[0])) {
+    weighted_lsharp_algorithm(std::vector< std::unique_ptr<base_oracle> >&& i_list) : weighted_lsharp_algorithm(std::move(i_list[0])) {
       std::cerr << "This algorithm does not support multiple oracles. Oracle 2 is ignored." << std::endl;
     }
 

@@ -30,17 +30,6 @@ paul_oracle::resp_t paul_oracle::get_sul_response(const vector< vector<int> >& q
 }
 
 /**
- * @brief Has a heuristic checking on whether we want to consider this string or not. Returns true if string interesting, 
- * false if we do not want to check.
- */
-bool paul_oracle::check_test_string_interesting(const vector<int>& teststr) const noexcept {
-    if(!AL_TEST_EMTPY_STRING && teststr.size() == 0){
-        return false;
-    }
-    return true;
-}
-
-/**
  * @brief Has a heuristic checking on whether we want to consider this string or not, but this 
  * time based on the transformer's confidence. If it is low omit this string, as it can 
  * introduce errors.
@@ -65,7 +54,7 @@ std::optional<pair<vector<int>, sul_response>> paul_oracle::equivalence_query(st
 
     std::optional<vector<int>> query_string_opt = cex_search_strategy->next(id);
     while (query_string_opt != nullopt) { // nullopt == search exhausted
-        if(!check_test_string_interesting(query_string_opt.value()))
+        if(!base_oracle::check_test_string_interesting(query_string_opt.value()))
             continue;
 
         if(tested_strings->contains(query_string_opt.value()))

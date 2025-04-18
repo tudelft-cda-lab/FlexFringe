@@ -17,11 +17,10 @@
 #include "lsharp.h"
 
 #include "definitions.h"
-#include "oracle_base.h"
+#include "base_oracle.h"
 #include "inputdata.h"
 #include "refinement.h"
 #include "state_merger.h"
-#include "string_probability_oracle.h"
 #include "tail.h"
 #include "trace.h"
 
@@ -60,13 +59,10 @@ class probabilistic_lsharp_algorithm : public lsharp_algorithm {
                                std::unique_ptr<state_merger>& merger, const refinement_list refs, const std::vector<int>& alphabet) const;
 
   public:
-    probabilistic_lsharp_algorithm(std::unique_ptr<oracle_base>&& oracle) : lsharp_algorithm(std::move(oracle)) {
-      if(dynamic_cast<string_probability_oracle*>(oracle.get()) == nullptr)
-          throw std::logic_error("Probabilistic L# only works with probabilistic oracle.");
-      
+    probabilistic_lsharp_algorithm(std::unique_ptr<base_oracle>&& oracle) : lsharp_algorithm(std::move(oracle)) {      
       STORE_ACCESS_STRINGS = true;
     };
-    probabilistic_lsharp_algorithm(std::vector< std::unique_ptr<oracle_base> >&& i_list) : probabilistic_lsharp_algorithm(std::move(i_list[0])) {
+    probabilistic_lsharp_algorithm(std::vector< std::unique_ptr<base_oracle> >&& i_list) : probabilistic_lsharp_algorithm(std::move(i_list[0])) {
       std::cerr << "This algorithm does not support multiple oracles. Oracle 2 is ignored." << std::endl;
     }
 

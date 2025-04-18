@@ -34,7 +34,7 @@ struct sf_tree_node {
     sf_tree_node(const int depth) : DEPTH(depth){};
 
     void add_child(const int s, sf_tree_node& child) noexcept;
-    inline sf_tree_node* get_child(const int s) noexcept;
+    sf_tree_node* get_child(const int s) noexcept;
     bool has_child(const int s) noexcept {return symbol_child_map.contains(s);}
 
     std::vector< std::pair<sf_tree_node*, int> > get_children() noexcept;

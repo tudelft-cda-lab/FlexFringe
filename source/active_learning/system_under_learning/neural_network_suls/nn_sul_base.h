@@ -28,7 +28,7 @@
 #include <Python.h> // IMPORTANT: Python.h must be first import. See https://docs.python.org/3/extending/extending.html
 
 class nn_sul_base : public sul_base {
-    friend class oracle_base;
+    friend class base_oracle;
 
   protected:
     const std::string CONNECTOR_FILE;
@@ -58,7 +58,7 @@ class nn_sul_base : public sul_base {
 #else
 
 class nn_sul_base : public sul_base {
-    friend class oracle_base;
+    friend class base_oracle;
 
   public:
     const sul_response do_query(const std::vector<int>& query_trace, inputdata& id) const override;

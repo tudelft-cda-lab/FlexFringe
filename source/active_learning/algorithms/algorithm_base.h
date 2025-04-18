@@ -12,7 +12,7 @@
 #ifndef _ALGORITHM_BASE_H_
 #define _ALGORITHM_BASE_H_
 
-#include "oracle_base.h"
+#include "base_oracle.h"
 #include "inputdata.h"
 
 #include <memory>
@@ -24,7 +24,7 @@
 
 class algorithm_base {
   protected:
-    std::unique_ptr<oracle_base> oracle;
+    std::unique_ptr<base_oracle> oracle;
 
     // helper functions to deal with input data
     inputdata* get_inputdata() const;
@@ -32,7 +32,7 @@ class algorithm_base {
     std::unique_ptr<parser> get_parser(std::ifstream& input_stream) const;
 
   public:
-    algorithm_base(std::unique_ptr<oracle_base>&& oracle)
+    algorithm_base(std::unique_ptr<base_oracle>&& oracle)
         : oracle(std::move(oracle)){};
 
     virtual void run(inputdata& id) = 0;

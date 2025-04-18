@@ -375,7 +375,7 @@ trace* active_learning_namespace::vector_to_trace(const vector<int>& vec, inputd
  * @return const double Probability.
  */
 /*const double active_learning_namespace::get_probability_of_last_symbol(trace* tr, inputdata& id,
-                                                                       const unique_ptr<oracle_base>& oracle,
+                                                                       const unique_ptr<base_oracle>& oracle,
                                                                        apta* aut) {
     static unordered_map<apta_node*, unordered_map<int, double>> node_response_map; // memoization
 

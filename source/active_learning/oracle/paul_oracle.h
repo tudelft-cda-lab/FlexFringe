@@ -12,7 +12,7 @@
 #ifndef _PAUL_ORACLE_H_
 #define _PAUL_ORACLE_H_
 
-#include "discrete_output_sul_oracle.h"
+#include "base_oracle.h"
 #include "parameters.h"
 
 #include "linear_conflict_search.h"
@@ -22,7 +22,7 @@
 #include <optional>
 #include <utility>
 
-class paul_oracle : public discrete_output_sul_oracle {
+class paul_oracle : public base_oracle {
   private:
     struct resp_t final {
       private:
@@ -47,14 +47,10 @@ class paul_oracle : public discrete_output_sul_oracle {
     };
 
     inline resp_t get_sul_response(const std::vector< std::vector<int> >& query_string, inputdata& id) const;
-    inline bool check_test_string_interesting(const std::vector<int>& teststr) const noexcept;
     inline bool check_test_string_interesting(const double confidence) const noexcept;
 
-  protected:
-    void reset_sul() override {};
-
   public:
-    paul_oracle(const std::shared_ptr<sul_base>& sul, const std::shared_ptr<ii_base>& ii_handler) : discrete_output_sul_oracle(sul) {
+    paul_oracle(const std::shared_ptr<sul_base>& sul, const std::shared_ptr<ii_base>& ii_handler) : base_oracle(sul) {
       if(!ii_handler)
         throw std::invalid_argument("ERROR: ii_handler not provided to paul oracle, but it depends on it.");
 

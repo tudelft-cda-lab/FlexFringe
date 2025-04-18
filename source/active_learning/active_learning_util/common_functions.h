@@ -62,8 +62,6 @@ trace* vector_to_trace(const std::vector<int>& vec, inputdata& id, const int tra
 void add_sequence_to_trace(/*out*/ trace* new_trace, const std::vector<int> sequence);
 void update_tail(/*out*/ tail* t, const int symbol);
 
-//const double get_probability_of_last_symbol(trace* tr, inputdata& id, const std::unique_ptr<oracle_base>& oracle,
-//                                            apta* aut);
 
 const double get_sampled_probability(
     trace* tr, inputdata& id, apta* aut,

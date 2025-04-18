@@ -15,11 +15,11 @@
 
 using namespace std;
 
-template bool suffix_tree::add_suffix(const vector<int>& suffix);
-template bool suffix_tree::add_suffix(const list<int>& suffix);
+template bool suffix_tree::add_suffix(const std::vector<int>& suffix);
+template bool suffix_tree::add_suffix(const std::list<int>& suffix);
 
-template bool suffix_tree::contains(const vector<int>& suffix);
-template bool suffix_tree::contains(const list<int>& suffix);
+template bool suffix_tree::contains(const std::vector<int>& suffix);
+template bool suffix_tree::contains(const std::list<int>& suffix);
 
 /**
  * @brief We do a DFS search* here, looking for the next sequence to return. If the

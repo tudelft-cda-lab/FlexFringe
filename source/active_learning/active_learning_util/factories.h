@@ -13,7 +13,7 @@
 #define _AL_FACTORIES_H_
 
 #include "algorithm_base.h"
-#include "oracle_base.h"
+#include "base_oracle.h"
 #include "sul_base.h"
 #include "ii_base.h"
 
@@ -74,7 +74,7 @@ class sul_factory {
  */
 class oracle_factory {
   private:
-    static std::unique_ptr<oracle_base> create_oracle(const std::shared_ptr<sul_base>& sul, std::string_view oracle_name, const std::shared_ptr<ii_base>& ii_handler);
+    static std::unique_ptr<base_oracle> create_oracle(const std::shared_ptr<sul_base>& sul, std::string_view oracle_name, const std::shared_ptr<ii_base>& ii_handler);
 
   public:
     oracle_factory() = delete;
@@ -85,7 +85,7 @@ class oracle_factory {
       oracle_key() = default;
     };
 
-    static std::unique_ptr<oracle_base> create_oracle(const std::shared_ptr<sul_base>& sul, std::string_view oracle_name, const std::shared_ptr<ii_base>& ii_handler, const oracle_key&& key){ 
+    static std::unique_ptr<base_oracle> create_oracle(const std::shared_ptr<sul_base>& sul, std::string_view oracle_name, const std::shared_ptr<ii_base>& ii_handler, const oracle_key&& key){ 
       return create_oracle(sul, oracle_name, ii_handler); 
     }
 };

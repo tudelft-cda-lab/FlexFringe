@@ -12,7 +12,7 @@
 #ifndef _OBS_TABLE_IMAT_H_
 #define _OBS_TABLE_IMAT_H_
 
-#include "oracle_base.h"
+#include "base_oracle.h"
 #include "definitions.h"
 #include "inputdata.h"
 
@@ -64,7 +64,7 @@ class observation_table_imat {
     // Maintain the indexes of the columns in the row_type.
     int new_ind = 0;
     std::map<active_learning_namespace::pref_suf_t, size_t> exp2ind;
-    void complete_rows(const std::unique_ptr<oracle_base>& oracle, inputdata& id);
+    void complete_rows(const std::unique_ptr<base_oracle>& oracle, inputdata& id);
     const bool has_record(const active_learning_namespace::pref_suf_t& row,
                           const active_learning_namespace::pref_suf_t& col);
     void insert_record(const active_learning_namespace::pref_suf_t& row,

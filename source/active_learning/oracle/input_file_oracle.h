@@ -12,7 +12,7 @@
 #ifndef _INPUT_FILE_ORACLE_H_
 #define _INPUT_FILE_ORACLE_H_
 
-#include "oracle_base.h"
+#include "base_oracle.h"
 #include "parameters.h"
 #include "input_file_sul.h"
 
@@ -25,14 +25,9 @@
  * in a data structure, then use those for both queries and equivalence.
  * 
  */
-class input_file_oracle : public oracle_base {
-  protected:
-    void reset_sul(){
-        // we won't need this guy here
-    };
-
+class input_file_oracle : public base_oracle {
   public:
-    input_file_oracle(const std::shared_ptr<sul_base>& sul) : oracle_base(sul) {
+    input_file_oracle(const std::shared_ptr<sul_base>& sul) : base_oracle(sul) {
       if(dynamic_cast<input_file_sul*>(sul.get()) == nullptr)
         throw std::logic_error("input_file_oracle needs an input_file_sul");
     };

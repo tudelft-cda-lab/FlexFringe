@@ -10,7 +10,7 @@
  */
 
 #include "observation_table_imat.h"
-#include "oracle_base.h"
+#include "base_oracle.h"
 #include "common_functions.h"
 #include "definitions.h"
 #include "inputdata.h"
@@ -300,7 +300,7 @@ void observation_table_imat::mark_row_complete(const pref_suf_t& row) {
     incomplete_rows.erase(position_it);
 }
 
-void observation_table_imat::complete_rows(const unique_ptr<oracle_base>& oracle, inputdata& id) {
+void observation_table_imat::complete_rows(const unique_ptr<base_oracle>& oracle, inputdata& id) {
     DLOG_S(INFO) << "COMPLETE" << endl;
     const auto& rows_to_close =
         list<pref_suf_t>(get_incomplete_rows()); // need a copy, since we're modifying structure in mark_row_complete().

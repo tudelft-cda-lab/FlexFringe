@@ -58,14 +58,10 @@ add_library(ActiveLearning STATIC
             databases/prefix_tree_database.cpp
 
             # oracles
-            oracle/oracle_base.h
-            oracle/oracle_base.cpp
+            oracle/base_oracle.h
+            oracle/base_oracle.cpp
             oracle/input_file_oracle.h
             oracle/input_file_oracle.cpp
-            oracle/discrete_output_sul_oracle.h
-            oracle/discrete_output_sul_oracle.cpp
-            oracle/string_probability_oracle.h
-            oracle/string_probability_oracle.cpp
             #oracle/sqldb_sul_regex_oracle.h
             #oracle/sqldb_sul_regex_oracle.cpp
             #oracle/sqldb_sul_random_oracle.h

@@ -31,9 +31,9 @@ class lstar_algorithm : public algorithm_base {
                                                                 inputdata& id) const;
 
   public:
-    lstar_algorithm(std::unique_ptr<oracle_base>&& oracle)
+    lstar_algorithm(std::unique_ptr<base_oracle>&& oracle)
         : algorithm_base(std::move(oracle)){};
-    lstar_algorithm(std::vector< std::unique_ptr<oracle_base> >&& i_list) : lstar_algorithm(std::move(i_list[0])){
+    lstar_algorithm(std::vector< std::unique_ptr<base_oracle> >&& i_list) : lstar_algorithm(std::move(i_list[0])){
       std::cerr << "This algorithm does not support multiple oracles. Oracle 2 is ignored." << std::endl;
     }
 

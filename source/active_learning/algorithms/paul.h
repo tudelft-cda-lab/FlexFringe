@@ -14,7 +14,7 @@
 
 #include "algorithm_base.h"
 #include "definitions.h"
-#include "oracle_base.h"
+#include "base_oracle.h"
 #include "inputdata.h"
 #include "refinement.h"
 #include "state_merger.h"
@@ -43,7 +43,7 @@ class paul_algorithm : public algorithm_base {
     void proc_counterex(inputdata& id, std::unique_ptr<apta>& the_apta, const std::vector<int>& counterex,
                         std::unique_ptr<state_merger>& merger, const refinement_list refs) const;
   public:
-    paul_algorithm(std::unique_ptr<oracle_base>&& oracle, const std::shared_ptr<ii_base>& ii_handler)
+    paul_algorithm(std::unique_ptr<base_oracle>&& oracle, const std::shared_ptr<ii_base>& ii_handler)
         : algorithm_base(std::move(oracle)), ii_handler(ii_handler){
           if(!ii_handler)
             throw std::invalid_argument("ii handler not provided for paul algorithm, but it relies on it");
@@ -52,7 +52,7 @@ class paul_algorithm : public algorithm_base {
           load_inputdata();
         }
 
-    paul_algorithm(std::vector< std::unique_ptr<oracle_base> >&& i_list, const std::shared_ptr<ii_base>& ii_handler) 
+    paul_algorithm(std::vector< std::unique_ptr<base_oracle> >&& i_list, const std::shared_ptr<ii_base>& ii_handler) 
     : paul_algorithm(std::move(i_list[0]), ii_handler){
       std::cerr << "This algorithm does not support multiple oracles. Oracle 2 is ignored." << std::endl;
     }

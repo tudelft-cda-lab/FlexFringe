@@ -1,5 +1,5 @@
 /**
- * @file oracle_base.h
+ * @file base_oracle.h
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
  * @brief 
  * @version 0.1
@@ -26,7 +26,11 @@
 #include <utility>
 #include <vector>
 
-class oracle_base {
+/**
+ * @brief Basic oracle capable of answering all basic queries.
+ * Specializations allowed.
+ */
+class base_oracle {
   protected:
     std::shared_ptr<sul_base> sul;
 
@@ -34,16 +38,16 @@ class oracle_base {
     std::unique_ptr<conflict_search_base> conflict_searcher; // these two are to be determined by derived classes
     std::shared_ptr<conflict_detector_base> conflict_detector; // these two are to be determined by derived classes
 
-    virtual void reset_sul() = 0;
+    virtual bool check_test_string_interesting(const std::vector<int>& teststr) const noexcept;
 
   public:
-    oracle_base(const std::shared_ptr<sul_base>& sul) : sul(sul) {
+    base_oracle(const std::shared_ptr<sul_base>& sul) : sul(sul) {
       cex_search_strategy = cex_search_strategy_factory::create_search_strategy();
     }
 
     // For logic behind this see e.g. https://stackoverflow.com/a/10001573/11956515
-    oracle_base(){
-      throw std::logic_error("oracle_base call to overloaded constructor providing the sul has to be called!");
+    base_oracle(){
+      throw std::logic_error("base_oracle call to overloaded constructor providing the sul has to be called!");
     }
 
     virtual void initialize(state_merger* merger);
@@ -57,6 +61,10 @@ class oracle_base {
 
     virtual std::optional<std::pair<std::vector<int>, sul_response>>
     equivalence_query(state_merger* merger);
+
+    virtual void reset_sul(){
+      // nothing to do here
+    };
 };
 
 #endif
