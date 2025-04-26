@@ -45,8 +45,6 @@ bool paul_oracle::check_test_string_interesting(const double confidence) const n
  * @return std::optional< pair< vector<int>, int> > nullopt if no counterexample found, else the counterexample.
  */
 std::optional<pair<vector<int>, sul_response>> paul_oracle::equivalence_query(state_merger* merger) {
-    // TODO: this one is going to look a little more complicated perhaps. 
-
     inputdata& id = *(merger->get_dat());
     apta& hypothesis = *(merger->get_aut());
 
@@ -94,6 +92,13 @@ std::optional<pair<vector<int>, sul_response>> paul_oracle::equivalence_query(st
             pair< vector<int>, optional<sul_response> > conflict_rep_pair = conflict_searcher->get_conflict_string(query_string[0], hypothesis, id);
             if(conflict_rep_pair.second == nullopt)
                 return make_optional(make_pair(query_string[0], sul_response(inferred_value)));
+
+            if(const auto& min_string = conflict_rep_pair.first; min_string.size() > AL_MAX_SEARCH_DEPTH){
+                cout << "Found a counterexample whose size exceeds maximum search depth. Omitting this example" << endl;
+                tested_strings->add_suffix(min_string);
+                continue;
+            }
+            
             return make_optional(make_pair( move(conflict_rep_pair.first), conflict_rep_pair.second.value())); // TODO: this line bothers me for sure
         }
 
