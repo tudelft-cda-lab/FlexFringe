@@ -13,32 +13,26 @@
 
 using namespace std;
 
+template bool linear_conflict_search::get_creates_conflict(const vector<int>& cex, apta& hypothesis, inputdata& id);
+template bool linear_conflict_search::get_creates_conflict(const vector< vector<int> >& cex, apta& hypothesis, inputdata& id);
+
+template pair< vector<int>, sul_response> linear_conflict_search::get_conflict_string_common(const vector<int>& cex, apta& hypothesis, inputdata& id);
+template pair< vector<int>, sul_response> linear_conflict_search::get_conflict_string_common(const vector< vector<int> >& cex, apta& hypothesis, inputdata& id);
+
 /**
- * @brief Searches for a conflict within a DFA via linear search from beginning to end.
- * 
- * We search for the shortest string that actually causes the error to happen.
- * 
- * @param cex The counterexample.
- * @param hypothesis The merged hypothesis.
- * @param id The inputdata wrapper.
- * @return std::vector<int>, sul_response A vector leading to the conflict including the corresponding SUL response.
+ * @brief To override our virtual function.
+ * Actual implementation in get_conflict_string_common()
  */
-pair< vector<int>, sul_response> linear_conflict_search::get_conflict_string(const vector<int>& cex, apta& hypothesis, inputdata& id) {
-  current_substring.clear();
+pair< vector<int>, sul_response> linear_conflict_search::get_conflict_string(const vector<int>& cex, apta& hypothesis, inputdata& id){
+  return get_conflict_string_common(cex, hypothesis, id);
+}
 
-  bool resp = false;
-  if(AL_TEST_EMTPY_STRING) // IMPORTANT: The underlying oracle also needs to check this
-    resp = conflict_detector->creates_conflict(current_substring, hypothesis, id).first;
-  else if(!AL_TEST_EMTPY_STRING && cex.empty())
-    throw invalid_argument("WARNING: al_test_empty_string set to false, but oracle tests empty string. Check your implementation.");
-  
-  while(!resp){ // works because cex has been determined to lead to conflict already
-    update_current_substring(cex);
-    resp = conflict_detector->creates_conflict(current_substring, hypothesis, id).first;
-  }
-
-  optional<sul_response> sul_resp = conflict_detector->creates_conflict(current_substring, hypothesis, id).second; 
-  return make_pair(current_substring, sul_resp.value());
+/**
+ * @brief To override our virtual function.
+ * Actual implementation in get_conflict_string_common()
+ */
+pair< vector<int>, sul_response> linear_conflict_search::get_conflict_string(const vector< vector<int> >& cex, apta& hypothesis, inputdata& id){
+  return get_conflict_string_common(cex, hypothesis, id);
 }
 
 /**
@@ -47,4 +41,12 @@ pair< vector<int>, sul_response> linear_conflict_search::get_conflict_string(con
 void linear_conflict_search::update_current_substring(const vector<int>& cex) noexcept {
   int idx = current_substring.size();
   current_substring.push_back(cex[idx]);
+}
+
+/**
+ * @brief Easy to read.
+ */
+void linear_conflict_search::update_current_substring(const vector< vector<int> >& cex) noexcept {
+  int idx = current_substring_batch_format.at(0).size();
+  current_substring_batch_format.at(0).push_back(cex.at(0)[idx]);
 }

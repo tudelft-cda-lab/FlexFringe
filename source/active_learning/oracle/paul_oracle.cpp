@@ -52,54 +52,32 @@ std::optional<pair<vector<int>, sul_response>> paul_oracle::equivalence_query(st
 
     std::optional<vector<int>> query_string_opt = cex_search_strategy->next(id);
     while (query_string_opt != nullopt) { // nullopt == search exhausted
-        if(!base_oracle::check_test_string_interesting(query_string_opt.value()))
-            continue;
 
-        if(tested_strings->contains(query_string_opt.value()))
+        if(!base_oracle::check_test_string_interesting(query_string_opt.value()) || tested_strings->contains(query_string_opt.value())){
+            query_string_opt = cex_search_strategy->next(id);
             continue;
+        }
         tested_strings->add_suffix(query_string_opt.value());
-
+        
         vector< vector<int> > query_string{ move(query_string_opt.value()) };
         const auto sul_resp = get_sul_response(query_string, id);
-        if(!check_test_string_interesting(sul_resp.get_confidence()))
-            continue;
-        const int inferred_value = sul_resp.get_type();
-    
-        trace* test_tr = vector_to_trace(query_string[0], id, 0); // type-argument irrelevant here
-        apta_node* n = hypothesis.get_root();
-        tail* t = test_tr->get_head();
-
-        for (int j = 0; j < test_tr->get_length(); j++) {
-            n = active_learning_namespace::get_child_node(n, t);
-
-            if (n == nullptr) {
-                cout << "Counterexample because tree not parsable. Returning string and transformer prediction" << endl;
-                return make_optional(make_pair(move(query_string[0]), sul_response(inferred_value)));
-            }
-
-            t = t->future();
+        if(!check_test_string_interesting(sul_resp.get_confidence())){
+            cout << "Skipped string due to low confidence of transformer" << endl;
+            query_string_opt = cex_search_strategy->next(id);
+            continue; 
         }
 
-        const int pred_val = n->get_data()->predict_type(t);
-        if (inferred_value != pred_val) {
-            cout << "Found counterexample. The inferred value: " << id.get_type(inferred_value)
-                 << ", predicted: " << id.get_type(pred_val) << endl;
-            cout << "String before conflict resolution: ";
-            for(int x: query_string[0])
-                cout << id.get_symbol(x) << " ";
+        pair<bool, optional<sul_response> > resp = conflict_detector->creates_conflict(query_string, hypothesis, id);
+
+        if (resp.first) {
+            pair< vector<int>, sul_response> conflict_resp_pair = conflict_searcher->get_conflict_string(query_string, hypothesis, id);
+            
+            cout << "Found counterexample of length " << conflict_resp_pair.first.size() << ":";
+            for(auto x: conflict_resp_pair.first)
+                cout << " " << id.get_symbol(x);
             cout << endl;
             
-            pair< vector<int>, optional<sul_response> > conflict_rep_pair = conflict_searcher->get_conflict_string(query_string[0], hypothesis, id);
-            if(conflict_rep_pair.second == nullopt)
-                return make_optional(make_pair(query_string[0], sul_response(inferred_value)));
-
-            if(const auto& min_string = conflict_rep_pair.first; min_string.size() > AL_MAX_SEARCH_DEPTH){
-                cout << "Found a counterexample whose size exceeds maximum search depth. Omitting this example" << endl;
-                tested_strings->add_suffix(min_string);
-                continue;
-            }
-            
-            return make_optional(make_pair( move(conflict_rep_pair.first), conflict_rep_pair.second.value())); // TODO: this line bothers me for sure
+            return make_optional(conflict_resp_pair);
         }
 
         query_string_opt = cex_search_strategy->next(id);

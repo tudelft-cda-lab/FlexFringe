@@ -60,13 +60,9 @@ const float string_probability_conflict_detector::get_string_prob(const std::vec
   return sampled_probability;
 }
 
-/**
- * @brief Compares the parsed string through the hypothesis with the prediction. If larger than a bound mu, then we raise an alarm.
- */
-pair<bool, optional<sul_response> > string_probability_conflict_detector::creates_conflict(const vector<int>& substr, apta& hypothesis, inputdata& id) {
+pair<bool, optional<sul_response> > string_probability_conflict_detector::creates_conflict_common(const sul_response& resp, const vector<int>& substr, apta& hypothesis, inputdata& id){
   static const float mu = MU;
   
-  sul_response resp = sul->do_query(substr, id);
   float sampled_probability = get_string_prob(substr, hypothesis, id);
   if(sampled_probability == -1)
     return make_pair(true, resp);
@@ -82,4 +78,3 @@ pair<bool, optional<sul_response> > string_probability_conflict_detector::create
 
   return make_pair(false, nullopt);
 }
-

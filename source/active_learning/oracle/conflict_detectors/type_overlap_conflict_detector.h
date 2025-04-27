@@ -23,6 +23,9 @@
 class type_overlap_conflict_detector : public type_conflict_detector {
   protected:
     std::shared_ptr<ii_base> ii_handler;
+  
+  protected:
+    std::pair<bool, std::optional<sul_response> > creates_conflict_common(const sul_response& resp, const std::vector<int>& substr, apta& hypothesis, inputdata& id) override;
 
   public: 
     type_overlap_conflict_detector(const std::shared_ptr<sul_base>& sul, const std::shared_ptr<ii_base>& ii_handler) 
@@ -31,8 +34,6 @@ class type_overlap_conflict_detector : public type_conflict_detector {
     type_overlap_conflict_detector(const std::shared_ptr<sul_base>& sul) : type_conflict_detector(sul) {
       throw std::invalid_argument("Error: type_overlap_conflict_detector relies on ii_handler, but not provided.");
     }
-    
-    std::pair<bool, std::optional<sul_response> > creates_conflict(const std::vector<int>& substr, apta& hypothesis, inputdata& id) override;
 };
 
 #endif // _AL_CONFLICT_DETECTOR_BASE_H_

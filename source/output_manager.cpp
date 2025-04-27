@@ -35,12 +35,7 @@ string_view output_manager::get_outfile_path(){
  * 
  */
 void output_manager::print_final_automaton(state_merger* merger, const std::string& append_string){
-  static bool is_called = false;
-  if(is_called)
-    throw std::runtime_error("ERROR: Call to final model printout happened twice.");
-
   print_current_automaton(merger, outfile_path, append_string);
-  is_called = true;
 }
 
 /**

@@ -38,11 +38,6 @@ void distinguishing_sequence_fill::pre_compute(list<int>& suffix, unordered_set<
   seen_nodes.insert(left);
   auto r_data = dynamic_cast<paul_data*>(right->get_data());
   auto l_data = dynamic_cast<paul_data*>(left->get_data());
-
-  if(r_data->label_is_queried() && l_data->label_is_queried()){
-    // TODO: do we want this?
-    return;
-  }
   
   // in these two following if-clauses the side effect happens (see description)
   if(!r_data->has_type()){
@@ -52,7 +47,7 @@ void distinguishing_sequence_fill::pre_compute(list<int>& suffix, unordered_set<
     complete_node(left, aut);
   }
 
-  if(l_data->predict_type(nullptr) != r_data->predict_type(nullptr)){
+  if(l_data->predict_type(nullptr) != r_data->predict_type(nullptr) && !(r_data->label_is_queried() && l_data->label_is_queried())){
     //if(!ds_ptr->contains(suffix)) // TODO: We can use a bloom filter here for example...
     ds_ptr->add_suffix(suffix);
   }
@@ -221,6 +216,10 @@ vector<int> distinguishing_sequence_fill::predict_node_with_sul(apta& aut, apta_
     }
   }
 
+  if(ds_ptr->size()==0){ // this case will happen if MAX_LEN kills all possible queries
+    res.assign(ds_ptr->size(), -1);
+  }
+
   return res;
 }
 
@@ -292,6 +291,10 @@ vector<int> distinguishing_sequence_fill::predict_node_with_automaton(apta& aut,
     }
   }
 
+  if(ds_ptr->size()==0){ // this case will happen if MAX_LEN kills all possible queries
+    res.assign(ds_ptr->size(), -1);
+  }
+
   return res;
 }
 
@@ -320,13 +323,14 @@ bool distinguishing_sequence_fill::distributions_consistent(const std::vector<in
       ++disagreed;
   }
 
-  float ratio = static_cast<float>(disagreed) / (static_cast<float>(disagreed) + static_cast<float>(agreed));
+  constexpr static float epsilon = 1e-6; // avoid division error when v1 or v2 only have -1 entries, or size of this is 0
+  float ratio = static_cast<float>(disagreed) / (static_cast<float>(disagreed) + static_cast<float>(agreed) + epsilon);
 
   static float threshold = CHECK_PARAMETER;
   //std::cout << "\n ratio: " << ratio << ", threshold: " << threshold << "size: " << v1.size() << std::endl;
   if(ratio > threshold){
     last_overlap = 0;
-    cout << "Disagreed: " << disagreed << " | agreed: " << agreed << " | ratio: " << ratio << endl;
+    cout << "\nDisagreed: " << disagreed << " | agreed: " << agreed << " | ratio: " << ratio << endl;
     return false;
   }
   

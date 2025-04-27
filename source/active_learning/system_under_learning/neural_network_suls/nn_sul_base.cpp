@@ -28,9 +28,8 @@ using namespace std;
  * 
  */
 void nn_sul_base::print_p_error() const {
-    std::cerr << "Something went wrong in the Python script, see line below. Terminating program" << std::endl;
     PyErr_Print();
-    exit(EXIT_FAILURE);
+    throw std::runtime_error("Something went wrong in the Python script with the error seen above.");
 }
 
 /**
@@ -307,13 +306,5 @@ const sul_response nn_sul_base::do_query(const vector<int>& query_trace, inputda
 const sul_response nn_sul_base::do_query(const vector< vector<int> >& query_trace, inputdata& id) const {
     throw std::logic_error("Enable this feature with -DENABLE_PYTHON=ON on cmake.");
 }
-
-/* void nn_sul_base::init_types() const {
-    throw std::logic_error("Enable this feature with -DENABLE_PYTHON=ON on cmake.");
-}
-
-void nn_sul_base::print_p_error() const {
-    throw std::logic_error("Enable this feature with -DENABLE_PYTHON=ON on cmake.");
-} */
 
 #endif /* __FLEXFRINGE_PYTHON */

@@ -182,6 +182,7 @@ extern int MAX_CEX_LENGTH;
 extern int AL_NUM_CEX_PARAM;
 extern int AL_MAX_SEARCH_DEPTH;
 extern int AL_TEST_EMTPY_STRING;
+extern bool AL_SAVE_RUNTIME_FOR_SPACE;
 
 extern std::string POSTGRESQL_CONNSTRING;
 extern std::string POSTGRESQL_TBLNAME;

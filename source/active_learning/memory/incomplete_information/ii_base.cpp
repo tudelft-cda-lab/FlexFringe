@@ -46,7 +46,6 @@ void ii_base::complete_node(apta_node* node, unique_ptr<apta>& aut){
   static heuristic_type heuristic_name = ht::UNINITIALIZED;
 
   if(heuristic_name==ht::UNINITIALIZED) [[unlikely]] {
-
     auto determine_heuristic_type = [](apta_node* n){
       if(dynamic_cast<paul_data*>(n->get_data())){
         return ht::PAUL_H;
@@ -55,7 +54,6 @@ void ii_base::complete_node(apta_node* node, unique_ptr<apta>& aut){
         return ht::OTHER;
       }
     };
-
     heuristic_name = determine_heuristic_type(node);
   }
   else if(heuristic_name == ht::PAUL_H){

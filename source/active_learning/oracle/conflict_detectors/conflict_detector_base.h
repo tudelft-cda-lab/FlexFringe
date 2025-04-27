@@ -23,6 +23,7 @@
 class conflict_detector_base {
   protected:
     std::shared_ptr<sul_base> sul;
+    virtual std::pair<bool, std::optional<sul_response> > creates_conflict_common(const sul_response& resp, const std::vector<int>& substr, apta& hypothesis, inputdata& id) = 0;
 
   public:
     conflict_detector_base(const std::shared_ptr<sul_base>& sul) : sul(sul) {};
@@ -30,7 +31,9 @@ class conflict_detector_base {
       std::cerr << "Info: This SUL does not support an incomplete information handler. Are you certain you picked the correct one?" << std::endl;
     };
     
-    virtual std::pair<bool, std::optional<sul_response> > creates_conflict(const std::vector<int>& substr, apta& hypothesis, inputdata& id) = 0;
+    // we have two kinds of instantiations for the ones below, because different SULs can expect either a batch or a single vector
+    virtual std::pair<bool, std::optional<sul_response> > creates_conflict(const std::vector<int>& substr, apta& hypothesis, inputdata& id);
+    virtual std::pair<bool, std::optional<sul_response> > creates_conflict(const std::vector< std::vector<int> >& substr, apta& hypothesis, inputdata& id);
 };
 
 #endif // _AL_CONFLICT_DETECTOR_BASE_H_

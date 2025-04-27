@@ -32,6 +32,8 @@ protected:
   num_map inferred_final_counts;    
   int inferred_total_final;
 
+  std::vector<int> predictions;
+
   // TODO: delete function
   inline float map_confidence(const float c){
     int x = c * 100; // 0.94 becomes 94 e.g. 
@@ -58,6 +60,11 @@ public:
 
   void update(evaluation_data* right) override;
   void undo(evaluation_data* right) override;
+
+  const auto& get_predictions() const noexcept {return predictions;}
+  
+  template<typename T>
+  void set_predictions(T&& predictions){this->predictions = std::forward<T>(predictions);}
 };
 
 class paul_heuristic : public count_driven {

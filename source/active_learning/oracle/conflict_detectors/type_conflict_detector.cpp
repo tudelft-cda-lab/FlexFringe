@@ -15,20 +15,20 @@
 using namespace std;
 using namespace active_learning_namespace;
 
-pair<bool, optional<sul_response> > type_conflict_detector::creates_conflict(const vector<int>& substr, apta& hypothesis, inputdata& id) {
-  const int true_val = sul->do_query(substr, id).GET_INT();
-  const int pred_value = parse_dfa_for_type(substr, hypothesis, id); // TODO: we can do this one faster too via memoization
-
-  if(true_val != pred_value)
-    return make_pair(true, make_optional(sul_response(true_val)));
-  
-  return make_pair(false, nullopt);
-}
-
 /**
  * @brief Walks throught the hypothesis with the substr, returns type of last node.
  */
 const int type_conflict_detector::parse_dfa_for_type(const vector<int>& substr, apta& hypothesis, inputdata& id) {
   trace* tr = vector_to_trace(substr, id); // TODO: we could make this more efficient
   return predict_type_from_trace(tr, &hypothesis, id);
+}
+
+pair<bool, optional<sul_response> > type_conflict_detector::creates_conflict_common(const sul_response& resp, const vector<int>& substr, apta& hypothesis, inputdata& id) {
+  const int true_val = resp.GET_INT();
+  const int pred_value = parse_dfa_for_type(substr, hypothesis, id); // TODO: we can do this one faster too via memoization
+
+  if(true_val != pred_value)
+    return make_pair(true, make_optional(sul_response(true_val)));
+  
+  return make_pair(false, nullopt);
 }

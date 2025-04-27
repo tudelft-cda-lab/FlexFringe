@@ -10,7 +10,6 @@
  */
 
 #include "paul.h"
-#include "paul_heuristic.h"
 #include "common_functions.h"
 
 #include "inputdatalocator.h"
@@ -34,17 +33,48 @@ using namespace std;
 using namespace active_learning_namespace;
 
 /**
+ * @brief Checks if node's data has has need for update, i.e. if the set of distinguishing sequences has increased, and if yes then
+ * update the predictions of the node.
+ */
+void paul_algorithm::update_node_data(apta_node* n, std::unique_ptr<apta>& aut) const {
+    auto* n_data = get_node_data(n);
+
+    if(!n_data->has_type()){
+        ii_handler->complete_node(n, aut);
+    }
+
+    if(n_data->get_predictions().size() != ii_handler->size()){
+        auto y_pred = ii_handler->predict_node_with_sul(*aut, n);
+        n_data->set_predictions(std::move(y_pred));
+    }
+}
+
+/**
+ * @brief For convenience. Gets data from node and converts to PAUL data. This works because PAUL algorithm is deeply intertwined with 
+ * its own heuristic.
+ */
+paul_data* paul_algorithm::get_node_data(apta_node* n) const {
+    return dynamic_cast<paul_data*>(n->get_data());
+}
+
+/**
  * @brief Checks if blue node has any merge partner among the red nodes, given by red_its. 
  * If blue node does not find a merge partner, then return a nullptr.
  */
-refinement* paul_algorithm::check_blue_node_for_merge_partner(apta_node* blue_node, unique_ptr<state_merger>& merger, unique_ptr<apta>& the_apta,
+refinement* paul_algorithm::check_blue_node_for_merge_partner(apta_node* const blue_node, unique_ptr<state_merger>& merger, unique_ptr<apta>& the_apta,
                                                               const state_set& red_its){
-    const static int N_THREADS = 1;
+    constexpr static int N_THREADS = 1;
+    const static bool MEMOIZE_PREDICTIONS = AL_SAVE_RUNTIME_FOR_SPACE;
 
-    for(apta_node* red_node: red_its){
-        ii_handler->pre_compute(the_apta, red_node, blue_node);
+    if(MEMOIZE_PREDICTIONS){
+        update_node_data(blue_node, the_apta);
     }
-    ii_handler->pre_compute(the_apta, blue_node);
+    else{
+        for(apta_node* red_node: red_its){
+            ii_handler->pre_compute(the_apta, red_node, blue_node);
+        }
+        ii_handler->pre_compute(the_apta, blue_node);
+    }
 
     refinement_set rs;
     bool mergeable = false;
@@ -54,12 +84,22 @@ refinement* paul_algorithm::check_blue_node_for_merge_partner(apta_node* blue_no
             if(ref == nullptr){
                 continue;
             }
-            // we only want to add data if they appear consistent so far
-            if(!ii_handler->check_consistency(the_apta, red_node, blue_node)){
-                continue;
+
+            // compare the nodes based on the SUL's predictions
+            if(MEMOIZE_PREDICTIONS){
+                update_node_data(red_node, the_apta);
+                if(!ii_handler->distributions_consistent(get_node_data(blue_node)->get_predictions(), get_node_data(red_node)->get_predictions())){
+                    continue;
+                }
             }
-            
-            ref->score = ii_handler->get_score();
+            else{
+                // we only want to add data if they appear consistent so far
+                if(!ii_handler->check_consistency(the_apta, red_node, blue_node)){
+                    continue;
+                }
+            }
+                
+            ref->score = ii_handler->get_score(); // score computed in check_consistency() or distributions_consistent()
             if(ref->score > 0){
                 rs.insert(ref);
                 mergeable = true;
@@ -275,10 +315,10 @@ list<refinement*> paul_algorithm::find_hypothesis(list<refinement*>& previous_re
         } */
 
 //#ifndef NDEBUG
-        {
+/*         {
             static int c = 0;
             merger->print_dot("after_" + to_string(c++) + ".dot");
-        }
+        } */
 //#endif
 
         //delete best_ref;
@@ -306,25 +346,22 @@ void paul_algorithm::proc_counterex(inputdata& id, unique_ptr<apta>& the_apta, c
         apta_node* n_child = active_learning_namespace::get_child_node(n, t);
 
         if (n_child == nullptr) {
-            auto access_trace = n->get_access_trace();
-            pref_suf_t seq = access_trace->get_input_sequence(true, true);
-            seq[-1] = t->get_symbol();
 
             vector< vector<int> > query(1);
-            query[0] = seq;
+            query[0] = substring;
             const sul_response res = oracle->ask_sul(query, id);
 
             int reverse_type = res.GET_INT_VEC()[0];
             double confidence = res.GET_DOUBLE_VEC()[0];
             assert(res.GET_INT_VEC().size() == 1);
 
-            trace* new_trace = active_learning_namespace::vector_to_trace(seq, id, reverse_type);
+            trace* new_trace = active_learning_namespace::vector_to_trace(substring, id, reverse_type);
             id.add_trace_to_apta(new_trace, the_apta.get(), false);
             n_child = active_learning_namespace::get_child_node(n, t);
             assert(n_child != nullptr);
 
-            paul_data* data = dynamic_cast<paul_data*>(n_child->get_data());
-            if(!data->has_type()){
+            auto* data = get_node_data(n_child);
+            if(!data->has_type()) [[likely]] { // should always be true
                 data->set_confidence(confidence);
                 data->add_inferred_type(reverse_type);
             }
@@ -388,7 +425,9 @@ void paul_algorithm::run(inputdata& id) {
         {
             static int model_nr = 0;
             cout << "printing model " << model_nr  << endl;
+
             output_manager::print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_refs");
+            output_manager::print_final_automaton(merger.get(), "." + to_string(model_nr) + ".pre_final");
         }
 
         optional<pair<vector<int>, sul_response>> query_result = oracle->equivalence_query(merger.get());
@@ -411,11 +450,11 @@ void paul_algorithm::run(inputdata& id) {
         cout << endl;        
         proc_counterex(id, the_apta, cex, merger, performed_refs);
 
-        {
+/*         {
             static int model_nr = 0;
             cout << "printing model " << model_nr  << endl;
             output_manager::print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_cex");
-        }
+        } */
 
         ++n_runs;
     }

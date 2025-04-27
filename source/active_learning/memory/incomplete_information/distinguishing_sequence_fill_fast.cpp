@@ -45,11 +45,6 @@ void distinguishing_sequence_fill_fast::pre_compute(list<int>& suffix, unordered
   seen_nodes.insert(left);
   auto r_data = dynamic_cast<paul_data*>(right->get_data());
   auto l_data = dynamic_cast<paul_data*>(left->get_data());
-
-  if(r_data->label_is_queried() && l_data->label_is_queried()){
-    // TODO: do we want this?
-    return;
-  }
   
   // in these two following if-clauses the side effect happens (see description)
   if(!r_data->has_type()){
@@ -59,7 +54,8 @@ void distinguishing_sequence_fill_fast::pre_compute(list<int>& suffix, unordered
     complete_node(left, aut);
   }
 
-  if(l_data->predict_type(nullptr) != r_data->predict_type(nullptr)){
+  // TODO: the label_queried check below only makes sense when we have a faulty oracle
+  if(l_data->predict_type(nullptr) != r_data->predict_type(nullptr) && !(r_data->label_is_queried() && l_data->label_is_queried())){
     m_suffixes.add_suffix(suffix);
   }
 
@@ -174,6 +170,10 @@ vector<int> distinguishing_sequence_fill_fast::predict_node_with_sul(apta& aut, 
     }
   }
 
+  if(res.size()==0){ // this case will happen if MAX_LEN kills all possible queries
+    res.assign(m_suffixes.size(), -1);
+  }
+
   return res;
 }
 
@@ -239,6 +239,10 @@ vector<int> distinguishing_sequence_fill_fast::predict_node_with_automaton(apta&
       res.push_back(answers[answers_idx]);
       ++answers_idx;
     }
+  }
+
+  if(res.size()==0){ // this case will happen if MAX_LEN kills all possible queries
+    res.assign(m_suffixes.size(), -1);
   }
 
   return res;

@@ -27,7 +27,10 @@ class conflict_search_base {
 
   public:
     conflict_search_base(const std::shared_ptr<conflict_detector_base>& cd) : conflict_detector(cd) {};
+
+    // two versions of this, because SULs can expect either a batch of data or a single string, therefore need to cover two types of interfaces
     virtual std::pair< std::vector<int>, sul_response> get_conflict_string(const std::vector<int>& cex, apta& hypothesis, inputdata& id) = 0;
+    virtual std::pair< std::vector<int>, sul_response> get_conflict_string(const std::vector< std::vector<int> >& cex, apta& hypothesis, inputdata& id) = 0;
 };
 
 #endif // _AL_CONFLICT_SEARCH_BASE_H_

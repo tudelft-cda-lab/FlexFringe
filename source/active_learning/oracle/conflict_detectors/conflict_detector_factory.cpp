@@ -59,7 +59,10 @@ shared_ptr<conflict_detector_base> conflict_detector_factory::create_detector(co
  * that is used, the selection is based on this.
  */
 shared_ptr<conflict_detector_base> conflict_detector_factory::create_detector(const std::shared_ptr<sul_base>& sul, const std::shared_ptr<ii_base>& ii_handler) {
-  if(type_overlap_based_algorithms.contains(ACTIVE_LEARNING_ALGORITHM))
+  if(type_based_algorithms.contains(ACTIVE_LEARNING_ALGORITHM)){
+    return make_shared<type_conflict_detector>(sul, ii_handler);
+  }
+  else if(type_overlap_based_algorithms.contains(ACTIVE_LEARNING_ALGORITHM))
     return make_shared<type_overlap_conflict_detector>(sul, ii_handler);
   else
     throw invalid_argument("No conflict detector is registered with this algorithm. Please choose for this.");

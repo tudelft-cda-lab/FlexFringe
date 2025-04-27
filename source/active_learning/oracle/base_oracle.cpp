@@ -56,7 +56,7 @@ const sul_response base_oracle::ask_sul(const vector< vector<int> >&& query_trac
  * false if we do not want to check.
  */
 bool base_oracle::check_test_string_interesting(const vector<int>& teststr) const noexcept {
-    if(!AL_TEST_EMTPY_STRING && teststr.size() == 0){
+    if(!AL_TEST_EMTPY_STRING && teststr.size() == 0 || AL_MAX_SEARCH_DEPTH > 0 && teststr.size() > AL_MAX_SEARCH_DEPTH){
         return false;
     }
     return true;
@@ -79,8 +79,10 @@ optional< pair<vector<int>, sul_response> > base_oracle::equivalence_query(state
     optional<vector<int>> query_string_opt = cex_search_strategy->next(id);
     while (query_string_opt != nullopt) { // nullopt == search exhausted
         auto& query_string = query_string_opt.value();
-        if(!check_test_string_interesting(query_string))
+        if(!check_test_string_interesting(query_string)){
+            query_string_opt = cex_search_strategy->next(id);
             continue;
+        }
 
         pair<bool, optional<sul_response> > resp = conflict_detector->creates_conflict(query_string, hypothesis, id);
         if(resp.first){

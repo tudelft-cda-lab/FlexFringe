@@ -23,6 +23,9 @@
 
 class distinguishing_sequence_fill : public ii_base, 
                                      public std::enable_shared_from_this<distinguishing_sequence_fill>{
+  
+  friend class paul_algorithm;
+
   private:
     std::unique_ptr<distinguishing_sequences> ds_ptr = std::make_unique<distinguishing_sequences>();
   
@@ -41,7 +44,6 @@ class distinguishing_sequence_fill : public ii_base,
     
     std::vector<int> predict_node_with_automaton(apta& aut, apta_node* node) override;
     std::vector<int> predict_node_with_sul(apta& aut, apta_node* node) override;
-
     bool distributions_consistent(const std::vector<int>& v1, const std::vector<int>& v2) override;
 
   public:
@@ -54,8 +56,8 @@ class distinguishing_sequence_fill : public ii_base,
     void pre_compute(std::unique_ptr<apta>& aut, apta_node* node) override;
     void pre_compute(std::unique_ptr<apta>& aut, apta_node* left, apta_node* right) override;
     bool check_consistency(std::unique_ptr<apta>& aut, apta_node* left, apta_node* right) override;
-    double get_score() override;
 
+    double get_score() override;
 
     const int size() const override {return ds_ptr->size();}
     

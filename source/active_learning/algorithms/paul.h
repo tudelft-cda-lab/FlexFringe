@@ -21,6 +21,8 @@
 #include "tail.h"
 #include "trace.h"
 
+#include "paul_heuristic.h"
+
 #include "overlap_fill.h"
 #include "overlap_fill_batch_wise.h"
 #include "distinguishing_sequence_fill.h"
@@ -32,13 +34,16 @@
 #include <future>
 #include <mutex>
 
-class paul_algorithm : public algorithm_base {
-  protected:
+class paul_algorithm final : public algorithm_base {    
+  private:
     std::shared_ptr<ii_base> ii_handler;
     const bool MERGE_WITH_LARGEST = true;
 
+    /* inline */ void update_node_data(apta_node* n, std::unique_ptr<apta>& aut) const;
+    /* inline */ paul_data* get_node_data(apta_node* n) const;
+
     refinement* get_best_refinement(std::unique_ptr<state_merger>& merger, std::unique_ptr<apta>& the_apta);
-    refinement* check_blue_node_for_merge_partner(apta_node* blue_node, std::unique_ptr<state_merger>& merger, std::unique_ptr<apta>& the_apta,
+    refinement* check_blue_node_for_merge_partner(apta_node* const blue_node, std::unique_ptr<state_merger>& merger, std::unique_ptr<apta>& the_apta,
                                                   const state_set& red_its);
 
     void load_inputdata();
