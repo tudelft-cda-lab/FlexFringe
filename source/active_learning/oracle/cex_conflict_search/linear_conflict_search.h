@@ -17,7 +17,7 @@
 class linear_conflict_search final : public conflict_search_base {
   protected:
     std::vector<int> current_substring;
-    std::vector< std::vector<int> > current_substring_batch_format;
+    std::vector< std::vector<int> > current_substring_batch_format = std::vector< std::vector<int> >(1);
 
     inline void update_current_substring(const std::vector<int>& cex) noexcept;
     inline void update_current_substring(const std::vector< std::vector<int> >& cex) noexcept;
