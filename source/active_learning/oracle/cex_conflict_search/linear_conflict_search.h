@@ -78,12 +78,12 @@ std::pair< std::vector<int>, sul_response> linear_conflict_search::get_conflict_
   }
 
   if constexpr(std::is_same_v<T, std::vector<int> >){
-    std::optional<sul_response> sul_resp = conflict_detector->creates_conflict(current_substring, hypothesis, id).second;
-    return make_pair(current_substring, sul_resp.value());
+    std::optional<sul_response> sul_resp_opt = conflict_detector->creates_conflict(current_substring, hypothesis, id).second; // we assume that the oracle already has ascertained to have found a conflict, therefore this is guaranteed to be one
+    return std::make_pair(current_substring, sul_resp_opt.value());
   }
   else if constexpr(std::is_same_v<T, std::vector< std::vector<int> > >){
-    std::optional<sul_response> sul_resp = conflict_detector->creates_conflict(current_substring_batch_format, hypothesis, id).second; 
-    return make_pair(current_substring.at(0), sul_resp.value());
+    std::optional<sul_response> sul_resp_opt = conflict_detector->creates_conflict(current_substring_batch_format, hypothesis, id).second; // we assume that the oracle already has ascertained to have found a conflict, therefore this is guaranteed to be one
+    return std::make_pair(current_substring_batch_format.at(0), sul_resp_opt.value());
   }
 }
 

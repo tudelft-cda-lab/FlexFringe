@@ -35,6 +35,14 @@ bool sul_response::GET_BOOL() const noexcept {
 }
 
 /**
+ * @brief True if bool-value exists, else false.
+ */
+bool sul_response::has_bool_val() const noexcept {
+  return bool_opt.has_value();
+}
+
+
+/**
   * @brief Get the int response. Safety check included.
   */
 int sul_response::get_int() const {
@@ -49,6 +57,13 @@ int sul_response::get_int() const {
  */
 int sul_response::GET_INT() const noexcept {
     return int_opt.value();
+}
+
+/**
+ * @brief True if integer-value exists, else false.
+ */
+bool sul_response::has_int_val() const noexcept {
+  return int_opt.has_value();
 }
 
 /**
@@ -69,6 +84,13 @@ double sul_response::GET_DOUBLE() const noexcept {
 }
 
 /**
+ * @brief True if double-value exists, else false.
+ */
+bool sul_response::has_double_val() const noexcept {
+  return double_opt.has_value();
+}
+
+/**
  * @brief Get the vector with ints. Safety check included.
  */
 const vector<int>& sul_response::get_int_vec() const {
@@ -86,6 +108,13 @@ const vector<int>& sul_response::GET_INT_VEC() const noexcept {
 }
 
 /**
+ * @brief True if integer-vector exists, else false.
+ */
+bool sul_response::has_int_vec() const noexcept {
+  return int_vec_opt.has_value();
+}
+
+/**
  * @brief Get the vector with floats. Safety check included.
  */
 const vector<double>& sul_response::get_double_vec() const {
@@ -100,6 +129,13 @@ const vector<double>& sul_response::get_double_vec() const {
  */
 const vector<double>& sul_response::GET_DOUBLE_VEC() const noexcept {
   return double_vec_opt.value();
+}
+
+/**
+ * @brief True if double-vector exists, else false.
+ */
+bool sul_response::has_double_vec() const noexcept {
+  return double_vec_opt.has_value();
 }
 
 /**

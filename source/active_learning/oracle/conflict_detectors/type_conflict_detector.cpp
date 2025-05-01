@@ -24,7 +24,7 @@ const int type_conflict_detector::parse_dfa_for_type(const vector<int>& substr, 
 }
 
 pair<bool, optional<sul_response> > type_conflict_detector::creates_conflict_common(const sul_response& resp, const vector<int>& substr, apta& hypothesis, inputdata& id) {
-  const int true_val = resp.GET_INT();
+  const int true_val = resp.has_int_val() ? resp.GET_INT() : resp.GET_INT_VEC().at(0);
   const int pred_value = parse_dfa_for_type(substr, hypothesis, id); // TODO: we can do this one faster too via memoization
 
   if(true_val != pred_value)

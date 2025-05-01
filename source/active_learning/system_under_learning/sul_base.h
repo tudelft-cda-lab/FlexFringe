@@ -56,18 +56,23 @@ struct sul_response {
     /** Getter-functions */
     bool get_bool() const;
     bool GET_BOOL() const noexcept;
+    bool has_bool_val() const noexcept;
 
     int get_int() const;
     int GET_INT() const noexcept;
+    bool has_int_val() const noexcept;
 
     double get_double() const;
     double GET_DOUBLE() const noexcept;
+    bool has_double_val() const noexcept;
 
     const std::vector<int>& get_int_vec() const;
     const std::vector<int>& GET_INT_VEC() const noexcept;
+    bool has_int_vec() const noexcept;
 
     const std::vector<double>& get_double_vec() const;
     const std::vector<double>& GET_DOUBLE_VEC() const noexcept;
+    bool has_double_vec() const noexcept;
 };
 
 class sul_base {
