@@ -18,7 +18,7 @@
  
 using namespace std;
 
-void ds_initializer_collect_from_apta::init(shared_ptr<distinguishing_sequence_fill> ii_handler, unique_ptr<apta>& aut){
+void ds_initializer_collect_from_apta::init(shared_ptr<distinguishing_sequences_handler> ii_handler, unique_ptr<apta>& aut){
   cout << "Collecting some distinguishing sequences from the initial apta" << endl;
   const int MAX_INIT_DEPTH = 2;
   int count = 0;

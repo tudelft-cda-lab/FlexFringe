@@ -50,3 +50,13 @@ inputdata* algorithm_base::get_inputdata() const {
     input_stream.close();
     return id;
 }
+
+/**
+ * @brief A standard way to initialize the oracle, since most of the algorithms use this method.
+ * 
+ */
+void algorithm_base::init_standard() {
+    auto sul = sul_factory::create_sul(AL_SYSTEM_UNDER_LEARNING);
+    auto ds_handler = ds_handler_factory::create_ds_handler(sul, AL_II_NAME);
+    this->oracle = oracle_factory::create_oracle(sul, AL_ORACLE, ds_handler);
+}

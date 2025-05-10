@@ -51,7 +51,7 @@ class paul_oracle : public base_oracle {
     std::optional<apta_node*> get_next_blue_node(std::unique_ptr<apta>& the_apta);
 
   public:
-    paul_oracle(const std::shared_ptr<sul_base>& sul, const std::shared_ptr<ii_base>& ii_handler) : base_oracle(sul) {
+    paul_oracle(const std::shared_ptr<sul_base>& sul, const std::shared_ptr<distinguishing_sequences_base>& ii_handler) : base_oracle(sul) {
       if(!ii_handler)
         throw std::invalid_argument("ERROR: ii_handler not provided to paul oracle, but it depends on it.");
 

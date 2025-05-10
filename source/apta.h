@@ -80,8 +80,8 @@ public:
     friend class state_merger;
     friend class overlap_fill;
     friend class overlap_fill_batch_wise;
-    friend class distinguishing_sequence_fill;
-    friend class distinguishing_sequence_fill_fast;
+    friend class distinguishing_sequences;
+    friend class distinguishing_sequences_fast;
 };
 
 /** iterators for the APTA and merged APTA nodes, performs breadth-first traversal
@@ -419,8 +419,8 @@ public:
     friend class benchmarkparser_base;
     friend class overlap_fill;
     friend class overlap_fill_batch_wise;
-    friend class distinguishing_sequence_fill;
-    friend class distinguishing_sequence_fill_fast;
+    friend class distinguishing_sequences;
+    friend class distinguishing_sequences_fast;
     friend class regex_builder;
 
     std::set<apta_node *> *get_sources();

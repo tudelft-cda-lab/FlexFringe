@@ -132,13 +132,9 @@ class ldot_algorithm : public algorithm_base {
     std::vector<apta_node*> represented_by(apta_node* n);
 
   public:
-    ldot_algorithm(std::unique_ptr<base_oracle>&& oracle)
-        : algorithm_base(std::move(oracle)){
-          STORE_ACCESS_STRINGS = true;
-        };
-
-    ldot_algorithm(std::vector< std::unique_ptr<base_oracle> >&& i_list) : : ldot_algorithm(std::move(i_list[0])){
-      throw std::logic_error("constructor not implemented");
+    ldot_algorithm(){
+      init_standard();
+      STORE_ACCESS_STRINGS = true;
     }
 
     /**

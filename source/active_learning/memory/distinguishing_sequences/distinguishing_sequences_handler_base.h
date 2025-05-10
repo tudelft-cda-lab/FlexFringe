@@ -1,5 +1,5 @@
 /**
- * @file ii_base.h
+ * @file distinguishing_sequences_handler_base.h
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
  * @brief Base class for incomplete information module. Name might change in future versions.
  * 
@@ -14,8 +14,8 @@
  * 
  */
 
-#ifndef __II_BASE_H__
-#define __II_BASE_H__
+#ifndef __DISTINGUISHING_SEQUENCES_HANDLER_BASE_H__
+#define __DISTINGUISHING_SEQUENCES_HANDLER_BASE_H__
 
 #include "apta.h"
 #include "sul_base.h"
@@ -23,7 +23,7 @@
 
 #include <memory>
 
-class ii_base {
+class distinguishing_sequences_handler_base {
   protected:
     std::shared_ptr<sul_base> sul;
 
@@ -34,10 +34,10 @@ class ii_base {
     };
 
   public:
-    ii_base(const std::shared_ptr<sul_base>& sul) : sul(sul){};
+    distinguishing_sequences_handler_base(const std::shared_ptr<sul_base>& sul) : sul(sul){};
 
-    ii_base(){
-      throw std::logic_error("Error: ii_base must be equipped with a SUL");
+    distinguishing_sequences_handler_base(){
+      throw std::logic_error("Error: distinguishing_sequences_handler_base must be equipped with a SUL");
     }
 
     virtual void initialize(std::unique_ptr<apta>& aut){

@@ -1,5 +1,5 @@
 /**
- * @file distinguishing_sequence_fill_fast.cpp
+ * @file distinguishing_sequences_handler_fast.cpp
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
  * @brief 
  * @version 0.1
@@ -9,7 +9,7 @@
  * 
  */
 
-#include "distinguishing_sequence_fill_fast.h"
+#include "distinguishing_sequences_handler_fast.h"
 #include "paul_heuristic.h"
 #include "parameters.h"
 
@@ -21,20 +21,20 @@
 using namespace std;
 
 // -------------------------------- Instantiate all the templated methods for suffixes_t --------------------------------
-template void distinguishing_sequence_fill_fast::suffixes_t::add_suffix(const vector<int>&);
-template void distinguishing_sequence_fill_fast::suffixes_t::add_suffix(const list<int>&);
+template void distinguishing_sequences_handler_fast::suffixes_t::add_suffix(const vector<int>&);
+template void distinguishing_sequences_handler_fast::suffixes_t::add_suffix(const list<int>&);
 
-template std::size_t distinguishing_sequence_fill_fast::suffixes_t::get_hash(const vector<uint32_t>&) const;
-template std::size_t distinguishing_sequence_fill_fast::suffixes_t::get_hash(const list<uint32_t>&) const;
+template std::size_t distinguishing_sequences_handler_fast::suffixes_t::get_hash(const vector<uint32_t>&) const;
+template std::size_t distinguishing_sequences_handler_fast::suffixes_t::get_hash(const list<uint32_t>&) const;
 
 
-// -------------------------------- Implementations of distinguishing_sequence_fill_fast --------------------------------
+// -------------------------------- Implementations of distinguishing_sequences_handler_fast --------------------------------
 
 /**
  * @brief Takes the two nodes, walks through their subtrees, and stores all the suffixes for which the two subtree disagree. 
  * If a suffix in not in the set of distinguishing sequences at the moment, then it will be added 
  */
-void distinguishing_sequence_fill_fast::pre_compute(list<int>& suffix, unordered_set<apta_node*>& seen_nodes, unique_ptr<apta>& aut, apta_node* left, apta_node* right, const int depth) {
+void distinguishing_sequences_handler_fast::pre_compute(list<int>& suffix, unordered_set<apta_node*>& seen_nodes, unique_ptr<apta>& aut, apta_node* left, apta_node* right, const int depth) {
   const static int max_search_depth = AL_MAX_SEARCH_DEPTH;
   if((LTD_LENGTH > 0 && suffix.size() == LTD_LENGTH) || (max_search_depth > 0 && (left->get_depth() > max_search_depth) || right->get_depth() > max_search_depth)) // making sure we don't bust the transformer
     return;
@@ -119,7 +119,7 @@ void distinguishing_sequence_fill_fast::pre_compute(list<int>& suffix, unordered
  * @brief Prerequisite to check_consistency. We already compute the distribution for the red node, 
  * saving us recomputation of the same distribution over and over again.
  */
-vector<int> distinguishing_sequence_fill_fast::predict_node_with_sul(apta& aut, apta_node* node) {
+vector<int> distinguishing_sequences_handler_fast::predict_node_with_sul(apta& aut, apta_node* node) {
   static inputdata& id = *inputdata_locator::get(); 
 
   auto right_access_trace = node->get_access_trace();
@@ -181,7 +181,7 @@ vector<int> distinguishing_sequence_fill_fast::predict_node_with_sul(apta& aut, 
  * @brief Predicts the distribution emanating from node using the automaton using 
  * the DS. If automaton cannot be parsed with the strings the prediction is -1.
  */
-vector<int> distinguishing_sequence_fill_fast::predict_node_with_automaton(apta& aut, apta_node* node){
+vector<int> distinguishing_sequences_handler_fast::predict_node_with_automaton(apta& aut, apta_node* node){
   static inputdata& id = *inputdata_locator::get(); 
 
   auto right_access_trace = node->get_access_trace();

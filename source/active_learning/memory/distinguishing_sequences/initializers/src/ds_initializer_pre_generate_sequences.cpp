@@ -45,7 +45,7 @@ void ds_initializer_pre_generate_sequences::recurse_layer(/*out*/ vector<int>& c
  * As a side effect, those are not real distinguishing sequences anymore, but we are sure to cover all 
  * until the pre-set depth. This enables us to run statistical methods on some SULs as well. 
  */
-void ds_initializer_pre_generate_sequences::init(shared_ptr<distinguishing_sequence_fill> ii_handler, unique_ptr<apta>& aut){
+void ds_initializer_pre_generate_sequences::init(shared_ptr<distinguishing_sequences_handler> ii_handler, unique_ptr<apta>& aut){
   this->ii_handler = ii_handler;
   
   const vector<int>& alphabet = aut->get_context()->get_dat()->get_alphabet();

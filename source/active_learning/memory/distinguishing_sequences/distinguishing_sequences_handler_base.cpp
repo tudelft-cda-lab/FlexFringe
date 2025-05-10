@@ -1,5 +1,5 @@
 /**
- * @file ii_base.cpp
+ * @file distinguishing_sequences_handler_base.cpp
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
  * @brief 
  * @version 0.1
@@ -9,7 +9,7 @@
  * 
  */
 
-#include "ii_base.h"
+#include "distinguishing_sequences_handler_base.h"
 #include "paul_heuristic.h"
 
 #include "mem_store.h"
@@ -28,7 +28,7 @@ using namespace std;
  * @brief Adds the type to the node according to the SUL and heuristic.
  * Only works on a few selected heuristics that support adding data.
  */
-void ii_base::complete_node(apta_node* node, unique_ptr<apta>& aut){
+void distinguishing_sequences_handler_base::complete_node(apta_node* node, unique_ptr<apta>& aut){
   static inputdata& id = *(inputdata_locator::get());
   using ht = heuristic_type;
   

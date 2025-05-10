@@ -1,5 +1,5 @@
 /**
- * @file distinguishing_sequence_fill_fast.h
+ * @file distinguishing_sequences_handler_fast.h
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
  * @brief Keeps track of distinguishing sequences by storing them in raw format. 
  * As the name implies, this version is fast, but consumes more memory at runtime. Only use 
@@ -11,11 +11,11 @@
  * 
  */
 
-#ifndef _DISTINGUISHING_SEQUENCES_FILL_FAST_H_
-#define _DISTINGUISHING_SEQUENCES_FILL_FAST_H_
+#ifndef _DISTINGUISHING_SEQUENCES_HANDLER_FAST_H_
+#define _DISTINGUISHING_SEQUENCES_HANDLER_FAST_H_
 
-#include "distinguishing_sequence_fill.h"
-#include "distinguishing_sequences.h"
+#include "distinguishing_sequences_handler.h"
+#include "data_structures/distinguishing_sequences.h"
 #include "parameters.h"
 
 #include <memory>
@@ -24,11 +24,11 @@
 #include <unordered_set>
 
 /**
- * @brief Works the same as the distinguishing_sequence_fill_fast, but it memoizes the sequences in a list as well. 
+ * @brief Works the same as the distinguishing_sequences_handler_fast, but it memoizes the sequences in a list as well. 
  * This way the sequences do not have to be reconstructed in every turn. The trade-off of this is obviously 
  * it requires more working memory.
  */
-class distinguishing_sequence_fill_fast : public distinguishing_sequence_fill {
+class distinguishing_sequences_handler_fast : public distinguishing_sequences_handler {
   private:
     struct suffixes_t {
       private:
@@ -67,7 +67,7 @@ class distinguishing_sequence_fill_fast : public distinguishing_sequence_fill {
     const int size() const override {return m_suffixes.size();}
 
   public:
-    distinguishing_sequence_fill_fast(const std::shared_ptr<sul_base>& sul) : distinguishing_sequence_fill(sul){};
+    distinguishing_sequences_handler_fast(const std::shared_ptr<sul_base>& sul) : distinguishing_sequences_handler(sul){};
     void add_suffix(const std::vector<int>& seq) override {m_suffixes.add_suffix(seq);} 
 };
 
@@ -75,7 +75,7 @@ class distinguishing_sequence_fill_fast : public distinguishing_sequence_fill {
  * @brief Adds a suffix to the set of suffixes. Makes sure that duplicates are avoided.
  */
 template<typename T> requires (std::is_same_v<T, std::vector<int>> || std::is_same_v<T, std::list<int>>)
-void distinguishing_sequence_fill_fast::suffixes_t::add_suffix(const T& seq) {
+void distinguishing_sequences_handler_fast::suffixes_t::add_suffix(const T& seq) {
   static std::unordered_set<size_t> hashed_suffixes;
 
   std::size_t suf_hash;

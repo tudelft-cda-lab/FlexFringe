@@ -59,11 +59,9 @@ class probabilistic_lsharp_algorithm : public lsharp_algorithm {
                                std::unique_ptr<state_merger>& merger, const refinement_list refs, const std::vector<int>& alphabet) const;
 
   public:
-    probabilistic_lsharp_algorithm(std::unique_ptr<base_oracle>&& oracle) : lsharp_algorithm(std::move(oracle)) {      
+    probabilistic_lsharp_algorithm() : lsharp_algorithm() {
+      init_standard();      
       STORE_ACCESS_STRINGS = true;
-    };
-    probabilistic_lsharp_algorithm(std::vector< std::unique_ptr<base_oracle> >&& i_list) : probabilistic_lsharp_algorithm(std::move(i_list[0])) {
-      std::cerr << "This algorithm does not support multiple oracles. Oracle 2 is ignored." << std::endl;
     }
 
     void run(inputdata& id) override;

@@ -8,9 +8,8 @@ include_directories(
         "${CMAKE_CURRENT_SOURCE_DIR}/oracle/conflict_detectors"
         "${CMAKE_CURRENT_SOURCE_DIR}/active_learning_util"
         "${CMAKE_CURRENT_SOURCE_DIR}/memory"
-        "${CMAKE_CURRENT_SOURCE_DIR}/memory/incomplete_information"
-        "${CMAKE_CURRENT_SOURCE_DIR}/memory/incomplete_information/initializers"
-        "${CMAKE_CURRENT_SOURCE_DIR}/memory/incomplete_information/initializers/distinguishing_sequences"
+        "${CMAKE_CURRENT_SOURCE_DIR}/memory/distinguishing_sequences"
+        "${CMAKE_CURRENT_SOURCE_DIR}/memory/overlap_fill"
         "${CMAKE_CURRENT_SOURCE_DIR}/system_under_learning"
         "${CMAKE_CURRENT_SOURCE_DIR}/system_under_learning/neural_network_suls"
         "${CMAKE_CURRENT_SOURCE_DIR}/system_under_learning/benchmark_parsers"
@@ -27,13 +26,13 @@ add_library(ActiveLearning STATIC
             active_learning_util/common_functions.cpp
             active_learning_util/random_int_generator.h
             active_learning_util/random_int_generator.cpp
-            active_learning_util/factories.h
-            active_learning_util/factories.cpp
 
             algorithms/algorithm_base.h
             algorithms/algorithm_base.cpp
 
             # DFAs
+            algorithms/algorithm_factory.h
+            algorithms/algorithm_factory.cpp
             algorithms/lstar.h
             algorithms/lstar.cpp
             algorithms/lstar_imat.h
@@ -58,6 +57,8 @@ add_library(ActiveLearning STATIC
             databases/prefix_tree_database.cpp
 
             # oracles
+            oracle/oracle_factory.h
+            oracle/oracle_factory.cpp
             oracle/base_oracle.h
             oracle/base_oracle.cpp
             oracle/input_file_oracle.h
@@ -105,43 +106,53 @@ add_library(ActiveLearning STATIC
             oracle/conflict_detectors/string_probability_conflict_detector.h
             oracle/conflict_detectors/string_probability_conflict_detector.cpp
 
-            # Methods to deal with incomplete information
-            memory/incomplete_information/ii_base.h
-            memory/incomplete_information/ii_base.cpp
-            memory/incomplete_information/overlap_fill.h
-            memory/incomplete_information/overlap_fill.cpp
-            memory/incomplete_information/overlap_fill_batch_wise.h
-            memory/incomplete_information/overlap_fill_batch_wise.cpp
-            memory/incomplete_information/distinguishing_sequence_fill.h
-            memory/incomplete_information/distinguishing_sequence_fill.cpp
-            memory/incomplete_information/distinguishing_sequence_fill_fast.h
-            memory/incomplete_information/distinguishing_sequence_fill_fast.cpp
-
-            memory/incomplete_information/initializers/ds_initializer_factory.h
-            memory/incomplete_information/initializers/ds_initializer_factory.cpp
-            memory/incomplete_information/initializers/ds_initializer_registration.h
-            memory/incomplete_information/initializers/ds_initializer_registration.cpp
-            memory/incomplete_information/initializers/distinguishing_sequences/ds_initializer_base.h
-            memory/incomplete_information/initializers/distinguishing_sequences/ds_initializer_pre_generate_sequences.h
-            memory/incomplete_information/initializers/distinguishing_sequences/ds_initializer_pre_generate_sequences.cpp
-            memory/incomplete_information/initializers/distinguishing_sequences/ds_initializer_collect_from_apta.h
-            memory/incomplete_information/initializers/distinguishing_sequences/ds_initializer_collect_from_apta.cpp
-
             # Everything related to memory and possible memoization techniques
             memory/observation_table.h
             memory/observation_table.cpp
             memory/observation_table_imat.h
             memory/observation_table_imat.cpp
-            memory/distinguishing_sequences.h
-            memory/distinguishing_sequences.cpp
-            memory/adaptive_distinguishing_sequences.h
-            memory/adaptive_distinguishing_sequences.cpp
             memory/classification_tree.h
             memory/classification_tree.cpp
             memory/suffix_tree.h
             memory/suffix_tree.cpp
 
+            # distinguishing sequences
+            memory/distinguishing_sequences/ds_handler_factory.h
+            memory/distinguishing_sequences/ds_handler_factory.cpp
+            memory/distinguishing_sequences/distinguishing_sequences_handler_base.h
+            memory/distinguishing_sequences/distinguishing_sequences_handler_base.cpp
+            memory/distinguishing_sequences/distinguishing_sequences_handler.h
+            memory/distinguishing_sequences/distinguishing_sequences_handler.cpp
+            memory/distinguishing_sequences/distinguishing_sequences_handler_fast.h
+            memory/distinguishing_sequences/distinguishing_sequences_handler_fast.cpp
+
+            memory/distinguishing_sequences/initializers/ds_initializer_factory.h
+            memory/distinguishing_sequences/initializers/ds_initializer_factory.cpp
+            memory/distinguishing_sequences/initializers/ds_initializer_registration.h
+            memory/distinguishing_sequences/initializers/ds_initializer_registration.cpp
+            memory/distinguishing_sequences/initializers/src/ds_initializer_base.h
+            memory/distinguishing_sequences/initializers/src/ds_initializer_pre_generate_sequences.h
+            memory/distinguishing_sequences/initializers/src/ds_initializer_pre_generate_sequences.cpp
+            memory/distinguishing_sequences/initializers/src/ds_initializer_collect_from_apta.h
+            memory/distinguishing_sequences/initializers/src/ds_initializer_collect_from_apta.cpp
+
+            memory/distinguishing_sequences/data_structures/distinguishing_sequences.h
+            memory/distinguishing_sequences/data_structures/distinguishing_sequences.cpp
+            memory/distinguishing_sequences/data_structures/adaptive_distinguishing_sequences.h
+            memory/distinguishing_sequences/data_structures/adaptive_distinguishing_sequences.cpp
+
+            # overlap fill
+            memory/overlap_fill/overlap_fill_factory.h
+            memory/overlap_fill/overlap_fill_factory.cpp
+            memory/overlap_fill/overlap_fill_base.h
+            memory/overlap_fill/overlap_fill.h
+            memory/overlap_fill/overlap_fill.cpp
+            memory/overlap_fill/overlap_fill_batch_wise.h
+            memory/overlap_fill/overlap_fill_batch_wise.cpp
+
             # The SULs: Interfaces connecting Flexfringe with the system under learning 
+            system_under_learning/sul_factory.h
+            system_under_learning/sul_factory.cpp
             system_under_learning/sul_base.h
             system_under_learning/sul_base.cpp
             system_under_learning/input_file_sul.h

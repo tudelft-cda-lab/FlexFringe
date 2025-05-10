@@ -23,10 +23,10 @@
 class ds_initializer_pre_generate_sequences : public ds_initializer_base {
   private:
     inline void recurse_layer( /*out*/ std::vector<int>& current_vector, const int depth, const int max_depth, const std::vector<int>& alphabet);  
-    std::shared_ptr<distinguishing_sequence_fill> ii_handler;
+    std::shared_ptr<distinguishing_sequences_handler> ii_handler;
   
   public:
-    void init(std::shared_ptr<distinguishing_sequence_fill> ii_handler, std::unique_ptr<apta>& aut) override;
+    void init(std::shared_ptr<distinguishing_sequences_handler> ii_handler, std::unique_ptr<apta>& aut) override;
 };
 
 #endif

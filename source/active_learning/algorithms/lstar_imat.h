@@ -32,13 +32,9 @@ class lstar_imat_algorithm : public algorithm_base {
     std::set<std::vector<int>> added_traces;
 
   public:
-    lstar_imat_algorithm(std::unique_ptr<base_oracle>&& oracle)
-        : algorithm_base(std::move(oracle)){
-          STORE_ACCESS_STRINGS = true;
-        };
-
-    lstar_imat_algorithm(std::vector< std::unique_ptr<base_oracle> >&& i_list) : lstar_imat_algorithm(std::move(i_list[0])) {
-      std::cerr << "This algorithm does not support multiple oracles. Oracle 2 is ignored." << std::endl;
+    lstar_imat_algorithm() {
+      init_standard();
+      STORE_ACCESS_STRINGS = true;
     }
 
     void run(inputdata& id) override;

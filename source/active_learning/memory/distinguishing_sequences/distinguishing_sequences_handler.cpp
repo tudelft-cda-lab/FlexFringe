@@ -1,5 +1,5 @@
 /**
- * @file distinguishing_sequence_fill.cpp
+ * @file distinguishing_sequences_handler.cpp
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
  * @brief 
  * @version 0.1
@@ -9,11 +9,11 @@
  * 
  */
 
-#include "distinguishing_sequence_fill.h"
+#include "distinguishing_sequences_handler.h"
 
 #include "paul_heuristic.h"
-#include "ds_initializer_factory.h"
-#include "ds_initializer_registration.h"
+#include "initializers/ds_initializer_factory.h"
+#include "initializers/ds_initializer_registration.h"
 #include "parameters.h"
 
 #include "inputdatalocator.h"
@@ -27,7 +27,7 @@ using namespace std;
  * @brief Takes the two nodes, walks through their subtrees, and stores all the suffixes for which the two subtree disagree. 
  * If a suffix in not in the set of distinguishing sequences at the moment, then it will be added 
  */
-void distinguishing_sequence_fill::pre_compute(list<int>& suffix, unordered_set<apta_node*>& seen_nodes, unique_ptr<apta>& aut, apta_node* left, apta_node* right, const int depth) {
+void distinguishing_sequences_handler::pre_compute(list<int>& suffix, unordered_set<apta_node*>& seen_nodes, unique_ptr<apta>& aut, apta_node* left, apta_node* right, const int depth) {
   const static int max_search_depth = AL_MAX_SEARCH_DEPTH;
   if(max_search_depth > 0 && (left->get_depth() > max_search_depth || right->get_depth() > max_search_depth)) // making sure we don't bust the transformer
     return;
@@ -110,7 +110,7 @@ void distinguishing_sequence_fill::pre_compute(list<int>& suffix, unordered_set<
 /**
  * @brief Collect all sequences that distinguish the two states.
  */
-void distinguishing_sequence_fill::pre_compute(unique_ptr<apta>& aut, apta_node* left, apta_node* right){
+void distinguishing_sequences_handler::pre_compute(unique_ptr<apta>& aut, apta_node* left, apta_node* right){
   if(!collect_suffixes())
     return;
 
@@ -122,7 +122,7 @@ void distinguishing_sequence_fill::pre_compute(unique_ptr<apta>& aut, apta_node*
 /**
  * @brief Helper function used to add sequences to the tree (putting the data into the node's information).
  */
-void distinguishing_sequence_fill::add_data_to_tree(unique_ptr<apta>& aut, const vector<int>& seq, const int reverse_type, const float confidence){
+void distinguishing_sequences_handler::add_data_to_tree(unique_ptr<apta>& aut, const vector<int>& seq, const int reverse_type, const float confidence){
   static inputdata& id = *(inputdata_locator::get());
 
   trace* new_trace = active_learning_namespace::vector_to_trace(seq, id, reverse_type);
@@ -144,7 +144,7 @@ void distinguishing_sequence_fill::add_data_to_tree(unique_ptr<apta>& aut, const
  * @brief Memoizes the suffixes. Saves us recomputation at the expense of memory and possible accuracy.
  * 
  */
-/* void distinguishing_sequence_fill::memoize() noexcept {
+/* void distinguishing_sequences_handler::memoize() noexcept {
   optional< vector<int> > suffix_opt = ds_ptr->next();
   while(suffix_opt){
     m_suffixes.push_back(move(suffix_opt.value()));
@@ -161,7 +161,7 @@ void distinguishing_sequence_fill::add_data_to_tree(unique_ptr<apta>& aut, const
  * @param node 
  * @return std::vector<int> 
  */
-vector<int> distinguishing_sequence_fill::predict_node_with_sul(apta& aut, apta_node* node){
+vector<int> distinguishing_sequences_handler::predict_node_with_sul(apta& aut, apta_node* node){
   static inputdata& id = *inputdata_locator::get(); 
 
   auto right_access_trace = node->get_access_trace();
@@ -227,7 +227,7 @@ vector<int> distinguishing_sequence_fill::predict_node_with_sul(apta& aut, apta_
  * @brief Predicts the distribution emanating from node using the automaton using 
  * the DS. If automaton cannot be parsed with the strings the prediction is -1.
  */
-vector<int> distinguishing_sequence_fill::predict_node_with_automaton(apta& aut, apta_node* node){
+vector<int> distinguishing_sequences_handler::predict_node_with_automaton(apta& aut, apta_node* node){
   static inputdata& id = *inputdata_locator::get(); 
 
   auto right_access_trace = node->get_access_trace();
@@ -302,7 +302,7 @@ vector<int> distinguishing_sequence_fill::predict_node_with_automaton(apta& aut,
 /**
  * @brief Avoids duplicate code.
  */
-bool distinguishing_sequence_fill::distributions_consistent(const std::vector<int>& v1, const std::vector<int>& v2) {
+bool distinguishing_sequences_handler::distributions_consistent(const std::vector<int>& v1, const std::vector<int>& v2) {
   if(v1.size() != v2.size())
     throw runtime_error("Something weird happened in predictions");
   
@@ -326,11 +326,11 @@ bool distinguishing_sequence_fill::distributions_consistent(const std::vector<in
   constexpr static float epsilon = 1e-6; // avoid division error when v1 or v2 only have -1 entries, or size of this is 0
   float ratio = static_cast<float>(disagreed) / (static_cast<float>(disagreed) + static_cast<float>(agreed) + epsilon);
 
-  static float threshold = CHECK_PARAMETER;
+  static const float threshold = CHECK_PARAMETER;
   //std::cout << "\n ratio: " << ratio << ", threshold: " << threshold << "size: " << v1.size() << std::endl;
   if(ratio > threshold){
     last_overlap = 0;
-    cout << "\nDisagreed: " << disagreed << " | agreed: " << agreed << " | ratio: " << ratio << endl;
+    //cout << "\nDisagreed: " << disagreed << " | agreed: " << agreed << " | ratio: " << ratio << endl;
     return false;
   }
   
@@ -342,7 +342,7 @@ bool distinguishing_sequence_fill::distributions_consistent(const std::vector<in
  * @brief Prerequisite to check_consistency. We already compute the distribution for the red node, 
  * saving us recomputation of the same distribution over and over again.
  */
-void distinguishing_sequence_fill::pre_compute(unique_ptr<apta>& aut, apta_node* node) {
+void distinguishing_sequences_handler::pre_compute(unique_ptr<apta>& aut, apta_node* node) {
   memoized_predictions = predict_node_with_sul(*aut, node);
 }
 
@@ -351,7 +351,7 @@ void distinguishing_sequence_fill::pre_compute(unique_ptr<apta>& aut, apta_node*
  * @return true If consistent.
  * @return false If not consistent.
  */
-bool distinguishing_sequence_fill::check_consistency(unique_ptr<apta>& aut, apta_node* left, apta_node* right){
+bool distinguishing_sequences_handler::check_consistency(unique_ptr<apta>& aut, apta_node* left, apta_node* right){
   vector<int> predictions = predict_node_with_sul(*aut, left);
   return distributions_consistent(memoized_predictions, predictions);
 }
@@ -359,7 +359,7 @@ bool distinguishing_sequence_fill::check_consistency(unique_ptr<apta>& aut, apta
 /**
  * @brief Computes the overlap and returns it.
  */
-double distinguishing_sequence_fill::get_score(){
+double distinguishing_sequences_handler::get_score(){
   return last_overlap;
 }
 
@@ -367,7 +367,7 @@ double distinguishing_sequence_fill::get_score(){
  * @brief Collect a set of distinguishing sequences already, to make better decisions at the root level of 
  * the tree.
  */
-void distinguishing_sequence_fill::initialize(std::unique_ptr<apta>& aut){
+void distinguishing_sequences_handler::initialize(std::unique_ptr<apta>& aut){
   auto initializer = ds_initializer_factory::get_initializer(AL_II_INITIALIZER_NAME);
   initializer->init(shared_from_this(), aut);
 }
@@ -377,7 +377,7 @@ void distinguishing_sequence_fill::initialize(std::unique_ptr<apta>& aut){
  * 
  * @param seq The sequence to add.
  */
-void distinguishing_sequence_fill::add_suffix(const std::vector<int>& seq){
+void distinguishing_sequences_handler::add_suffix(const std::vector<int>& seq){
   ds_ptr->add_suffix(seq);
 }
 
@@ -387,7 +387,7 @@ void distinguishing_sequence_fill::add_suffix(const std::vector<int>& seq){
  * @return true Collect suffixes still.
  * @return false Disable collecting suffixes.
  */
-const bool distinguishing_sequence_fill::collect_suffixes() const {
+const bool distinguishing_sequences_handler::collect_suffixes() const {
   bool res = false;
   try{
     // if we use this initializer, we already collect a large set of sequences and rely on that
@@ -406,7 +406,7 @@ const bool distinguishing_sequence_fill::collect_suffixes() const {
  * @brief Take all the distinguishing sequences you currently have, add them to the two nodes, and ask the transformer to fill those two out.
  * Afterwards, reset the distinguishing sequences back to their original state.
  */
-/*void distinguishing_sequence_fill::complement_nodes(unique_ptr<apta>& aut, apta_node* left, apta_node* right) {
+/*void distinguishing_sequences_handler::complement_nodes(unique_ptr<apta>& aut, apta_node* left, apta_node* right) {
   return; // we currently do not want this option
 
   auto left_access_trace = left->get_access_trace();

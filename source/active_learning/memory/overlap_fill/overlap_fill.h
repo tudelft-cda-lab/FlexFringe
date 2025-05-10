@@ -16,14 +16,14 @@
 #ifndef __OVERLAP_FILL_H__
 #define __OVERLAP_FILL_H__
 
-#include "ii_base.h"
+#include "overlap_fill_base.h"
 #include "parameters.h"
 
 #include <optional>
 #include <unordered_set>
 
 
-class overlap_fill : public ii_base {
+class overlap_fill : public overlap_fill_base {
   private:
     __attribute__((always_inline)) inline void add_data_to_tree(std::unique_ptr<apta>& aut, active_learning_namespace::pref_suf_t& seq, apta_node* n, std::optional<int> s_opt=std::nullopt);
 
@@ -35,11 +35,7 @@ class overlap_fill : public ii_base {
     void complete_node(apta_node* node, std::unique_ptr<apta>& aut);
 
   public:
-    overlap_fill(const std::shared_ptr<sul_base>& sul) : ii_base(sul), MAX_DEPTH(AL_MAX_SEARCH_DEPTH) {};
-
-    void pre_compute(std::unique_ptr<apta>& aut, apta_node* left) override { /*Nothing to do here*/ };
-    void pre_compute(std::unique_ptr<apta>& aut, apta_node* left, apta_node* right) override;
-    bool check_consistency(std::unique_ptr<apta>& aut, apta_node* left, apta_node* right) override { return true; }
+    overlap_fill(const std::shared_ptr<sul_base>& sul) : overlap_fill_base(sul), MAX_DEPTH(AL_MAX_SEARCH_DEPTH) {};
 };
 
 #endif

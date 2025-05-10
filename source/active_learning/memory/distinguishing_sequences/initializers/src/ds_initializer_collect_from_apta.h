@@ -20,7 +20,7 @@
  */
 class ds_initializer_collect_from_apta : public ds_initializer_base {
   public:
-    void init(std::shared_ptr<distinguishing_sequence_fill> ii_handler, std::unique_ptr<apta>& aut) override;
+    void init(std::shared_ptr<distinguishing_sequences_handler> ii_handler, std::unique_ptr<apta>& aut) override;
 };
 
 #endif

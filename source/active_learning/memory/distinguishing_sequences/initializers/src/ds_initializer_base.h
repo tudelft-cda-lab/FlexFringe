@@ -13,7 +13,7 @@
 #define _DS_INITIALIZER_BASE_H_
 
 #include "apta.h"
-#include "../../distinguishing_sequence_fill.h"
+#include "../../distinguishing_sequences_handler.h"
 
 #include <memory>
 
@@ -23,7 +23,7 @@
  */
 class ds_initializer_base {
   public:
-    virtual void init(std::shared_ptr<distinguishing_sequence_fill> ii_handler, std::unique_ptr<apta>& aut){};
+    virtual void init(std::shared_ptr<distinguishing_sequences_handler> ii_handler, std::unique_ptr<apta>& aut){};
 };
 
 #endif

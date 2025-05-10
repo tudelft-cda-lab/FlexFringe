@@ -48,7 +48,7 @@ pair<bool, optional<sul_response> > string_probability_conflict_detector::create
     if (use_sinks && n==nullptr) {
       cout << "Sink found in eq" << endl;
 
-      true_probability *= weights[AL_END_SYMBOL]; // TODO: bake the EOS index into the Python script, along with the other requirements
+      true_probability *= weights[AL_END_SYMBOL]; // TODO: here we want to bake the EOS index into the Python script, along with the other requirements
         
       // assume: sampled_probability = 0
       if(true_probability < mu) 

@@ -23,7 +23,8 @@ void paul_data::print_state_label(std::iostream& output){
 };
 
 void paul_data::add_tail(tail* t) {
-    count_data::add_tail(t);
+    if(t->get_type() != -1) // making sure we don't add unlabeled traces
+        count_data::add_tail(t);
 }
 
 /**
@@ -188,7 +189,7 @@ void paul_heuristic::reset(state_merger *merger){
     n_real_real_pairs=0;
 };
 
-void paul_heuristic::provide_ii_handler(std::shared_ptr<ii_base>& ii_handler){
+void paul_heuristic::provide_ds_handler(std::shared_ptr<distinguishing_sequences_base>& ii_handler){
     this->ii_handler=ii_handler;
 }
 

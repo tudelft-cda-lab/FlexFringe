@@ -1,5 +1,5 @@
 /**
- * @file distinguishing_sequence_fill.h
+ * @file distinguishing_sequences_handler.h
  * @author Robert Baumgartner (r.baumgartner-1@tudelft.nl)
  * @brief Keeps track of distinguishing sequences, which it then fills up.
  * @version 0.1
@@ -9,11 +9,11 @@
  * 
  */
 
-#ifndef _DISTINGUISHING_SEQUENCES_FILL_H_
-#define _DISTINGUISHING_SEQUENCES_FILL_H_
+#ifndef _DISTINGUISHING_SEQUENCES_HANDLER_H_
+#define _DISTINGUISHING_SEQUENCES_HANDLER_H_
 
-#include "ii_base.h"
-#include "distinguishing_sequences.h"
+#include "distinguishing_sequences_handler_base.h"
+#include "data_structures/distinguishing_sequences.h"
 #include "parameters.h"
 
 #include <memory>
@@ -21,13 +21,13 @@
 #include <list>
 #include <unordered_set>
 
-class distinguishing_sequence_fill : public ii_base, 
-                                     public std::enable_shared_from_this<distinguishing_sequence_fill>{
+class distinguishing_sequences_handler : public distinguishing_sequences_handler_base, 
+                                     public std::enable_shared_from_this<distinguishing_sequences_handler>{
   
   friend class paul_algorithm;
 
   private:
-    std::unique_ptr<distinguishing_sequences> ds_ptr = std::make_unique<distinguishing_sequences>();
+    std::unique_ptr<distinguishing_sequences_handler> ds_ptr = std::make_unique<distinguishing_sequences_handler>();
   
   protected:
     const int MIN_BATCH_SIZE = AL_BATCH_SIZE;
@@ -47,8 +47,8 @@ class distinguishing_sequence_fill : public ii_base,
     bool distributions_consistent(const std::vector<int>& v1, const std::vector<int>& v2) override;
 
   public:
-    distinguishing_sequence_fill(const std::shared_ptr<sul_base>& sul) 
-    : ii_base(sul), MIN_BATCH_SIZE(AL_BATCH_SIZE), MAX_LEN(AL_MAX_SEARCH_DEPTH) {};
+    distinguishing_sequences_handler(const std::shared_ptr<sul_base>& sul) 
+    : distinguishing_sequences_handler_base(sul), MIN_BATCH_SIZE(AL_BATCH_SIZE), MAX_LEN(AL_MAX_SEARCH_DEPTH) {};
 
     [[nodiscard]] const bool collect_suffixes() const;
 

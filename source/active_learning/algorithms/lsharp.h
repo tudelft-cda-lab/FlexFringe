@@ -44,13 +44,9 @@ class lsharp_algorithm : public algorithm_base {
                                          const std::vector<int>& alphabet);
 
   public:
-    lsharp_algorithm(std::unique_ptr<base_oracle>&& oracle)
-        : algorithm_base(std::move(oracle)){
-          STORE_ACCESS_STRINGS = true;
-        };
-    
-    lsharp_algorithm(std::vector< std::unique_ptr<base_oracle> >&& i_list) : lsharp_algorithm(std::move(i_list[0])) {
-      std::cerr << "This algorithm does not support multiple oracles. Oracle 2 is ignored." << std::endl;
+    lsharp_algorithm() {
+      init_standard();
+      STORE_ACCESS_STRINGS = true;
     }
 
     void run(inputdata& id) override;

@@ -40,11 +40,11 @@ void paul_algorithm::update_node_data(apta_node* n, std::unique_ptr<apta>& aut) 
     auto* n_data = get_node_data(n);
 
     if(!n_data->has_type()){
-        ii_handler->complete_node(n, aut);
+        ds_handler->complete_node(n, aut);
     }
 
-    if(n_data->get_predictions().size() != ii_handler->size()){
-        auto y_pred = ii_handler->predict_node_with_sul(*aut, n);
+    if(n_data->get_predictions().size() != ds_handler->size()){
+        auto y_pred = ds_handler->predict_node_with_sul(*aut, n);
         n_data->set_predictions(std::move(y_pred));
     }
 }
@@ -56,6 +56,65 @@ void paul_algorithm::update_node_data(apta_node* n, std::unique_ptr<apta>& aut) 
 paul_data* paul_algorithm::get_node_data(apta_node* n) const {
     return dynamic_cast<paul_data*>(n->get_data());
 }
+
+/**
+ * @brief Checks node n for children. If they do not exist create them via the SUL output.
+ * Ensures that we have a hypothesis that can accept any input string over input alphabet.
+ */
+void paul_algorithm::complete_node(apta_node* n, std::unique_ptr<state_merger>& merger) const {
+    static const auto alphabet = merger->get_dat()->get_alphabet();
+    static auto* id_ptr = inputdata_locator::get();
+
+    static unordered_set<apta_node*> extended_nodes; // TODO: do we need this data structure here?
+    if (extended_nodes.contains(n))
+        return;
+
+    auto access_trace = n->get_access_trace();
+    pref_suf_t seq;
+    if (n->get_number() != -1 && n->get_number() != 0) [[likely]]
+        seq = access_trace->get_input_sequence(true, true);
+    else
+        seq.resize(1); // this is the root node
+
+    for (const int symbol : alphabet) {
+        if(n->get_child(symbol) != nullptr)
+            continue;
+
+        seq[seq.size() - 1] = symbol;
+        create_child_node(n, merger, seq, *id_ptr);
+
+        assert(n->get_child(symbol) != nullptr);
+    }
+
+    extended_nodes.insert(n);
+}
+
+/**
+ * @brief Create node with incoming trace seq.
+ */
+void paul_algorithm::create_child_node(apta_node* parent_node, std::unique_ptr<state_merger>& merger, const vector<int>& seq, inputdata& id) const {
+    trace* new_trace = mem_store::create_trace(&id);
+    add_sequence_to_trace(new_trace, seq);
+    id.add_trace_to_apta(new_trace, merger->get_aut(), false);
+
+    vector< vector<int> > query(1);
+    query[0] = seq;
+    const sul_response res = oracle->ask_sul(query, id);
+
+    int reverse_type = res.GET_INT_VEC()[0];
+    double confidence = res.GET_DOUBLE_VEC()[0];
+
+    apta_node* n_child = active_learning_namespace::get_child_node(parent_node, seq[seq.size()-1]);
+    assert(n_child != nullptr);
+
+    auto* data = get_node_data(n_child);
+    assert(!data->has_type()); // should always be true
+    if(!data->has_type()) [[likely]] { 
+        data->set_confidence(confidence);
+        data->add_inferred_type(reverse_type);
+    }
+}
+
 
 /**
  * @brief Checks if blue node has any merge partner among the red nodes, given by red_its. 
@@ -71,9 +130,9 @@ refinement* paul_algorithm::check_blue_node_for_merge_partner(apta_node* const b
     }
     else{
         for(apta_node* red_node: red_its){
-            ii_handler->pre_compute(the_apta, red_node, blue_node);
+            ds_handler->pre_compute(the_apta, red_node, blue_node);
         }
-        ii_handler->pre_compute(the_apta, blue_node);
+        ds_handler->pre_compute(the_apta, blue_node);
     }
 
     refinement_set rs;
@@ -88,18 +147,18 @@ refinement* paul_algorithm::check_blue_node_for_merge_partner(apta_node* const b
             // compare the nodes based on the SUL's predictions
             if(MEMOIZE_PREDICTIONS){
                 update_node_data(red_node, the_apta);
-                if(!ii_handler->distributions_consistent(get_node_data(blue_node)->get_predictions(), get_node_data(red_node)->get_predictions())){
+                if(!ds_handler->distributions_consistent(get_node_data(blue_node)->get_predictions(), get_node_data(red_node)->get_predictions())){
                     continue;
                 }
             }
             else{
                 // we only want to add data if they appear consistent so far
-                if(!ii_handler->check_consistency(the_apta, red_node, blue_node)){
+                if(!ds_handler->check_consistency(the_apta, red_node, blue_node)){
                     continue;
                 }
             }
                 
-            ref->score = ii_handler->get_score(); // score computed in check_consistency() or distributions_consistent()
+            ref->score = ds_handler->get_score(); // score computed in check_consistency() or distributions_consistent()
             if(ref->score > 0){
                 rs.insert(ref);
                 mergeable = true;
@@ -130,7 +189,7 @@ refinement* paul_algorithm::check_blue_node_for_merge_partner(apta_node* const b
                 threads.push_back(thread(std::ref(search_instances[current_refs.size()-1]), move(p), std::ref(merger), std::ref(the_apta), std::ref(oracle), red_node, blue_node));
                     
                 //t_res.push_back(async(launch::async, search_instance(), std::ref(merger), std::ref(the_apta), std::ref(oracle), red_node, blue_node));
-                //t_res.push_back(async(launch::async, paul_algorithm::merge_check, std::ref(ii_handler), std::ref(merger), std::ref(oracle), std::ref(the_apta), red_node, blue_node));
+                //t_res.push_back(async(launch::async, paul_algorithm::merge_check, std::ref(ds_handler), std::ref(merger), std::ref(oracle), std::ref(the_apta), red_node, blue_node));
                 
                 if(t_res.size()==N_THREADS){
                     // sync threads and collect results
@@ -182,7 +241,6 @@ refinement* paul_algorithm::check_blue_node_for_merge_partner(apta_node* const b
  * @return refinement* The best currently possible operation according to the heuristic.
  */
 refinement* paul_algorithm::get_best_refinement(unique_ptr<state_merger>& merger, unique_ptr<apta>& the_apta){
-
     state_set red_its = state_set();
     unordered_set<apta_node*> blue_its;
     static unordered_set<apta_node*> non_mergeable_blue_its;
@@ -346,8 +404,15 @@ void paul_algorithm::proc_counterex(inputdata& id, unique_ptr<apta>& the_apta, c
         apta_node* n_child = active_learning_namespace::get_child_node(n, t);
 
         if (n_child == nullptr) {
+            complete_node(n, merger);
+            
+            n_child = active_learning_namespace::get_child_node(n, t);
+            assert(n_child != nullptr);
 
-            vector< vector<int> > query(1);
+            //create_child_node(n, merger, substring, id);
+            //complete_node(n_child, merger);
+
+/*          vector< vector<int> > query(1);
             query[0] = substring;
             const sul_response res = oracle->ask_sul(query, id);
 
@@ -364,7 +429,7 @@ void paul_algorithm::proc_counterex(inputdata& id, unique_ptr<apta>& the_apta, c
             if(!data->has_type()) [[likely]] { // should always be true
                 data->set_confidence(confidence);
                 data->add_inferred_type(reverse_type);
-            }
+            } */
         }
 
         n = n_child;
@@ -403,15 +468,15 @@ void paul_algorithm::run(inputdata& id) {
         cout << "Size of raw APTA: " << n_states << endl;
     }
 
-    cout << "Initializing ii_handler" << endl;
-    ii_handler->initialize(the_apta); // must happen after traces have been added to apta!
+    cout << "Initializing ds_handler" << endl;
+    ds_handler->initialize(the_apta); // must happen after traces have been added to apta!
     try{
-        dynamic_cast<paul_heuristic*>(eval.get())->provide_ii_handler(ii_handler);    
+        dynamic_cast<paul_heuristic*>(eval.get())->provide_provide_ds_handler(ds_handler);    
     }
     catch(...){
-        throw invalid_argument("Cannot provide heuristic with ii_handler. Using paul heuristic?");
+        throw invalid_argument("Cannot provide heuristic with ds_handler. Using paul heuristic?");
     }
-    cout << "ii_handler is initialized" << endl;
+    cout << "ds_handler is initialized" << endl;
 
     const vector<int> alphabet = id.get_alphabet();
     cout << "Alphabet: ";
@@ -427,13 +492,15 @@ void paul_algorithm::run(inputdata& id) {
             cout << "printing model " << model_nr  << endl;
 
             output_manager::print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_refs");
-            output_manager::print_final_automaton(merger.get(), "." + to_string(model_nr) + ".pre_final");
         }
+
+        output_manager::print_final_automaton(merger.get(), ".final");
+        return;
 
         optional<pair<vector<int>, sul_response>> query_result = oracle->equivalence_query(merger.get());
         if (!query_result) {
             cout << "Found consistent automaton => Print." << endl;
-            output_manager::print_final_automaton(merger.get(), ".final");
+            //output_manager::print_final_automaton(merger.get(), ".final");
 
             for(auto ref: performed_refs)
                 mem_store::delete_refinement(ref);

@@ -13,12 +13,12 @@
 #define __PAUL_HEURISTIC__
 
 #include "count_types.h"
-#include "ii_base.h"
+#include "distinguishing_sequences_base.h"
 
 #include <map> // TODO: for debugging only
 #include <memory>
 
-class ii_base;
+class distinguishing_sequences_base;
 
 /* The data contained in every node of the prefix tree or DFA */
 class paul_data: public count_data {
@@ -44,6 +44,16 @@ protected:
   }
 
 public:
+  paul_data() : count_data::count_data() {
+    final_counts.clear();
+  }
+
+  void initialize() override {
+    count_data::initialize();
+    inferred_final_counts.clear();
+    inferred_total_final = 0;
+  }
+
   void print_state_label(std::iostream& output) override;
 
   void set_confidence(const float confidence) noexcept;
@@ -53,8 +63,8 @@ public:
 
   float get_confidence() const noexcept { return lm_confidence; };
 
-  inline bool has_type() const noexcept { return num_final() > 0; }
-  inline bool label_is_queried() const noexcept { return num_final() == 0; }
+  inline bool has_type() const noexcept { return final_counts.size() > 0; }
+  inline bool label_is_queried() const noexcept { return inferred_final_counts.size() > 0 && final_counts.size() == 0; }
 
   int predict_type(tail* t) override;
 
@@ -70,7 +80,7 @@ public:
 class paul_heuristic : public count_driven {
 
 protected:
-  std::shared_ptr<ii_base> ii_handler;
+  std::shared_ptr<distinguishing_sequences_base> ii_handler;
 
   int check_for_consistency(paul_data* left, paul_data* right, int mismatch_count=0) const;
 
@@ -92,7 +102,7 @@ public:
   bool consistent(state_merger* merger, apta_node* left, apta_node* right, int depth) override;
   double compute_score(state_merger* merger, apta_node* left, apta_node* right) override; 
   void reset(state_merger *merger) override;
-  void provide_ii_handler(std::shared_ptr<ii_base>& ii_handler);
+  void provide_ds_handler(std::shared_ptr<distinguishing_sequences_base>& ii_handler);
 };
 
 #endif

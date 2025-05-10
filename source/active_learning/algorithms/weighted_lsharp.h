@@ -45,11 +45,9 @@ class weighted_lsharp_algorithm : public lsharp_algorithm {
                                          const std::vector<int>& alphabet) override;
 
   public:
-    weighted_lsharp_algorithm(std::unique_ptr<base_oracle>&& oracle) : lsharp_algorithm(std::move(oracle)), use_sinks(USE_SINKS) {
+    weighted_lsharp_algorithm() : use_sinks(USE_SINKS) {
+        init_standard();
         STORE_ACCESS_STRINGS = true;
-    };
-    weighted_lsharp_algorithm(std::vector< std::unique_ptr<base_oracle> >&& i_list) : weighted_lsharp_algorithm(std::move(i_list[0])) {
-      std::cerr << "This algorithm does not support multiple oracles. Oracle 2 is ignored." << std::endl;
     }
 
     void run(inputdata& id) override;

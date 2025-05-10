@@ -12,7 +12,11 @@
 #ifndef _ALGORITHM_BASE_H_
 #define _ALGORITHM_BASE_H_
 
-#include "base_oracle.h"
+#include "oracle_factory.h"
+#include "sul_factory.h"
+#include "ds_handler_factory.h"
+
+#include "parameters.h"
 #include "inputdata.h"
 
 #include <memory>
@@ -31,9 +35,11 @@ class algorithm_base {
     std::ifstream get_inputstream() const;
     std::unique_ptr<parser> get_parser(std::ifstream& input_stream) const;
 
+    void init_standard();
+
   public:
-    algorithm_base(std::unique_ptr<base_oracle>&& oracle)
-        : oracle(std::move(oracle)){};
+    algorithm_base(){
+    };
 
     virtual void run(inputdata& id) = 0;
 };

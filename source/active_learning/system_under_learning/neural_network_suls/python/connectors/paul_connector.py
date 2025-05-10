@@ -176,7 +176,7 @@ def do_query(input_seq: list):
   #res = list()
   #res.append(confidence.item())
   #res.append(preds.item())
-  res = [confidence.item(), preds.item()] #, embedding_dim]
+  res = [preds.item(), confidence.item()] #, embedding_dim]
   #res.extend(representations)
 
   return res
