@@ -15,7 +15,7 @@ std::string LOG_PATH = "flexfringe.log";
 
 std::string OPERATION_MODE = "greedy";
 
-std::string SAT_SOLVER = "glucose";
+std::string SAT_SOLVER = "";
 std::string APTA_FILE = "";
 std::string APTA_FILE2 = "";
 

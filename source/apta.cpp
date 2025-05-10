@@ -15,8 +15,6 @@
 #include "input/inputdatalocator.h"
 #include "input/parsers/abbadingoparser.h"
 
-using namespace std;
-
 /*inline void apta_node::set_child(tail* t, apta_node* node){
     set_child(t->get_symbol(), node);
 };*/
@@ -38,67 +36,62 @@ apta::apta(){
     root = new apta_node();
     root->red = true;
     merger = nullptr;
+    root->number = 0;
 }
 
-void apta::print_dot(iostream& output){
+bool apta::print_node(apta_node* n){
+    if(n->rep() != nullptr) return false;
+    if(!n->data->print_state_true()) return false;
+    if(!PRINT_RED && n->red) return false;
+    if(!PRINT_WHITE && !n->red) {
+        if (n->source != nullptr) {
+            if (!n->source->find()->red) return false;
+            if (!PRINT_BLUE) return false;
+        }
+    }
+    return true;
+}
+
+void apta_node::print_dot(std::iostream& output){
+    output << "\t" << number << " [ label=\"";
+    output << number << " #" << size << " ";
+    data->print_state_label(output);
+    data->print_state_style(output);
+    output << "\" ";
+
+    //if (representative == nullptr) output << ", style=filled";
+    //else output << ", style=dotted";
+    output << ", style=filled";
+
+    if (is_red()) output << ", fillcolor=\"tomato\"";
+    else if (is_blue()) output << ", fillcolor=\"lightskyblue\"";
+    else if (is_white()) output << ", fillcolor=\"ghostwhite\"";
+
+    output << ", width=" << log(1 + log(1 + size));
+    output << ", height=" << log(1 + log(1 + size));
+    output << ", penwidth=" << log(1 + size);
+    output << "];\n";
+}
+
+void apta::print_dot(std::iostream& output){
     output << "digraph DFA {\n";
     output << "\t" << root->find()->number << " [label=\"root\" shape=box];\n";
     output << "\t\tI -> " << root->find()->number << ";\n";
-    for(APTA_iterator Ait = APTA_iterator(root); *Ait != 0; ++Ait){
+    for(APTA_iterator Ait = APTA_iterator(root); *Ait != nullptr; ++Ait){
         apta_node *n = *Ait;
-        if(!DEBUGGING && n->rep() != nullptr) continue;
-
-        if (!n->data->print_state_true()) {
-            continue;
-        }
-
-        if(!PRINT_RED && n->red) continue;
-
-        if (!PRINT_WHITE && !n->red) {
-            if (n->source != nullptr) {
-                if (!n->source->find()->red)
-                    continue;
-                if (!PRINT_BLUE)
-                    continue;
-            }
-        }
-
-        output << "\t" << n->number << " [ label=\"";
-        if(DEBUGGING){
-            output << n << ":#" << "\\n";
-            output << "rep#" << n->representative << "\\n";
-        }
-        output << n->number << " #" << n->size << " ";
-        n->data->print_state_label(output);
-        n->data->print_state_style(output);
-        output << "\" ";
-
-        if (n->is_red()) output << ", style=filled, fillcolor=\"firebrick1\"";
-        else if (n->is_blue()) output << ", style=filled, fillcolor=\"dodgerblue1\"";
-        else if (n->is_white()) output << ", style=filled, fillcolor=\"ghostwhite\"";
-        output << ", width=" << log(1 + log(1 + n->size));
-        output << ", height=" << log(1 + log(1 + n->size));
-        output << ", penwidth=" << log(1 + n->size);
-        output << "];\n";
+        if(!print_node(n)) continue;
+        n->print_dot(output);
 
         for(auto it = n->guards.begin(); it != n->guards.end(); ++it){
             if(it->second->target == nullptr) continue;
 
             apta_guard* g = it->second;
             apta_node* child = it->second->target->find();
+            if(!print_node(child)) continue;
+
             if(DEBUGGING) child = it->second->target;
 
-            if(!PRINT_RED && n->red) continue;
-
-            if (!PRINT_WHITE && !child->red) {
-                if (!n->red)
-                    continue;
-                if (!PRINT_BLUE)
-                    continue;
-            }
-
             output << "\t\t" << n->number << " -> " << child->number << " [label=\"";
-
             output << inputdata_locator::get()->get_symbol(it->first) << " ";
             n->data->print_transition_label(output, it->first);
             for(auto & min_attribute_value : g->min_attribute_values){
@@ -108,188 +101,141 @@ void apta::print_dot(iostream& output){
                 output << "\\n" << inputdata_locator::get()->get_attribute(max_attribute_value.first) << " < " << max_attribute_value.second;
             }
             output << "\" ";
+            //if(child->representative != nullptr) output << ", style=dotted";
             output << ", penwidth=" << log(1 + n->size);
             output << " ];\n";
+
+            if(DEBUGGING){
+                child = it->second->target;
+                while(child->representative != nullptr){
+                    child->print_dot(output);
+                    output << "\t\t" << child->number << " -> " << child->representative->number;
+                    output << " [label=\"m" << child->merge_score << "\" , penwidth=" << log(1 + n->size) << " ];\n";
+                    child = child->representative;
+                }
+            }
         }
     }
     output << "}\n";
 }
 
-void apta_node::print_json(iostream& output){
-    output << "\t\t{\n";
-    output << "\t\t\t\"id\" : " << number << ",\n";
-    //output << "\t\t\t\"access\" : " << get_trace_from_state()->to_string() << ",\n";
-    if(source != nullptr) output << "\t\t\t\"source\" :  " << source->find()->number << ",\n";
-    else output << "\t\t\t\"source\" :  " << -1 << ",\n";
-    output << "\t\t\t\"label\" : \"";
-    data->print_state_label_json(output);
-    output  << "\",\n";
-    output << "\t\t\t\"size\" : " << size << ",\n";
-    output<< "\t\t\t\"level\" : " << depth << ",\n";
-    output << "\t\t\t\"style\" : \"";
-    data->print_state_style(output);
-    output  << "\",\n";
-    output << "\t\t\t\"isred\" :  " << is_red() << ",\n";
-    output << "\t\t\t\"issink\" :  " << is_sink() << ",\n";
-    output << "\t\t\t\"isblue\" :  " << is_blue() << ",\n";
-    output << "\t\t\t\"trace\" :  \"" << access_trace->to_string() << "\",\n";
+void apta_node::print_json(json& nodes){
+    json output;
+    output["id"] = number;
+    if(source != nullptr) output["source"] = source->find()->number;
+    else output["source"] = -1;
+    output["size"] = size;
+    output["level"] = depth;
+    output["isred"] = is_red();
+    output["isblue"] = is_blue();
+    output["issink"] = is_sink();
+    output["trace"] = access_trace->to_string();
+    if(DEBUGGING){
+        if(representative != nullptr){
+            output["representative"] = representative->number;
+            output["mergescore"] = merge_score;
+        } else {
+            output["representative"] = -1;
+            output["mergescore"] = 0.0;
+        }
+    }
     json d;
     data->write_json(d);
-    output << "\t\t\t\"data\" :  " << d;
-    output << "\n\t\t}";
+    output["data"] = d;
+    nodes.push_back(output);
 }
 
-void apta_node::print_json_transitions(iostream& output){
-    bool first = true;
+void apta_node::print_json_transitions(json& edges){
     for(auto & guard : guards){
+        json output;
         if(guard.second->target == nullptr) continue;
-        apta_node* child = guard.second->target->find();
+        apta_node* child = guard.second->target;
 
-        if(!first) output << ",\n";
-        else first = false;
+        output["source"] = number;
+        if(DEBUGGING) output["target"] = child->number;
+        else output["target"] = child->find()->number;
 
-
-        output << "\t\t{\n";
-        output << "\t\t\t\"id\" : \"" << number << "_" << child->number << "\",\n";
-        output << "\t\t\t\"source\" : \"" << number << "\",\n";
-        output << "\t\t\t\"target\" : \"" << child->number << "\",\n";
-
-        output << "\t\t\t\"name\": \"" << inputdata_locator::get()->get_symbol(guard.first) << "\",\n";
-        output << "\t\t\t\"appearances\": \"";
-        data->print_transition_label_json(output, guard.first);
-        output << "\"}\n";
+        output["label"] = inputdata_locator::get()->get_symbol(guard.first);
+        edges.push_back(output);
     }
 }
 
-void apta::print_json(iostream& output){
+void apta::print_json(std::iostream& outio){
     set_json_depths();
     int count = 0;
     root->depth = 0;
 
-    output << "{\n";
-    output << "\t\"types\" : [\n";
+    json output;
+
+    std::list<std::string> types;
     for (int i = 0; i < inputdata_locator::get()->get_types_size(); ++i) {
-        if(i != 0) output << ",\n";
-        output << "\"" << inputdata_locator::get()->string_from_type(i) << "\"";
+        types.push_back(inputdata_locator::get()->string_from_type(i));
     }
-    output << "\n\t],\n";
-    output << "\t\"alphabet\" : [\n";
+    output["types"] = types;
+
+    std::list<std::string> alphabet;
     for (int i = 0; i < inputdata_locator::get()->get_alphabet_size(); ++i) {
-        if(i != 0) output << ",\n";
-        output << "\"" << inputdata_locator::get()->string_from_symbol(i)<< "\"";
+        alphabet.push_back(inputdata_locator::get()->string_from_symbol(i));
     }
-    output << "\n\t],\n";
-    output << "\t\"nodes\" : [\n";
-    bool first = true;
+    output["alphabet"] = alphabet;
+
+    json nodes;
     for(merged_APTA_iterator Ait = merged_APTA_iterator(root); *Ait != nullptr; ++Ait) {
         apta_node *n = *Ait;
+        if(!print_node(n)) continue;
 
-        if(!PRINT_RED && n->red) continue;
-
-        if (!PRINT_WHITE && !n->red) {
-            if (n->source != nullptr) {
-                if (!n->source->find()->red)
-                    continue;
-                if (!PRINT_BLUE)
-                    continue;
-            }
-        }
-
-        if(!first)
-            output << ",\n";
-        else
-            first = false;
-        n->print_json(output);
-    }
-
-    output << "\n\t],\n";
-
-    output << "\t\"edges\" : [\n";
-    first = true;
-    for(merged_APTA_iterator Ait = merged_APTA_iterator(root); *Ait != nullptr; ++Ait) {
-        apta_node *n = *Ait;
-
-        if(!PRINT_RED && n->red) continue;
-
-        if (!PRINT_WHITE && !n->red) {
-            if (n->source != nullptr) {
-                if (!n->source->find()->red)
-                    continue;
-                if (!PRINT_BLUE)
-                    continue;
-            }
-        }
-
-        bool found = false;
-        for(auto & guard : n->guards){
-            if(guard.second->target != nullptr){
-                apta_node* target = guard.second->target->find();
-                if (!PRINT_WHITE && !target->red) {
-                    if (target->source != nullptr) {
-                        if (!target->source->find()->red)
-                            continue;
-                        if (!PRINT_BLUE)
-                            continue;
+        n->print_json(nodes);
+        for(auto & guard : n->guards) {
+            if (guard.second->target != nullptr){
+                apta_node* target = guard.second->target;
+                if(!print_node(target->find())) continue;
+                if(DEBUGGING){
+                    while(target->representative != nullptr){
+                        target->print_json(nodes);
+                        target = target->representative;
                     }
+                } else
+                {
+                    target = target->find();
+                    target->print_json(nodes);
                 }
-                found = true;
-                break;
             }
         }
-        if(!found) continue;
-
-        if(!first)
-            output << ",\n";
-        else
-            first = false;
-        n->print_json_transitions(output);
     }
-    output << "\n\t]\n}\n";
-}
+    output["nodes"] = nodes;
 
-void apta::print_sinks_json(iostream& output) const{
-    output << "{\n";
-    output << "\t\"nodes\" : [\n";
-    bool first = true;
+    json edges;
     for(merged_APTA_iterator Ait = merged_APTA_iterator(root); *Ait != nullptr; ++Ait) {
         apta_node *n = *Ait;
-        if(n->red) continue;
-
-        if (!first) output << ",\n";
-        else first = false;
-
-        n->print_json(output);
-    }
-    output << "\n\t],\n";
-
-    output << "\t\"edges\" : [\n";
-    first = true;
-    for(merged_APTA_iterator Ait = merged_APTA_iterator(root); *Ait != nullptr; ++Ait) {
-        apta_node *n = *Ait;
-        if(n->red) continue;
+        if(!print_node(n)) continue;
 
         bool found = false;
         for(auto & guard : n->guards){
             if(guard.second->target != nullptr){
+                apta_node* target = guard.second->target;
+                if(!print_node(target->find())) continue;
                 found = true;
                 break;
             }
         }
         if(!found) continue;
 
-        if (!first) output << ",\n";
-        else first = false;
-
-        n->print_json_transitions(output);
+        n->print_json_transitions(edges);
     }
-    output << "\n\t]\n}\n";
+    output["edges"] = edges;
+
+    outio << output.dump(2);
 }
 
-void apta::read_json(istream& input_stream){
+void apta::print_sinks_json(std::iostream& output){
+    print_json(output);
+}
+
+void apta::read_json(std::istream& input_stream){
     json read_apta = json::parse(input_stream);
     // abbadingo_inputdata idat;
 
-    map<int, apta_node*> states;
+    std::map<int, apta_node*> states;
     //for each json line
     for (auto & i : read_apta["types"]) {
         inputdata_locator::get()->type_from_string(i);
@@ -310,8 +256,8 @@ void apta::read_json(istream& input_stream){
         node->size = n["size"];
         node->data->read_json(n["data"]);
         node->source = states[n["source"]];
-        string trace = n["trace"];
-        istringstream trace_stream(trace);
+        std::string trace = n["trace"];
+        std::istringstream trace_stream(trace);
         node->access_trace = mem_store::create_trace();
 
         auto parser = abbadingoparser::single_trace(trace_stream);
@@ -332,18 +278,15 @@ void apta::read_json(istream& input_stream){
     for (int i = 0; i < read_apta["edges"].size(); ++i) {
         json e = read_apta["edges"][i];
 
-        string symbol = e["name"];
+        std::string symbol = e["label"];
         //if symbol not in alphabet, add it
         int symbol_nr = inputdata_locator::get()->symbol_from_string(symbol);
 
         //string symb = inputdata_locator::get()->string_from_symbol(symbol_nr);
         //cout << symbol << " == " << symb << endl;
 
-        string source_string = e["source"];
-        string target_string = e["target"];
-
-        int source_nr = std::stoi(source_string);
-        int target_nr = std::stoi(target_string);
+        int source_nr = e["source"];
+        int target_nr = e["target"];
 
         if(states.find(source_nr) == states.end()) continue;
         if(states.find(target_nr) == states.end()) continue;
@@ -529,13 +472,13 @@ void apta_node::set_child(tail* t, apta_node* node){
             guards.erase(it);
     } else {
         apta_guard* g = new apta_guard();
-        guards.insert(pair<int,apta_guard*>(t->get_symbol(),g));
+        guards.insert(std::pair<int,apta_guard*>(t->get_symbol(),g));
         g->target = node;
     }
 };
 
-set<apta_node*>* apta_node::get_sources(){
-    auto* sources = new set<apta_node*>();
+std::set<apta_node*>* apta_node::get_sources(){
+    auto* sources = new std::set<apta_node*>();
     sources->insert(find());
     if(source != nullptr){
         sources->insert(source->find());
@@ -731,28 +674,18 @@ apta_node::~apta_node(){
     delete data;
 }
 
-bool apta_node::is_sink() const {
-    if(sink != -1) return true;
-    return data->sink_type() != -1;
-}
-
-int apta_node::sink_type() const {
-    if(sink != -1) return sink;
-    return data->sink_type();
-}
-
-void apta::set_json_depths() const {
+void apta::set_json_depths(){
     for(merged_APTA_iterator Ait = merged_APTA_iterator(root); *Ait != nullptr; ++Ait) {
         apta_node *n = *Ait;
         if (n->source == nullptr){
             n->depth = 0;
         } else {
-            set<apta_node*>* sources = n->get_sources();
+            std::set<apta_node*>* sources = n->get_sources();
             n->depth = n->source->find()->depth + sources->size();
             delete sources;
         }
     }
-    set<int> depths;
+    std::set<int> depths;
     for(merged_APTA_iterator Ait = merged_APTA_iterator(root); *Ait != nullptr; ++Ait){
         apta_node* n = *Ait;
         for(apta_node* n2 = n->representative_of; n2 != nullptr; n2 = n2->next_merged_node){

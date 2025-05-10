@@ -50,6 +50,7 @@ public:
     state_set* sink_states;
 
     std::map<apta_node*, int> state_number;
+    std::map<int, apta_node*> number_state;
     std::map<apta_node*, int> state_colour;
 
     std::stringstream sat_stream; // TODO: give some information on this object
@@ -95,9 +96,11 @@ public:
 
     void compute_header();
 
-    void read_solution(FILE *sat_file, int best_solution);
+    void read_solution(FILE *sat_file, int best_solution, state_merger*);
 
     void translate(FILE *sat_file);
+
+    void perform_sat_merges(state_merger*);
 };
 
 void run_dfasat(state_merger* m, std::string sat_program, int best_solution);

@@ -253,6 +253,7 @@ double prob_single_parallel(tail* p, tail* t, apta_node* n, double prod_prob, bo
 
 apta_node* single_step(apta_node* n, tail* t, apta* a){
     apta_node* child = n->child(t);
+
     if(child == 0){
         if(PREDICT_RESET) return a->get_root();
         else if(PREDICT_REMAIN) return n;
@@ -307,7 +308,6 @@ void predict_trace_update_sequences(state_merger* m, tail* t){
             align_sequence.push_back(false);
             break;
         }
-
         t = t->future();
         state_sequence.push_back(n->get_number());
         align_sequence.push_back(true);
@@ -345,7 +345,6 @@ void write_list(std::list<T>& list_to_write, std::ofstream& output){
 
 void predict_trace(state_merger* m, std::ofstream& output, trace* tr){
     if(REVERSE_TRACES) tr->reverse();
-
     state_sequence.clear();
     score_sequence.clear();
     align_sequence.clear();

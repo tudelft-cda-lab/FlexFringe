@@ -187,11 +187,11 @@ public:
     void print_dot(std::iostream& output);
     void print_json(std::iostream& output);
     void read_json(std::istream &input_stream);
-    void print_sinks_json(std::iostream &output) const;
+    void print_sinks_json(std::iostream &output);
 
     /** for better layout when visualizing state machines from the json file
      * set nodes to this depth in a hierarchical view */
-    void set_json_depths() const;
+    void set_json_depths();
 
     friend class apta_guard;
     friend class APTA_iterator;
@@ -203,6 +203,8 @@ public:
     friend class inputdata;
     friend class IInputData; // TODO: rename
     friend class state_merger;
+
+    bool print_node(apta_node *n);
 };
 
 /**
@@ -240,6 +242,9 @@ private:
     int size;
     int final;
 
+    /** merge score, stored after performing a merge */
+    double merge_score;
+
     /** variables used for splitting */
     /** singly linked list containing all tails in this state */
     tail* tails_head;
@@ -264,6 +269,8 @@ public:
     inline int get_size(){ return size; }
     inline int get_final(){ return final; }
     inline int get_depth(){ return depth; }
+    inline double get_score(){ return merge_score; }
+    inline void set_score(double m){  merge_score = m; }
     inline void set_red(bool b){ red = b; };
     inline apta_node* rep(){ return representative; }
 
@@ -348,17 +355,23 @@ public:
 
     /** red, blue, white, and sinks */
 
-    inline bool is_red(){
+    inline bool is_red() const{
         return red;
     }
-    inline bool is_blue(){
+    inline bool is_blue() const{
         return source != 0 && is_red() == false && source->find()->is_red();
     }
-    inline bool is_white(){
+    inline bool is_white() const{
         return source != 0 && is_red() == false && !source->find()->is_red();
     }
-    bool is_sink() const;
-    int sink_type() const;
+    inline bool is_sink() const{
+        if(sink != -1) return true;
+        return data->sink_type() != -1;
+    }
+    inline int sink_type() const{
+        if(sink != -1) return sink;
+        return data->sink_type();
+    }
 
     /** constructors and intializers */
     apta_node();
@@ -366,11 +379,11 @@ public:
     void initialize(apta_node* n);
 
     /** print to json output, use later in predict functions */
-    void print_json(std::iostream &output);
-    void print_json_transitions(std::iostream &output);
+    void print_json(json &output);
+    void print_json_transitions(json &output);
+    void print_dot(std::iostream& output);
 
     /** below are functions use by special heuristics/settings and output printing */
-
     friend class apta;
     friend class apta_guard;
     friend class APTA_iterator;
