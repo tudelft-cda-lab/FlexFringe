@@ -1144,6 +1144,7 @@ void dfasat::perform_sat_merges(state_merger* m) {
             apta_node *blue = *it;
             int nr = state_number[blue];
             int cr = -1;
+
             for(int j = 0; j < dfa_size; ++j) {
                 if (x[nr][j] == -1) {
                     cr = j;
@@ -1151,10 +1152,10 @@ void dfasat::perform_sat_merges(state_merger* m) {
                 }
                 if (trueliterals.contains(x[nr][j])) {
                     cr = j;
-                    ++it;
                     break;
                 }
             }
+
             if(cr == -1) continue;
             if(!color_node.contains(cr)) {
                 m->extend(blue);
@@ -1189,16 +1190,14 @@ void dfasat::read_solution(FILE* sat_file, int best_solution, state_merger* merg
                     best_solution = dfa_size;
                     improved = true;
                 }
-            } else if (strcmp(pch, "v") == 0) {
+            }
+        } else if (strcmp(pch, "v") == 0) {
                 pch = strtok(NULL, " ");
                 while (pch != NULL) {
                     int val = atoi(pch);
                     if (val > 0) trueliterals.insert(val);
                     pch = strtok(NULL, " ");
                 }
-            } else {
-                    std::cerr << line << std::endl;
-            }
         }
     }
     perform_sat_merges(merger);
@@ -1248,6 +1247,8 @@ void run_dfasat(state_merger* m, std::string sat_program, int best_solution) {
     if(SAT_SOLVER.compare("") == 0){
         sat_program = "./glucose -model";
     }
+
+    std::cerr << "calling " << sat_program << std::endl;
 
     dfasat sat_object = dfasat(m, best_solution);
     sat_object.compute_header();
