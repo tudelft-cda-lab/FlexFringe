@@ -14,6 +14,7 @@
 #define _OVERLAP_FILL_FACTORY_H_
 
 #include "overlap_fill_base.h"
+#include "sul_base.h"
 
 #include <memory>
 #include <string_view>

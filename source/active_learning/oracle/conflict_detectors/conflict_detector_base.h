@@ -27,7 +27,7 @@ class conflict_detector_base {
 
   public:
     conflict_detector_base(const std::shared_ptr<sul_base>& sul) : sul(sul) {};
-    conflict_detector_base(const std::shared_ptr<sul_base>& sul, const std::shared_ptr<distinguishing_sequences_base>& ii_handler) : sul(sul) {
+    conflict_detector_base(const std::shared_ptr<sul_base>& sul, const std::shared_ptr<distinguishing_sequences_handler_base>& ii_handler) : sul(sul) {
       std::cerr << "Info: This SUL does not support an incomplete information handler. Are you certain you picked the correct one?" << std::endl;
     };
     

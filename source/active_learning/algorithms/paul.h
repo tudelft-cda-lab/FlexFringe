@@ -34,7 +34,7 @@
 
 class paul_algorithm final : public algorithm_base {    
   private:
-    std::shared_ptr<distinguishing_sequences_base> ds_handler;
+    std::shared_ptr<distinguishing_sequences_handler_base> ds_handler;
     const bool MERGE_WITH_LARGEST = true;
 
     /* inline */ void update_node_data(apta_node* n, std::unique_ptr<apta>& aut) const;

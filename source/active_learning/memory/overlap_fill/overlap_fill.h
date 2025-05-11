@@ -36,6 +36,8 @@ class overlap_fill : public overlap_fill_base {
 
   public:
     overlap_fill(const std::shared_ptr<sul_base>& sul) : overlap_fill_base(sul), MAX_DEPTH(AL_MAX_SEARCH_DEPTH) {};
+    void pre_compute(std::unique_ptr<apta>& aut, apta_node* left, apta_node* right) override; 
+
 };
 
 #endif

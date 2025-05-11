@@ -22,7 +22,7 @@ class oracle_factory {
   public:
     oracle_factory() = delete;
 
-    static std::unique_ptr<base_oracle> create_oracle(const std::shared_ptr<sul_base>& sul, std::string_view oracle_name, const std::shared_ptr<distinguishing_sequences_base>& ii_handler);
+    static std::unique_ptr<base_oracle> create_oracle(const std::shared_ptr<sul_base>& sul, std::string_view oracle_name, const std::shared_ptr<distinguishing_sequences_handler_base>& ii_handler);
 };
 
 #endif

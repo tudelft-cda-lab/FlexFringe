@@ -12,8 +12,8 @@
 #include "ds_initializer_factory.h"
 #include "ds_initializer_registration.h"
 
-#include "ds_initializer_collect_from_apta.h"
-#include "ds_initializer_pre_generate_sequences.h"
+#include "src/ds_initializer_collect_from_apta.h"
+#include "src/ds_initializer_pre_generate_sequences.h"
 
 #include <iostream>
 #include <stdexcept>

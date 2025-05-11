@@ -14,7 +14,7 @@
 
 #include "conflict_detector_base.h"
 
-#include "memory/distinguishing_sequences/distinguishing_sequences_base.h"
+#include "distinguishing_sequences_handler_base.h"
 #include "sul_base.h"
 
 #include <memory>
@@ -27,7 +27,7 @@ class conflict_detector_factory {
   public:
     conflict_detector_factory() = delete;
     static std::shared_ptr<conflict_detector_base> create_detector(const std::shared_ptr<sul_base>& sul);
-    static std::shared_ptr<conflict_detector_base> create_detector(const std::shared_ptr<sul_base>& sul, const std::shared_ptr<distinguishing_sequences_base>& ii_handler);
+    static std::shared_ptr<conflict_detector_base> create_detector(const std::shared_ptr<sul_base>& sul, const std::shared_ptr<distinguishing_sequences_handler_base>& ii_handler);
 };
 
 #endif // _CEX_SEARCH_STRATEGY_FACTORY_H_

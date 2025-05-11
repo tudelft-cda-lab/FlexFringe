@@ -13,12 +13,12 @@
 #define __PAUL_HEURISTIC__
 
 #include "count_types.h"
-#include "distinguishing_sequences_base.h"
+#include "source/active_learning/memory/distinguishing_sequences/distinguishing_sequences_handler_base.h"
 
 #include <map> // TODO: for debugging only
 #include <memory>
 
-class distinguishing_sequences_base;
+class distinguishing_sequences_handler_base;
 
 /* The data contained in every node of the prefix tree or DFA */
 class paul_data: public count_data {
@@ -80,7 +80,7 @@ public:
 class paul_heuristic : public count_driven {
 
 protected:
-  std::shared_ptr<distinguishing_sequences_base> ii_handler;
+  std::shared_ptr<distinguishing_sequences_handler_base> ii_handler;
 
   int check_for_consistency(paul_data* left, paul_data* right, int mismatch_count=0) const;
 
@@ -102,7 +102,7 @@ public:
   bool consistent(state_merger* merger, apta_node* left, apta_node* right, int depth) override;
   double compute_score(state_merger* merger, apta_node* left, apta_node* right) override; 
   void reset(state_merger *merger) override;
-  void provide_ds_handler(std::shared_ptr<distinguishing_sequences_base>& ii_handler);
+  void provide_ds_handler(std::shared_ptr<distinguishing_sequences_handler_base>& ii_handler);
 };
 
 #endif

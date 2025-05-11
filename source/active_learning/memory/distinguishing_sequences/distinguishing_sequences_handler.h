@@ -27,7 +27,7 @@ class distinguishing_sequences_handler : public distinguishing_sequences_handler
   friend class paul_algorithm;
 
   private:
-    std::unique_ptr<distinguishing_sequences_handler> ds_ptr = std::make_unique<distinguishing_sequences_handler>();
+    std::unique_ptr<distinguishing_sequences> ds_ptr = std::make_unique<distinguishing_sequences>();
   
   protected:
     const int MIN_BATCH_SIZE = AL_BATCH_SIZE;

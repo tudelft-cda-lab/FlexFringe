@@ -471,7 +471,7 @@ void paul_algorithm::run(inputdata& id) {
     cout << "Initializing ds_handler" << endl;
     ds_handler->initialize(the_apta); // must happen after traces have been added to apta!
     try{
-        dynamic_cast<paul_heuristic*>(eval.get())->provide_provide_ds_handler(ds_handler);    
+        dynamic_cast<paul_heuristic*>(eval.get())->provide_ds_handler(ds_handler);    
     }
     catch(...){
         throw invalid_argument("Cannot provide heuristic with ds_handler. Using paul heuristic?");

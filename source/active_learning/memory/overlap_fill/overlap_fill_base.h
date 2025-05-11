@@ -49,17 +49,6 @@ class overlap_fill_base {
      * first collect a few distinguishing sequences before starting.
      */
     virtual void pre_compute(std::unique_ptr<apta>& aut, apta_node* left, apta_node* right) = 0;
-
-    /**
-     * @brief Pre-computation on single node. For example relevant in distinguishing sequence approach, where we 
-     * use this to memoize partial results to speed up computation.
-     */
-    virtual void pre_compute(std::unique_ptr<apta>& aut, apta_node* node) = 0;
-    
-    /**
-     * @brief We use this function similar to complement_nodes. The difference is that it does not add data to the tree.
-     */
-    virtual bool check_consistency(std::unique_ptr<apta>& aut, apta_node* left, apta_node* right) = 0;
 };
 
 #endif // __II_BASE_H__

@@ -10,6 +10,21 @@
  */
 
 #include "sul_factory.h"
+#include "inputdatalocator.h"
+
+// the SULs
+#include "database_sul.h"
+#include "dfa_sul.h"
+#include "input_file_sul.h"
+//#include "sqldb_sul.h"
+
+// the neural network SULs
+#include "nn_binary_output_sul.h"
+#include "nn_discrete_and_float_output_sul.h"
+#include "nn_discrete_output_and_hidden_reps_sul.h"
+#include "nn_discrete_output_sul.h"
+#include "nn_float_output_sul.h"
+#include "nn_float_vector_output_sul.h"
 
 using namespace std;
 

@@ -12,7 +12,7 @@
 #ifndef _DS_INITIALIZER_FACTORY_H_
 #define _DS_INITIALIZER_FACTORY_H_
 
-#include "ds_initializer_base.h"
+#include "src/ds_initializer_base.h"
 
 #include <string_view>
 #include <memory>

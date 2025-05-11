@@ -30,8 +30,6 @@ class overlap_fill_batch_wise : public overlap_fill {
     overlap_fill_batch_wise(const std::shared_ptr<sul_base>& sul) : overlap_fill(sul), STREAMING_BATCH_SIZE(AL_BATCH_SIZE) {};
 
     void pre_compute(std::unique_ptr<apta>& aut, apta_node* left, apta_node* right) override;
-    
-    //void complete_node(apta_node* node, std::unique_ptr<apta>& aut) override;
 };
 
 #endif

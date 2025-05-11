@@ -11,6 +11,11 @@
 
 #include "oracle_factory.h"
 
+#include "input_file_oracle.h"
+#include "paul_oracle.h"
+//#include "sqldb_sul_regex_oracle.h"
+//#include "sqldb_sul_random_oracle.h"
+
 #include <stdexcept>
 
 using namespace std;
@@ -19,7 +24,7 @@ using namespace std;
  * @brief Does what you think it does. Since not every oracle requires access to distinguishing sequences, but when it does it normally shares them with 
  * other recourses like the algorithms, we require a shared pointer here, but allow it to be nullptr-initialized.
  */
-unique_ptr<base_oracle> oracle_factory::create_oracle(const shared_ptr<sul_base>& sul, string_view oracle_name, const shared_ptr<distinguishing_sequences_base>& ds_handler){
+unique_ptr<base_oracle> oracle_factory::create_oracle(const shared_ptr<sul_base>& sul, string_view oracle_name, const shared_ptr<distinguishing_sequences_handler_base>& ds_handler){
   if(AL_ORACLE == "base_oracle")
       return make_unique<base_oracle>(sul);
   

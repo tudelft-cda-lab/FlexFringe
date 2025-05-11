@@ -10,8 +10,7 @@
  */
 
 #include "active_learning_mode.h"
-#include "algorithm_base.h" 
-#include "factories.h"
+#include "algorithm_factory.h"
 
 #include "inputdatalocator.h"
 #include "misc/printutil.h"

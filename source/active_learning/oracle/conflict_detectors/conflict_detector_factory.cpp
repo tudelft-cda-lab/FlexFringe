@@ -58,7 +58,7 @@ shared_ptr<conflict_detector_base> conflict_detector_factory::create_detector(co
  * Since the conflict detector is tightly knitted to the kind of algorithm 
  * that is used, the selection is based on this.
  */
-shared_ptr<conflict_detector_base> conflict_detector_factory::create_detector(const std::shared_ptr<sul_base>& sul, const std::shared_ptr<distinguishing_sequences_base>& ii_handler) {
+shared_ptr<conflict_detector_base> conflict_detector_factory::create_detector(const std::shared_ptr<sul_base>& sul, const std::shared_ptr<distinguishing_sequences_handler_base>& ii_handler) {
   if(type_based_algorithms.contains(ACTIVE_LEARNING_ALGORITHM)){
     return make_shared<type_conflict_detector>(sul, ii_handler);
   }

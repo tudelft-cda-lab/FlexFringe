@@ -275,7 +275,7 @@ void paul_heuristic_2::reset(state_merger *merger){
     n_real_real_pairs=0;
 };
 
-void paul_heuristic_2::provide_ii_handler(std::shared_ptr<ii_base>& ii_handler){
+void paul_heuristic_2::provide_ds_handler(std::shared_ptr<distinguishing_sequences_handler_base>& ii_handler){
     this->ii_handler=ii_handler;
 }
 

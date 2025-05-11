@@ -22,7 +22,7 @@ class type_conflict_detector : public conflict_detector_base {
 
   public: 
     type_conflict_detector(const std::shared_ptr<sul_base>& sul) : conflict_detector_base(sul) {};
-    type_conflict_detector(const std::shared_ptr<sul_base>& sul, const std::shared_ptr<distinguishing_sequences_base>& ii_handler) 
+    type_conflict_detector(const std::shared_ptr<sul_base>& sul, const std::shared_ptr<distinguishing_sequences_handler_base>& ii_handler) 
     : conflict_detector_base(sul, ii_handler){};
 };
 
