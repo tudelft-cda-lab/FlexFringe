@@ -138,4 +138,9 @@ extern int IDENTICAL_KTAIL;
 
 extern bool STAR_FREE;
 extern bool SINK_TYPE;
+
+extern int DFA_SIZE_BOUND;
+extern int APTA_SIZE_BOUND;
+extern bool SAT_RUN_GREEDY;
+
 #endif
