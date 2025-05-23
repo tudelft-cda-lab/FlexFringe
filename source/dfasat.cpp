@@ -321,7 +321,7 @@ void dfasat::fix_red_values(){
         
         for(int label = 0; label < alphabet_size; ++label){
             apta_node* target = node->get_child(label);
-            if(target->is_red() == true){
+            if(target != nullptr && target->is_red() == true){
                 int tcr = state_colour[target];
 
                 for(int i = 0; i < dfa_size; ++i) y[label][cr][i] = -2;
@@ -1137,6 +1137,7 @@ void dfasat::translate(FILE* sat_file) {
 void dfasat::perform_sat_merges(state_merger* m) {
     std::map<int,apta_node*> color_node;
     apta* aut = m->get_aut();
+    color_node[0] = aut->get_root();
     bool did_merge = true;
     while(did_merge){
         did_merge = false;
@@ -1157,6 +1158,7 @@ void dfasat::perform_sat_merges(state_merger* m) {
             }
 
             if(cr == -1) continue;
+
             if(!color_node.contains(cr)) {
                 m->extend(blue);
                 color_node[cr] = blue;
