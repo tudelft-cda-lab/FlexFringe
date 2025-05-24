@@ -1137,40 +1137,66 @@ void dfasat::translate(FILE* sat_file) {
 void dfasat::perform_sat_merges(state_merger* m) {
     std::map<int,apta_node*> color_node;
     apta* aut = m->get_aut();
-    color_node[0] = aut->get_root();
-    bool did_merge = true;
-    while(did_merge){
-        did_merge = false;
-        for(blue_state_iterator it = blue_state_iterator(aut->get_root()); *it != nullptr; ++it) {
-            apta_node *blue = *it;
-            int nr = state_number[blue];
-            int cr = -1;
+    red_state_iterator itr = red_state_iterator(aut->get_root());
+    while(*itr != nullptr) {
+        apta_node *red = *itr;
+        int nr = state_number[red];
+        int cr = -1;
 
-            for(int j = 0; j < dfa_size; ++j) {
-                if (x[nr][j] == -1) {
-                    cr = j;
-                    break;
-                }
-                if (trueliterals.contains(x[nr][j])) {
-                    cr = j;
-                    break;
-                }
-            }
-
-            if(cr == -1) continue;
-
-            if(!color_node.contains(cr)) {
-                m->extend(blue);
-                color_node[cr] = blue;
-                did_merge = true;
+        for (int j = 0; j < dfa_size; ++j) {
+            if (x[nr][j] == -1) {
+                cr = j;
                 break;
-            } else {
-                apta_node* red = color_node[cr];
-                m->perform_merge(red, blue);
-                did_merge = true;
+            }
+            if (trueliterals.contains(x[nr][j])) {
+                cr = j;
                 break;
             }
         }
+
+        if (cr == -1) {
+            std::cerr << "error performing merges" << std::endl;
+            break;
+        }
+
+        if (!color_node.contains(cr)) {
+            color_node[cr] = red;
+            std::cerr << "coloring node red " << cr << std::endl;
+        }
+        ++itr;
+    }
+
+    blue_state_iterator it = blue_state_iterator(aut->get_root());
+    while(*it != nullptr){
+        apta_node *blue = *it;
+        int nr = state_number[blue];
+        int cr = -1;
+
+        for(int j = 0; j < dfa_size; ++j) {
+            if (x[nr][j] == -1) {
+                cr = j;
+                break;
+            }
+            if (trueliterals.contains(x[nr][j])) {
+                cr = j;
+                break;
+            }
+        }
+
+        if(cr == -1) {
+            std::cerr << "error performing merges" << std::endl;
+            break;
+        }
+
+        if(!color_node.contains(cr)) {
+            m->extend(blue);
+            color_node[cr] = blue;
+            std::cerr << "coloring node blue " << cr << std::endl;
+        } else {
+            apta_node* red = color_node[cr];
+            m->perform_merge(red, blue);
+        }
+        it = blue_state_iterator(aut->get_root());
     }
 }
 
@@ -1180,7 +1206,10 @@ void dfasat::read_solution(FILE* sat_file, int best_solution, state_merger* merg
     char line[5000];
 
     bool improved = false;
+    bool read_v = false;
+    char* broken_val = nullptr;
     while (fgets(line, sizeof line, sat_file) != NULL) {
+        //std::cerr << line << std::endl;
         char *pch = strtok(line, " ");
         if (strcmp(pch, "s") == 0) {
             pch = strtok(NULL, " ");
@@ -1193,12 +1222,26 @@ void dfasat::read_solution(FILE* sat_file, int best_solution, state_merger* merg
                     improved = true;
                 }
             }
-        } else if (strcmp(pch, "v") == 0) {
+        } else if (read_v || strcmp(pch, "v") == 0) {
+                read_v = true;
+                //std::cerr << pch << std::endl;
                 pch = strtok(NULL, " ");
-                while (pch != NULL) {
+                if(broken_val != nullptr){
+                    std::string combined = std::string(broken_val) + std::string(pch);
                     int val = atoi(pch);
                     if (val > 0) trueliterals.insert(val);
                     pch = strtok(NULL, " ");
+                }
+                int prev_val = 0;
+                while (pch != NULL) {
+                    int val = atoi(pch);
+                    if (abs(prev_val) > abs(val)){
+                        broken_val = pch;
+                    } else {
+                        if (val > 0) trueliterals.insert(val);
+                    }
+                    pch = strtok(NULL, " ");
+                    prev_val = val;
                 }
         }
     }
