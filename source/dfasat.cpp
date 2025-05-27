@@ -1191,7 +1191,7 @@ void dfasat::perform_sat_merges(state_merger* m) {
         if(!color_node.contains(cr)) {
             m->extend(blue);
             color_node[cr] = blue;
-            std::cerr << "coloring node blue " << cr << std::endl;
+            //std::cerr << "coloring node blue " << cr << std::endl;
         } else {
             apta_node* red = color_node[cr];
             m->perform_merge(red, blue);
