@@ -167,7 +167,11 @@ foreach (Filepath ${CPPProbFiles})
     file(APPEND "${cmakelists_eval}" "\n            probabilistic_heuristics/${CleanFilename}.cpp")
 endforeach ()
 
-file(APPEND "${cmakelists_eval}" ")")
+file(APPEND "${cmakelists_eval}" ")\n")
+
+file(APPEND "${cmakelists_eval}" "if (ENABLE_DATABASE)\n")
+file(APPEND "${cmakelists_eval}" "    target_link_libraries(Evaluation libpqxx::pqxx)\n")
+file(APPEND "${cmakelists_eval}" "endif()\n")
 
 add_subdirectory(evaluation)
 add_subdirectory(utility)

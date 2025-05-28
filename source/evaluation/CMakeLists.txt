@@ -58,3 +58,6 @@ add_library(Evaluation STATIC
             probabilistic_heuristics/string_probability_estimator.cpp
             probabilistic_heuristics/weight_comparator.h
             probabilistic_heuristics/weight_comparator.cpp)
+if (ENABLE_DATABASE)
+    target_link_libraries(Evaluation libpqxx::pqxx)
+endif()
