@@ -21,14 +21,14 @@
 class sqldb_sul : public sul_base {
   public:
     psql::db& my_sqldb;
+    const std::unordered_set<int> added_traces;
 
+    explicit sqldb_sul(psql::db& db) : my_sqldb(db){};
+
+    void pre(inputdata& id) override;
     void reset() override{};
-    explicit sqldb_sul(psql::db& db);
-    virtual void pre(inputdata& id) override;
-
-    const std::unordered_set<int>& added_traces;
-
     const sul_response do_query(const std::vector<int>& query_trace, inputdata& id) const override;
+
     const sul_response regex_equivalence(const std::string& regex, int type);
     const std::vector<sul_response> prefix_query(const std::vector<int>& prefix, int n);
 };

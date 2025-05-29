@@ -15,8 +15,6 @@
 #include "sul_base.h"
 #include "utility/loguru.hpp"
 
-sqldb_sul::sqldb_sul(psql::db& db) : my_sqldb(db) {}
-
 void sqldb_sul::pre(inputdata& id) {
     LOG_S(INFO) << fmt::format("Inferring alphabet from {0}_meta table.", my_sqldb.get_table_name());
 
