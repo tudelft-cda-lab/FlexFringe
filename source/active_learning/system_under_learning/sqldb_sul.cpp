@@ -9,11 +9,11 @@
  *
  */
 
-//#include "sqldb_sul.h"
+#include "sqldb_sul.h"
 #include "misc/printutil.h"
 #include "misc/sqldb.h"
+#include "sul_base.h"
 #include "utility/loguru.hpp"
-#include <sstream>
 
 sqldb_sul::sqldb_sul(psql::db& db) : my_sqldb(db) {}
 
@@ -39,25 +39,17 @@ void sqldb_sul::pre(inputdata& id) {
     LOG_S(INFO) << "Set the alphabet and types to inputdata.";
 }
 
-bool sqldb_sul::is_member(const std::vector<int>& query_trace) const {
-    return my_sqldb.is_member(my_sqldb.vec2str(query_trace));
+const sul_response sqldb_sul::do_query(const std::vector<int>& query_trace, inputdata& id) const {
+    auto rec = my_sqldb.query_trace_opt(my_sqldb.vec2str(query_trace));
+    return sul_response(rec.type, rec.pk, rec.trace)
 }
 
-const int sqldb_sul::query_trace(const std::vector<int>& query_trace, inputdata& id) const {
-    return my_sqldb.query_trace(my_sqldb.vec2str(query_trace));
+const sul_response sqldb_sul::regex_equivalence(const std::string& regex, int type) {
+    auto rec = my_sqldb.regex_equivalence(regex, type);
+    return sul_response(rec.type, rec.pk, rec.trace)
 }
 
-const int sqldb_sul::query_trace_maybe(const std::vector<int>& query_trace, inputdata& id) const {
-    return my_sqldb.query_trace_maybe(my_sqldb.vec2str(query_trace));
-}
-
-const std::optional<psql::record> sqldb_sul::query_trace_opt(const std::vector<int>& query_trace) const {
-    return my_sqldb.query_trace_opt(my_sqldb.vec2str(query_trace));
-}
-std::optional<psql::record> sqldb_sul::regex_equivalence(const std::string& regex, int type) {
-    return my_sqldb.regex_equivalence(regex, type);
-}
-
-std::vector<psql::record> sqldb_sul::prefix_query(const std::vector<int>& prefix, int n) {
-    return my_sqldb.prefix_query(my_sqldb.vec2str(prefix), n);
+const std::vector<sul_response> sqldb_sul::prefix_query(const std::vector<int>& prefix, int n) {
+    auto rec = my_sqldb.prefix_query(my_sqldb.vec2str(prefix), n);
+    return sul_response(rec.type, rec.pk, rec.trace)
 }

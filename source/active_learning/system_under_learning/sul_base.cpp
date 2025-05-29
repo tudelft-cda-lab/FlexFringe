@@ -67,6 +67,30 @@ bool sul_response::has_int_val() const noexcept {
 }
 
 /**
+  * @brief Get the id response. Safety check included.
+  */
+int sul_response::get_id() const {
+    if(!id_opt){
+      throw runtime_error("Tried to retrieve integer response, but it does not exist in response type.");
+    }
+    return id_opt.value();
+}
+
+/**
+ * @brief Same as get_id, but no check on whether optional has been set. Will terminate program if called unsuccessfully.
+ */
+int sul_response::GET_ID() const noexcept {
+    return id_opt.value();
+}
+
+/**
+ * @brief True if id-value exists, else false.
+ */
+bool sul_response::has_id_val() const noexcept {
+  return id_opt.has_value();
+}
+
+/**
  * @brief Get the int response. Safety check included.
  */
 double sul_response::get_double() const {

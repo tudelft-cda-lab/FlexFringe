@@ -3,8 +3,8 @@
  */
 
 #include "sqldb_sul_regex_oracle.h"
-#include "input/inputdatalocator.h"
 #include "common.h"
+#include "input/inputdatalocator.h"
 #include "misc/printutil.h"
 #include "misc/sqldb.h"
 #include "misc/trim.h"
@@ -18,7 +18,7 @@
 #include <utility>
 #include <vector>
 
-std::optional<psql::record> sqldb_sul_regex_oracle::equivalence_query_db(state_merger* merger) {
+std::optional<std::pair<std::vector<int>, int>> sqldb_sul_regex_oracle::equivalence_query(state_merger* merger) {
     inputdata& id = *(merger->get_dat());
     apta& hypothesis = *(merger->get_aut());
 
@@ -59,7 +59,9 @@ std::optional<psql::record> sqldb_sul_regex_oracle::equivalence_query_db(state_m
                 std::optional<psql::record> cex = my_sqldb_sul->regex_equivalence(regex, type);
                 if (cex) {
                     // Found counter example, return immidiatly.
-                    return cex;
+                    auto rec = cex.value();
+                    auto sul_resp = sul_response(rec.type, rec.pk, rec.trace);
+                    return std::make_optional<std::pair<std::vector<int>, int>>(std::make_pair(rec.trace, sul_resp));
                 }
             } catch (const pqxx::data_exception& e) {
                 // Regex got too big, lets split into multiple parts.
@@ -108,13 +110,4 @@ std::optional<psql::record> sqldb_sul_regex_oracle::equivalence_query_db(state_m
 
     // No difference found: No counter example: Found the truth.
     return std::nullopt;
-}
-
-std::optional<std::pair<std::vector<int>, int>>
-sqldb_sul_regex_oracle::equivalence_query(state_merger* merger) {
-    std::optional<psql::record> r_maybe = equivalence_query_db(merger);
-    if (!r_maybe)
-        return std::nullopt;
-    psql::record r = r_maybe.value();
-    return std::make_optional<std::pair<std::vector<int>, int>>(std::make_pair(r.trace, r.type));
 }

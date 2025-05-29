@@ -18,7 +18,7 @@
 #include "input/trace.h"
 #include "inputdata.h"
 #include "refinement.h"
-//#include "sqldb_sul.h"
+#include "sqldb_sul.h"
 #include "sqldb_sul_random_oracle.h"
 #include "sqldb_sul_regex_oracle.h"
 #include "state_merger.h"
@@ -132,9 +132,17 @@ class ldot_algorithm : public algorithm_base {
     std::vector<apta_node*> represented_by(apta_node* n);
 
   public:
-    ldot_algorithm(){
-      init_standard();
-      STORE_ACCESS_STRINGS = true;
+    ldot_algorithm() {
+        init_standard();
+        STORE_ACCESS_STRINGS = true;
+
+        auto sul = sul_factory::create_sul(AL_SYSTEM_UNDER_LEARNING);
+        my_sul = dynamic_pointer_cast<sqldb_sul>(sul);
+        if (my_sul == nullptr) {
+            throw std::logic_error("ldot only works with sqldb_sul.");
+        }
+        auto ds_handler = ds_handler_factory::create_ds_handler(sul, AL_II_NAME);
+        this->oracle = oracle_factory::create_oracle(sul, AL_ORACLE, ds_handler);
     }
 
     /**

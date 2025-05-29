@@ -11,24 +11,27 @@
  */
 
 #include "ldot.h"
+#include "common.h"
 #include "common_functions.h"
 #include "evaluate.h"
 #include "input/trace.h"
-#include "common.h"
+#include "output_manager.h"
 #include "parameters.h"
 #include "refinement.h"
-#include "output_manager.h"
 
 #include "sqldb_sul.h"
 #include "sqldb_sul_random_oracle.h"
 
-#include "utility/loguru.hpp"
 #include "misc/printutil.h"
+#include "utility/loguru.hpp"
 
 #include <filesystem>
 #include <fmt/format.h>
 #include <memory>
 #include <vector>
+
+sqldb_sul::sqldb_sul(psql::db& db) : my_sqldb(db) {}
+ldot_algorithm::ldot_algorithm(psql::db& db) {}
 
 /** Debugging function */
 template <typename T> std::string printAddress(const std::list<T>& v) {
@@ -52,7 +55,7 @@ void ldot_algorithm::test_access_traces() {
     }
 }
 
-void ldot_algorithm::proc_counter_record(inputdata& id, const psql::record& rec, const refinement_list& refs) {
+void ldot_algorithm::proc_counter_record(inputdata& id, const sul_response& rec, const refinement_list& refs) {
     active_learning_namespace::reset_apta(my_merger.get(), refs);
 #ifndef NDEBUG
     DLOG_S(1) << n_runs << ": Undoing (for cex) " << refs.size() << " refs.";
@@ -66,7 +69,7 @@ void ldot_algorithm::proc_counter_record(inputdata& id, const psql::record& rec,
     apta_node* n = my_apta->get_root();
 
     if (COMPLETE_PATH_CEX) {
-        for (const int s : rec.trace) {
+        for (const int s : rec.GET_INT_VEC()) {
             // Look for fringe, then add to apta.
             if (n != nullptr) {
                 substring.push_back(s);
@@ -74,9 +77,9 @@ void ldot_algorithm::proc_counter_record(inputdata& id, const psql::record& rec,
                 // apta_node n and substring point now to same place in apta.
             } else {
                 // apta_node n points to non existent place in apta.
-                auto record_maybe = my_sul->query_trace_opt(substring);
-                if (record_maybe) {
-                    add_trace(id, record_maybe.value());
+                auto record_maybe = my_sul->do_query(substring);
+                if (record_maybe.has_int_val()) {
+                    add_trace(id, record_maybe);
                 }
                 substring.push_back(s);
             }
@@ -89,20 +92,20 @@ void ldot_algorithm::proc_counter_record(inputdata& id, const psql::record& rec,
     // Now let's walk over the apta again, completing all the states we created.
     if (EXPLORE_OUTSIDE_CEX) {
         n = my_apta->get_root();
-        for (auto s : rec.trace) {
+        for (auto s : rec.GET_INT_VEC()) {
             n = active_learning_namespace::get_child_node(n, s);
             complete_state(id, n);
         }
     }
 }
 
-bool ldot_algorithm::add_trace(inputdata& id, const psql::record& r) {
-    if (added_traces.contains(r.pk)) {
+bool ldot_algorithm::add_trace(inputdata& id, const sul_response& r) {
+    if (my_sul->added_traces.contains(r.GET_ID())) {
         return false;
     }
-    added_traces.insert(r.pk);
+    my_sul->added_traces.insert(r.GET_ID());
 
-    LOG_S(1) << "pk:" << r.pk << " " << r.type << " " << r.trace;
+    LOG_S(1) << "pk:" << r.GET_ID() << " " << r.GET_INT() << " " << r.GET_INT_VEC();
 
     trace* new_trace = active_learning_namespace::vector_to_trace(r.trace, id, r.type);
     id.add_trace_to_apta(new_trace, my_merger->get_aut(), false);
@@ -113,11 +116,11 @@ bool ldot_algorithm::add_trace(inputdata& id, const psql::record& r) {
 void ldot_algorithm::merge_processed_ref(refinement* ref) {
 #ifndef NDEBUG
     output_manager::print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.",
-                            std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) + ".pro_a");
+                                            std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) + ".pro_a");
     ref->doref(my_merger.get());
     performed_refinements.push_back(ref);
     output_manager::print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.",
-                            std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) + ".pro_b");
+                                            std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) + ".pro_b");
 
     DLOG_S(2) << n_runs << ":uni:" << printAddress(performed_refinements);
 #else
@@ -294,15 +297,11 @@ void ldot_algorithm::run(inputdata& id) {
     std::filesystem::create_directories(DEBUG_DIR);
 #endif
     LOG_S(INFO) << "Running the ldot algorithm.";
-    my_sul = dynamic_pointer_cast<sqldb_sul>(sul);
-    if (my_sul == nullptr) {
-        throw std::logic_error("ldot only works with sqldb_sul.");
-    }
-
     std::unique_ptr<sqldb_sul_regex_oracle> my_oracle(dynamic_cast<sqldb_sul_regex_oracle*>(oracle.get()));
     if (my_oracle == nullptr) {
-        throw std::logic_error("ldot only accepts the sqldb_sul_regex_oracle, there are more oracles, but a refactoring is "
-                          "needed in that case.");
+        throw std::logic_error(
+            "ldot only accepts the sqldb_sul_regex_oracle, there are more oracles, but a refactoring is "
+            "needed in that case.");
     }
     oracle.release(); // illegal ownership transfer of a unique_ptr (TODO: oracle should be shared_ptr)
 
@@ -340,7 +339,8 @@ void ldot_algorithm::run(inputdata& id) {
         // printing the model each time (once per n_runs).
         static int x = -1;
         if (x != n_runs)
-            output_manager::print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.", std::to_string(n_runs) + ".bef");
+            output_manager::print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.",
+                                                    std::to_string(n_runs) + ".bef");
         x = n_runs;
 #endif
 
@@ -371,11 +371,13 @@ void ldot_algorithm::run(inputdata& id) {
 #ifndef NDEBUG
                 test_access_traces();
                 output_manager::print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.",
-                                        std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) + ".ext_a");
+                                                        std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) +
+                                                            ".ext_a");
                 ref->doref(my_merger.get());
                 performed_refinements.push_back(ref);
                 output_manager::print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.",
-                                        std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) + ".ext_b");
+                                                        std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) +
+                                                            ".ext_b");
                 DLOG_S(2) << n_runs << ":extend:" << printAddress(performed_refinements);
 #else
                 ref->doref(my_merger.get());
@@ -389,11 +391,13 @@ void ldot_algorithm::run(inputdata& id) {
 #ifndef NDEBUG
                 test_access_traces();
                 output_manager::print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.",
-                                        std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) + ".one_a");
+                                                        std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) +
+                                                            ".one_a");
                 ref->doref(my_merger.get());
                 performed_refinements.push_back(ref);
                 output_manager::print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.",
-                                        std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) + ".one_b");
+                                                        std::to_string(n_runs) + fmt::format(".f{:0>4}", uid++) +
+                                                            ".one_b");
                 DLOG_S(2) << n_runs << ":one:" << printAddress(performed_refinements);
 #else
                 ref->doref(my_merger.get());
@@ -425,7 +429,8 @@ void ldot_algorithm::run(inputdata& id) {
 #ifndef NDEBUG
             DLOG_S(1) << n_runs << ": Undoing (for completion) " << performed_refinements.size() << " refs.";
             // printing the model each time
-            output_manager::print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.", std::to_string(n_runs) + ".com");
+            output_manager::print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.",
+                                                    std::to_string(n_runs) + ".com");
 #endif
             for (auto* ref : performed_refinements)
                 ref->erase();
@@ -450,7 +455,8 @@ void ldot_algorithm::run(inputdata& id) {
         test_access_traces();
         const std::size_t selected_refs_nr = performed_refinements.size();
         // printing the model each time
-        output_manager::print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.", std::to_string(n_runs) + ".sel");
+        output_manager::print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.",
+                                                std::to_string(n_runs) + ".sel");
 #endif
 
         // build hypothesis -> try to reduce the apta.
@@ -460,7 +466,8 @@ void ldot_algorithm::run(inputdata& id) {
         DLOG_S(1) << n_runs << ": Got " << selected_refs_nr << " refs from selection and a total of "
                   << performed_refinements.size() << " after minimizing.";
         // printing the model each time
-        output_manager::print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.", std::to_string(n_runs) + ".xxx");
+        output_manager::print_current_automaton(my_merger.get(), DEBUG_DIR + "/model.",
+                                                std::to_string(n_runs) + ".xxx");
 #endif
 
         // Check if we go for a next run.
@@ -479,21 +486,21 @@ void ldot_algorithm::run(inputdata& id) {
 
             try {
 
-                std::optional<psql::record> query_result = equivalence(my_oracle.get());
+                auto query_result = equivalence(my_oracle.get());
 
                 if (!query_result) {
                     LOG_S(INFO) << n_runs << ":END: Found consistent automaton => Print to " << OUTPUT_FILE;
                     output_manager::print_final_automaton(my_merger.get(),
-                                            ".final"); // printing the final model.
-                    return;                            // Solved!
+                                                          ".final"); // printing the final model.
+                    return;                                          // Solved!
                 }
                 auto cex_rec = query_result.value();
-                const int type = cex_rec.type;
+                const int type = cex_rec.GET_INT();
                 // If this query could not be found ask for a new counter example.
                 if (type < 0)
                     continue;
 
-                const std::vector<int>& cex = cex_rec.trace;
+                const std::vector<int>& cex = cex_rec.GET_INT_VEC();
 
                 if (cex == prev_cex) {
                     throw std::runtime_error("repeated cex");
@@ -543,12 +550,19 @@ void ldot_algorithm::run(inputdata& id) {
     }
 }
 
-std::optional<psql::record> ldot_algorithm::equivalence(sqldb_sul_regex_oracle* regex_oracle) {
-    if (REGEX_EQUIVALENCE && !disable_regex_oracle)
-        return regex_oracle->equivalence_query_db(my_merger.get());
+std::optional<sul_response> ldot_algorithm::equivalence(sqldb_sul_regex_oracle* regex_oracle) {
+    if (REGEX_EQUIVALENCE && !disable_regex_oracle) {
+        auto res = regex_oracle->equivalence_query(my_merger.get());
+        if (!res)
+            return std::nullopt;
+        return std::make_optional<res.second>;
+    }
 
     if (RANDOM_EQUIVALENCE) {
-        return random_oracle->equivalence_query_db(my_merger.get(), added_traces);
+        auto res = random_oracle->equivalence_query(my_merger.get());
+        if (!res)
+            return std::nullopt;
+        return std::make_optional<res.second>;
     }
 
     if (DISTINGUISHING_EQUIVALENCE) {

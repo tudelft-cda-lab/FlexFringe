@@ -19,8 +19,8 @@
 // however, using db::stream_traces (in a fixed order) is faster.
 const bool TRUE_RANDOM = false;
 
-std::optional<psql::record> sqldb_sul_random_oracle::equivalence_query_db(state_merger* merger,
-                                                                          const std::unordered_set<int>& added_traces) {
+std::optional<std::pair<std::vector<int>, sul_response>>
+sqldb_sul_random_oracle::equivalence_query(state_merger* merger) {
     inputdata& id = *(merger->get_dat());
     int n = 0;
     const int max_pk = my_sqldb_sul->my_sqldb.max_trace_pk();
@@ -31,7 +31,7 @@ std::optional<psql::record> sqldb_sul_random_oracle::equivalence_query_db(state_
         std::vector<int> possible_ids;
 
         for (int pk = 0; pk <= max_pk; pk++) {
-            if (!added_traces.contains(pk))
+            if (!my_sqldb_sul.added_traces.contains(pk))
                 possible_ids.push_back(pk);
         }
         std::shuffle(possible_ids.begin(), possible_ids.end(), RNG);
@@ -64,7 +64,8 @@ std::optional<psql::record> sqldb_sul_random_oracle::equivalence_query_db(state_
 
             // if different from db, return
             if (type != rec.type) {
-                return std::make_optional<psql::record>(rec);
+                auto sul_resp = sul_response(rec.type, rec.pk, rec.trace);
+                return std::make_optional<std::pair<std::vector<int>, int>>(std::make_pair(rec.trace, sul_resp));
             }
         }
 
@@ -106,16 +107,13 @@ std::optional<psql::record> sqldb_sul_random_oracle::equivalence_query_db(state_
         };
 
         my_sqldb_sul->my_sqldb.stream_traces(g);
-        return ans; // Either lambda g sets ans to a value or it remain the nullopt.
-    }
-}
 
-std::optional<std::pair<std::vector<int>, int>>
-sqldb_sul_random_oracle::equivalence_query(state_merger* merger) {
-    const std::unordered_set<int> empty_set;
-    std::optional<psql::record> r_maybe = equivalence_query_db(merger, empty_set);
-    if (!r_maybe)
-        return std::nullopt;
-    const psql::record r = r_maybe.value();
-    return std::make_optional<std::pair<std::vector<int>, int>>(std::make_pair(r.trace, r.type));
+        // Either lambda g sets ans to a value or it remain the nullopt.
+
+        if (!ans)
+            return std::nullopt;
+        auto rec = ans.value();
+        auto sul_resp = sul_response(rec.type, rec.pk, rec.trace);
+        return std::make_optional<std::pair<std::vector<int>, int>>(std::make_pair(rec.trace, sul_resp));
+    }
 }
