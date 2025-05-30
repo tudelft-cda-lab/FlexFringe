@@ -137,6 +137,7 @@ class ldot_algorithm : public algorithm_base {
   public:
     ldot_algorithm() {
         STORE_ACCESS_STRINGS = true;
+        POSTGRESQL_DROPTBLS = false;
 
         auto sul = sul_factory::create_sul(AL_SYSTEM_UNDER_LEARNING);
         auto ds_handler = ds_handler_factory::create_ds_handler(sul, AL_II_NAME);
