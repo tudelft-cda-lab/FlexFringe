@@ -18,7 +18,8 @@
 #include <utility>
 #include <vector>
 
-std::optional<std::pair<std::vector<int>, int>> sqldb_sul_regex_oracle::equivalence_query(state_merger* merger) {
+std::optional<std::pair<std::vector<int>, sul_response>>
+sqldb_sul_regex_oracle::equivalence_query(state_merger* merger) {
     inputdata& id = *(merger->get_dat());
     apta& hypothesis = *(merger->get_aut());
 
@@ -56,12 +57,11 @@ std::optional<std::pair<std::vector<int>, int>> sqldb_sul_regex_oracle::equivale
 /* When pqxx is used, it needs to be guarded out since we want to compile on platforms without libpq and pqxx still. */
 #ifdef __FLEXFRINGE_DATABASE
             try {
-                std::optional<psql::record> cex = my_sqldb_sul->regex_equivalence(regex, type);
-                if (cex) {
+                sul_response cex = my_sqldb_sul->regex_equivalence(regex, type);
+                if (cex.has_int_val()) {
                     // Found counter example, return immidiatly.
-                    auto rec = cex.value();
-                    auto sul_resp = sul_response(rec.type, rec.pk, rec.trace);
-                    return std::make_optional<std::pair<std::vector<int>, int>>(std::make_pair(rec.trace, sul_resp));
+                    return std::make_optional<std::pair<std::vector<int>, sul_response>>(
+                        std::make_pair(cex.GET_INT_VEC(), cex));
                 }
             } catch (const pqxx::data_exception& e) {
                 // Regex got too big, lets split into multiple parts.

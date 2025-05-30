@@ -31,7 +31,7 @@ sqldb_sul_random_oracle::equivalence_query(state_merger* merger) {
         std::vector<int> possible_ids;
 
         for (int pk = 0; pk <= max_pk; pk++) {
-            if (!my_sqldb_sul.added_traces.contains(pk))
+            if (!my_sqldb_sul->added_traces.contains(pk))
                 possible_ids.push_back(pk);
         }
         std::shuffle(possible_ids.begin(), possible_ids.end(), RNG);
@@ -46,8 +46,11 @@ sqldb_sul_random_oracle::equivalence_query(state_merger* merger) {
             apta_node* ending_state = merger->get_state_from_trace(t);
 
             // Found a path in database that is not in the APTA
-            if (ending_state == nullptr)
-                return std::make_optional<psql::record>(rec);
+            if (ending_state == nullptr) {
+                auto sul_resp = sul_response(rec.type, rec.pk, std::move(rec.trace));
+                return std::make_optional<std::pair<std::vector<int>, sul_response>>(
+                    std::make_pair(rec.trace, sul_resp));
+            }
 
             ending_state = ending_state->find();
             tail* ending_tail = t->end_tail;
@@ -64,8 +67,9 @@ sqldb_sul_random_oracle::equivalence_query(state_merger* merger) {
 
             // if different from db, return
             if (type != rec.type) {
-                auto sul_resp = sul_response(rec.type, rec.pk, rec.trace);
-                return std::make_optional<std::pair<std::vector<int>, int>>(std::make_pair(rec.trace, sul_resp));
+                auto sul_resp = sul_response(rec.type, rec.pk, std::move(rec.trace));
+                return std::make_optional<std::pair<std::vector<int>, sul_response>>(
+                    std::make_pair(rec.trace, sul_resp));
             }
         }
 
@@ -113,7 +117,7 @@ sqldb_sul_random_oracle::equivalence_query(state_merger* merger) {
         if (!ans)
             return std::nullopt;
         auto rec = ans.value();
-        auto sul_resp = sul_response(rec.type, rec.pk, rec.trace);
-        return std::make_optional<std::pair<std::vector<int>, int>>(std::make_pair(rec.trace, sul_resp));
+        auto sul_resp = sul_response(rec.type, rec.pk, std::move(rec.trace));
+        return std::make_optional<std::pair<std::vector<int>, sul_response>>(std::make_pair(rec.trace, sul_resp));
     }
 }

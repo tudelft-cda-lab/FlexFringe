@@ -41,8 +41,8 @@ shared_ptr<sul_base> sul_factory::create_sul(string_view sul_name) {
     else if (sul_name == "database_sul")
         res = make_shared<database_sul>();
     else if (sul_name == "sqldb_sul") {
-        auto my_sqldb = make_unique<psql::db>(POSTGRESQL_TBLNAME, POSTGRESQL_CONNSTRING);
-        sqldb_sul* my_sul = new sqldb_sul(*my_sqldb);
+        /* auto my_sqldb = make_unique<psql::db>(POSTGRESQL_TBLNAME, POSTGRESQL_CONNSTRING); */
+        /* sqldb_sul* my_sul = new sqldb_sul(*my_sqldb); */
         /* shared_ptr<sqldb_sul> sqldb_res = shared_ptr<sqldb_sul>(my_sul); */
         inputdata* id = inputdata_locator::get();
         if (id == nullptr)

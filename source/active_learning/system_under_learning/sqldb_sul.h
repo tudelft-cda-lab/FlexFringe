@@ -21,7 +21,7 @@
 class sqldb_sul : public sul_base {
   public:
     psql::db& my_sqldb;
-    const std::unordered_set<int> added_traces;
+    std::unordered_set<int> added_traces;
 
     explicit sqldb_sul(psql::db& db) : my_sqldb(db){};
 

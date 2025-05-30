@@ -30,9 +30,6 @@
 #include <memory>
 #include <vector>
 
-sqldb_sul::sqldb_sul(psql::db& db) : my_sqldb(db) {}
-ldot_algorithm::ldot_algorithm(psql::db& db) {}
-
 /** Debugging function */
 template <typename T> std::string printAddress(const std::list<T>& v) {
     std::stringstream ss;
@@ -77,7 +74,7 @@ void ldot_algorithm::proc_counter_record(inputdata& id, const sul_response& rec,
                 // apta_node n and substring point now to same place in apta.
             } else {
                 // apta_node n points to non existent place in apta.
-                auto record_maybe = my_sul->do_query(substring);
+                auto record_maybe = my_sul->do_query(substring, id);
                 if (record_maybe.has_int_val()) {
                     add_trace(id, record_maybe);
                 }
@@ -100,14 +97,15 @@ void ldot_algorithm::proc_counter_record(inputdata& id, const sul_response& rec,
 }
 
 bool ldot_algorithm::add_trace(inputdata& id, const sul_response& r) {
-    if (my_sul->added_traces.contains(r.GET_ID())) {
+    int pk = r.GET_ID();
+    if (my_sul->added_traces.contains(pk)) {
         return false;
     }
-    my_sul->added_traces.insert(r.GET_ID());
+    my_sul->added_traces.insert(pk);
 
     LOG_S(1) << "pk:" << r.GET_ID() << " " << r.GET_INT() << " " << r.GET_INT_VEC();
 
-    trace* new_trace = active_learning_namespace::vector_to_trace(r.trace, id, r.type);
+    trace* new_trace = active_learning_namespace::vector_to_trace(r.GET_INT_VEC(), id, r.GET_INT());
     id.add_trace_to_apta(new_trace, my_merger->get_aut(), false);
     id.add_trace(new_trace);
     return true;
@@ -297,15 +295,6 @@ void ldot_algorithm::run(inputdata& id) {
     std::filesystem::create_directories(DEBUG_DIR);
 #endif
     LOG_S(INFO) << "Running the ldot algorithm.";
-    std::unique_ptr<sqldb_sul_regex_oracle> my_oracle(dynamic_cast<sqldb_sul_regex_oracle*>(oracle.get()));
-    if (my_oracle == nullptr) {
-        throw std::logic_error(
-            "ldot only accepts the sqldb_sul_regex_oracle, there are more oracles, but a refactoring is "
-            "needed in that case.");
-    }
-    oracle.release(); // illegal ownership transfer of a unique_ptr (TODO: oracle should be shared_ptr)
-
-    random_oracle = std::make_unique<sqldb_sul_random_oracle>(sul);
 
     n_runs = 1;
     n_subs = 1;
@@ -486,7 +475,7 @@ void ldot_algorithm::run(inputdata& id) {
 
             try {
 
-                auto query_result = equivalence(my_oracle.get());
+                std::optional<sul_response> query_result = equivalence();
 
                 if (!query_result) {
                     LOG_S(INFO) << n_runs << ":END: Found consistent automaton => Print to " << OUTPUT_FILE;
@@ -494,7 +483,7 @@ void ldot_algorithm::run(inputdata& id) {
                                                           ".final"); // printing the final model.
                     return;                                          // Solved!
                 }
-                auto cex_rec = query_result.value();
+                sul_response cex_rec = query_result.value();
                 const int type = cex_rec.GET_INT();
                 // If this query could not be found ask for a new counter example.
                 if (type < 0)
@@ -550,19 +539,19 @@ void ldot_algorithm::run(inputdata& id) {
     }
 }
 
-std::optional<sul_response> ldot_algorithm::equivalence(sqldb_sul_regex_oracle* regex_oracle) {
+std::optional<sul_response> ldot_algorithm::equivalence() {
     if (REGEX_EQUIVALENCE && !disable_regex_oracle) {
-        auto res = regex_oracle->equivalence_query(my_merger.get());
+        auto res = oracle_2->equivalence_query(my_merger.get());
         if (!res)
             return std::nullopt;
-        return std::make_optional<res.second>;
+        return std::make_optional<sul_response>(res.value().second);
     }
 
     if (RANDOM_EQUIVALENCE) {
-        auto res = random_oracle->equivalence_query(my_merger.get());
+        auto res = oracle->equivalence_query(my_merger.get());
         if (!res)
             return std::nullopt;
-        return std::make_optional<res.second>;
+        return std::make_optional<sul_response>(res.value().second);
     }
 
     if (DISTINGUISHING_EQUIVALENCE) {

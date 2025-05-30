@@ -39,8 +39,8 @@ add_library(ActiveLearning STATIC
             algorithms/lstar_imat.cpp
             algorithms/lsharp.h
             algorithms/lsharp.cpp
-            #algorithms/ldot.h
-            #algorithms/ldot.cpp
+            algorithms/ldot.h
+            algorithms/ldot.cpp
             algorithms/paul.h
             algorithms/paul.cpp
 
@@ -63,10 +63,10 @@ add_library(ActiveLearning STATIC
             oracle/base_oracle.cpp
             oracle/input_file_oracle.h
             oracle/input_file_oracle.cpp
-            #oracle/sqldb_sul_regex_oracle.h
-            #oracle/sqldb_sul_regex_oracle.cpp
-            #oracle/sqldb_sul_random_oracle.h
-            #oracle/sqldb_sul_random_oracle.cpp
+            oracle/sqldb_sul_regex_oracle.h
+            oracle/sqldb_sul_regex_oracle.cpp
+            oracle/sqldb_sul_random_oracle.h
+            oracle/sqldb_sul_random_oracle.cpp
             oracle/paul_oracle.h
             oracle/paul_oracle.cpp
 
@@ -161,8 +161,8 @@ add_library(ActiveLearning STATIC
             system_under_learning/dfa_sul.cpp
             system_under_learning/database_sul.h
             system_under_learning/database_sul.cpp
-            #system_under_learning/sqldb_sul.h
-            #system_under_learning/sqldb_sul.cpp
+            system_under_learning/sqldb_sul.h
+            system_under_learning/sqldb_sul.cpp
 
             # The SULs dedicated to capturing the output of neural networks (or Python scripts having similar outputs)
             system_under_learning/neural_network_suls/nn_sul_base.h

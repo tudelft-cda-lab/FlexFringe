@@ -17,11 +17,13 @@
 #include "base_oracle.h"
 #include "input/trace.h"
 #include "inputdata.h"
+#include "inputdatalocator.h"
 #include "refinement.h"
 #include "sqldb_sul.h"
 #include "sqldb_sul_random_oracle.h"
 #include "sqldb_sul_regex_oracle.h"
 #include "state_merger.h"
+#include "sul_base.h"
 #include <memory>
 #include <set>
 #include <vector>
@@ -63,7 +65,6 @@ class ldot_algorithm : public algorithm_base {
     int uid = 0;
     std::list<refinement*> performed_refinements;
     std::unordered_set<apta_node*> completed_nodes;
-    std::unordered_set<int> added_traces;
     bool isolated_states;
     std::set<apta_node*> complete_these_states;
 
@@ -96,7 +97,7 @@ class ldot_algorithm : public algorithm_base {
      * @brief Add a new trace to the data structures (apta, mem_store).
      * Returns true if trace has been added.
      */
-    bool add_trace(inputdata& id, const psql::record& rec);
+    bool add_trace(inputdata& id, const sul_response& rec);
 
     /**
      * @brief Processing the counterexample recursively in the binary search strategy
@@ -112,7 +113,7 @@ class ldot_algorithm : public algorithm_base {
      * @param counterex The counterexample.
      * @param refs The list of refinments made.
      */
-    void proc_counter_record(inputdata& id, const psql::record& rec, const refinement_list& refs);
+    void proc_counter_record(inputdata& id, const sul_response& rec, const refinement_list& refs);
 
     /** Function to process a std::vector with refinement_set (merges)
      * we are unsure of
@@ -127,22 +128,35 @@ class ldot_algorithm : public algorithm_base {
     /** Perform an equivalence check
      * Return an optional record holding the counter example
      */
-    std::optional<psql::record> equivalence(sqldb_sul_regex_oracle* regex_oracle);
+    std::optional<sul_response> equivalence();
 
     std::vector<apta_node*> represented_by(apta_node* n);
 
+    std::unique_ptr<base_oracle> oracle_2;
+
   public:
     ldot_algorithm() {
-        init_standard();
         STORE_ACCESS_STRINGS = true;
 
-        auto sul = sul_factory::create_sul(AL_SYSTEM_UNDER_LEARNING);
+        /* auto sul = sul_factory::create_sul(AL_SYSTEM_UNDER_LEARNING); */
+
+        auto my_sqldb = std::make_unique<psql::db>(POSTGRESQL_TBLNAME, POSTGRESQL_CONNSTRING);
+        sqldb_sul* my_sqldb_sul = new sqldb_sul(*my_sqldb);
+        std::shared_ptr<sqldb_sul> sul = std::shared_ptr<sqldb_sul>(my_sqldb_sul);
+        inputdata* id = inputdata_locator::get();
+        if (id == nullptr)
+            throw std::logic_error("Inputdata must exist the moment the SUL is created");
+        sul->pre(*id);
+
         my_sul = dynamic_pointer_cast<sqldb_sul>(sul);
         if (my_sul == nullptr) {
             throw std::logic_error("ldot only works with sqldb_sul.");
         }
         auto ds_handler = ds_handler_factory::create_ds_handler(sul, AL_II_NAME);
         this->oracle = oracle_factory::create_oracle(sul, AL_ORACLE, ds_handler);
+        if (AL_ORACLE_2 != "") {
+            this->oracle_2 = oracle_factory::create_oracle(sul, AL_ORACLE_2, ds_handler);
+        }
     }
 
     /**

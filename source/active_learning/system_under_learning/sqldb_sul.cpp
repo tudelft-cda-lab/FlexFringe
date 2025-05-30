@@ -38,16 +38,28 @@ void sqldb_sul::pre(inputdata& id) {
 }
 
 const sul_response sqldb_sul::do_query(const std::vector<int>& query_trace, inputdata& id) const {
-    auto rec = my_sqldb.query_trace_opt(my_sqldb.vec2str(query_trace));
-    return sul_response(rec.type, rec.pk, rec.trace)
+    auto rec_maybe = my_sqldb.query_trace_opt(my_sqldb.vec2str(query_trace));
+    if (!rec_maybe) {
+        return sul_response();
+    }
+    auto rec = rec_maybe.value();
+    return sul_response(rec.type, rec.pk, std::move(rec.trace));
 }
 
 const sul_response sqldb_sul::regex_equivalence(const std::string& regex, int type) {
-    auto rec = my_sqldb.regex_equivalence(regex, type);
-    return sul_response(rec.type, rec.pk, rec.trace)
+    auto rec_maybe = my_sqldb.regex_equivalence(regex, type);
+    if (!rec_maybe) {
+        return sul_response();
+    }
+    auto rec = rec_maybe.value();
+    return sul_response(rec.type, rec.pk, std::move(rec.trace));
 }
 
 const std::vector<sul_response> sqldb_sul::prefix_query(const std::vector<int>& prefix, int n) {
-    auto rec = my_sqldb.prefix_query(my_sqldb.vec2str(prefix), n);
-    return sul_response(rec.type, rec.pk, rec.trace)
+    auto recs = my_sqldb.prefix_query(my_sqldb.vec2str(prefix), n);
+    std::vector<sul_response> res;
+    for (auto rec : recs) {
+        res.emplace_back(rec.type, rec.pk, std::move(rec.trace));
+    }
+    return res;
 }

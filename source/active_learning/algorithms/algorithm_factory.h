@@ -14,7 +14,7 @@
 
 #include "algorithm_base.h"
 
-//#include "ldot.h"
+#include "ldot.h"
 #include "lsharp.h"
 #include "lstar_imat.h"
 #include "lstar.h"
