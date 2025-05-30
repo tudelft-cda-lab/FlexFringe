@@ -35,10 +35,10 @@ oracle_factory::create_oracle(const shared_ptr<sul_base>& sul, string_view oracl
         return make_unique<input_file_oracle>(sul);
     if (AL_ORACLE == "paul_oracle")
         return make_unique<paul_oracle>(sul, ds_handler);
-    /* if (AL_ORACLE == "sqldb_sul_random_oracle") */
-    /*     return make_unique<sqldb_sul_random_oracle>(sul); */
-    /* if (AL_ORACLE == "sqldb_sul_regex_oracle") */
-    /*     return make_unique<sqldb_sul_regex_oracle>(sul); */
+    if (AL_ORACLE == "sqldb_sul_random_oracle")
+        return make_unique<sqldb_sul_random_oracle>(sul);
+    if (AL_ORACLE == "sqldb_sul_regex_oracle")
+        return make_unique<sqldb_sul_regex_oracle>(sul);
 
     throw std::invalid_argument(
         "One of the oracle specifying input parameters was not recognized by the oracle factory.");
