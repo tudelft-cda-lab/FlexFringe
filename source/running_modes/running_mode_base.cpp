@@ -22,9 +22,9 @@
 using namespace std;
 
 /**
- * @brief Reads the entire input file all at once and stores it in input data.
+ * @brief get the inputstream
  */
-void running_mode_base::read_input_file() {
+ifstream running_mode_base::get_inputstream() const {
     ifstream input_stream(INPUT_FILE);
 
     if(!input_stream) {
@@ -34,6 +34,14 @@ void running_mode_base::read_input_file() {
     } else {
         cout << "Using input file: " << INPUT_FILE << endl;
     }
+    return input_stream;
+}
+
+/**
+ * @brief Reads the entire input file all at once and stores it in input data.
+ */
+void running_mode_base::read_input_file() {
+    ifstream input_stream = get_inputstream();
 
     bool read_csv = false;
     if(INPUT_FILE.ends_with(".csv")){

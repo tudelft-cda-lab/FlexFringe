@@ -33,6 +33,7 @@ class running_mode_base {
     state_merger* merger = nullptr; // must be set from within constructor
 
     void read_input_file();
+    std::ifstream get_inputstream() const;
 
   public:
     ~running_mode_base(){

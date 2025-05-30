@@ -80,6 +80,8 @@ add_library(Source STATIC
         running_modes/predict_mode.cpp
         running_modes/regex_mode.h
         running_modes/regex_mode.cpp
+        running_modes/load_sqldb_mode.h
+        running_modes/load_sqldb_mode.cpp
         running_modes/running_mode_base.h
         running_modes/running_mode_base.cpp
         running_modes/search_mode.h

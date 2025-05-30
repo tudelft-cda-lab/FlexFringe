@@ -20,6 +20,7 @@
 #include "interactive_mode.h"
 #include "predict_mode.h"
 #include "regex_mode.h"
+#include "load_sqldb_mode.h"
 #include "search_mode.h"
 #include "stream_mode.h"
 #include "subgraphextraction_mode.h"

@@ -37,3 +37,21 @@ seems not guaranteed anymore.
 - To run valgrind on the Python interface, download the valgrind-python.supp file from the [cpython-github](https://github.com/python/cpython/blob/main/Misc/valgrind-python.supp), and the run it using the flag
 
     --suppressions=\[some path\]/valgrind-python.supp
+
+# Daalder (or Ldot)
+
+You can run Daalder (formerly Ldot) with these commands:
+
+```sh
+# First load the strings a database.
+./flexfringe --ini ini/edsm.ini --mode load_sqldb --postgresql-tblname test_daalder20 test.dat --logpath test_daalder.log  
+# Then you can learn the state machine from the stored traces using ldot.
+./flexfringe --ini ini/edsm.ini --mode active_learning --active_learning_algorithm ldot --al_oracle sqldb_sul_random_oracle --al_system_under_learning sqldb_sul --postgresql-tblname test_daalder20 '' --runs 1000001 --predicttype 1 --printblue 1 --printwhite 1 --logpath test_daalder.log --outputfile test_daalder
+```
+
+For more configuration for connecting to PostGreSQL check documentation of PostGreSQL on connection string and set it with `--postgresql-connstring`.
+
+For more details read: 
+
+* https://arxiv.org/abs/2406.07208
+* https://repository.tudelft.nl/record/uuid:40a1cb17-a46e-421e-a916-396ebaf3d7b1
