@@ -41,31 +41,8 @@ shared_ptr<sul_base> sul_factory::create_sul(string_view sul_name) {
     else if (sul_name == "database_sul")
         res = make_shared<database_sul>();
     else if (sul_name == "sqldb_sul") {
-        /* auto my_sqldb = make_unique<psql::db>(POSTGRESQL_TBLNAME, POSTGRESQL_CONNSTRING); */
-        /* sqldb_sul* my_sul = new sqldb_sul(*my_sqldb); */
-        /* shared_ptr<sqldb_sul> sqldb_res = shared_ptr<sqldb_sul>(my_sul); */
-        inputdata* id = inputdata_locator::get();
-        if (id == nullptr)
-            throw logic_error("Inputdata must exist the moment the SUL is created");
-
-        /* res->pre(*id); */
-        // HIELKE: The code for these functions was in main.cpp, currently commented out
-        /*     bool LOADSQLDB = false;
-            if (!LOADSQLDB) {
-                // If reading, not loading, from db, do not drop on initialization.
-                POSTGRESQL_DROPTBLS = false;
-            }
-            auto my_sqldb = make_unique<psql::db>(POSTGRESQL_TBLNAME, POSTGRESQL_CONNSTRING);
-            if (LOADSQLDB) {
-                ifstream input_stream = get_inputstream();
-
-                cout << "Selected to use the SQL database. Creating new inputdata object and loading traces."
-                abbadingo_inputdata id;
-                inputdata_locator::provide(&id);
-                my_sqldb->load_traces(id, input_stream);
-
-                return my_sqldb;
-            } */
+        auto my_sqldb = make_unique<psql::db>(POSTGRESQL_TBLNAME, POSTGRESQL_CONNSTRING);
+        res = make_shared<sqldb_sul>(*my_sqldb);
     }
 
     // the neural network suls

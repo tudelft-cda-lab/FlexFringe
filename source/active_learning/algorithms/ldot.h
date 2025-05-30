@@ -138,21 +138,14 @@ class ldot_algorithm : public algorithm_base {
     ldot_algorithm() {
         STORE_ACCESS_STRINGS = true;
 
-        /* auto sul = sul_factory::create_sul(AL_SYSTEM_UNDER_LEARNING); */
-
-        auto my_sqldb = std::make_unique<psql::db>(POSTGRESQL_TBLNAME, POSTGRESQL_CONNSTRING);
-        sqldb_sul* my_sqldb_sul = new sqldb_sul(*my_sqldb);
-        std::shared_ptr<sqldb_sul> sul = std::shared_ptr<sqldb_sul>(my_sqldb_sul);
-        inputdata* id = inputdata_locator::get();
-        if (id == nullptr)
-            throw std::logic_error("Inputdata must exist the moment the SUL is created");
-        sul->pre(*id);
+        auto sul = sul_factory::create_sul(AL_SYSTEM_UNDER_LEARNING);
+        auto ds_handler = ds_handler_factory::create_ds_handler(sul, AL_II_NAME);
 
         my_sul = dynamic_pointer_cast<sqldb_sul>(sul);
         if (my_sul == nullptr) {
             throw std::logic_error("ldot only works with sqldb_sul.");
         }
-        auto ds_handler = ds_handler_factory::create_ds_handler(sul, AL_II_NAME);
+
         this->oracle = oracle_factory::create_oracle(sul, AL_ORACLE, ds_handler);
         if (AL_ORACLE_2 != "") {
             this->oracle_2 = oracle_factory::create_oracle(sul, AL_ORACLE_2, ds_handler);

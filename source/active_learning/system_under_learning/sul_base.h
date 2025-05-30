@@ -94,6 +94,9 @@ class sul_base {
     std::ifstream get_input_stream() const;
 
   public:
+    sul_base() = default;
+    virtual ~sul_base() = default; // making sure that the destructors of derived classes are called
+
     virtual const sul_response do_query(const std::vector<int>& query_trace, inputdata& id) const = 0;
     virtual const sul_response do_query(const std::vector<std::vector<int>>& query_trace, inputdata& id) const {
         throw std::logic_error("batched queries not implemented in this sul-class.");
