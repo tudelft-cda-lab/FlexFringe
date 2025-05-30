@@ -79,7 +79,7 @@ jobs:
           junit_files: "testresults-${{ matrix.triplet }}.xml"
 
       - name: upload-binary-artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: 'flexfringe-${{ matrix.triplet }}'
           path: '${{ runner.workspace }}/FlexFringe/build/flexfringe-${{ matrix.triplet }}${{ matrix.extension}}'
