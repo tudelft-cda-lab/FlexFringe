@@ -41,12 +41,9 @@ shared_ptr<sul_base> sul_factory::create_sul(string_view sul_name) {
     else if (sul_name == "database_sul")
         res = make_shared<database_sul>();
     else if (sul_name == "sqldb_sul") {
-        auto my_sqldb = make_shared<psql::db>(POSTGRESQL_TBLNAME, POSTGRESQL_CONNSTRING);
-
-        std::cout << "GET" << std::endl;
-        my_sqldb->get_alphabet();
-        std::cout << "GOT" << std::endl;
-
+        // Dangling pointer: Since this is a static function, it cannot correctly
+        // own smart pointers, so I just made this a dangling one.
+        auto my_sqldb = new psql::db(POSTGRESQL_TBLNAME, POSTGRESQL_CONNSTRING);
         res = make_shared<sqldb_sul>(*my_sqldb);
     }
 
