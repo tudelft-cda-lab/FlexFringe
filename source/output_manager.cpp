@@ -16,13 +16,15 @@
 using namespace std;
 
 void output_manager::init_outfile_path(){
-  if(OUTPUT_FILE.empty()) 
-    outfile_path = INPUT_FILE + ".ff";
-  else
-    outfile_path = OUTPUT_FILE;
+  std::string_view outf_path = OUTPUT_FILE.empty() ? INPUT_FILE + ".ff" : OUTPUT_FILE;
+  init_outfile_path(outf_path);
+}
 
+void output_manager::init_outfile_path(std::string_view outf_path){
+  outfile_path = outf_path;
     // TODO: do something with the predict mode here after refactoring predict mode
 }
+
 
 string_view output_manager::get_outfile_path(){
   return outfile_path;

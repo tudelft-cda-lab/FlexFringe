@@ -139,6 +139,7 @@ int K = 0;
 // active learning parameters
 std::string ACTIVE_LEARNING_ALGORITHM = "lstar";
 bool DO_ACTIVE_LEARNING = false;
+int AL_MAX_N_STATES = -1;
 std::string AL_REJECTING_LABEL = "0";
 std::string AL_ORACLE = "";
 std::string AL_ORACLE_2 = "";
@@ -157,6 +158,7 @@ int AL_BATCH_SIZE = 256;
 int AL_LONG_TERM_DEPENDENCY_WINSIZE = -1;
 int AL_TEST_EMTPY_STRING = 1;
 bool AL_SAVE_RUNTIME_FOR_SPACE = true;
+bool AL_ADJUST_THRESHOLD = false;
 
 std::string POSTGRESQL_CONNSTRING = "";
 std::string POSTGRESQL_TBLNAME = "";

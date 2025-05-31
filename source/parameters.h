@@ -165,6 +165,7 @@ extern bool SINK_TYPE;
 // active learning parameters
 extern std::string ACTIVE_LEARNING_ALGORITHM;
 extern bool DO_ACTIVE_LEARNING;
+extern int AL_MAX_N_STATES;
 extern std::string AL_REJECTING_LABEL;
 extern std::string AL_ORACLE;
 extern std::string AL_ORACLE_2;
@@ -183,6 +184,7 @@ extern int AL_NUM_CEX_PARAM;
 extern int AL_MAX_SEARCH_DEPTH;
 extern int AL_TEST_EMTPY_STRING;
 extern bool AL_SAVE_RUNTIME_FOR_SPACE;
+extern bool AL_ADJUST_THRESHOLD;
 
 extern std::string POSTGRESQL_CONNSTRING;
 extern std::string POSTGRESQL_TBLNAME;

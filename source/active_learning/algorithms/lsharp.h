@@ -21,6 +21,7 @@
 #include "state_merger.h"
 #include "tail.h"
 #include "trace.h"
+#include "output_manager.h"
 
 #include <list>
 #include <memory>
@@ -47,6 +48,7 @@ class lsharp_algorithm : public algorithm_base {
     lsharp_algorithm() {
       init_standard();
       STORE_ACCESS_STRINGS = true;
+      output_manager::init_outfile_path(APTA_FILE);
     }
 
     void run(inputdata& id) override;

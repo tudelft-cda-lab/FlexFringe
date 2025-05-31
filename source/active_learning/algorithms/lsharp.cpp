@@ -22,8 +22,6 @@
 
 #include "edsm.h"
 
-#include <list>
-
 using namespace std;
 using namespace active_learning_namespace;
 
@@ -125,7 +123,6 @@ list<refinement*> lsharp_algorithm::find_complete_base(unique_ptr<state_merger>&
     static const bool merge_root = MERGE_ROOT;
 
     int n_red_nodes = 1; // for the root node
-    static const int MAX_RED_NODES = 2500; // TODO: shall we make something like this an input parameter?
     bool termination_reached = false;
     int n_iter = -1;
 
@@ -168,15 +165,7 @@ list<refinement*> lsharp_algorithm::find_complete_base(unique_ptr<state_merger>&
                 extend_fringe(merger, blue_node, the_apta, id, alphabet);
                 do_operations(merger.get(), performed_refs);
 
-                if(n_red_nodes == MAX_RED_NODES){
-                    termination_reached = true;
-                    break;
-                }
-            /* } else if (IDENTIFY_STATE_COMPLETELY && possible_merges.size() > 1) {
-                // we need to find a distinguishing sequence. We can either use the set we have, or turn this one red
-                reset_apta(merger.get(), performed_refs);
-                extend_fringe(merger, blue_node, the_apta, id, alphabet);
-                do_operations(merger.get(), performed_refs); */
+            /* } else if (IDENTIFY_STATE_COMPLETELY && possible_merges.size() > 1) { */
 
             } else {
                 // get the best merge from the heap
@@ -205,15 +194,6 @@ list<refinement*> lsharp_algorithm::find_complete_base(unique_ptr<state_merger>&
         //}
 
         if(!identified_red_node){
-            //static int n_h = 0;
-            //++n_h;
-            //if(n_h==10){
-            //    cout << "Max number of hypotheses reached. Printing the automaton with " << n_red_nodes << " states." << endl;
-            //    find_closed_automaton(performed_refs, the_apta, merger, evidence_driven::get_score);
-            //    output_manager::print_current_automaton(merger.get(), OUTPUT_FILE, ".final");
-            //    cout << "Printed. Terminating" << endl;
-            //    exit(0);
-            //}
             cout << "Complete basis found. Forwarding hypothesis" << endl;
             find_closed_automaton(performed_refs, the_apta, merger, evidence_driven::get_score);
             return performed_refs;
@@ -222,8 +202,6 @@ list<refinement*> lsharp_algorithm::find_complete_base(unique_ptr<state_merger>&
 }
 
 void lsharp_algorithm::run(inputdata& id) {
-    int n_runs = 1;
-
     auto eval = unique_ptr<evaluation_function>(get_evaluation());
     eval->initialize_before_adding_traces();
 
@@ -248,22 +226,22 @@ void lsharp_algorithm::run(inputdata& id) {
         extend_fringe(merger, root_node, the_apta, id, alphabet);
     }
 
-    //{
-    //    static int model_nr = 0;
-    //    output_manager::print_current_automaton(merger.get(), "model.", "root");
-    //}
-
-    while (ENSEMBLE_RUNS > 0 && n_runs <= ENSEMBLE_RUNS) {
-        if (n_runs % 100 == 0)
-            cout << "Iteration " << n_runs + 1 << endl;
-
+    while (true) {
         auto refs = find_complete_base(merger, the_apta, id, alphabet);
         cout << "Searching for counterexamples" << endl;
 
-        {
+        static const int MAX_N_NODES = AL_MAX_N_STATES;
+        const auto n_nodes = count_nodes(the_apta.get());
+        if(MAX_N_NODES > -1 && n_nodes >= MAX_N_NODES){
+            cout << "Reached maximum number of states. Printing." << endl;
+            output_manager::print_final_automaton(merger.get(), ".final");
+            return;
+        }
+
+        /* {
             static int model_nr = 0;
             output_manager::print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".before_cex");
-        }
+        } */
 
         // only merges performed, hence we can test our hypothesis
         while (true) {
@@ -291,10 +269,10 @@ void lsharp_algorithm::run(inputdata& id) {
             
             proc_counterex(id, the_apta, cex, merger, refs, alphabet);
 
-            {
+            /* {
                 static int model_nr = 0;
                 output_manager::print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_cex");
-            }
+            } */
 
             break;
         }

@@ -17,18 +17,9 @@
 #include "common_functions.h"
 
 #include <optional>
+#include <ranges>
 
 using namespace std;
-
-// -------------------------------- Instantiate all the templated methods for suffixes_t --------------------------------
-template void distinguishing_sequences_handler_fast::suffixes_t::add_suffix(const vector<int>&);
-template void distinguishing_sequences_handler_fast::suffixes_t::add_suffix(const list<int>&);
-
-template std::size_t distinguishing_sequences_handler_fast::suffixes_t::get_hash(const vector<uint32_t>&) const;
-template std::size_t distinguishing_sequences_handler_fast::suffixes_t::get_hash(const list<uint32_t>&) const;
-
-
-// -------------------------------- Implementations of distinguishing_sequences_handler_fast --------------------------------
 
 /**
  * @brief Takes the two nodes, walks through their subtrees, and stores all the suffixes for which the two subtree disagree. 
@@ -129,29 +120,31 @@ vector<int> distinguishing_sequences_handler_fast::predict_node_with_sul(apta& a
   unordered_set<int> no_pred_idxs;
   vector<int> res;
 
-  for(const auto& suffix: m_suffixes.get_suffixes()){
-    if(right_prefix.size() + suffix.size() > MAX_LEN){
-      no_pred_idxs.insert(queries.size()+no_pred_idxs.size()); // invalid prediction
-      continue;
-    }
-
-    queries.push_back(active_learning_namespace::concatenate_vectors(right_prefix, suffix));
-    if(queries.size() >= MIN_BATCH_SIZE){ // if min-batch size % 2 != 0 will be larger
-      const sul_response response = sul->do_query(queries, *(inputdata_locator::get()));
-        
-      int answers_idx = 0;
-      const vector<int>& answers = response.GET_INT_VEC();
-      for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
-        if(no_pred_idxs.contains(i)){
-          res.push_back(-1);
-          continue;
-        }
-        res.push_back(answers[answers_idx]);
-        ++answers_idx;
+  for(auto& [length, suffixes]: m_suffixes.get_suffixes()){
+    for(const auto& suffix: suffixes){
+      if(right_prefix.size() + suffix.size() > MAX_LEN){
+        no_pred_idxs.insert(queries.size()+no_pred_idxs.size()); // invalid prediction
+        continue;
       }
+
+      queries.push_back(active_learning_namespace::concatenate_vectors(right_prefix, suffix));
+      if(queries.size() >= MIN_BATCH_SIZE){ // if min-batch size % 2 != 0 will be larger
+        const sul_response response = sul->do_query(queries, *(inputdata_locator::get()));
           
-      queries.clear();
-      no_pred_idxs.clear();
+        int answers_idx = 0;
+        const vector<int>& answers = response.GET_INT_VEC();
+        for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
+          if(no_pred_idxs.contains(i)){
+            res.push_back(-1);
+            continue;
+          }
+          res.push_back(answers[answers_idx]);
+          ++answers_idx;
+        }
+            
+        queries.clear();
+        no_pred_idxs.clear();
+      }
     }
   }
 
@@ -178,6 +171,76 @@ vector<int> distinguishing_sequences_handler_fast::predict_node_with_sul(apta& a
 }
 
 /**
+ * @brief Prerequisite to check_consistency. We already compute the distribution for the red node, 
+ * saving us recomputation of the same distribution over and over again.
+ */
+distinguishing_sequences_handler_fast::layer_predictions_map distinguishing_sequences_handler_fast::predict_node_with_sul_layer_wise(apta& aut, apta_node* node) {
+  static inputdata& id = *inputdata_locator::get(); 
+
+  auto right_access_trace = node->get_access_trace();
+  const active_learning_namespace::pref_suf_t right_prefix = right_access_trace->get_input_sequence(true, false);
+  
+  layer_predictions_map res;
+
+  for(auto& [length, suffixes]: m_suffixes.get_suffixes()){
+    vector< vector<int> > queries;
+    unordered_set<int> no_pred_idxs;
+
+    if(!res.contains(length))
+      res[length] = vector<int>();
+
+    auto& res_vec = res[length];
+
+    for(const auto& suffix: suffixes){
+      if(right_prefix.size() + suffix.size() > MAX_LEN){
+        no_pred_idxs.insert(queries.size()+no_pred_idxs.size()); // invalid prediction
+        continue;
+      }
+
+      queries.push_back(active_learning_namespace::concatenate_vectors(right_prefix, suffix));
+      if(queries.size() >= MIN_BATCH_SIZE){ // if min-batch size % 2 != 0 will be larger
+        const sul_response response = sul->do_query(queries, *(inputdata_locator::get()));
+          
+        int answers_idx = 0;
+        const vector<int>& answers = response.GET_INT_VEC();
+        for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
+          if(no_pred_idxs.contains(i)){
+            res_vec.push_back(-1);
+            continue;
+          }
+          res_vec.push_back(answers[answers_idx]);
+          ++answers_idx;
+        }
+            
+        queries.clear();
+        no_pred_idxs.clear();
+      }
+    }
+
+    if(queries.size() > 0){
+      const sul_response response = sul->do_query(queries, *(inputdata_locator::get()));
+      
+      int answers_idx = 0;
+      const vector<int>& answers = response.GET_INT_VEC();
+      for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
+        if(no_pred_idxs.contains(i)){
+          res_vec.push_back(-1);
+          continue;
+        }
+        res_vec.push_back(answers[answers_idx]);
+        ++answers_idx;
+      }
+    }
+
+    if(res_vec.size()==0){ // this case will happen if MAX_LEN kills all possible queries
+      res_vec.assign(suffixes.size(), -1);
+    }
+  }
+
+  return res;
+}
+
+/**
  * @brief Predicts the distribution emanating from node using the automaton using 
  * the DS. If automaton cannot be parsed with the strings the prediction is -1.
  */
@@ -191,33 +254,35 @@ vector<int> distinguishing_sequences_handler_fast::predict_node_with_automaton(a
   unordered_set<int> no_pred_idxs;
   vector<int> res;
 
-  for(const auto& suffix: m_suffixes.get_suffixes()){
-    if(right_prefix.size() + suffix.size() > MAX_LEN){
-      no_pred_idxs.insert(queries.size()+no_pred_idxs.size()); // invalid prediction
-      continue;
-    }
-
-    queries.push_back(active_learning_namespace::concatenate_vectors(right_prefix, suffix));
-    if(queries.size() >= MIN_BATCH_SIZE){ // if min-batch size % 2 != 0 will be larger
-      
-      int answers_idx = 0;
-      vector<int> answers;
-      for(auto query : queries){
-        const int answer = active_learning_namespace::predict_type_from_trace(active_learning_namespace::vector_to_trace(query, id), &aut, id);
-        answers.push_back(answer);
+  for(auto& [length, suffixes]: m_suffixes.get_suffixes()){
+    for(const auto& suffix: suffixes){
+      if(right_prefix.size() + suffix.size() > MAX_LEN){
+        no_pred_idxs.insert(queries.size()+no_pred_idxs.size()); // invalid prediction
+        continue;
       }
 
-      for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
-        if(no_pred_idxs.contains(i)){
-          res.push_back(-1);
-          continue;
+      queries.push_back(active_learning_namespace::concatenate_vectors(right_prefix, suffix));
+      if(queries.size() >= MIN_BATCH_SIZE){ // if min-batch size % 2 != 0 will be larger
+        
+        int answers_idx = 0;
+        vector<int> answers;
+        for(auto query : queries){
+          const int answer = active_learning_namespace::predict_type_from_trace(active_learning_namespace::vector_to_trace(query, id), &aut, id);
+          answers.push_back(answer);
         }
-        res.push_back(answers[answers_idx]);
-        ++answers_idx;
+
+        for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
+          if(no_pred_idxs.contains(i)){
+            res.push_back(-1);
+            continue;
+          }
+          res.push_back(answers[answers_idx]);
+          ++answers_idx;
+        }
+            
+        queries.clear();
+        no_pred_idxs.clear();
       }
-          
-      queries.clear();
-      no_pred_idxs.clear();
     }
   }
 
@@ -247,3 +312,136 @@ vector<int> distinguishing_sequences_handler_fast::predict_node_with_automaton(a
 
   return res;
 }
+
+/**
+ * @brief Predicts the distribution emanating from node using the automaton using 
+ * the DS. If automaton cannot be parsed with the strings the prediction is -1.
+ */
+distinguishing_sequences_handler_fast::layer_predictions_map distinguishing_sequences_handler_fast::predict_node_with_automaton_layer_wise(apta& aut, apta_node* node){
+  static inputdata& id = *inputdata_locator::get(); 
+
+  auto right_access_trace = node->get_access_trace();
+  const active_learning_namespace::pref_suf_t right_prefix = right_access_trace->get_input_sequence(true, false);
+  
+
+  layer_predictions_map res;
+
+  for(auto& [length, suffixes]: m_suffixes.get_suffixes()){
+    vector< vector<int> > queries;
+    unordered_set<int> no_pred_idxs;
+
+    if(!res.contains(length))
+      res[length] = vector<int>();
+
+    auto& res_vec = res[length];
+
+    for(const auto& suffix: suffixes){
+      if(right_prefix.size() + suffix.size() > MAX_LEN){
+        no_pred_idxs.insert(queries.size()+no_pred_idxs.size()); // invalid prediction
+        continue;
+      }
+
+      queries.push_back(active_learning_namespace::concatenate_vectors(right_prefix, suffix));
+      if(queries.size() >= MIN_BATCH_SIZE){ // if min-batch size % 2 != 0 will be larger
+        
+        int answers_idx = 0;
+        vector<int> answers;
+        for(auto query : queries){
+          const int answer = active_learning_namespace::predict_type_from_trace(active_learning_namespace::vector_to_trace(query, id), &aut, id);
+          answers.push_back(answer);
+        }
+
+        for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
+          if(no_pred_idxs.contains(i)){
+            res_vec.push_back(-1);
+            continue;
+          }
+          res_vec.push_back(answers[answers_idx]);
+          ++answers_idx;
+        }
+            
+        queries.clear();
+        no_pred_idxs.clear();
+      }
+    }
+
+    if(queries.size() > 0){
+      const sul_response response = sul->do_query(queries, *(inputdata_locator::get()));
+      
+      int answers_idx = 0;
+      vector<int> answers;
+      for(auto query : queries){
+        const int answer = active_learning_namespace::predict_type_from_trace(active_learning_namespace::vector_to_trace(query, id), &aut, id);
+        answers.push_back(answer);
+      }
+
+      for(int i=0; i<answers.size()+no_pred_idxs.size(); ++i){
+        if(no_pred_idxs.contains(i)){
+          res_vec.push_back(-1);
+          continue;
+        }
+        res_vec.push_back(answers[answers_idx]);
+        ++answers_idx;
+      }
+    }
+
+    if(res_vec.size()==0){ // this case will happen if MAX_LEN kills all possible queries
+      res_vec.assign(suffixes.size(), -1);
+    }
+  }
+
+  return res;
+}
+
+/**
+ * @brief Gets a threshold according to the policy.
+ */
+float distinguishing_sequences_handler_fast::compute_threshold(const optional<int>& d1, const optional<int>& d2){
+  static const float initial_threshold = CHECK_PARAMETER;
+  if(!AL_ADJUST_THRESHOLD || !d1 || !d2)
+    return initial_threshold;
+
+  auto max_depth = max(d1.value(), d2.value()) - 1;
+  auto sigmoid_term = 1.0 / ( 1+exp(-0.3*(max_depth-5)) ) - 0.5;
+
+  return initial_threshold + min(max(0.0, sigmoid_term), 0.5);
+}
+
+/**
+ * @brief Does what you think it does.
+ * 
+ * TODO: Describe how we do the check in particular.
+ */
+bool distinguishing_sequences_handler_fast::distributions_consistent_layer_wise(const layer_predictions_map& d1, const layer_predictions_map& d2, 
+                                                                                const optional<int> depth1_opt, const optional<int> depth2_opt) {
+  if(d1.size() != d2.size())
+    throw runtime_error("Distributions are unequal");
+
+  float max_ratio = 0;
+  for(auto depth : d1 | std::views::keys){
+    const auto threshold = compute_threshold(depth1_opt, depth2_opt);
+
+    if(!d2.contains(depth))
+      throw runtime_error("Distributions captured different lengths, this should not have happened");
+
+    const auto& v1 = d1.at(depth);
+    const auto& v2 = d2.at(depth);
+    if(v1.size() != v2.size())
+      throw runtime_error("Distributions do not match in size in length " + to_string(depth));
+
+    const auto ratio = get_overlap(v1, v2);
+    if(ratio > threshold){
+      //cout << "\nsize: " << v1.size() << ", depth: " << depth <<  ", ratio: " << ratio << endl;
+      last_overlap = 0;
+      return false;
+    }
+    
+    max_ratio = max(max_ratio, ratio); // TODO: adjust the data types
+  }
+
+  last_overlap = 1-max_ratio;
+  //cout << "\nDisagreed: " << disagreed << " | agreed: " << agreed << "max ratio: " << max_ratio << endl;
+  //cout << "\nmax ratio: " << max_ratio << endl;
+  return true;
+
+} 

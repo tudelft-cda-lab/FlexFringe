@@ -15,8 +15,9 @@
 REGISTER_DEF_TYPE(paul_heuristic);
 REGISTER_DEF_DATATYPE(paul_data);
 
-template void paul_data::set_predictions(std::vector<int>& predictions);
-template void paul_data::set_predictions(std::vector<int>&& predictions);
+// template void paul_data::set_predictions(std::vector<int>& predictions);
+// template void paul_data::set_predictions(std::vector<int>&& predictions);
+template void paul_data::set_predictions(layer_predictions_map&& predictions);
 
 void paul_data::print_state_label(std::iostream& output){
     count_data::print_state_label(output);

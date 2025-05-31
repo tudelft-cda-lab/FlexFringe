@@ -30,6 +30,7 @@ class output_manager final {
     output_manager() = delete;
 
     static void init_outfile_path();
+    static void init_outfile_path(std::string_view outf_path);
     static std::string_view get_outfile_path();
 
     static void print_final_automaton(state_merger* merger, const std::string& append_string);

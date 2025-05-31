@@ -20,6 +20,7 @@
 #include "state_merger.h"
 #include "tail.h"
 #include "trace.h"
+#include "output_manager.h"
 
 #include <list>
 #include <memory>
@@ -33,6 +34,7 @@ class lstar_algorithm : public algorithm_base {
   public:
     lstar_algorithm(){
       init_standard();
+      output_manager::init_outfile_path(APTA_FILE);
     }
 
     void run(inputdata& id) override;
