@@ -4,7 +4,8 @@
 //inputdata* inputdata_locator::reader_;
 
 void inputdata_locator::provide(inputdata *reader) {
-    assert(inputdata_locator::reader_ == nullptr); // helps us find potential problems
+    // You can provide a new reader again. (Especially for tests.)
+    /* assert(inputdata_locator::reader_ == nullptr); */
     inputdata_locator::reader_ = reader;
 }
 

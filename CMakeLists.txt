@@ -225,11 +225,11 @@ if(NOT SKIP_TESTS)
             tests/testcsvparser.cpp
             tests/testabbadingoparser.cpp
             source/main.cpp
-            tests/testinputdata.cpp
             tests/testobservationtable.cpp
             tests/testregex.cpp
-            source/main.cpp
             tests/testinputdata.cpp
+            # tests/tail.cpp
+            # tests/testinputfilesul.cpp
             )
 
     # Need this so the plugin registration does not get stripped out
