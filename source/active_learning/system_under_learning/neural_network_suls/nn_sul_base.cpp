@@ -242,7 +242,7 @@ Possible hints for debugging: 1. Check the error message above. 2. Does your int
             Py_DECREF(load_model_func);
             Py_DECREF(p_model_path);
             Py_DECREF(p_item);
-            cerr << "Alphabet returned by Python script must be a vector of string values." << endl;
+            cerr << "Alphabet returned by Python script must be a list of string values." << endl;
             exit(1);
         }
         
@@ -258,7 +258,7 @@ Possible hints for debugging: 1. Check the error message above. 2. Does your int
             Py_DECREF(load_model_func);
             Py_DECREF(p_model_path);
             Py_DECREF(p_item);
-            cerr << "Alphabet returned by Python script must be a vector of string- or integer-values." << endl;
+            cerr << "Something went wrong converting the alphabet symbol to a string." << endl;
             exit(1);
         }
 
@@ -275,6 +275,67 @@ Possible hints for debugging: 1. Check the error message above. 2. Does your int
 
     cout << "Python module " << INPUT_FILE << " loaded and initialized successfully." << endl;
     init_types();
+}
+
+std::vector<std::string> nn_sul_base::get_types() const {
+    if(!Py_IsInitialized())
+        throw runtime_error("Implementation error: First need to initialize Python before calling get_types");
+    
+    PyObject* get_types_func = PyObject_GetAttrString(p_module, "get_types");
+    if (load_model_func == NULL || !PyCallable_Check(load_model_func)) {
+        Py_DECREF(p_module);
+        Py_DECREF(p_model_path);
+        Py_DECREF(load_model_func);
+        Py_DECREF(query_func);
+        cerr << "Problem in loading the get_types function. Terminating program." << endl;
+        exit(1);
+    }
+
+    cout << "Getting types from python module." << endl;
+    PyObject* p_types = PyObject_CallNoArgs(get_types_func);
+    if (p_types == NULL || !PyList_Check(p_types)) {
+        Py_DECREF(p_module);
+        Py_DECREF(p_model_path);
+        Py_DECREF(load_model_func);
+        Py_DECREF(query_func);
+        Py_DECREF(get_types_func);
+        cerr << "get_types() function in python script did not return a list-type." << endl;
+        exit(1);
+    }
+
+    vector<string> res;
+    const auto size = static_cast<int>(PyList_Size(p_types));
+    for (int i = 0; i < size; ++i) {
+        PyObject* p_item = PyList_GetItem(p_types, static_cast<Py_ssize_t>(i));
+        if(!PyUnicode_Check(p_item)){
+            Py_DECREF(p_module);
+            Py_DECREF(p_model_path);
+            Py_DECREF(load_model_func);
+            Py_DECREF(query_func);
+            Py_DECREF(get_types_func);
+            cerr << "Types returned by Python script must be a list of string values." << endl;
+            exit(1);
+        }
+        
+        string item;
+        try {
+            const char* s =  PyUnicode_AsUTF8(p_item);
+            item = string(s);
+        } catch (...) {
+            Py_DECREF(p_module);
+            Py_DECREF(p_model_path);
+            Py_DECREF(load_model_func);
+            Py_DECREF(query_func);
+            Py_DECREF(get_types_func);
+            Py_DECREF(p_item);
+            cerr << "Something went wrong converting the type to a string." << endl;
+            exit(1);
+        }
+
+        res.push_back(std::move(item));
+    }
+
+    return res;
 }
 
 /**

@@ -50,6 +50,8 @@ class nn_sul_base : public sul_base {
   public:
     void pre(inputdata& id) override;
 
+    std::vector<std::string> get_types() const override;
+
     nn_sul_base() = default;
     ~nn_sul_base();
 };

@@ -208,6 +208,7 @@ void lsharp_algorithm::run(inputdata& id) {
     auto the_apta = unique_ptr<apta>(new apta());
     auto merger = unique_ptr<state_merger>(new state_merger(&id, eval.get(), the_apta.get()));
     this->oracle->initialize(merger.get());
+    set_types();
 
     const vector<int> alphabet = id.get_alphabet();
     cout << "Alphabet: ";

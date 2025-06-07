@@ -56,6 +56,8 @@ class base_oracle {
 
     virtual void initialize(state_merger* merger);
 
+    std::vector<std::string> get_types() const;
+
     const sul_response ask_sul(const std::vector<int>& query_trace, inputdata& id) const;
     const sul_response ask_sul(const std::vector<int>& prefix, const std::vector<int>& suffix, inputdata& id) const;
     const sul_response ask_sul(const std::vector<int>&& query_trace, inputdata& id) const;

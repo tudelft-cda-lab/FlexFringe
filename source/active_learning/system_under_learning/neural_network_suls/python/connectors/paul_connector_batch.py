@@ -20,13 +20,9 @@ from torch.nn.functional import softmax
 import transformers
 
 import sys
-#sys.path.append("/home/robert/Documents/code/Flexfringe/source/active_learning/system_under_learning/python/util")
 sys.path.append("../util")
 from distillbert_for_language_model import DistilBertForTokenClassification
-#from transformers import DistilBertForTokenClassification
-
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-#DEVICE = "cpu" # we do not do batch processing, so CPU should be good enough
 
 # we need these variables globally, as they represent the status of our program
 model = None 
@@ -46,7 +42,6 @@ INT_TO_TYPE_DICT = dict()
 def make_dict(**kwargs):
     return kwargs
 
-
 def init_global_variables(path_to_model: str):
   global MAXLEN, ALPHABET_SIZE, SOS, EOS, PAD
 
@@ -65,7 +60,6 @@ def init_global_variables(path_to_model: str):
   EOS = dataset_dict["EOS"]
   PAD = dataset_dict["PAD"]
   MAXLEN = dataset_dict["maxlen"]
-
 
 def load_nn_model(path_to_model: str):
   """Loads a model and writes it into the global model-variable
@@ -265,6 +259,12 @@ def get_hidden_representation(res: list):
     print(len(reps[-1]))
   
   return reps
+
+def get_types():
+  """
+  Not needed in PAUL
+  """
+  raise Exception("Should not be called, PAUL does not need this")
 
 if __name__ == "__main__":
   import random

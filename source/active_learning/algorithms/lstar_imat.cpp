@@ -104,6 +104,7 @@ void lstar_imat_algorithm::run(inputdata& id) {
 
     auto the_apta = unique_ptr<apta>(new apta());
     auto merger = unique_ptr<state_merger>(new state_merger(&id, eval.get(), the_apta.get()));
+    set_types();
 
     list<refinement*> refs; // we keep track of refinements
     while (ENSEMBLE_RUNS > 0 && n_runs < ENSEMBLE_RUNS) {

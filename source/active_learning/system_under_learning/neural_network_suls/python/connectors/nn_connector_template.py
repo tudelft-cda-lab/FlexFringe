@@ -61,6 +61,13 @@ def get_alphabet(path_to_model: str):
   assert(alphabet is not None)
   return list(alphabet)
 
+def get_types():
+  """
+  In case that the model is being used to infer types of predictions (e.g. binary- 
+  or multiclass-classification), this function returns a list of the possible predictions. 
+  We need this so that flexfringe can map to the correct outputs.
+  """
+  pass
 
 if __name__ == "__main__":
   raise Exception("This is not a standalone script.")

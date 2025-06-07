@@ -319,6 +319,7 @@ void ldot_algorithm::run(inputdata& id) {
     my_apta->set_context(my_merger.get());
     my_eval->set_context(my_merger.get());
     const std::vector<int> my_alphabet = id.get_alphabet();
+    set_types();
 
     // init the root node, s.t. we have blue states to iterate over
     complete_state(id, my_apta->get_root());

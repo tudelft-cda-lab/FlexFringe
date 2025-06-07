@@ -31,7 +31,7 @@ void inputdata::read(parser *input_parser) {
     traces.sort([](auto &left, auto &right) {
         return left->sequence < right->sequence;
     });
-    LOG_S(INFO) << "Conversions: r_alphabet: " << get_r_alphabet() << " r_types: " << get_r_types();
+    LOG_S(INFO) << "Conversions: alphabet: " << alphabet << " types: " << types;
 }
 
 /**
@@ -143,10 +143,10 @@ void inputdata::add_type(const std::string& t) {
 /**
  * @brief S.e. 
  * 
- * @return const std::map<std::string, int>& Reference to r_types map, 
+ * @return const std::unordered_map<std::string, int>& Reference to r_types map, 
  * mapping the external string to the internal integer representation.
  */
-const std::map<std::string, int>& inputdata::get_r_types() const {
+const std::unordered_map<std::string, int>& inputdata::get_r_types() const {
     return this->r_types;
 }
 
@@ -201,13 +201,21 @@ void inputdata::set_alphabet(const std::vector<std::string>& input_alphabet){
     }
 }
 
-void inputdata::set_alphabet(const std::map<std::string, int>& input_r_alphabet) {
+void inputdata::set_alphabet(const std::unordered_map<std::string, int>& input_r_alphabet) {
     r_alphabet = input_r_alphabet; // copy-assignment
     alphabet.clear();
     alphabet.resize(input_r_alphabet.size());
     for (auto const& [str, val] : input_r_alphabet) alphabet[val] = str;
 }
-void inputdata::set_types(const std::map<std::string, int>& input_r_types) {
+
+void inputdata::set_types(const std::vector<std::string>& input_r_types) {
+    std::unordered_map<std::string, int> types_map;
+    for(auto type: input_r_types)
+        types_map[type] = types_map.size();
+    set_types(types_map);
+}
+
+void inputdata::set_types(const std::unordered_map<std::string, int>& input_r_types) {
     r_types = input_r_types; // copy-assignment
     types.clear();
     types.resize(input_r_types.size());
@@ -275,7 +283,7 @@ int inputdata::get_alphabet_size() {
     return alphabet.size();
 }
 
-const std::map<std::string, int> inputdata::get_r_alphabet() const {
+const std::unordered_map<std::string, int> inputdata::get_r_alphabet() const {
     return this->r_alphabet;
 }
 

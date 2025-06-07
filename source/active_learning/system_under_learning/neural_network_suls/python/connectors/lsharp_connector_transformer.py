@@ -20,11 +20,8 @@ from torch.nn.functional import softmax
 import transformers
 
 import sys
-#sys.path.append("/home/robert/Documents/code/Flexfringe/source/active_learning/system_under_learning/python/util")
 sys.path.append("../util")
 from distillbert_for_language_model import DistilBertForTokenClassification
-#from transformers import DistilBertForTokenClassification
-
 DEVICE = "cpu" # we do not do batch processing, so CPU should be good enough
 
 # we need these variables globally, as they represent the status of our program
@@ -39,6 +36,8 @@ MAXLEN = None # max length of a sequence. Used for padding and set by get_alphab
 ALPHABET_SIZE = None
 
 ALPH_MAPPING = dict()
+INT_TO_TYPE_DICT = dict()
+
 
 def make_dict(**kwargs):
     return kwargs
@@ -111,33 +110,6 @@ def make_tensor_causal_masks(words:torch.Tensor):
     x += torch.eye(l,dtype=torch.bool, device=x.device)
     return x.type(torch.int8)
 
-def get_representation(output, last_token_idx):
-  """Gets the attention. Make sure to keep the convention: Keys go from 1...number of attention vectors, 
-  as 0 is reserved for the networks output.
-
-  Returns:
-      output (dict): 1...n_attn -> attn_vector
-  """
-  DO_FIRST_ONLY = True
-
-  if DO_FIRST_ONLY:
-    attn = torch.squeeze(output["hidden_states"][1].detach()).numpy() # (b_size, maxlen_seq, hidden_dim); b_size here will always be 1 and squeezed out!
-    #attn = torch.squeeze(output["attentions"][0].detach()).numpy() # (b_size, n_heads, maxlen_seq, maxlen_seq); b_size here will always be 1 and squeezed out!
-    #attn = np.mean(attn, axis=0) # using the attn and not the states
-  elif False:
-    pass # placeholder for different strategy
-  else: # concatenate all of them
-    attn = output.hidden_states[1]
-    for i in range(2, len(output.hidden_states)):
-      attn = torch.cat((attn, output.hidden_states[i]), dim=-1)    
-    attn = torch.squeeze(attn.detach()).numpy()
-  
-  res = list()
-  for i in range(last_token_idx+1):
-    res.extend(list(attn[i]))
-
-  return res
-
 def do_query(input_seq: list):
   """This is the main function, performed on a sequence.
   Returns what you want it to return, make sure it makes 
@@ -169,15 +141,13 @@ def do_query(input_seq: list):
   if preds < 0 or preds > 1:
      print("Erroneous prediction: ", preds) # what now?
 
-  representations = get_representation(output, last_token_idx)
-  embedding_dim = int(len(representations) / len(seq))
+  if preds.item() in INT_TO_TYPE_DICT: 
+    pred_type = INT_TO_TYPE_DICT[preds.item()]
+  else:
+    print("Transformer did output an invalid type. Changed to unknown type")
+    pred_type = "<UNK>"
 
-  #res = list()
-  #res.append(confidence.item())
-  #res.append(preds.item())
-  res = [preds.item()] #, embedding_dim]
-  #res.extend(representations)
-
+  res = [pred_type]
   return res
 
 
@@ -193,7 +163,7 @@ def get_alphabet(path_to_model: str):
   Returns:
       alphabet: list(int): The possible inputs the network can take.
   """
-  global ALPH_MAPPING
+  global ALPH_MAPPING, INT_TO_TYPE_DICT
 
   path_split = os.path.split(path_to_model)
   data_dir = os.path.join(*path_split[:-1])
@@ -209,44 +179,21 @@ def get_alphabet(path_to_model: str):
 
   alphabet = [k for k in symbol_dict.keys() if not k=="<SOS>" and not k=="<EOS>"]
   ALPH_MAPPING = symbol_dict
+  INT_TO_TYPE_DICT = {v: k for k, v in dataset_dict["label_dict"].items()}
   
   assert(alphabet is not None)
   print("The alphabet: ", alphabet)
   return alphabet
 
-
-def get_hidden_representation(res: list):
+def get_types():
   """
-  Only for debugging purposes. We want to manually check our output.
-
-  res: The result as returned by do_query.
+  Returns the types the transformer can possibly return.
   """
-  pred = res[0]
-  embed_dim = res[1]
-  n_hidden = (len(res) - 2) / embed_dim
-  n_hidden = int(n_hidden)
+  if not INT_TO_TYPE_DICT or len(INT_TO_TYPE_DICT)==0:
+     raise Exception("INT_TO_TYPE_DICT in python script has not been initialized")
 
-  reps = list()
-  for i in range(n_hidden):
-    start = 2 + i * embed_dim
-    reps.append([res[j] for j in range(start, start+embed_dim)])
-    print(len(reps[-1]))
-  
-  return reps
+  return list(INT_TO_TYPE_DICT.values())
     
 
 if __name__ == "__main__":
-  # {'c': 0, 'b': 1, 'd': 2, 'a': 3}
-  model_path = "/home/robert/Documents/code/Flexfringe/data/active_learning/mlregtest/trained_models/distilbert_problem_04.04.SL.2.1.0_mid.pk.finetuned"
-  get_alphabet(model_path)
-  load_nn_model(model_path)
-  #seq = [4, 1, 1, 5]
-  seq = [4, 1, 3, 3, 1, 5]
-  res = do_query(seq)
-  print(type(res), len(res))
-  print("here come the hidden reps: ")
-  hreps = get_hidden_representation(res)
-  for i in range(len(hreps)):
-     print("Index: {}, char: {}, hreps: {}\n\n\n".format(i, seq[i], hreps[i][:3]))
-
   raise Exception("This is not a standalone script.")

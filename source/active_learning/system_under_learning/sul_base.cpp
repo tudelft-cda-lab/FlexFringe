@@ -138,6 +138,10 @@ bool sul_response::has_double_vec() const noexcept {
   return double_vec_opt.has_value();
 }
 
+vector<string> sul_base::get_types() const {
+  return vector<string>();
+}
+
 /**
  * @brief Returns the stream to an input file, provided by flag INPUT_FILE.
  */

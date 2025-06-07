@@ -36,6 +36,7 @@ class algorithm_base {
     std::unique_ptr<parser> get_parser(std::ifstream& input_stream) const;
 
     void init_standard();
+    void set_types();
 
   public:
     algorithm_base(){

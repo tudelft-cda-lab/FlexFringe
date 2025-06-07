@@ -45,11 +45,7 @@
 using namespace std;
 
 /**
- * @brief Templated routine for selecting the appropriate algorithm. Templated so it can take single 
- * arguments as well as the initialization_list path.
- * 
- * If you have trouble understanding the templated T&& structure look up "Perfect forwarding", e.g. 
- * in "Effective Modern C++" by Scott Meyers
+ * @brief Does what you think it does.
  */
 std::unique_ptr<algorithm_base> algorithm_factory::create_algorithm_obj(){
   if(ACTIVE_LEARNING_ALGORITHM=="ldot")

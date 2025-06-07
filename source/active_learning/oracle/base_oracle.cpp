@@ -25,6 +25,15 @@ void base_oracle::initialize(state_merger* merger){
     cex_search_strategy->initialize(merger);
 }
 
+/**
+ * @brief See docstring of the SUL's get_types() method.
+ * 
+ * @return vector<string> 
+ */
+vector<string> base_oracle::get_types() const {
+    return sul->get_types();
+}
+
 const sul_response base_oracle::ask_sul(const vector<int>& query_trace, inputdata& id) const {
     return sul->do_query(query_trace, id);
 }
