@@ -492,17 +492,11 @@ void paul_algorithm::run(inputdata& id) {
     list<refinement*> performed_refs;
     while(ENSEMBLE_RUNS > 0 && n_runs <= ENSEMBLE_RUNS){
         performed_refs = find_hypothesis(performed_refs, merger, the_apta);
-        cout << "Found hypothesis. Now testing" << endl;
-
-        {
-            static int model_nr = 0;
-            cout << "printing model " << model_nr  << endl;
-
-            output_manager::print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_refs");
-        }
 
         output_manager::print_final_automaton(merger.get(), ".final");
         return;
+
+        cout << "Found hypothesis. Now testing" << endl;
 
         optional<pair<vector<int>, sul_response>> query_result = oracle->equivalence_query(merger.get());
         if (!query_result) {

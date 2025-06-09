@@ -16,11 +16,11 @@
 using namespace std;
 
 void output_manager::init_outfile_path(){
-  std::string_view outf_path = OUTPUT_FILE.empty() ? INPUT_FILE + ".ff" : OUTPUT_FILE;
+  const string outf_path = OUTPUT_FILE.empty() ? INPUT_FILE + string(".ff") : OUTPUT_FILE;
   init_outfile_path(outf_path);
 }
 
-void output_manager::init_outfile_path(std::string_view outf_path){
+void output_manager::init_outfile_path(string_view outf_path){
   outfile_path = outf_path;
     // TODO: do something with the predict mode here after refactoring predict mode
 }
@@ -36,14 +36,15 @@ string_view output_manager::get_outfile_path(){
  * Call this function normally to put out the final automaton. For all other outputs like intermediate outputs call the overloaded function.
  * 
  */
-void output_manager::print_final_automaton(state_merger* merger, const std::string& append_string){
+void output_manager::print_final_automaton(state_merger* merger, const string& append_string){
+  cout << "Printing final model to " << outfile_path + append_string << endl;
   print_current_automaton(merger, outfile_path, append_string);
 }
 
 /**
  * @brief For backwards compatibility and to allow other types of outputs as well, e.g. for debugging.
  */
-void output_manager::print_current_automaton(state_merger* merger, const std::string& output_file, const std::string& append_string){
+void output_manager::print_current_automaton(state_merger* merger, const string& output_file, const string& append_string){
     if (OUTPUT_TYPE == "dot" || OUTPUT_TYPE == "both") {
         merger->print_dot(output_file + append_string + ".dot");
     }
