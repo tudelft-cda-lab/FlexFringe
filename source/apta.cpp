@@ -125,6 +125,7 @@ void apta_node::print_json(json& nodes){
     if(source != nullptr) output["source"] = source->find()->number;
     else output["source"] = -1;
     output["size"] = size;
+    output["weight"] = weight;
     output["level"] = depth;
     output["isred"] = is_red();
     output["isblue"] = is_blue();
@@ -254,6 +255,7 @@ void apta::read_json(std::istream& input_stream){
         }
         node->number = n["id"];
         node->size = n["size"];
+        node->weight = n["weight"];
         node->data->read_json(n["data"]);
         node->source = states[n["source"]];
         std::string trace = n["trace"];
@@ -361,6 +363,7 @@ apta_node::apta_node(){
     depth = 0;
     red = false;
     sink = -1;
+    weight = 1.0;
 
     try {
        data = (DerivedDataRegister<evaluation_data>::getMap())->at(DATA_NAME)();

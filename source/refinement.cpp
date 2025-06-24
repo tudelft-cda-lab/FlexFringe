@@ -31,6 +31,7 @@ merge_refinement::merge_refinement(state_merger* m, double s, apta_node* l, apta
     refs = 1;
     time = m->get_num_merges();
     if(RANDOMIZE_SCORES > 0.0) score = score - (score * RANDOMIZE_SCORES * random_double());
+    if(BOOSTING) score *= (l->get_weight() + r->get_weight()) / 2;
 }
 
 void merge_refinement::initialize(state_merger* m, double s, apta_node* l, apta_node* r){
@@ -45,6 +46,7 @@ void merge_refinement::initialize(state_merger* m, double s, apta_node* l, apta_
     refs = 1;
     time = m->get_num_merges();
     if(RANDOMIZE_SCORES > 0.0) score = score - (score * RANDOMIZE_SCORES * random_double());
+    if(BOOSTING) score *= (l->get_weight() + r->get_weight()) / 2;
 }
 
 split_refinement::split_refinement(state_merger* m, double s, apta_node* r, tail* t, int a){

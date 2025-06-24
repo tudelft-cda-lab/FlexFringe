@@ -128,6 +128,7 @@ extern std::string OPERATION_MODE;
 extern std::string SAT_SOLVER;
 extern std::string APTA_FILE;
 extern std::string APTA_FILE2;
+extern std::string VALID_FILE;
 
 extern std::string COMMAND_LINE;
 
@@ -136,11 +137,11 @@ extern int ENSEMBLE_RUNS;
 extern bool PERFORM_SYMBOL_CHECK;
 extern int IDENTICAL_KTAIL;
 
+extern int ESTIMATORS;
+extern double RANDOM_LB;
+extern double RANDOM_UB;
+extern bool BOOSTING;
+
 extern bool STAR_FREE;
 extern bool SINK_TYPE;
-
-extern int DFA_SIZE_BOUND;
-extern int APTA_SIZE_BOUND;
-extern bool SAT_RUN_GREEDY;
-
 #endif

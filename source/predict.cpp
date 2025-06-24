@@ -488,6 +488,30 @@ void predict_trace(state_merger* m, std::ofstream& output, trace* tr){
     output << std::endl;
 }
 
+int predict_trace_type(state_merger* m, trace* tr) {
+    if (REVERSE_TRACES) tr->reverse();
+
+    state_sequence.clear();
+    score_sequence.clear();
+    align_sequence.clear();
+    ending_state = nullptr;
+    ending_tail = nullptr;
+
+    if (PREDICT_ALIGN) {
+        align(m, tr->get_head(), true, 1.0);
+    } else {
+        predict_trace_update_sequences(m, tr->get_head());
+    }
+
+    // If there's no valid ending state, return default prediction (e.g. type 0)
+    if (ending_state == nullptr || ending_tail == nullptr) {
+        return 0;
+    }
+
+    // Predict and return the type using the ending state's data
+    return ending_state->get_data()->predict_type(ending_tail);
+}
+
 
 void predict(state_merger* m, inputdata& idat, std::ofstream& output){
     output << "row nr; abbadingo trace; state sequence; score sequence";

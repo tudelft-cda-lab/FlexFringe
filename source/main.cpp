@@ -4,7 +4,7 @@
 #include <cstdlib>
 #include "greedy.h"
 #include "state_merger.h"
-#include "evaluate.h"
+#include "evaluation/evaluate.h"
 #include "dfasat.h"
 #include <iostream>
 #include "evaluation_factory.h"
@@ -131,7 +131,7 @@ void run() {
     inputdata id;
     inputdata_locator::provide(&id);
 
-    if(OPERATION_MODE != "streaming" && OPERATION_MODE != "predict"){
+    if(OPERATION_MODE != "streaming" && OPERATION_MODE != "predict" && OPERATION_MODE != "predictens"){
         read_input_file(&id);
     }
 
@@ -163,8 +163,6 @@ void run() {
         eval->initialize_after_adding_traces(merger);
         LOG_S(INFO) << "Satsolver mode selected, starting run";
 
-        if(SAT_RUN_GREEDY) greedy_run(merger);
-
         run_dfasat(merger, SAT_SOLVER, -1);
 
         print_current_automaton(merger, OUTPUT_FILE, ".final");
@@ -194,6 +192,24 @@ void run() {
         LOG_S(INFO) << "Bagging mode selected, starting run";
 
         bagging(merger, OUTPUT_FILE,10);
+    } else if(OPERATION_MODE == "ensemblerandom") {
+        std::cout << "ensemble random mode selected" << std::endl;
+
+        eval->initialize_before_adding_traces();
+        //id.add_traces_to_apta(the_apta);
+        eval->initialize_after_adding_traces(merger);
+        LOG_S(INFO) << "Ensemble random mode selected, starting run";
+
+        ensemble_random(&id, eval, ESTIMATORS, RANDOM_LB, RANDOM_UB, OUTPUT_FILE + ".final_ensemble.json");
+    } else if(OPERATION_MODE == "ensembleboosting") {
+        std::cout << "ensemble boosting mode selected" << std::endl;
+
+        eval->initialize_before_adding_traces();
+        id.add_traces_to_apta(the_apta);
+        eval->initialize_after_adding_traces(merger);
+        LOG_S(INFO) << "Ensemble boosting mode selected, starting run";
+        int n_states = merger->get_final_apta_size();
+        ensemble_boosting(&id, eval, ESTIMATORS, OUTPUT_FILE, VALID_FILE, n_states);
     } else if(OPERATION_MODE == "interactive") {
         std::cout << "interactive mode selected" << std::endl;
 
@@ -244,6 +260,21 @@ void run() {
         } else {
             std::cerr << "require a json formatted apta file to make predictions" << std::endl;
         }
+    } else if(OPERATION_MODE == "predictens") {
+        std::cout << "predictens mode selected" << std::endl;
+        LOG_S(INFO) << "Predict using ensemble mode selected, starting run";
+        if(!APTA_FILE.empty()) {
+
+            std::ifstream input_ensemble_stream(APTA_FILE);
+            std::cerr << "reading ensemble file - " << APTA_FILE << std::endl;
+            std::cerr << "reading validation file - " << VALID_FILE << std::endl;
+
+            predict_ensemble(input_ensemble_stream, &id, eval, VALID_FILE, INPUT_FILE, APTA_FILE);
+
+        } else {
+            std::cerr << "require a json formatted ensemble file to make predictions" << std::endl;
+        }
+
     } else if(OPERATION_MODE == "diff") {
         std::cout << "behavioral differencing mode selected" << std::endl;
         LOG_S(INFO) << "Diff mode selected, starting run";
@@ -317,6 +348,7 @@ int main(int argc, char *argv[]){
     app.add_option("--satsolver", SAT_SOLVER, "Name of the SAT solver executable. Default=glucose.");
     app.add_option("--aptafile", APTA_FILE, "Name of the input file containing a previously learned automaton in json format. Note that you need to use the same evaluation function it was learned with.");
     app.add_option("--aptafile2", APTA_FILE2, "Name of the input file containing a previously learned automaton in json format. Note that you need to use the same evaluation function it was learned with.");
+    app.add_option("--validfile", VALID_FILE, "Name of the validation file used for boosting");
 
     app.add_option("--debug", DEBUGGING, "turn on debugging mode, printing includes pointers and find/union structure, more output");
     app.add_option("--addtails", ADD_TAILS, "Add tails to the states, used for splitting nodes. When not needed, it saves space and time to not add them. Default=1.");
@@ -377,9 +409,6 @@ int main(int argc, char *argv[]){
     app.add_option("--satfinalred", TARGET_REJECTING, "Make all transitions from red states without any occurrences force to have 0 occurrences (similar to targeting a rejecting sink), (setting 0 or 1) before sending the problem to the SAT solver; default=0. Advice: the same as finalred but for the SAT solver. Setting it to 1 greatly improves solving speed.");
     app.add_option("--symmetry", SYMMETRY_BREAKING, "Add symmetry breaking predicates to the SAT encoding (setting 0 or 1), based on Ulyantsev et al. BFS symmetry breaking; default=1. Advice: in our experience this only improves solving speed.");
     app.add_option("--forcing", FORCING, "Add predicates to the SAT encoding that force transitions in the learned DFA to be used by input examples (setting 0 or 1); default=0. Advice: leads to non-complete models. When the data is sparse, this should be set to 1. It does make the instance larger and can have a negative effect on the solving time.");
-    app.add_option("--satgreedy", SAT_RUN_GREEDY, "Run the greedy process before starting the SAT solver, default=0.");
-    app.add_option("--aptabound", APTA_SIZE_BOUND, "Lower bound on the APTA (entire data tree) size. When reached by greedy, no more merges will be performed. Default=0.");
-    app.add_option("--dfabound", DFA_SIZE_BOUND, "Upper bound on the Automaton (only red states) size. When reached by greedy, no more merges will be performed. Default=0.");
 
     app.add_option("--printblue", PRINT_BLUE, "Print blue states in the .dot file? Default 1 (true).");
     app.add_option("--printwhite", PRINT_WHITE, "Print white states in the .dot file? These are typically sinks states, i.e., states that have not been considered for merging. Default 0 (false).");
@@ -418,6 +447,12 @@ int main(int argc, char *argv[]){
     app.add_option("--distancemetric", DISTANCE_METRIC_SKETCHES, "The distance metric when comparing the sketches. 1 hoeffding-bound and cosine-similarity for score, 2 hoeffding bound in both, 3 like 1 but pooled. Default: 1");
     app.add_option("--randominitialization", RANDOM_INITIALIZATION_SKETCHES, "If 0 (zero), then initialize CMS deterministically. Elsewise, CMS becomes random. Default: 0.");
     app.add_option("--futuresteps", NSTEPS_SKETCHES, "Number of steps into future when storing future in sketches. Default: 2.");
+
+    // ensembling parameters
+    app.add_option("--estimators", ESTIMATORS, "Number of estimators");
+    app.add_option("--ensemblingrandomlb", RANDOM_LB, "Lower bound for the random parameter in ensembling");
+    app.add_option("--ensemblingrandomub", RANDOM_UB, "Upper bound for the random parameter in ensembling");
+    app.add_option("--boosting", BOOSTING, "Whether used ensemble is Boosting or not");
 
     CLI11_PARSE(app, argc, argv)
 

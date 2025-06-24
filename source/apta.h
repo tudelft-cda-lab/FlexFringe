@@ -228,6 +228,7 @@ private:
     int depth;
     /** unique state identifiers, used by SAT encoding and reading/writing */
     int number;
+    double weight;
 
     /** transitions to child states */
     guard_map guards;
@@ -269,8 +270,10 @@ public:
     inline int get_size(){ return size; }
     inline int get_final(){ return final; }
     inline int get_depth(){ return depth; }
+    inline double get_weight(){ return weight; }
     inline double get_score(){ return merge_score; }
     inline void set_score(double m){  merge_score = m; }
+    inline void set_weight(double w){ weight = w; }
     inline void set_red(bool b){ red = b; };
     inline apta_node* rep(){ return representative; }
 

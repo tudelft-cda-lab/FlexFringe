@@ -18,6 +18,7 @@ std::string OPERATION_MODE = "greedy";
 std::string SAT_SOLVER = "";
 std::string APTA_FILE = "";
 std::string APTA_FILE2 = "";
+std::string VALID_FILE = "";
 
 std::string COMMAND_LINE = "";
 
@@ -123,7 +124,9 @@ int DIFF_SIZE = 1000;
 int DIFF_MAX_LENGTH = 50;
 double DIFF_MIN = -100.0;
 
-int DFA_SIZE_BOUND = -1;
-int APTA_SIZE_BOUND = -1;
-bool SAT_RUN_GREEDY = false;
+int ESTIMATORS = 3;
+double RANDOM_LB = 0.1;
+double RANDOM_UB = 0.3;
+bool BOOSTING = 0;
+
 

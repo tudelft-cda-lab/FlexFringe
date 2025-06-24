@@ -36,6 +36,8 @@ apta_node* state_merger::get_state_from_trace(trace* t) const{
     apta_node* cur_state = aut->root;
     while(cur_tail != nullptr){
         cur_state = cur_state->find();
+        if (cur_state->child(cur_tail) == nullptr)
+            return cur_state;
         cur_state = cur_state->child(cur_tail);
         cur_tail = cur_tail->future();
     }
@@ -923,14 +925,7 @@ refinement_set* state_merger::get_possible_refinements(){
     if(!found_non_sink && !MERGE_SINKS){
         return result;
     }
-
-    if(DFA_SIZE_BOUND != -1 && get_num_red_states() >= DFA_SIZE_BOUND){
-        return result;
-    }
-    if(APTA_SIZE_BOUND != -1 && get_final_apta_size() <= APTA_SIZE_BOUND){
-        return result;
-    }
-
+    
     for(auto it = blue_its.begin(); it != blue_its.end(); ++it){
         apta_node* blue = *it;
         bool found = false;
@@ -979,10 +974,9 @@ refinement_set* state_merger::get_possible_refinements(){
             return result;
         }
         
-        if(!found || EXTEND_SINKS || !blue->is_sink()){
+        if(!found || EXTEND_SINKS || !blue->is_sink())
             result->insert(mem_store::create_extend_refinement(this, blue));
-        }
-
+        
         if(MERGE_MOST_VISITED) break;
     }
     return result;
