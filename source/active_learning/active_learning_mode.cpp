@@ -77,6 +77,9 @@ int active_learning_mode::run() {
     unique_ptr<algorithm_base> algorithm = algorithm_factory::create_algorithm_obj();
     algorithm->run(id);
 
+#ifdef __CUDA
+    cudaDeviceReset();
+#endif
         // Hielke: Can we we this one better? For example, we do it in the constructor of the corresponding algorithms
 /*         LOG_S(INFO) << "Learning (partly) passively. Therefore read in input-data.";
         get_inputdata();

@@ -15,8 +15,16 @@
 #include "count_types.h"
 #include "source/active_learning/memory/distinguishing_sequences/distinguishing_sequences_handler_base.h"
 
-#include <map> // TODO: for debugging only
+#ifdef __FLEXFRINGE_CUDA
+#include "cuda.h"
+#include "cuda_runtime.h"
+#include "device_launch_parameters.h"
+#endif
+
+//#include <map> // TODO: for debugging only
+#include <unordered_map>
 #include <memory>
+#include <ranges>
 
 /* The data contained in every node of the prefix tree or DFA */
 class paul_data: public count_data {
@@ -32,7 +40,13 @@ protected:
   int inferred_total_final;
 
   //std::vector<int> predictions;
+#ifdef __FLEXFRINGE_CUDA
+  using device_vector = distinguishing_sequences_handler_base::device_vector; // mapping to GPU memory instead
+  device_vector predictions;
+  ~paul_data() override;
+#else
   layer_predictions_map predictions;
+#endif 
 
   // TODO: delete function
   inline float map_confidence(const float c){
@@ -56,11 +70,11 @@ public:
 
   void print_state_label(std::iostream& output) override;
 
-  void set_confidence(const float confidence) noexcept;
   void add_inferred_type(const int t) noexcept;
 
   void add_tail(tail* t) override;
 
+  void set_confidence(const float confidence) noexcept;
   float get_confidence() const noexcept { return lm_confidence; };
 
   inline bool has_type() const noexcept { return final_counts.size() > 0; }
@@ -72,9 +86,38 @@ public:
   void undo(evaluation_data* right) override;
 
   const auto& get_predictions() const noexcept {return predictions;}
+
+  /**
+   * @brief Gets the number of predictions made at length len.
+   */
+  const auto get_n_predictions(const int len) const noexcept {
+  #ifdef __FLEXFRINGE_CUDA
+    return this->predictions.len_size_map.at(len);  
+  #else
+    return this->predictions[len].size();
+  #endif
+  }
+
+    /**
+   * @brief Gets the totoal number of predictions.
+   */
+  const auto get_n_predictions() const noexcept {
+    int res = 0;
   
-  template<typename T>
-  void set_predictions(T&& predictions){this->predictions = std::forward<T>(predictions);}
+#ifdef __FLEXFRINGE_CUDA
+    for(const size_t size: this->predictions.len_size_map | std::ranges::views::values){
+      res += static_cast<int>(size);
+    }
+#else
+    for(const auto& preds: this->predictions | std::ranges::views::values){
+      res += preds.size();
+    }
+#endif
+
+  return res;
+  }
+  
+  void set_predictions(layer_predictions_map&& predictions);
 };
 
 class paul_heuristic : public count_driven {

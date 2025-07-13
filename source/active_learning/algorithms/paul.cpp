@@ -43,7 +43,10 @@ void paul_algorithm::update_node_data(apta_node* n, std::unique_ptr<apta>& aut) 
         ds_handler->complete_node(n, aut);
     }
 
-    if(n_data->get_predictions().size() != ds_handler->size()){
+    //if(n->get_depth() >= 10)
+    //    return;
+
+    if(n_data->get_n_predictions() != ds_handler->size()){
         auto y_pred = ds_handler->predict_node_with_sul_layer_wise(*aut, n);
         n_data->set_predictions(std::move(y_pred));
     }
@@ -159,7 +162,8 @@ refinement* paul_algorithm::check_blue_node_for_merge_partner(apta_node* const b
                 //    continue;
                 //}
             }
-                
+
+            //if(ds_handler->get_score() > 0)
             ref->score = ds_handler->get_score(); // score computed in check_consistency() or distributions_consistent()
             if(ref->score > 0){
                 rs.insert(ref);
@@ -375,14 +379,14 @@ list<refinement*> paul_algorithm::find_hypothesis(list<refinement*>& previous_re
         } */
 
 //#ifndef NDEBUG
-        {
+/*         {
             static int c = 0;
             merger->print_dot("after_" + to_string(c++) + ".dot");
         
             if(c%10==0){
                 output_manager::print_current_automaton(merger.get(), "model.", to_string(c) + ".intermediate");
             }
-        }
+        } */
 
 //#endif
 
