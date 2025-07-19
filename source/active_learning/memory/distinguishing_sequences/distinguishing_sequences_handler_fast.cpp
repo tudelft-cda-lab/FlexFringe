@@ -441,7 +441,7 @@ bool distinguishing_sequences_handler_fast::distributions_consistent_layer_wise(
     const auto v1_d = d1.len_pred_map_d.at(len);
     const auto v2_d = d2.len_pred_map_d.at(len);
 
-    const auto ratio = distinguishing_sequences_gpu::get_overlap_gpu(v1_d, v2_d, n_preds);
+    const auto ratio = 1.0f - distinguishing_sequences_gpu::get_overlap_gpu(v1_d, v2_d, n_preds);
     if(ratio > threshold){
       //cout << "\nsize: " << v1.size() << ", depth: " << depth <<  ", ratio: " << ratio << endl;
       last_overlap = 0;

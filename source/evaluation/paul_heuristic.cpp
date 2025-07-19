@@ -75,11 +75,11 @@ void paul_data::set_predictions(layer_predictions_map&& predictions){
     for(const auto& [len, preds]: predictions){
         sizes[len] = preds.size();
         
-        preds_d[len] = nullptr; // making sure the entry
-        int* target_field_d = preds_d[len];
+        int* target_field_d;
         const auto byte_size = preds.size() * sizeof(int);
         gpuErrchk(cudaMalloc((void**) &target_field_d, byte_size));
         gpuErrchk(cudaMemcpy(target_field_d, preds.data(), byte_size, cudaMemcpyHostToDevice));
+        preds_d[len] = target_field_d;
     }
     
     this->predictions.len_pred_map_d = std::move(preds_d);
