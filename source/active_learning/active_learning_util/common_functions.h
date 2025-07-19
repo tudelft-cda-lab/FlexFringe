@@ -24,6 +24,7 @@
 
 #include <functional>
 #include <list>
+#include <span>
 #include <unordered_map>
 #include <utility>
 
@@ -98,9 +99,7 @@ namespace active_learning_namespace {
         std::cout << std::endl;
     }
 
-    [[maybe_unused]] void print_list(const std::list<int>& l);
-
-    void print_vector(const std::vector<int>& l);
+    void print_span(std::span<int> l);
 } // namespace active_learning_namespace
 
 

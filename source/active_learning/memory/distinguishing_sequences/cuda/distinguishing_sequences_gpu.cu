@@ -163,7 +163,8 @@ namespace {
     gpuErrchk( cudaFree(tmp_arr_d) );
     gpuErrchk( cudaFree(res_arr_d) );
 
-    return static_cast<float>(n_overlaps) / static_cast<float>(size);
+    constexpr static float epsilon = 1e-6; // avoid division error when v1 or v2 only have -1 entries, or size of this is 0
+    return static_cast<float>(n_overlaps) / (static_cast<float>(size) + epsilon);
 }
 
 #endif // gpuErrcheck
