@@ -439,7 +439,7 @@ trace* active_learning_namespace::vector_to_trace(const vector<int>& vec, inputd
     throw runtime_error("We should not reach here. What happened?");
 }*/
 
-void active_learning_namespace::print_span(std::span<int> l) {
+void active_learning_namespace::print_span(std::span<const int> l) {
     for (const auto s : l) cout << s << " ";
     cout << endl;
 }

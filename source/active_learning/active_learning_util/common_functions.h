@@ -99,7 +99,7 @@ namespace active_learning_namespace {
         std::cout << std::endl;
     }
 
-    void print_span(std::span<int> l);
+    void print_span(std::span<const int> l);
 } // namespace active_learning_namespace
 
 
