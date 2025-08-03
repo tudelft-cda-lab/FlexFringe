@@ -25,14 +25,14 @@ static_assert(std::integral_constant<bool, false>::value, "distinguishing_sequen
 #ifndef gpuErrcheck
 #define gpuErrchk(ans) { cuda_common::gpuAssert((ans), __FILE__, __LINE__); }
 
-
- // unnamed namespace only accessible in file of definition
 namespace {
-  /**
-   * @brief Example of how to use below in this file.
-   */
 
-   // fix here? https://forums.developer.nvidia.com/t/cmake-compile-cpp-as-cu/204118
+   /**
+    * @brief Sums the integers in an array up.
+    * Kernel not optimal, but appears good enough (bottleneck lies elsewhere now).
+    * 
+    * Example of how to use below in this file.
+    */
   __global__ void sum_kernel(int* input, int* res, const int size){
     int tid = threadIdx.x;
     int gid = blockDim.x * blockIdx.x + threadIdx.x;
@@ -41,14 +41,7 @@ namespace {
       return;
 
     // local data block pointer
-    //int* i_data = input + blockDim.x * blockIdx.x;
     for(int offset=1; offset <= blockDim.x/2; offset *= 2){
-      /* int index = 2*offset*tid;
-
-      if(index < blockDim.x){
-        i_data[index] += i_data[index+offset];
-      } */
-
       if(tid % (2 * offset) == 0){
         input[gid] += input[gid + offset];
       }
