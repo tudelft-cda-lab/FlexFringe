@@ -58,7 +58,7 @@ const sul_response sqldb_sul::regex_equivalence(const std::string& regex, int ty
 const std::vector<sul_response> sqldb_sul::prefix_query(const std::vector<int>& prefix, int n) {
     auto recs = my_sqldb.prefix_query(my_sqldb.vec2str(prefix), n);
     std::vector<sul_response> res;
-    for (auto rec : recs) {
+    for (auto& rec : recs) {
         res.emplace_back(rec.type, rec.pk, std::move(rec.trace));
     }
     return res;
