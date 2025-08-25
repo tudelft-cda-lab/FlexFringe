@@ -194,4 +194,8 @@ extern bool POSTGRESQL_DROPTBLS;
 
 extern std::string PRINT_MODEL_PREFIX; // TODO: delete this one
 
+extern int DFA_SIZE_BOUND;
+extern int APTA_SIZE_BOUND;
+extern bool SAT_RUN_GREEDY;
+
 #endif

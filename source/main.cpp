@@ -145,6 +145,9 @@ int main(int argc, char *argv[]){
     app.add_option("--satfinalred", TARGET_REJECTING, "Make all transitions from red states without any occurrences force to have 0 occurrences (similar to targeting a rejecting sink), (setting 0 or 1) before sending the problem to the SAT solver; default=0. Advice: the same as finalred but for the SAT solver. Setting it to 1 greatly improves solving speed.");
     app.add_option("--symmetry", SYMMETRY_BREAKING, "Add symmetry breaking predicates to the SAT encoding (setting 0 or 1), based on Ulyantsev et al. BFS symmetry breaking; default=1. Advice: in our experience this only improves solving speed.");
     app.add_option("--forcing", FORCING, "Add predicates to the SAT encoding that force transitions in the learned DFA to be used by input examples (setting 0 or 1); default=0. Advice: leads to non-complete models. When the data is sparse, this should be set to 1. It does make the instance larger and can have a negative effect on the solving time.");
+    app.add_option("--satgreedy", SAT_RUN_GREEDY, "Run the greedy process before starting the SAT solver, default=0.");
+    app.add_option("--aptabound", APTA_SIZE_BOUND, "Lower bound on the APTA (entire data tree) size. When reached by greedy, no more merges will be performed. Default=0.");
+    app.add_option("--dfabound", DFA_SIZE_BOUND, "Upper bound on the Automaton (only red states) size. When reached by greedy, no more merges will be performed. Default=0.");
 
     app.add_option("--printblue", PRINT_BLUE, "Print blue states in the .dot file? Default 0 (false).");
     app.add_option("--printwhite", PRINT_WHITE, "Print white states in the .dot file? These are typically sinks states, i.e., states that have not been considered for merging. Default 0 (false).");

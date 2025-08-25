@@ -79,6 +79,7 @@ class dfasat_mode::dfasat_status {
     state_set* sink_states;
 
     std::map<apta_node*, int> state_number;
+    std::map<int, apta_node*> number_state;
     std::map<apta_node*, int> state_colour;
 
     std::stringstream sat_stream; // TODO: give some information on this object
@@ -124,9 +125,11 @@ class dfasat_mode::dfasat_status {
 
     void compute_header();
 
-    void read_solution(FILE *sat_file, int best_solution);
+    void read_solution(FILE *sat_file, int best_solution, state_merger*);
 
     void translate(FILE *sat_file);
+
+    void perform_sat_merges(state_merger*);
 };
 
 #endif /* _DFASAT_MODE_H_ */

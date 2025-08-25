@@ -16,7 +16,7 @@ std::string DEBUG_DIR = "debug";
 
 std::string OPERATION_MODE = "greedy";
 
-std::string SAT_SOLVER = "glucose";
+std::string SAT_SOLVER = "";
 std::string APTA_FILE = "";
 std::string APTA_FILE2 = "";
 
@@ -147,6 +147,10 @@ std::string AL_SYSTEM_UNDER_LEARNING = "";
 std::string AL_SYSTEM_UNDER_LEARNING_2 = "";
 std::string AL_II_NAME = "";
 std::string AL_II_INITIALIZER_NAME = "";
+
+int DFA_SIZE_BOUND = -1;
+int APTA_SIZE_BOUND = -1;
+bool SAT_RUN_GREEDY = false;
 
 int AL_START_SYMBOL = -1;
 int AL_END_SYMBOL = -1;
