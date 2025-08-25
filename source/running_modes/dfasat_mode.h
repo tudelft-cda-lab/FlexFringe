@@ -36,7 +36,7 @@ class dfasat_mode : public running_mode_base {
   protected:
     class dfasat_status;
 
-    inline void run_dfasat(std::string sat_program, int best_solution);
+    inline void run_dfasat(state_merger* m, std::string sat_program, int best_solution);
     void start_sat_solver(std::string sat_program);
     
   public: 

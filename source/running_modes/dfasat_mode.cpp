@@ -47,7 +47,7 @@ void dfasat_mode::initialize(){
  * @brief Kicks in the main routine.
  */
 int dfasat_mode::run(){
-  run_dfasat(SAT_SOLVER, -1);
+  run_dfasat(merger, SAT_SOLVER, -1);
   return EXIT_SUCCESS;
 }
 
@@ -1165,7 +1165,7 @@ void dfasat_mode::dfasat_status::translate(FILE* sat_file) {
     std::cerr << "sent problem to SAT solver" << std::endl;
 }
 
-void dfasat_mode::dfa_status::perform_sat_merges(state_merger* m) {
+void dfasat_mode::dfasat_status::perform_sat_merges(state_merger* m) {
     std::map<int,apta_node*> color_node;
     apta* aut = m->get_aut();
     red_state_iterator itr = red_state_iterator(aut->get_root());
@@ -1316,18 +1316,19 @@ void dfasat_mode::start_sat_solver(std::string sat_program){
  * translate result to a DFA
  * print result
  * */
-void run_dfasat(state_merger* m, std::string sat_program, int best_solution) {
+
+
+void dfasat_mode::run_dfasat(state_merger* m, string sat_program, int best_solution){
 #ifdef _WIN32
-    std::cerr << "DFASAT does not work under Windows OS" << std::endl;
+    cerr << "DFASAT does not work under Windows OS" << endl;
 #else
+    sat_program = "./glucose";
     sat_program = SAT_SOLVER;
     if(SAT_SOLVER.compare("") == 0){
         sat_program = "./glucose -model";
     }
 
-    std::cerr << "calling " << sat_program << std::endl;
-
-    dfasat sat_object = dfasat(m, best_solution);
+    dfasat_status sat_object = dfasat_status(merger, best_solution);
     sat_object.compute_header();
 
     /* CODE TO RUN SATSOLVER AND CONNECT USING PIPES, ONLY WORKS UNDER LINUX */
@@ -1375,5 +1376,4 @@ void run_dfasat(state_merger* m, std::string sat_program, int best_solution) {
             std::cerr << "solving took " << (time(nullptr) - begin_time) << " seconds" << std::endl;
         }
 #endif // WIN32
-};
-
+}
