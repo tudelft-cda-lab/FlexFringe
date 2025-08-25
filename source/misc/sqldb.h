@@ -14,10 +14,10 @@
 
 #include "input/abbadingoreader.h"
 #include "input/inputdata.h"
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
-#include <functional>
 #ifdef __FLEXFRINGE_DATABASE
 #include <pqxx/pqxx>
 #endif /* __FLEXFRINGE_DATABASE */
@@ -45,7 +45,7 @@ class db {
 #endif /* __FLEXFRINGE_DATABASE */
 
     const std::string connection_string;
-    std::vector<std::string> get_vec_from_map(const std::map<std::string, int>& mapping);
+    std::vector<std::string> get_vec_from_map(const std::unordered_map<std::string, int>& mapping);
     std::string get_sqlarr_from_vec(const std::vector<std::string>& vec);
     const std::string table_name;
 
@@ -128,6 +128,5 @@ class db {
 };
 
 } // namespace psql
-
 
 #endif /* _SQLDB_H_ */

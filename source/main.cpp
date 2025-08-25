@@ -199,6 +199,7 @@ int main(int argc, char *argv[]){
     // active learning parameters
     app.add_option("--active_learning_algorithm", ACTIVE_LEARNING_ALGORITHM, "The basic algorithm that runs through. Current options are (lstar). DEFAULT: lstar");
     app.add_option("--use_active_learning", DO_ACTIVE_LEARNING, "Not in use yet. Will enable some forms of algorithms to augment normal runs with active learning. Examples that are planned are e.g. the streaming framework.");
+    app.add_option("--al_max_n_states", AL_MAX_N_STATES, "Maximum number of states in the final automaton. If reached, then output early hypothesis. Value of -1 disables this option. Default: -1.");
     app.add_option("--al_max_search_depth", AL_MAX_SEARCH_DEPTH, "The active learning search depth. Some uses can be disabled with a value <= 0. Critical in models where a maximum-string-length occurs, such as transformer-models. Default: 25");
     app.add_option("--al_num_cex_search", AL_NUM_CEX_PARAM, "Samples parameter indicating a number in the counterexample search. For example, in the random w-method the number of strings per node,\\
                                                                 and in random string search it is the delay. Default: 5000");
@@ -213,6 +214,7 @@ int main(int argc, char *argv[]){
     app.add_option("--al_long_term_dep_winsize", AL_LONG_TERM_DEPENDENCY_WINSIZE, "Experimental: An estimate of the maximum window size that a long-term dependency can occur in. Could be useful for some methods, but handle with care, as this can explode the amount of used memory. Default: 1");
     app.add_option("--al_test_empty_string", AL_TEST_EMTPY_STRING, "In active learning, sometimes the oracle cannot respond to the empty string. This can cause troubles in the counterexample search, as an undefined label is still a label. If disabled omit checking the empty string to prevent problems. Default: 1");
     app.add_option("--al_save_runtime_for_space", AL_SAVE_RUNTIME_FOR_SPACE, "Some algorithms enable optimization through memoizatoin. This way we sacrifice memory (potentially a lot) for large gains in run-time. An example is the PAUL algorithm, which stores its predictions in nodes, therefore saving queries. Default: 1 (true)");
+    app.add_option("--al_adjust_threshold", AL_ADJUST_THRESHOLD, "Some augmented models, such as deep learning models, can lose prediction performance in deeper layers. We want to adjust by increasing the threshold, leading to more conservative decisions in earlier layers, more generous in deeper layers. Default: 0 (false)");
 
     // TODO: shall we delete the rejecting_label option?
     app.add_option("--al_rejecting_label", AL_REJECTING_LABEL, "The label as a string that is used for rejecting (non-accepting) behavior. Only in active learning mode. DEFAULT: 0");

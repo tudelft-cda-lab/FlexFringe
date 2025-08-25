@@ -18,10 +18,9 @@
 #include <map> // TODO: for debugging only
 #include <memory>
 
-class distinguishing_sequences_handler_base;
-
 /* The data contained in every node of the prefix tree or DFA */
 class paul_data: public count_data {
+  using layer_predictions_map = distinguishing_sequences_handler_base::layer_predictions_map;
 
   friend class paul_heuristic;
 
@@ -32,7 +31,8 @@ protected:
   num_map inferred_final_counts;    
   int inferred_total_final;
 
-  std::vector<int> predictions;
+  //std::vector<int> predictions;
+  layer_predictions_map predictions;
 
   // TODO: delete function
   inline float map_confidence(const float c){

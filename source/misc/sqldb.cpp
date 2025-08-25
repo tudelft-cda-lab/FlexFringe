@@ -20,7 +20,7 @@
 
 namespace psql {
 
-std::vector<std::string> db::get_vec_from_map(const std::map<std::string, int>& mapping) {
+std::vector<std::string> db::get_vec_from_map(const std::unordered_map<std::string, int>& mapping) {
     std::vector<std::string> res(mapping.size());
     for (auto const map : mapping) {
         res[map.second] = map.first;

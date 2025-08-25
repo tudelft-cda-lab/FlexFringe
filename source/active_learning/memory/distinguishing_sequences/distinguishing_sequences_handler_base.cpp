@@ -24,6 +24,15 @@
 
 using namespace std;
 
+// -------------------------------- Instantiate all the templated methods for suffixes_t --------------------------------
+template void distinguishing_sequences_handler_base::layerwise_suffixes_t::add_suffix(const vector<int>&);
+template void distinguishing_sequences_handler_base::layerwise_suffixes_t::add_suffix(const list<int>&);
+
+template std::size_t distinguishing_sequences_handler_base::layerwise_suffixes_t::get_hash(const vector<uint32_t>&) const;
+template std::size_t distinguishing_sequences_handler_base::layerwise_suffixes_t::get_hash(const list<uint32_t>&) const;
+
+// -------------------------------- Methods for the ds-handler base ------------------------------------------------------
+
 /**
  * @brief Adds the type to the node according to the SUL and heuristic.
  * Only works on a few selected heuristics that support adding data.

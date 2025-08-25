@@ -19,7 +19,7 @@ void sqldb_sul::pre(inputdata& id) {
     LOG_S(INFO) << fmt::format("Inferring alphabet from {0}_meta table.", my_sqldb.get_table_name());
 
     auto alphabet = my_sqldb.get_alphabet();
-    std::map<std::string, int> r_alphabet;
+    std::unordered_map<std::string, int> r_alphabet;
     for (int i = 0; i < alphabet.size(); i++) {
         std::string symbol = alphabet[i];
         r_alphabet[symbol] = i;
@@ -27,7 +27,7 @@ void sqldb_sul::pre(inputdata& id) {
     id.set_alphabet(r_alphabet);
 
     auto types = my_sqldb.get_types();
-    std::map<std::string, int> r_types;
+    std::unordered_map<std::string, int> r_types;
     for (int i = 0; i < types.size(); i++) {
         std::string symbol = types[i];
         r_types[symbol] = i;

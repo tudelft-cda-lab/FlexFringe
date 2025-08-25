@@ -40,6 +40,17 @@ apta_node* active_learning_namespace::get_child_node(apta_node* n, int symbol) {
 }
 
 /**
+ * @brief We use this function e.g. to determine termination of an algorithm.
+ */
+int active_learning_namespace::count_nodes(apta* aut){
+    int res = 0;
+    for(auto it = red_state_iterator(aut->get_root()); *it!=nullptr; ++it)
+        res++;
+        
+    return res;
+}
+
+/**
  * @brief There are two versions of this function. In this version we look at if the tree is
  * possibly parsable by the traces.
  *

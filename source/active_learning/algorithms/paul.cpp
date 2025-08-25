@@ -44,7 +44,7 @@ void paul_algorithm::update_node_data(apta_node* n, std::unique_ptr<apta>& aut) 
     }
 
     if(n_data->get_predictions().size() != ds_handler->size()){
-        auto y_pred = ds_handler->predict_node_with_sul(*aut, n);
+        auto y_pred = ds_handler->predict_node_with_sul_layer_wise(*aut, n);
         n_data->set_predictions(std::move(y_pred));
     }
 }
@@ -129,10 +129,11 @@ refinement* paul_algorithm::check_blue_node_for_merge_partner(apta_node* const b
         update_node_data(blue_node, the_apta);
     }
     else{
-        for(apta_node* red_node: red_its){
-            ds_handler->pre_compute(the_apta, red_node, blue_node);
-        }
-        ds_handler->pre_compute(the_apta, blue_node);
+        throw std::invalid_argument("This path is currently not implemented yet with layer wise computations in ds");
+        //for(apta_node* red_node: red_its){
+        //    ds_handler->pre_compute(the_apta, red_node, blue_node);
+        //}
+        //ds_handler->pre_compute(the_apta, blue_node);
     }
 
     refinement_set rs;
@@ -147,15 +148,16 @@ refinement* paul_algorithm::check_blue_node_for_merge_partner(apta_node* const b
             // compare the nodes based on the SUL's predictions
             if(MEMOIZE_PREDICTIONS){
                 update_node_data(red_node, the_apta);
-                if(!ds_handler->distributions_consistent(get_node_data(blue_node)->get_predictions(), get_node_data(red_node)->get_predictions())){
+                if(!ds_handler->distributions_consistent_layer_wise(get_node_data(blue_node)->get_predictions(), get_node_data(red_node)->get_predictions(), blue_node->get_depth(), red_node->get_depth())){
                     continue;
                 }
             }
             else{
                 // we only want to add data if they appear consistent so far
-                if(!ds_handler->check_consistency(the_apta, red_node, blue_node)){
-                    continue;
-                }
+                //throw std::invalid_argument("This path is currently not implemented yet with layer wise computations in ds");
+                //if(!ds_handler->check_consistency(the_apta, red_node, blue_node)){
+                //    continue;
+                //}
             }
                 
             ref->score = ds_handler->get_score(); // score computed in check_consistency() or distributions_consistent()
@@ -373,10 +375,15 @@ list<refinement*> paul_algorithm::find_hypothesis(list<refinement*>& previous_re
         } */
 
 //#ifndef NDEBUG
-/*         {
+        {
             static int c = 0;
             merger->print_dot("after_" + to_string(c++) + ".dot");
-        } */
+        
+            if(c%10==0){
+                output_manager::print_current_automaton(merger.get(), "model.", to_string(c) + ".intermediate");
+            }
+        }
+
 //#endif
 
         //delete best_ref;
@@ -485,17 +492,11 @@ void paul_algorithm::run(inputdata& id) {
     list<refinement*> performed_refs;
     while(ENSEMBLE_RUNS > 0 && n_runs <= ENSEMBLE_RUNS){
         performed_refs = find_hypothesis(performed_refs, merger, the_apta);
-        cout << "Found hypothesis. Now testing" << endl;
-
-        {
-            static int model_nr = 0;
-            cout << "printing model " << model_nr  << endl;
-
-            output_manager::print_current_automaton(merger.get(), "model.", to_string(++model_nr) + ".after_refs");
-        }
 
         output_manager::print_final_automaton(merger.get(), ".final");
         return;
+
+        cout << "Found hypothesis. Now testing" << endl;
 
         optional<pair<vector<int>, sul_response>> query_result = oracle->equivalence_query(merger.get());
         if (!query_result) {

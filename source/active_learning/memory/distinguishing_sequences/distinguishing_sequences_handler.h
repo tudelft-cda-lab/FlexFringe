@@ -44,7 +44,11 @@ class distinguishing_sequences_handler : public distinguishing_sequences_handler
     
     std::vector<int> predict_node_with_automaton(apta& aut, apta_node* node) override;
     std::vector<int> predict_node_with_sul(apta& aut, apta_node* node) override;
-    bool distributions_consistent(const std::vector<int>& v1, const std::vector<int>& v2) override;
+    bool distributions_consistent(const std::vector<int>& v1, const std::vector<int>& v2,
+                                  const std::optional<int> depth1_opt = std::nullopt,
+                                  const std::optional<int> depth2_opt = std::nullopt) override;
+
+    float get_overlap(const std::vector<int>& v1, const std::vector<int>& v2) const;
 
   public:
     distinguishing_sequences_handler(const std::shared_ptr<sul_base>& sul) 

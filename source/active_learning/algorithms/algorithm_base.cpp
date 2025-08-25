@@ -60,3 +60,22 @@ void algorithm_base::init_standard() {
     auto ds_handler = ds_handler_factory::create_ds_handler(sul, AL_II_NAME);
     this->oracle = oracle_factory::create_oracle(sul, AL_ORACLE, ds_handler);
 }
+
+/**
+ * @brief Sets the internal types representation. We need this for classification SULs (hence algorithms that
+ * output classification state machines like DFA).
+ * 
+ * IMPORTANT: Must be called AFTER oracle/sul have been initialized completely, and after inputdata
+ * has been initialized completely.
+ * 
+ */
+void algorithm_base::set_types() {
+    const auto types = oracle->get_types();
+    if(types.size()==0){
+        cout << "Empty set of types received. Skipping type initialization." << endl;
+        return;
+    }
+
+    auto* id = inputdata_locator::get();
+    id->set_types(types);
+}

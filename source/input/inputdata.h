@@ -40,10 +40,10 @@ protected:
     std::list<trace*> traces;
 
     std::vector<std::string> alphabet;
-    std::map<std::string, int> r_alphabet;
+    std::unordered_map<std::string, int> r_alphabet;
 
     std::vector<std::string> types;
-    std::map<std::string, int> r_types;
+    std::unordered_map<std::string, int> r_types;
 
     std::vector<attribute> trace_attributes;
     std::vector<attribute> symbol_attributes;
@@ -92,8 +92,9 @@ public:
     const std::string& get_type(int a);
     int get_reverse_type(std::string a);
     void set_alphabet(const std::vector<std::string>& input_alphabet);
-    void set_alphabet(const std::map<std::string, int>& input_r_alphabet);
-    void set_types(const std::map<std::string, int>& input_r_types);
+    void set_alphabet(const std::unordered_map<std::string, int>& input_r_alphabet);
+    void set_types(const std::vector<std::string>& input_r_types);
+    void set_types(const std::unordered_map<std::string, int>& input_r_types);
 
     /* gets an attribute, first symbol attributes, then trace attributes */
     attribute* get_trace_attribute(int attr);
@@ -108,7 +109,7 @@ public:
 
     void add_type(const std::string& t);
     const std::vector<int> get_types() const;
-    const std::map<std::string, int>& get_r_types() const;
+    const std::unordered_map<std::string, int>& get_r_types() const;
 
     /* attribute properties:
      * splittable: will be used to infer guards
@@ -128,7 +129,7 @@ public:
     int get_types_size();
     int get_alphabet_size();
     const std::vector<int> get_alphabet() const;
-    const std::map<std::string, int> get_r_alphabet() const;
+    const std::unordered_map<std::string, int> get_r_alphabet() const;
 
     int symbol_from_string(std::string symbol);
 

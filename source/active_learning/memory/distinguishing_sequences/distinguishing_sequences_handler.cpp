@@ -298,14 +298,10 @@ vector<int> distinguishing_sequences_handler::predict_node_with_automaton(apta& 
   return res;
 }
 
-
 /**
- * @brief Avoids duplicate code.
+ * @brief Computes the overlap in the two distributions.
  */
-bool distinguishing_sequences_handler::distributions_consistent(const std::vector<int>& v1, const std::vector<int>& v2) {
-  if(v1.size() != v2.size())
-    throw runtime_error("Something weird happened in predictions");
-  
+float distinguishing_sequences_handler::get_overlap(const std::vector<int>& v1, const std::vector<int>& v2) const {
   int agreed = 0;
   int disagreed = 0;
   for(int i=0; i<v1.size(); ++i){
@@ -326,8 +322,20 @@ bool distinguishing_sequences_handler::distributions_consistent(const std::vecto
   constexpr static float epsilon = 1e-6; // avoid division error when v1 or v2 only have -1 entries, or size of this is 0
   float ratio = static_cast<float>(disagreed) / (static_cast<float>(disagreed) + static_cast<float>(agreed) + epsilon);
 
+  return ratio;
+}
+
+
+/**
+ * @brief Avoids duplicate code.
+ */
+bool distinguishing_sequences_handler::distributions_consistent(const std::vector<int>& v1, const std::vector<int>& v2, const optional<int> depth1_opt, const optional<int> depth2_opt) {
+  if(v1.size() != v2.size())
+    throw runtime_error("Something weird happened in predictions");
+  
   static const float threshold = CHECK_PARAMETER;
-  //std::cout << "\n ratio: " << ratio << ", threshold: " << threshold << "size: " << v1.size() << std::endl;
+  const auto ratio = get_overlap(v1, v2);
+
   if(ratio > threshold){
     last_overlap = 0;
     //cout << "\nDisagreed: " << disagreed << " | agreed: " << agreed << " | ratio: " << ratio << endl;

@@ -26,7 +26,9 @@
 
 /**
  * @brief Wrapper class for the response of a SUL. Enables us to make things more generic.
- *
+ * 
+ * Optional optimization: We could make this a std::variant
+ * 
  */
 struct sul_response {
   private:
@@ -101,6 +103,8 @@ class sul_base {
     virtual const sul_response do_query(const std::vector<std::vector<int>>& query_trace, inputdata& id) const {
         throw std::logic_error("batched queries not implemented in this sul-class.");
     }
+
+    virtual std::vector<std::string> get_types() const;
 
     /**
      * @brief Initialize the sul class.
