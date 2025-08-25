@@ -98,10 +98,10 @@ void ldot_algorithm::proc_counter_record(inputdata& id, const sul_response& rec,
 
 bool ldot_algorithm::add_trace(inputdata& id, const sul_response& r) {
     int pk = r.GET_ID();
-    if (my_sul->added_traces.contains(pk)) {
+    if (my_sul->contains_uid(pk)) {
         return false;
     }
-    my_sul->added_traces.insert(pk);
+    my_sul->insert_uid(pk);
 
     LOG_S(1) << "pk:" << r.GET_ID() << " " << r.GET_INT() << " " << r.GET_INT_VEC();
 

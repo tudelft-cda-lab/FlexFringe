@@ -23,6 +23,9 @@ class sqldb_sul : public sul_base {
     psql::db& my_sqldb;
     std::unordered_set<int> added_traces;
 
+    std::pair<std::unordered_set<int>::iterator, bool> insert_uid(int x) { return added_traces.insert(x); };
+    bool contains_uid(int x) { return added_traces.contains(x); };
+
     explicit sqldb_sul(psql::db& db) : my_sqldb(db){};
 
     void pre(inputdata& id) override;

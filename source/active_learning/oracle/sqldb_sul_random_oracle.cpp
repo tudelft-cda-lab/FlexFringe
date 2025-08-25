@@ -31,7 +31,7 @@ sqldb_sul_random_oracle::equivalence_query(state_merger* merger) {
         std::vector<int> possible_ids;
 
         for (int pk = 0; pk <= max_pk; pk++) {
-            if (!my_sqldb_sul->added_traces.contains(pk))
+            if (!my_sqldb_sul->contains_uid(pk))
                 possible_ids.push_back(pk);
         }
         std::shuffle(possible_ids.begin(), possible_ids.end(), RNG);
