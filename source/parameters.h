@@ -3,8 +3,10 @@
 
 #include <string>
 #include <vector>
+#include <random>
 
 double random_double();
+extern std::default_random_engine RNG;
 
 extern bool MERGE_SINKS;
 extern int STATE_COUNT;
@@ -25,6 +27,7 @@ extern bool SYMMETRY_BREAKING;
 extern bool FORCING;
 extern std::string OUTPUT_TYPE;
 extern std::string LOG_PATH;
+extern std::string DEBUG_DIR;
 extern bool MERGE_MOST_VISITED;
 extern bool MERGE_BLUE_BLUE;
 extern bool RED_FIXED;
@@ -111,12 +114,32 @@ extern int DIFF_MAX_LENGTH;
 
 extern bool STORE_ACCESS_STRINGS;
 
+extern int STREAMING_BATCH_SIZE;
+
 // Count-min-sketches
 extern int NROWS_SKETCHES;
 extern int NCOLUMNS_SKETCHES;
-extern int DISTANCE_METRIC_SKETCHES;
-extern int RANDOM_INITIALIZATION_SKETCHES;
 extern int NSTEPS_SKETCHES;
+extern bool CONDITIONAL_PROB;
+extern bool MINHASH;
+extern int MINHASH_SIZE;
+extern int ALPHABET_SIZE;
+
+// space-saving specific
+extern double DELTA;
+extern double MU;
+extern double EPSILON;
+extern int L;
+extern int R;
+extern int K;
+
+// space-saving specific
+extern double DELTA;
+extern double MU;
+extern double EPSILON;
+extern int L;
+extern int R;
+extern int K;
 
 extern std::string HEURISTIC_NAME;
 extern std::string DATA_NAME;
@@ -138,6 +161,38 @@ extern int IDENTICAL_KTAIL;
 
 extern bool STAR_FREE;
 extern bool SINK_TYPE;
+
+// active learning parameters
+extern std::string ACTIVE_LEARNING_ALGORITHM;
+extern bool DO_ACTIVE_LEARNING;
+extern int AL_MAX_N_STATES;
+extern std::string AL_REJECTING_LABEL;
+extern std::string AL_ORACLE;
+extern std::string AL_ORACLE_2;
+extern std::string AL_SYSTEM_UNDER_LEARNING;
+extern std::string AL_SYSTEM_UNDER_LEARNING_2;
+extern std::string AL_II_NAME;
+extern std::string AL_II_INITIALIZER_NAME;
+
+extern int AL_BATCH_SIZE;
+extern int AL_LONG_TERM_DEPENDENCY_WINSIZE;
+extern int AL_START_SYMBOL;
+extern int AL_END_SYMBOL;
+extern std::string AL_CEX_SEARCH_STRATEGY;
+extern int MAX_CEX_LENGTH;
+extern int AL_NUM_CEX_PARAM;
+extern int AL_MAX_SEARCH_DEPTH;
+extern int AL_TEST_EMTPY_STRING;
+extern bool AL_SAVE_RUNTIME_FOR_SPACE;
+extern bool AL_ADJUST_THRESHOLD;
+
+extern std::string POSTGRESQL_CONNSTRING;
+extern std::string POSTGRESQL_TBLNAME;
+extern bool POSTGRESQL_DROPTBLS;
+
+
+
+extern std::string PRINT_MODEL_PREFIX; // TODO: delete this one
 
 extern int DFA_SIZE_BOUND;
 extern int APTA_SIZE_BOUND;

@@ -1,10 +1,18 @@
 # IDE / output / build stuff
 .idea/
 cmake-build-*/
-build/
+*build*/*
+*.vscode*
+*__pycache__*
 test-reports/
 *.o
 *.a
+data/*
+!data/active_learning/test_dfas/*
+*ipynb*
+*.tu-*
+*.tu*
+tags
 
 # Binaries
 runtests
@@ -19,6 +27,8 @@ tests/tests
 *.log
 *.result
 *.png
+*.pdf
+*.dat
 
 # Generated files
 source/gitversion.cpp

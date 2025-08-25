@@ -144,7 +144,17 @@ void mem_store::erase(){
     for(auto & it : mem_store::extendref_store){
         delete it;
     }
+}
 
+void mem_store::delete_refinement(refinement* ref){
+    if(dynamic_cast<extend_refinement*>(ref) != nullptr)
+        delete_extend_refinement(static_cast<extend_refinement*>(ref));
+    else if(dynamic_cast<merge_refinement*>(ref) != nullptr)
+        delete_merge_refinement(static_cast<merge_refinement*>(ref));
+    else if(dynamic_cast<split_refinement*>(ref) != nullptr)
+        delete_split_refinement(static_cast<split_refinement*>(ref));
+    else
+        std::cerr << "WARNING: An unexpexted refinement encountered in mem_store::delete_refinement(). Please check!" << std::endl;
 }
 
 void mem_store::delete_trace(trace* trace) {
@@ -159,19 +169,32 @@ void mem_store::delete_trace(trace* trace) {
     trace_store.push_front(trace);
 }
 
-trace *mem_store::create_trace(inputdata* inputData) {
+trace *mem_store::create_trace(inputdata* inputData, trace* other_trace) {
     if (inputData == nullptr) {
         // Will crash if no InputData can be located
         inputData = inputdata_locator::get();
     }
 
     trace* t;
-    if(!trace_store.empty()) {
+    if(!trace_store.empty() && other_trace == nullptr) {
         t = trace_store.front();
         trace_store.pop_front();
         t->initialize(inputData);
-    } else {
+    } else if(!trace_store.empty() && other_trace != nullptr){
+        t = trace_store.front();
+        trace_store.pop_front();
+        t->initialize(inputData, other_trace);
+
+/*         past_tail = nullptr;
+        future_tail = nullptr;
+        next_in_list = nullptr;
+        split_from = nullptr;
+        split_to = nullptr; */
+    } else if(other_trace == nullptr) {
         t = new trace(inputData);
+    }
+    else{
+        t = new trace(inputData, other_trace);
     }
     return t;
 }

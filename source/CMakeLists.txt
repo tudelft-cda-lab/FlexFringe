@@ -1,5 +1,12 @@
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/evaluation"
+include_directories(
+        "${CMAKE_CURRENT_SOURCE_DIR}/evaluation"
+        "${CMAKE_CURRENT_SOURCE_DIR}/running_modes"
+        "${CMAKE_CURRENT_SOURCE_DIR}/evaluation/probabilistic_heuristics"
         "${CMAKE_CURRENT_SOURCE_DIR}/utility"
+        "${CMAKE_CURRENT_SOURCE_DIR}/input"
+        "${CMAKE_CURRENT_SOURCE_DIR}/input/parsers"
+        "${CMAKE_CURRENT_SOURCE_DIR}/input/parsers/grammar"
+        "${CMAKE_CURRENT_SOURCE_DIR}/active_learning"
         )
 
 ## create the gitversion.cpp
@@ -17,9 +24,16 @@ file(WRITE "gitversion.cpp" "const char *gitversion = \"${Gitversion}\";")
 ## create the evaluators.h file
 file(GLOB Files "${CMAKE_CURRENT_SOURCE_DIR}/evaluation/*.h")
 file(WRITE "evaluators.h" "#ifndef __ALL_HEADERS__ \n#define __ALL_HEADERS__ \n\n")
+
 foreach (Filepath ${Files})
     get_filename_component(Filename ${Filepath} NAME)
     file(APPEND "evaluators.h" "#include \"${Filename}\"\n")
+endforeach ()
+
+file(GLOB ProbFiles "${CMAKE_CURRENT_SOURCE_DIR}/evaluation/probabilistic_heuristics/*.h")
+foreach (Filepath ${ProbFiles})
+    get_filename_component(Filename ${Filepath} NAME)
+    file(APPEND "evaluators.h" "#include \"probabilistic_heuristics/${Filename}\"\n")
 endforeach ()
 file(APPEND "evaluators.h" "\n#endif")
 
@@ -27,34 +41,57 @@ add_library(Source STATIC
         apta.cpp
         apta.h
         common.h
+        common.cpp
+        output_manager.h
+        output_manager.cpp
         conflict_graph.cpp
         conflict_graph.h
-        dfasat.cpp
-        dfasat.h
         evaluation_factory.cpp
         evaluation_factory.h
         evaluators.h
         gitversion.cpp
-        interactive.cpp
-        interactive.h
         parameters.cpp
         parameters.h
-        greedy.cpp
-        greedy.h
         refinement.cpp
         refinement.h
-        searcher.cpp
-        searcher.h
         state_merger.cpp
         state_merger.h
-        stream.cpp
-        stream.h
         mem_store.cpp
         mem_store.h
-        predict.cpp predict.h
-        differencing.cpp differencing.h
-        ensemble.cpp ensemble.h
-        dfa_properties.cpp dfa_properties.h
+        dfa_properties.cpp 
+        dfa_properties.h
+        refinement_selection_strategies.h 
+        refinement_selection_strategies.cpp
+        regex_builder.cpp
+        regex_builder.h 
+        running_mode_factory.h
+        running_mode_factory.cpp
+
+        running_modes/dfasat_mode.h
+        running_modes/dfasat_mode.cpp
+        running_modes/differencing_mode.h
+        running_modes/differencing_mode.cpp
+        running_modes/ensemble_mode.h
+        running_modes/ensemble_mode.cpp
+        running_modes/greedy_mode.h
+        running_modes/greedy_mode.cpp
+        running_modes/interactive_mode.h
+        running_modes/interactive_mode.cpp
+        running_modes/predict_mode.h
+        running_modes/predict_mode.cpp
+        running_modes/regex_mode.h
+        running_modes/regex_mode.cpp
+        running_modes/load_sqldb_mode.h
+        running_modes/load_sqldb_mode.cpp
+        running_modes/running_mode_base.h
+        running_modes/running_mode_base.cpp
+        running_modes/search_mode.h
+        running_modes/search_mode.cpp
+        running_modes/stream_mode.h
+        running_modes/stream_mode.cpp
+        running_modes/subgraphextraction_mode.h
+        running_modes/subgraphextraction_mode.cpp
+
         input/trace.cpp
         input/trace.h
         input/inputdatalocator.cpp
@@ -83,19 +120,73 @@ add_library(Source STATIC
         input/streaming.cpp
         input/streaming.h
         input/parsers/reader_strategy.cpp
-        input/parsers/reader_strategy.h)
+        input/parsers/reader_strategy.h
+
+        misc/printutil.h
+        misc/utils.h
+        misc/trim.h
+        misc/zip.h
+        misc/sqldb.h
+        misc/sqldb.cpp
+        )
 
 ## create CMakeLists.txt in evaluation directory
 set(cmakelists_eval "evaluation/CMakeLists.txt")
-file(WRITE "${cmakelists_eval}" "add_library(Evaluation STATIC")
+
+# open up parts of the active learning lib. 
+# We want to use those structures to augment some eval-funcs
+file(WRITE "${cmakelists_eval}" "#including those directories enables us to use active learning structures in heuristics as well\n")
+file(APPEND "${cmakelists_eval}" "include_directories(\n")
+file(APPEND "${cmakelists_eval}" "  \"../active_learning/active_learning_util\"\n")
+file(APPEND "${cmakelists_eval}" "  \"../active_learning/memory\"\n")
+file(APPEND "${cmakelists_eval}" "  \"../active_learning/memory/incomplete_information\"\n")
+file(APPEND "${cmakelists_eval}" "  \"../active_learning/system_under_learning\"\n")
+file(APPEND "${cmakelists_eval}" "  \"../active_learning/system_under_learning/neural_network_suls\"\n")
+file(APPEND "${cmakelists_eval}" "  \"../active_learning/system_under_learning/benchmark_parsers\"\n")
+file(APPEND "${cmakelists_eval}" ")\n\n")
+
+# the cuda directives
+file(APPEND "${cmakelists_eval}" "if(CMAKE_CUDA_COMPILER)\n")
+file(APPEND "${cmakelists_eval}" "  include_directories(\$\{CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES\})\n")
+file(APPEND "${cmakelists_eval}" "endif()\n\n")
+
+#  "${CMAKE_CURRENT_SOURCE_DIR}/../active_learning//oracle/cex_search_strategies"
+#  "${CMAKE_CURRENT_SOURCE_DIR}/../active_learning//oracle/cex_conflict_search"
+#  "${CMAKE_CURRENT_SOURCE_DIR}/../active_learning//oracle/conflict_detectors"
+#  "${CMAKE_CURRENT_SOURCE_DIR}/../active_learning//active_learning_util"
+
+#file(WRITE "${cmakelists_eval}" "add_library(Evaluation STATIC")
+file(APPEND "${cmakelists_eval}" "add_library(Evaluation STATIC")
 file(GLOB CPPFiles "${CMAKE_CURRENT_SOURCE_DIR}/evaluation/*.cpp")
+
 foreach (Filepath ${Files})
     get_filename_component(Filename ${Filepath} NAME)
     string(REGEX REPLACE "\\.[^.]*$" "" CleanFilename ${Filename})
     file(APPEND "${cmakelists_eval}" "\n            ${CleanFilename}.h")
     file(APPEND "${cmakelists_eval}" "\n            ${CleanFilename}.cpp")
 endforeach ()
-file(APPEND "${cmakelists_eval}" ")")
+
+file(GLOB CPPProbFiles "${CMAKE_CURRENT_SOURCE_DIR}/evaluation/probabilistic_heuristics/*.h")
+foreach (Filepath ${CPPProbFiles})
+    get_filename_component(Filename ${Filepath} NAME)
+    get_filename_component(Filename ${Filepath} NAME)
+    string(REGEX REPLACE "\\.[^.]*$" "" CleanFilename ${Filename})
+    file(APPEND "${cmakelists_eval}" "\n            probabilistic_heuristics/${CleanFilename}.h")
+    file(APPEND "${cmakelists_eval}" "\n            probabilistic_heuristics/${CleanFilename}.cpp")
+endforeach ()
+
+file(APPEND "${cmakelists_eval}" ")\n")
+
+file(APPEND "${cmakelists_eval}" "if (ENABLE_DATABASE)\n")
+file(APPEND "${cmakelists_eval}" "    target_link_libraries(Evaluation libpqxx::pqxx)\n")
+file(APPEND "${cmakelists_eval}" "endif()\n")
 
 add_subdirectory(evaluation)
 add_subdirectory(utility)
+add_subdirectory(active_learning)
+
+# Please note that pqxx should be linked to every module that depends on it.
+# include_directories does not work.
+if (ENABLE_DATABASE)
+        target_link_libraries(Source libpqxx::pqxx)
+endif()

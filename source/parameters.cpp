@@ -2,8 +2,8 @@
 #include <random>
 
 std::uniform_real_distribution<double> unif(0.0, 1.0);
-std::default_random_engine re;
-double random_double(){ return unif(re); }
+std::default_random_engine RNG{ 42 };  // rand engine with seed.
+double random_double(){ return unif(RNG); }
 
 std::string HEURISTIC_NAME = "alergia";
 std::string DATA_NAME = "default";
@@ -12,6 +12,7 @@ std::string INPUT_FILE = "test.dat";
 std::string OUTPUT_FILE = "";
 std::string OUTPUT_TYPE = "both";
 std::string LOG_PATH = "flexfringe.log";
+std::string DEBUG_DIR = "debug";
 
 std::string OPERATION_MODE = "greedy";
 
@@ -109,12 +110,16 @@ bool PREDICT_SYMBOL = false;
 bool PREDICT_TRACE = true;
 bool PREDICT_DATA = false;
 
+int STREAMING_BATCH_SIZE = 500;
+
 // the count-min-sketches
 int NROWS_SKETCHES = 0;
 int NCOLUMNS_SKETCHES = 0;
-int DISTANCE_METRIC_SKETCHES = 1;
-int RANDOM_INITIALIZATION_SKETCHES = 0;
 int NSTEPS_SKETCHES = 2;
+bool CONDITIONAL_PROB = false;
+bool MINHASH = false;
+int MINHASH_SIZE = 2;
+int ALPHABET_SIZE = 0;
 
 double ALIGN_SKIP_PENALTY = 1.0;
 double ALIGN_DISTANCE_PENALTY = 0.1;
@@ -123,7 +128,44 @@ int DIFF_SIZE = 1000;
 int DIFF_MAX_LENGTH = 50;
 double DIFF_MIN = -100.0;
 
+// space-saving specific
+double DELTA = 0;
+double MU = 0;
+double EPSILON = 0;
+int L = 0;
+int R = 0;
+int K = 0;
+
+// active learning parameters
+std::string ACTIVE_LEARNING_ALGORITHM = "lstar";
+bool DO_ACTIVE_LEARNING = false;
+int AL_MAX_N_STATES = -1;
+std::string AL_REJECTING_LABEL = "0";
+std::string AL_ORACLE = "";
+std::string AL_ORACLE_2 = "";
+std::string AL_SYSTEM_UNDER_LEARNING = "";
+std::string AL_SYSTEM_UNDER_LEARNING_2 = "";
+std::string AL_II_NAME = "";
+std::string AL_II_INITIALIZER_NAME = "";
+
 int DFA_SIZE_BOUND = -1;
 int APTA_SIZE_BOUND = -1;
 bool SAT_RUN_GREEDY = false;
 
+int AL_START_SYMBOL = -1;
+int AL_END_SYMBOL = -1;
+std::string AL_CEX_SEARCH_STRATEGY = "random_w_method";
+int AL_MAX_SEARCH_DEPTH = 10;
+int MAX_CEX_LENGTH = 10;
+int AL_NUM_CEX_PARAM = 5000;
+int AL_BATCH_SIZE = 256;
+int AL_LONG_TERM_DEPENDENCY_WINSIZE = -1;
+int AL_TEST_EMTPY_STRING = 1;
+bool AL_SAVE_RUNTIME_FOR_SPACE = true;
+bool AL_ADJUST_THRESHOLD = false;
+
+std::string POSTGRESQL_CONNSTRING = "";
+std::string POSTGRESQL_TBLNAME = "";
+bool POSTGRESQL_DROPTBLS = true;
+
+std::string PRINT_MODEL_PREFIX = ""; // TODO: delete this one

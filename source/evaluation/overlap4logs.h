@@ -50,7 +50,7 @@ protected:
     REGISTER_DEC_TYPE(overlap4logs);
 
 public:
-    virtual bool consistent(state_merger *merger, apta_node* left, apta_node* right);
+    virtual bool consistent(state_merger *merger, apta_node* left, apta_node* right, int depth);
     virtual void update_score(state_merger *merger, apta_node* left, apta_node* right);
     virtual double compute_score(state_merger*, apta_node* left, apta_node* right);
     virtual int print_labels(std::iostream& output, apta* aut, overlap4logs_data* data, int symbol);

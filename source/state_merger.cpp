@@ -31,12 +31,13 @@ state_merger::state_merger(inputdata* d, evaluation_function* e, apta* a){
  * @param t 
  * @return apta_node* 
  */
-apta_node* state_merger::get_state_from_trace(trace* t) const{
+apta_node* state_merger::get_state_from_trace(trace* t) const {
     tail* cur_tail = t->head;
     apta_node* cur_state = aut->root;
-    while(cur_tail != nullptr){
+    while(cur_tail != nullptr && !cur_tail->is_final()){
         cur_state = cur_state->find();
         cur_state = cur_state->child(cur_tail);
+        if (cur_state == nullptr) return nullptr;
         cur_tail = cur_tail->future();
     }
     return cur_state;
@@ -210,7 +211,7 @@ bool state_merger::merge(apta_node* left, apta_node* right, int depth, bool eval
         bool early_stop = false;
 
         if(early_stop_merge(left, right, depth, early_stop)) return early_stop;
-        if(evaluate && !eval->consistent(this, left, right)) return false;
+        if(evaluate && !eval->consistent(this, left, right, depth)) return false;
     }
     
     if(perform){
@@ -252,7 +253,7 @@ bool state_merger::merge(apta_node* left, apta_node* right, int depth, bool eval
     if(evaluate) {
         eval->update_score_after_recursion(this, left, right);
     }
-    return true;
+    return result;
 }
 
 bool state_merger::merge(apta_node* left, apta_node* right) {
@@ -692,7 +693,7 @@ void state_merger::undo_perform_split(apta_node* red, tail* t, int attr){
 void state_merger::extend(apta_node* blue){
     blue->red = true;
     blue->sink = blue->sink_type();
-    if(blue->source->find()->sink != -1) blue->sink = blue->source->find()->sink;
+    if(blue->source && blue->source->find()->sink != -1) blue->sink = blue->source->find()->sink;
 }
 
 /* undo_merge making a given blue state red */
@@ -805,11 +806,12 @@ bool state_merger::pre_consistent(apta_node* left, apta_node* right){
 }
 
 /* test a merge, behavior depending on input parameters
- * it performs a merge, computes its consistency and score, and undos the merge
+ * it performs a merge, computes its consistency and score, and undoes the merge
  * returns a <consistency,score> pair */
 refinement* state_merger::test_merge(apta_node* left, apta_node* right){
     eval->reset(this);
 
+    /* if(left->representative || right->representative) return nullptr; */
     if(!pre_consistent(left, right)) return nullptr;
 
     double score_result = -1;
@@ -823,6 +825,7 @@ refinement* state_merger::test_merge(apta_node* left, apta_node* right){
     if(merge_result && !eval->compute_before_merge) score_result = eval->compute_score(this, left, right);
     if(USE_LOWER_BOUND && score_result < LOWER_BOUND) merge_result = false;
     if((merge_result && !eval->compute_consistency(this, left, right))) merge_result = false;
+    /* if(right->representative == left && PERFORM_MERGE_CHECK && MERGE_WHEN_TESTING) undo_merge(left,right); */
     if(PERFORM_MERGE_CHECK && MERGE_WHEN_TESTING) undo_merge(left,right);
 
     if(PERFORM_DEPTH_CHECK && merge_result){
@@ -907,10 +910,16 @@ refinement* state_merger::test_splits(apta_node* blue){
  * behavior depends on input parameters
  * the merge score is used as key in the returned refinement_set
  * returns an empty set if none exists (given the input parameters)
+ * 
+ * If the optional is provided, then the function keeps track of the nodes 
+ * and which refiment they map to. This can be used to further select refiments
+ * or gain insight into the current state of the algorithm.
  */
 
-refinement_set* state_merger::get_possible_refinements(){
+refinement_set* state_merger::get_possible_refinements(std::shared_ptr<node_to_refinement_map_T> node_to_ref_map_opt){
     auto* result = new refinement_set();
+
+    const bool TRACK_STATES = node_to_ref_map_opt != nullptr; 
     
     state_set blue_its = state_set();
     bool found_non_sink = false;
@@ -943,6 +952,8 @@ refinement_set* state_merger::get_possible_refinements(){
                 if(ref != nullptr){
                     result->insert(ref);
                     found = true;
+
+                    if(TRACK_STATES) insert_ref_into_map(ref, *node_to_ref_map_opt);
                 }
             }
         }
@@ -955,6 +966,8 @@ refinement_set* state_merger::get_possible_refinements(){
             if(ref != nullptr){
                 result->insert(ref);
                 found = true;
+
+                if(TRACK_STATES) insert_ref_into_map(ref, *node_to_ref_map_opt);
             }
         }
         
@@ -968,6 +981,8 @@ refinement_set* state_merger::get_possible_refinements(){
                 if(ref != nullptr){
                     result->insert(ref);
                     found = true;
+
+                    if(TRACK_STATES) insert_ref_into_map(ref, *node_to_ref_map_opt);
                 }
             }
         }
@@ -989,6 +1004,19 @@ refinement_set* state_merger::get_possible_refinements(){
 }
 
 /**
+ * @brief Small helper function to make code more readable. Does what it says.
+ * 
+ */
+void state_merger::insert_ref_into_map(refinement* ref, node_to_refinement_map_T& node_to_ref_map) const noexcept {
+    auto s1 = ref->red;
+    node_to_ref_map[s1].insert(ref);
+    if(dynamic_cast<merge_refinement*>(ref) != nullptr){
+        auto s2 = dynamic_cast<merge_refinement*>(ref)->blue;
+        node_to_ref_map[s2].insert(ref);
+    }
+}
+
+/**
  * @brief Returns the highest scoring refinement.
  * 
  * Returns the highest scoring refinement given the current sets of red and blue states
@@ -1005,7 +1033,7 @@ refinement* state_merger::get_best_refinement() {
         }
     }
 
-    delete rs;
+    delete rs; // can this actually erase the refinement that we did?
     return r;
 }
 
@@ -1104,4 +1132,12 @@ state_merger::~state_merger(){
 
 int state_merger::get_num_merges() {
     return num_merges;
+}
+
+void state_merger::renumber_states(){
+    return;
+    int ncounter = 0;
+    for(merged_APTA_iterator Ait = merged_APTA_iterator(aut->get_root()); *Ait != 0; ++Ait){
+        (*Ait)->number = ncounter++;
+    }
 }
