@@ -73,7 +73,15 @@ class distinguishing_sequences_handler_base {
 
   public:
     using layer_predictions_map = std::unordered_map< int, std::vector<int> >;
-    
+
+    #ifdef __FLEXFRINGE_CUDA
+      // an aggregate to structure values
+      struct device_vector {
+          std::unordered_map<int, int*> len_pred_map_d; // maps to device pointers
+          std::unordered_map<int, size_t > len_size_map; // maps to size
+      };
+    #endif
+
     distinguishing_sequences_handler_base(const std::shared_ptr<sul_base>& sul) : sul(sul){};
 
     distinguishing_sequences_handler_base(){
@@ -161,6 +169,17 @@ class distinguishing_sequences_handler_base {
       throw std::invalid_argument("This ii-handler does not implement distributions_consistent function");
     }
 
+    #ifdef __FLEXFRINGE_CUDA
+    /**
+     * @brief The same as the non-CUDA version, but it does work on a GPU.
+     */
+    virtual bool distributions_consistent_layer_wise(const device_vector& v1,
+                                                     const device_vector& v2,
+                                                     const std::optional<int> depth1_opt = std::nullopt,
+                                                     const std::optional<int> depth2_opt = std::nullopt) {
+      throw std::invalid_argument("This ii-handler does not implement distributions_consistent function");
+    }
+    #else
     /**
      * @brief A function determining whether the distributions as gained from predict_node_with_automaton
      * and predict_node_with_sul are consistent. Layer-wise enables different kinds of statistical tests such as 
@@ -174,6 +193,7 @@ class distinguishing_sequences_handler_base {
                                                      const std::optional<int> depth2_opt = std::nullopt) {
       throw std::invalid_argument("This ii-handler does not implement distributions_consistent function");
     }
+    #endif
 };
 
 /**

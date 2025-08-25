@@ -18,15 +18,28 @@ endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 
+
 option(COMPILE_DOCS "This is settable from the command line" OFF)
 option(ENABLE_DATABASE "Set this for the database connector to work" OFF)
 option(ENABLE_PYTHON "Set this for python connector to work" OFF)
+option(ENABLE_CUDA "Enable CUDA execution for some faster data structures" OFF)
 
 if (ENABLE_DATABASE)
   add_definitions(-D__FLEXFRINGE_DATABASE)
 endif()
 if (ENABLE_PYTHON)
   add_definitions(-D__FLEXFRINGE_PYTHON)
+endif()
+
+if (ENABLE_CUDA)
+  include(CheckLanguage)
+  check_language(CUDA)
+  if(CMAKE_CUDA_COMPILER)
+    add_definitions(-D__FLEXFRINGE_CUDA)
+    enable_language(CUDA)
+  else()
+    message(WARNING "Could not find CUDA on system. Proceeding without.")
+  endif()
 endif()
 
 #set(CMAKE_MESSAGE_LOG_LEVEL WARNING)
@@ -189,6 +202,11 @@ target_link_libraries(flexfringe
         )
 if (ENABLE_DATABASE)
   target_link_libraries(flexfringe libpqxx::pqxx)
+endif()
+
+if(CMAKE_CUDA_COMPILER)
+  find_library(CUDART_LIBRARY cudart ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
+  target_link_libraries(ActiveLearning ${CUDART_LIBRARY})
 endif()
 
 

@@ -15,8 +15,14 @@ include_directories(
         "${CMAKE_CURRENT_SOURCE_DIR}/system_under_learning/benchmark_parsers"
         )
 
+if(CMAKE_CUDA_COMPILER)
+  include_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
+                     "${CMAKE_CURRENT_SOURCE_DIR}/active_learning_util/cuda"
+                     "${CMAKE_CURRENT_SOURCE_DIR}/memory/distinguishing_sequences/cuda"
+  )
+endif()
 
-add_library(ActiveLearning STATIC
+set(ACTIVE_LEARNING_FILES
             active_learning_mode.h
             active_learning_mode.cpp
 
@@ -187,6 +193,24 @@ add_library(ActiveLearning STATIC
             system_under_learning/benchmark_parsers/benchmark_dfaparser.cpp
 )
 
+
+if(CMAKE_CUDA_COMPILER)
+  set(CUDA_FILES
+      active_learning_util/cuda/cuda_common.cuh
+      active_learning_util/cuda/cuda_common.cu
+      memory/distinguishing_sequences/cuda/distinguishing_sequences_gpu.cuh
+      memory/distinguishing_sequences/cuda/distinguishing_sequences_gpu.cu
+  )
+
+  set(ACTIVE_LEARNING_FILES 
+            ${ACTIVE_LEARNING_FILES} 
+            ${CUDA_FILES}
+  )
+
+  set_source_files_properties(${CUDA_FILES} PROPERTIES LANGUAGE CUDA)
+endif()
+
+add_library(ActiveLearning STATIC ${ACTIVE_LEARNING_FILES})
 
 if (ENABLE_PYTHON)
   target_link_libraries(ActiveLearning ${PYTHON_LIBRARIES})

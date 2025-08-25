@@ -19,6 +19,10 @@
 #include <optional>
 #include <ranges>
 
+#ifdef __FLEXFRINGE_CUDA
+#include "distinguishing_sequences_gpu.cuh"
+#endif
+
 using namespace std;
 
 /**
@@ -407,6 +411,50 @@ float distinguishing_sequences_handler_fast::compute_threshold(const optional<in
   return initial_threshold + min(max(0.0, sigmoid_term), 0.5);
 }
 
+
+#ifdef __FLEXFRINGE_CUDA
+/** 
+ * Does the evaluation on GPU rather than CPU.
+ */
+bool distinguishing_sequences_handler_fast::distributions_consistent_layer_wise(const device_vector& d1, const device_vector& d2, 
+                                                                                const optional<int> depth1_opt, const optional<int> depth2_opt) {
+                                                                                  
+  /* if(depth1_opt.has_value() && depth2_opt.has_value() && AL_ADJUST_THRESHOLD && (depth1_opt.value() >= 10 || depth2_opt.value() >= 10)){
+    last_overlap = -1; // indicating we skipped this step
+    return true;
+  } */
+  if(d1.len_size_map.size() != d2.len_size_map.size())
+    throw runtime_error("Distributions do not match in lengths");
+
+  float max_ratio = 0;
+  for(auto len_size_t : d1.len_size_map | std::views::keys){
+    const int len = static_cast<int>(len_size_t);
+    const auto threshold = compute_threshold(depth1_opt, depth2_opt);
+
+    if(!d2.len_size_map.contains(len))
+      throw runtime_error("Distributions captured different lengths, this should not have happened");
+
+    const auto n_preds = static_cast<int>(d1.len_size_map.at(len));
+    if(n_preds != static_cast<int>(d1.len_size_map.at(len)))
+      throw runtime_error("Distributions do not match in size in length " + to_string(len));
+
+    const auto v1_d = d1.len_pred_map_d.at(len);
+    const auto v2_d = d2.len_pred_map_d.at(len);
+
+    const auto ratio = 1.0f - distinguishing_sequences_gpu::get_overlap_gpu(v1_d, v2_d, n_preds);
+    if(ratio > threshold){
+      //cout << "\nsize: " << v1.size() << ", depth: " << depth <<  ", ratio: " << ratio << endl;
+      last_overlap = 0;
+      return false;
+    }
+    
+    max_ratio = max(max_ratio, ratio); // TODO: adjust the data types
+  }
+
+  last_overlap = 1-max_ratio;
+  return true;
+}
+#else
 /**
  * @brief Does what you think it does.
  * 
@@ -414,20 +462,25 @@ float distinguishing_sequences_handler_fast::compute_threshold(const optional<in
  */
 bool distinguishing_sequences_handler_fast::distributions_consistent_layer_wise(const layer_predictions_map& d1, const layer_predictions_map& d2, 
                                                                                 const optional<int> depth1_opt, const optional<int> depth2_opt) {
+                                                                                  
+  /* if(depth1_opt.has_value() && depth2_opt.has_value() && AL_ADJUST_THRESHOLD && (depth1_opt.value() >= 10 || depth2_opt.value() >= 10)){
+    last_overlap = -1; // indicating we skipped this step
+    return true;
+  } */
   if(d1.size() != d2.size())
     throw runtime_error("Distributions are unequal");
 
   float max_ratio = 0;
-  for(auto depth : d1 | std::views::keys){
+  for(auto len : d1 | std::views::keys){
     const auto threshold = compute_threshold(depth1_opt, depth2_opt);
 
-    if(!d2.contains(depth))
+    if(!d2.contains(len))
       throw runtime_error("Distributions captured different lengths, this should not have happened");
 
-    const auto& v1 = d1.at(depth);
-    const auto& v2 = d2.at(depth);
+    const auto& v1 = d1.at(len);
+    const auto& v2 = d2.at(len);
     if(v1.size() != v2.size())
-      throw runtime_error("Distributions do not match in size in length " + to_string(depth));
+      throw runtime_error("Distributions do not match in size in length " + to_string(len));
 
     const auto ratio = get_overlap(v1, v2);
     if(ratio > threshold){
@@ -443,5 +496,5 @@ bool distinguishing_sequences_handler_fast::distributions_consistent_layer_wise(
   //cout << "\nDisagreed: " << disagreed << " | agreed: " << agreed << "max ratio: " << max_ratio << endl;
   //cout << "\nmax ratio: " << max_ratio << endl;
   return true;
-
-} 
+}
+#endif

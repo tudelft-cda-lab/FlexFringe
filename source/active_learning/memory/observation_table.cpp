@@ -361,7 +361,7 @@ void observation_table::print() const {
     /*   cout << "Upper table: " << endl;
       for(auto it = upper_table.cbegin(); it != upper_table.cend(); ++it){
         const auto& row_name = it->first;
-        print_vector(row_name);
+        print_span(row_name);
       }
 
       cout << "Lower table:" << endl;
@@ -372,11 +372,11 @@ void observation_table::print() const {
 
       cout << "Columns:" << endl;
       for(const auto col: all_columns){
-        print_vector(col);
+        print_span(col);
       }
 
       cout << "Rows to close:" << endl;
       for(const auto r: incomplete_rows){
-        print_vector(r);
+        print_span(r);
       } */
 }

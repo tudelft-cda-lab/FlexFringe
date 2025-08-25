@@ -44,11 +44,19 @@ class distinguishing_sequences_handler_fast final : public distinguishing_sequen
 
     const int size() const override {return m_suffixes.size();}
 
+  #ifdef __FLEXFRINGE_CUDA 
+    bool distributions_consistent_layer_wise(const device_vector& v1,
+                                             const device_vector& v2,
+                                             const std::optional<int> depth1_opt = std::nullopt,
+                                             const std::optional<int> depth2_opt = std::nullopt)
+                                             override;
+  #else 
     bool distributions_consistent_layer_wise(const layer_predictions_map& v1, 
                                              const layer_predictions_map& v2,
                                              const std::optional<int> depth1_opt = std::nullopt,
                                              const std::optional<int> depth2_opt = std::nullopt) 
-                                             override;    
+                                             override;   
+  #endif
 
     float compute_threshold(const std::optional<int>& d1, const std::optional<int>& d2); 
 

@@ -8,6 +8,9 @@ include_directories(
   "../active_learning/system_under_learning/benchmark_parsers"
 )
 
+if(CMAKE_CUDA_COMPILER)
+  include_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
+endif()
 
 add_library(Evaluation STATIC
             aic.h

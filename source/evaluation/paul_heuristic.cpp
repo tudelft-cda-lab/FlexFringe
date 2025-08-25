@@ -12,12 +12,13 @@
 #include <cmath>
 #include <iostream>
 
+#ifdef __FLEXFRINGE_CUDA
+#include "source/active_learning/active_learning_util/cuda/cuda_common.cuh"
+#include <ranges>
+#endif
+
 REGISTER_DEF_TYPE(paul_heuristic);
 REGISTER_DEF_DATATYPE(paul_data);
-
-// template void paul_data::set_predictions(std::vector<int>& predictions);
-// template void paul_data::set_predictions(std::vector<int>&& predictions);
-template void paul_data::set_predictions(layer_predictions_map&& predictions);
 
 void paul_data::print_state_label(std::iostream& output){
     count_data::print_state_label(output);
@@ -59,6 +60,48 @@ void paul_data::update(evaluation_data* right){
     }
 }
 
+/**
+ * @brief Overwrites the current set of predictions with the ones handed to this method.
+ */
+void paul_data::set_predictions(layer_predictions_map&& predictions){
+#ifdef __FLEXFRINGE_CUDA
+
+#ifndef gpuErrcheck
+#define gpuErrchk(ans) { cuda_common::gpuAssert((ans), __FILE__, __LINE__); }
+
+    std::unordered_map< int, int* > preds_d(predictions.size());
+    std::unordered_map< int, size_t > sizes(predictions.size());
+
+    for(const auto& [len, preds]: predictions){
+        sizes[len] = preds.size();
+        
+        int* target_field_d;
+        const auto byte_size = preds.size() * sizeof(int);
+        gpuErrchk(cudaMalloc((void**) &target_field_d, byte_size));
+        gpuErrchk(cudaMemcpy(target_field_d, preds.data(), byte_size, cudaMemcpyHostToDevice));
+        preds_d[len] = target_field_d;
+    }
+    
+    this->predictions.len_pred_map_d = std::move(preds_d);
+    this->predictions.len_size_map = std::move(sizes);
+#endif // gpuErrcheck
+
+#else
+    this->predictions = move(predictions);
+#endif // __FLEXFRINGE_CUDA
+}
+
+#ifdef __FLEXFRINGE_CUDA
+paul_data::~paul_data(){
+#ifndef gpuErrcheck
+#define gpuErrchk(ans) { cuda_common::gpuAssert((ans), __FILE__, __LINE__); }
+
+    for(int* preds_d: this->predictions.len_pred_map_d | std::ranges::views::values){
+       gpuErrchk(cudaFree(preds_d));
+    }
+}
+#endif // gpuErrcheck
+#endif // __FLEXFRINGE_CUDA
 /**
  * @brief Does what you think it does.
  */

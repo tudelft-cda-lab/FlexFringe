@@ -24,6 +24,7 @@ file(WRITE "gitversion.cpp" "const char *gitversion = \"${Gitversion}\";")
 ## create the evaluators.h file
 file(GLOB Files "${CMAKE_CURRENT_SOURCE_DIR}/evaluation/*.h")
 file(WRITE "evaluators.h" "#ifndef __ALL_HEADERS__ \n#define __ALL_HEADERS__ \n\n")
+
 foreach (Filepath ${Files})
     get_filename_component(Filename ${Filepath} NAME)
     file(APPEND "evaluators.h" "#include \"${Filename}\"\n")
@@ -142,7 +143,12 @@ file(APPEND "${cmakelists_eval}" "  \"../active_learning/memory/incomplete_infor
 file(APPEND "${cmakelists_eval}" "  \"../active_learning/system_under_learning\"\n")
 file(APPEND "${cmakelists_eval}" "  \"../active_learning/system_under_learning/neural_network_suls\"\n")
 file(APPEND "${cmakelists_eval}" "  \"../active_learning/system_under_learning/benchmark_parsers\"\n")
-file(APPEND "${cmakelists_eval}" ")\n\n\n")
+file(APPEND "${cmakelists_eval}" ")\n\n")
+
+# the cuda directives
+file(APPEND "${cmakelists_eval}" "if(CMAKE_CUDA_COMPILER)\n")
+file(APPEND "${cmakelists_eval}" "  include_directories(\$\{CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES\})\n")
+file(APPEND "${cmakelists_eval}" "endif()\n\n")
 
 #  "${CMAKE_CURRENT_SOURCE_DIR}/../active_learning//oracle/cex_search_strategies"
 #  "${CMAKE_CURRENT_SOURCE_DIR}/../active_learning//oracle/cex_conflict_search"
