@@ -37,7 +37,7 @@ unique_ptr<running_mode_base> running_mode_factory::get_mode(const string& opera
     cout << "Active learning mode selected" << endl;
     mode = make_unique<active_learning_mode>();
   }
-  if(operation_mode == "load_sqldb"){
+  else if(operation_mode == "load_sqldb"){
     cout << "Active learning mode selected" << endl;
     mode = make_unique<load_sqldb_mode>();
   }
