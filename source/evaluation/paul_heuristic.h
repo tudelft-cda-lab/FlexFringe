@@ -94,12 +94,12 @@ public:
   #ifdef __FLEXFRINGE_CUDA
     return this->predictions.len_size_map.at(len);  
   #else
-    return this->predictions[len].size();
+    return this->predictions.at(len).size();
   #endif
   }
 
     /**
-   * @brief Gets the totoal number of predictions.
+   * @brief Gets the total number of predictions.
    */
   const auto get_n_predictions() const noexcept {
     int res = 0;
