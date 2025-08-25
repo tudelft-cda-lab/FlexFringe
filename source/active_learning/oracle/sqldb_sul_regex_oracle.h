@@ -21,7 +21,7 @@ class sqldb_sul_regex_oracle : public base_oracle {
     std::shared_ptr<sqldb_sul> my_sqldb_sul;
 
   public:
-    sqldb_sul_regex_oracle(const std::shared_ptr<sul_base>& sul) : base_oracle(sul) {
+    explicit sqldb_sul_regex_oracle(const std::shared_ptr<sul_base>& sul) : base_oracle(sul) {
         my_sqldb_sul = dynamic_pointer_cast<sqldb_sul>(sul);
         if (my_sqldb_sul == nullptr) {
             throw std::logic_error("sqldb_sul_regex_oracle only works with sqldb_sul.");
