@@ -34,12 +34,11 @@ struct sul_response {
   private:
     const std::optional<bool> bool_opt = std::nullopt;
     const std::optional<int> int_opt = std::nullopt;
+    const std::optional<std::vector<int>> int_vec_opt = std::nullopt;
+    const std::optional<std::vector<double>> double_vec_opt = std::nullopt;
     // id can be used for a unique identifier for the trace.
     const std::optional<int> id_opt = std::nullopt;
     const std::optional<double> double_opt = std::nullopt;
-
-    const std::optional<std::vector<int>> int_vec_opt = std::nullopt;
-    const std::optional<std::vector<double>> double_vec_opt = std::nullopt;
 
   public:
     /** Constructors  */
