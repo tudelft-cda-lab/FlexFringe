@@ -29,6 +29,7 @@ typedef std::map< apta_node*, ts_pair > score_map;
 typedef std::list< std::pair< int, int > > size_list;
 
 typedef std::set<apta_node*, size_compare> state_set;
+typedef std::list<apta_node*> state_list;
 
 typedef std::list<int> int_list;
 typedef std::list<double> double_list;
@@ -273,6 +274,16 @@ public:
     inline void set_score(double m){  merge_score = m; }
     inline void set_red(bool b){ red = b; };
     inline apta_node* rep(){ return representative; }
+
+    inline int compute_depth(){
+        apta_node* s = source;
+        int d = 0;
+        while(s != nullptr){
+            d++;
+            s = s->source;
+        }
+        return d;
+    }
 
     /** this gets merged with node, replacing head of list */
     inline void merge_with(apta_node* node){

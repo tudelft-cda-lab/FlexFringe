@@ -68,6 +68,14 @@ state_set* state_merger::get_all_states() const{
     return states;
 }
 
+state_list* state_merger::get_all_states_as_list() const{
+    auto* states = new state_list();
+    for(merged_APTA_iterator Ait = merged_APTA_iterator(aut->root); *Ait != nullptr; ++Ait){
+        states->push_back(*Ait);
+    }
+    return states;
+}
+
 bool is_sink_node(apta_node* node){
     return node->get_data()->sink_type() != -1;
 }

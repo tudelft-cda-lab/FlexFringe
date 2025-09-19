@@ -84,6 +84,7 @@ public:
     refinement* test_merge(apta_node*,apta_node*);
 
     state_set* get_all_states() const;
+    state_list* get_all_states_as_list() const;
     state_set* get_red_states() const;
     state_set* get_blue_states() const;
     state_set* get_candidate_states();

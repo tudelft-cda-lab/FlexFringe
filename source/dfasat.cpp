@@ -437,13 +437,13 @@ void dfasat::erase_red_conflict_colours(){
             apta_node* right = *it2;
             int right_nr = state_number[right];
 
-            //graph_node* l = ag->get_node(left);
-            //graph_node* r = ag->get_node(right);
+            graph_node* l = ag->get_node(left);
+            graph_node* r = ag->get_node(right);
 
-            //if(l->neighbors.find(r) != l->neighbors.end() || l->type_consistent(r) == false || r->type_consistent(l) == false){
-            //    x[right->satnumber][left->colour] = -2;
-            //}
-            if(merger->test_merge(left,right) == 0) x[right_nr][left_cl] = -2;
+            if(l->neighbors.find(r) != l->neighbors.end() || l->type_consistent(r) == false || r->type_consistent(l) == false){
+                x[right_nr][left_cl] = -2;
+            }
+            //if(merger->test_merge(left,right) == 0) x[right_nr][left_cl] = -2;
             //if(merger.test_local_merge(left,right) == -1) x[right->satnumber][left->colour] = -2;
             //if(right->pos_paths() != 0 || right->pos_final() != 0) x[right->satnumber][0] = -2;
             //if(right->neg_paths() != 0 || right->neg_final() != 0) x[right->satnumber][1] = -2;
@@ -522,19 +522,19 @@ int dfasat::print_conflicts(){
             //if(left->type == 1 && right->type != 1) continue;
             //if(left->type != 1 && right->type == 1) continue;
 
-            //graph_node* l = ag->get_node(left);
-            //graph_node* r = ag->get_node(right);
+            graph_node* l = ag->get_node(left);
+            graph_node* r = ag->get_node(right);
 
-            /*if(l->neighbors.find(r) != l->neighbors.end() || l->type_consistent(r) == false){
-                for(int k = 0; k < dfa_size; ++k)
-                    num += print_clause(false, x[left->satnumber][k], false, x[right->satnumber][k]);
-            }*/
-
-            if(merger->test_merge(left, right) == 0){
-                //cerr << left << " and " << right << " cannot have the same colour" << endl;
+            if(l->neighbors.find(r) != l->neighbors.end() || l->type_consistent(r) == false){
                 for(int k = 0; k < dfa_size; ++k)
                     num += print_clause(false, x[left_nr][k], false, x[right_nr][k]);
             }
+
+            /*if(merger->test_merge(left, right) == 0){
+                //cerr << left << " and " << right << " cannot have the same colour" << endl;
+                for(int k = 0; k < dfa_size; ++k)
+                    num += print_clause(false, x[left_nr][k], false, x[right_nr][k]);
+            }*/
 
             /*if(merger.test_local_merge(left, right) == -1){
                 for(int k = 0; k < dfa_size; ++k)
@@ -1001,7 +1001,7 @@ dfasat::dfasat(state_merger* m, int best_solution){
     merger = m;
     state_set *all_states = merger->get_all_states();
     ag = new apta_graph(all_states);
-    //ag->add_conflicts(merger);
+    ag->add_conflicts(merger);
     //ag->extract_types(50);
 
     alphabet_size = inputdata_locator::get()->get_alphabet_size();
@@ -1025,7 +1025,7 @@ dfasat::dfasat(state_merger* m, int best_solution){
     new_states = dfa_size - red_states->size();
     new_init = red_states->size();
 
-    num_types = 2;//ag->num_types;
+    num_types = ag->num_types;
 
     /* run reduction code IF valid solver was specified */
 

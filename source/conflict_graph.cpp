@@ -6,28 +6,33 @@ using std::endl;
 void apta_graph::add_conflicts(state_merger* merger){
     cout << "adding conflicts " << nodes.size() << endl;
 
-	for(node_set::iterator it = nodes.begin(); it != nodes.end(); ++it){
-		graph_node* left = *it;
-		node_set::iterator next_it = it;
-		++next_it;
-		for(node_set::iterator it2 = next_it;
-				it2 != nodes.end();
-				++it2){
-			graph_node* right = *it2;
+    for(merged_APTA_iterator it = merged_APTA_iterator(merger->get_aut()->get_root()); *it != nullptr; ++it) {
+        graph_node *left = get_node(*it);
+        merged_APTA_iterator it2 = it;
+        ++it2;
+        while (*it2 != nullptr) {
+            graph_node *right = get_node(*it2);
+            ++it2;
 
 			if(right->anode->is_red() == true) continue;
+            if(right == left) continue;
 
-			refinement* ref = merger->test_merge(left->anode, right->anode);
-			if(ref == 0){
+            //std::cerr << "testing: " << left->anode->get_number() << " " << right->anode->get_number() << endl;
+
+            refinement* ref = merger->test_merge(left->anode, right->anode);
+			if(ref == nullptr){
+                //std::cerr << "adding: " << left->anode->get_number() << " " << right->anode->get_number() << endl;
 				left->neighbors.insert(right);
 				right->neighbors.insert(left);
 			}
 		}
 	}
+    print_dot();
 }
 
 apta_graph::apta_graph(state_set* states){
 	for(state_set::iterator it = states->begin(); it != states->end(); ++it){
+        if(*it == nullptr) continue;
 	    graph_node* gn = new graph_node(*it);
 		nodes.insert(gn);
 		node_map[*it] = gn;
@@ -65,6 +70,25 @@ node_set *apta_graph::find_clique_converge() {
 		}
 	}
 }
+
+void apta_graph::print_dot() {
+    std::ofstream output("conflict_graph.dot");
+    if (output.fail()) {
+        throw std::ofstream::failure("Unable to open file for writing conflict graph");
+    }
+    output << "graph {\n";
+    for(node_set::iterator it = nodes.begin(); it != nodes.end(); ++it) {
+        graph_node* gn = *it;
+        if(gn->anode == nullptr) continue;
+        for(auto nit = gn->neighbors.begin(); nit != gn->neighbors.end(); nit++) {
+            graph_node* an = *nit;
+            if(an->anode == nullptr) continue;
+            if(gn->anode->get_number() < an->anode->get_number()) output << "\t\t" << gn->anode->get_number() << " -- " << an->anode->get_number() << ";\n";
+        }
+    }
+    output << "}\n";
+}
+
 
 node_set *apta_graph::find_clique(){
 	node_set* result = new node_set();
@@ -156,14 +180,79 @@ std::pair<node_set*, node_set*> apta_graph::find_bipartite(){
         }
     }
 
+    std::cerr << "left head: " << left_head->anode->get_number() << "\tright head: " << right_head->anode->get_number() << endl;
+
     if(right_head == NULL) return std::pair<node_set*, node_set*>(left_result, right_result);
 
     left_result->insert(left_head);
     right_result->insert(right_head);
 
+    while(true){
+        graph_node* right_node = nullptr;
+        for(node_set::iterator it = left_head->neighbors.begin(); it != left_head->neighbors.end(); ++it) {
+            graph_node* node = *it;
+            if(right_result->contains(node)) continue;
+            //std::cerr << "\ttrying: " << node->anode->get_number() << endl;
+            bool match = true;
+            for(node_set::iterator it2 = left_result->begin(); it2 != left_result->end(); ++it2) {
+                graph_node* right = *it2;
+                if(right->neighbors.find(node) == right->neighbors.end()) {
+                    match = false;
+                    break;
+                }
+            }
+            if(match){
+                right_node = node;
+                break;
+            }
+        }
+        graph_node* left_node = nullptr;
+        for(node_set::iterator it = right_head->neighbors.begin(); it != right_head->neighbors.end(); ++it) {
+            graph_node* node = *it;
+            if(left_result->contains(node)) continue;
+            //std::cerr << "\ttrying: " << node->anode->get_number() << endl;
+            bool match = true;
+            for(node_set::iterator it2 = right_result->begin(); it2 != right_result->end(); ++it2) {
+                graph_node* left = *it2;
+                if(left->neighbors.find(node) == left->neighbors.end()) {
+                    match = false;
+                    break;
+                }
+            }
+            if(match){
+                left_node = node;
+                break;
+            }
+        }
+
+        if(left_node != nullptr && right_node != nullptr) {
+            if (left_result->size() > right_result->size()) {
+                //std::cerr << "\tadding right: " << right_node->anode->get_number() << endl;
+                right_result->insert(right_node);
+            } else {
+                //std::cerr << "\tadding left: " << left_node->anode->get_number() << endl;
+                left_result->insert(left_node);
+            }
+        } else if(left_node != nullptr) {
+            //std::cerr << "\tadding left: " << left_node->anode->get_number() << endl;
+            left_result->insert(left_node);
+        } else if(right_node != nullptr) {
+            //std::cerr << "\tadding right: " << right_node->anode->get_number() << endl;
+            right_result->insert(right_node);
+        } else {
+            break;
+        }
+    }
+
+    std::cerr << "bipartite subgraph: " << left_result->size() << " " << right_result->size() << endl;
+
+    return std::pair<node_set*, node_set*>(left_result, right_result);
+
     for(node_set::iterator it = ordered_nodes.begin(); it != ordered_nodes.end(); ++it) {
         graph_node* node = *it;
         if(node == left_head || node == right_head) continue;
+
+        std::cerr << "\ttrying: " << node->anode->get_number() << endl;
 
         // try left
         bool left_match = true;
@@ -186,14 +275,19 @@ std::pair<node_set*, node_set*> apta_graph::find_bipartite(){
         }
 
         if(left_match == true && right_match == false){
+            std::cerr << "\tadding left: " << node->anode->get_number() << endl;
             left_result->insert(node);
         } else if(left_match == false && right_match == true){
+            std::cerr << "\tadding right: " << node->anode->get_number() << endl;
             right_result->insert(node);
         } else if(left_match == true && right_match == true) {
-            if(left_result->size() > right_result->size())
+            if(left_result->size() > right_result->size()){
+                std::cerr << "\tadding right: " << node->anode->get_number() << endl;
                 right_result->insert(node);
-            else
+            } else {
+                std::cerr << "\tadding left: " << node->anode->get_number() << endl;
                 left_result->insert(node);
+            }
         }
     }
 

@@ -68,6 +68,8 @@ public:
 
     std::pair<node_set*, node_set*> find_bipartite();
     void extract_types(int min_bip_size);
+
+    void print_dot();
 };
 
 
