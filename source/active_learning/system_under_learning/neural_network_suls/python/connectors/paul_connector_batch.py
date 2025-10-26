@@ -1,6 +1,4 @@
 """
-Like the binary state causal transformer connector, but also returns confidence of transformer as well.
-
 Documentation of CPython-API: https://docs.python.org/3/c-api/index.html
 
 Created by Robert Baumgartner, 10.9.24.
@@ -113,35 +111,6 @@ def make_tensor_causal_masks(words:torch.Tensor):
     x += torch.eye(l,dtype=torch.bool, device=x.device)
     return x.type(torch.int8)
 
-
-def get_representation(output, last_token_idx):
-  """Gets the attention. Make sure to keep the convention: Keys go from 1...number of attention vectors, 
-  as 0 is reserved for the networks output.
-
-  Returns:
-      output (dict): 1...n_attn -> attn_vector
-  """
-  DO_FIRST_ONLY = True
-
-  if DO_FIRST_ONLY:
-    attn = torch.squeeze(output["hidden_states"][1].detach().cpu()).numpy() # (b_size, maxlen_seq, hidden_dim); b_size here will always be 1 and squeezed out!
-    #attn = torch.squeeze(output["attentions"][0].detach()).numpy() # (b_size, n_heads, maxlen_seq, maxlen_seq); b_size here will always be 1 and squeezed out!
-    #attn = np.mean(attn, axis=0) # using the attn and not the states
-  elif False:
-    pass # placeholder for different strategy
-  else: # concatenate all of them
-    attn = output.hidden_states[1].detach().cpu()
-    for i in range(2, len(output.hidden_states)):
-      attn = torch.cat((attn, output.hidden_states[i]), dim=-1)    
-    attn = torch.squeeze(attn.detach().detach().cpu()).numpy()
-  
-  res = list()
-  for i in range(last_token_idx+1):
-    res.extend(list(attn[i]))
-
-  return res
-
-
 def do_query(input_seq: list):
   """This is the main function, performed on a sequence.
   Returns what you want it to return, make sure it makes 
@@ -197,9 +166,6 @@ def do_query(input_seq: list):
 
     res.append(pred_type)
     res.append(confidence.item())
-
-  #representations = get_representation(output, last_token_idx)
-  #embedding_dim = int(len(representations) / len(seq))
 
   return res
 
@@ -267,22 +233,4 @@ def get_types():
   raise Exception("Should not be called, PAUL does not need this")
 
 if __name__ == "__main__":
-  import random
-
-  # {'c': 0, 'b': 1, 'd': 2, 'a': 3}
-  model_path = "/home/robert/Documents/code/Flexfringe/data/active_learning/mlregtest/trained_models/distilbert_problem_04.04.SL.2.1.0_mid.pk.finetuned"
-  get_alphabet(model_path)
-  load_nn_model(model_path)
-  
-  i = 0
-  symbols = ["a", "b", "c", "d"]
-  while True:
-    length = random.randint(0, 25)
-    b_size = random.randint(1, 512)
-    seq = [[random.choice(symbols) for _ in range(length)] for _ in range(b_size)]
-    res = do_query(seq)
-    i += 1
-    if i % 100 == 0:
-      print(i)
-
   raise Exception("This is not a standalone script.")
