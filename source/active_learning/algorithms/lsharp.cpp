@@ -109,8 +109,6 @@ void lsharp_algorithm::proc_counterex(inputdata& id,
 
 /**
  * @brief Does what you think it does.
- * 
- * TODO: will be same as weighted L# and L# most likely
  *
  * @param merger
  * @param the_apta
