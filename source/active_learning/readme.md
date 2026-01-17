@@ -1,5 +1,4 @@
-# Active learning library (BETA)
-
+# Active learning library
 ## Information
 
 This is the active learning library of flexfringe. It has been designed to accommodate development of novel algorithms and enables the integration of active and passive learning. Examples of these are the Ldot and the PAUl algorithm.
