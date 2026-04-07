@@ -218,8 +218,11 @@ void run() {
 
             // Setup output file stream
             std::ostringstream res_stream;
-            res_stream << APTA_FILE << ".result";
+            res_stream << APTA_FILE << ".result";// << ".dot";
             std::ofstream output(res_stream.str().c_str());
+            std::fstream output2(res_stream.str().c_str(), std::ios_base::out);
+
+            //the_apta->print_dot(output2);
 
             // We stream the to predict traces into inputdata one by one to save memory
             // Set up the parser for the input stream
@@ -240,7 +243,11 @@ void run() {
                 strategy = std::make_unique<in_order>();
             }
 
-            predict_streaming(merger, *parser, *strategy, output);
+            inputdata idat = inputdata::with_alphabet_from(*inputdata_locator::get());
+            idat.read(parser.get());
+
+            predict(merger, idat, output);
+            //predict_streaming(merger, *parser, *strategy, output);
         } else {
             std::cerr << "require a json formatted apta file to make predictions" << std::endl;
         }

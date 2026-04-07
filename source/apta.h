@@ -38,6 +38,7 @@ typedef std::map<int, double> bound_map;
 #include "parameters.h"
 #include "evaluate.h"
 #include "input/inputdata.h"
+#include "utility/json.hpp"
 
 typedef std::list< std::pair< tail*, int > > split_list;
 
