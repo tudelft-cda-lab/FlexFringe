@@ -35,6 +35,9 @@ protected:
     std::vector<std::string> types;
     std::map<std::string, int> r_types;
 
+    std::vector<std::string> symbol_types;
+    std::map<std::string, int> r_symbol_types;
+
     std::vector<attribute> trace_attributes;
     std::vector<attribute> symbol_attributes;
 
@@ -48,6 +51,9 @@ protected:
 
     void add_type_to_trace(trace *new_trace,
                            const std::string &type);
+
+    void add_type_to_symbol(const tail *new_tail, const std::string &type);
+
 private:
 
     // The trace IDs of which we already processed the trace attributes
@@ -103,6 +109,16 @@ public:
     bool is_distributionable(int attr);
     bool is_discrete(int attr);
     bool is_target(int attr);
+
+    bool is_trace_splittable(int trace_attr);
+    bool is_trace_distributionable(int trace_attr);
+    bool is_trace_discrete(int trace_attr);
+    bool is_trace_target(int trace_attr);
+
+    bool is_symbol_splittable(int symbol_attr);
+    bool is_symbol_distributionable(int symbol_attr);
+    bool is_symbol_discrete(int symbol_attr);
+    bool is_symbol_target(int symbol_attr);
 
     /* inputdata properties:
      * the number of distinct sequence types

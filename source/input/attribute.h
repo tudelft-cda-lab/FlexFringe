@@ -11,8 +11,8 @@
 /**
  * @brief Wrapper class for the input data. Supports functionalities
  * such as alphabet functions, file transformations and data added to the APTA.
- *
  */
+
 class attribute{
 public:
     bool discrete;
@@ -28,28 +28,26 @@ public:
     explicit attribute(const std::string& input);
     explicit attribute(const attribute_info& input);
 
-    inline double get_value(std::string val){
+    double get_value(const std::string& val){
         if(discrete){
-            if(r_values.find(val) == r_values.end()) {
+            if(!r_values.contains(val)) {
                 r_values[val] = values.size();
                 values.push_back(val);
             }
-            return (double) r_values[val];
-        } else {
-            double result;
-            try {
-                result = std::stof(val);
-            } catch (const std::invalid_argument& e) {
-                result = 0.0;
-            }
-            return result;
+            return r_values[val];
         }
+        double result;
+        try {
+            result = std::stof(val);
+        } catch (const std::invalid_argument&) {
+            result = 0.0;
+        }
+        return result;
     };
 
-    inline std::string get_name(){
+    std::string get_name(){
         return name;
     };
-
 };
 
 #endif //FLEXFRINGE_ATTRIBUTE_H

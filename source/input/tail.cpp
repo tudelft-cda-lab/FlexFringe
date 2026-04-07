@@ -141,6 +141,9 @@ int tail::get_index(){
 int tail::get_type(){
     return tr->type;
 }
+int tail::get_symbol_type(){
+    return td->type;
+}
 int tail::get_length(){
     return tr->length;
 }
@@ -183,6 +186,7 @@ tail_data::tail_data() {
     }
     data = "";
     tail_nr = -1;
+    type = 0;
 }
 
 
@@ -198,4 +202,5 @@ void tail_data::initialize() {
     }
     data = "";
     tail_nr = -1;
+    type = 0;
 }

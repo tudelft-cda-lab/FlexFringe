@@ -17,6 +17,9 @@ void apta_graph::add_conflicts(state_merger* merger){
 			if(right->anode->is_red() == true) continue;
             if(right == left) continue;
 
+            if(merger->sink_type(right->anode) != -1) continue;
+            if(merger->sink_type(left->anode) != -1) continue;
+
             //std::cerr << "testing: " << left->anode->get_number() << " " << right->anode->get_number() << endl;
 
             refinement* ref = merger->test_merge(left->anode, right->anode);
@@ -28,6 +31,7 @@ void apta_graph::add_conflicts(state_merger* merger){
 		}
 	}
     print_dot();
+    print_edge_list();
 }
 
 apta_graph::apta_graph(state_set* states){
@@ -89,6 +93,21 @@ void apta_graph::print_dot() {
     output << "}\n";
 }
 
+void apta_graph::print_edge_list() {
+    std::ofstream output("conflict_graph.edges");
+    if (output.fail()) {
+        throw std::ofstream::failure("Unable to open file for writing conflict graph");
+    }
+    for(node_set::iterator it = nodes.begin(); it != nodes.end(); ++it) {
+        graph_node* gn = *it;
+        if(gn->anode == nullptr) continue;
+        for(auto nit = gn->neighbors.begin(); nit != gn->neighbors.end(); nit++) {
+            graph_node* an = *nit;
+            if(an->anode == nullptr) continue;
+            if(gn->anode->get_number() < an->anode->get_number()) output << gn->anode->get_number() << " " << an->anode->get_number() << "\n";
+        }
+    }
+}
 
 node_set *apta_graph::find_clique(){
 	node_set* result = new node_set();
@@ -322,5 +341,6 @@ void apta_graph::extract_types(int min_bip_size){
         delete bip.second;
         num_types++;
     }
+    print_dot();
 }
 

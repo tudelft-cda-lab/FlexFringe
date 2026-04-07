@@ -9,10 +9,15 @@
 
 REGISTER_DEF_TYPE(count_driven);
 REGISTER_DEF_DATATYPE(count_data);
+REGISTER_DEF_GUARDDATATYPE(count_guard_data);
 
 count_data::count_data() : evaluation_data() {
     total_paths = 0;
     total_final = 0;
+};
+
+count_guard_data::count_guard_data() : evaluation_guard_data() {
+    total_paths = 0;
 };
 
 void count_data::initialize(){
@@ -21,6 +26,12 @@ void count_data::initialize(){
     total_final = 0;
     path_counts.clear();
     final_counts.clear();
+};
+
+void count_guard_data::initialize(){
+    evaluation_guard_data::initialize();
+    total_paths = 0;
+    path_counts.clear();
 };
 
 void count_data::print_transition_label(std::iostream& output, int symbol){
@@ -52,6 +63,7 @@ void count_data::print_state_label_json(std::iostream& output){
 };
 
 void count_data::add_tail(tail* t){
+    evaluation_data::add_tail(t);
     int type = t->get_type();
     if(!t->is_final()) {
         if(path_counts.find(type) == path_counts.end()){
@@ -71,6 +83,7 @@ void count_data::add_tail(tail* t){
 }
 
 void count_data::del_tail(tail* t){
+    evaluation_data::del_tail(t);
     int type = t->get_type();
     if(!t->is_final()) {
         path_counts[type]--;
@@ -121,6 +134,7 @@ void count_data::write_json(json& data){
 };
 
 void count_data::update(evaluation_data* right){
+    evaluation_data::update(right);
     auto* other = reinterpret_cast<count_data*>(right);
     for(auto & final_count : other->final_counts){
         int type = final_count.first;
@@ -145,8 +159,8 @@ void count_data::update(evaluation_data* right){
 };
 
 void count_data::undo(evaluation_data* right){
+    evaluation_data::undo(right);
     auto* other = reinterpret_cast<count_data*>(right);
-
     for(auto & final_count : other->final_counts){
         int type = final_count.first;
         int count = final_count.second;
@@ -159,6 +173,46 @@ void count_data::undo(evaluation_data* right){
     }
     total_paths -= other->total_paths;
     total_final -= other->total_final;
+};
+
+void count_guard_data::add_tail(tail* t){
+    evaluation_guard_data::add_tail(t);
+    if(const int type = t->get_type(); !path_counts.contains(type)){
+        path_counts[type] = 1;
+    } else {
+        path_counts[type]++;
+    }
+    total_paths++;
+}
+
+void count_guard_data::del_tail(tail* t){
+    evaluation_guard_data::del_tail(t);
+    const int type = t->get_type();
+    path_counts[type]--;
+    total_paths--;
+}
+
+void count_guard_data::update(evaluation_guard_data* right){
+    evaluation_guard_data::update(right);
+    const auto* other = reinterpret_cast<count_guard_data*>(right);
+    for(const auto &[type, count] : other->path_counts){
+        if(path_counts.contains(type)){
+            path_counts[type] += count;
+        } else {
+            path_counts[type] = count;
+        }
+    }
+    total_paths += other->total_paths;
+};
+
+void count_guard_data::undo(evaluation_guard_data* right){
+    evaluation_guard_data::undo(right);
+    const auto* other = reinterpret_cast<count_guard_data*>(right);
+
+    for(const auto &[type, count] : other->path_counts){
+        path_counts[type] -= count;
+    }
+    total_paths -= other->total_paths;
 };
 
 double count_data::predict_type_score(int t){
@@ -191,6 +245,7 @@ int count_data::predict_type(tail*){
 
 /* default evaluation, count number of performed merges */
 bool count_driven::consistent(state_merger *merger, apta_node* left, apta_node* right){
+    evaluation_function::consistent(merger, left, right);
     if(inconsistency_found) return false;
 
     if(!TYPE_CONSISTENT) return true;
@@ -225,9 +280,10 @@ double count_driven::compute_score(state_merger *merger, apta_node* left, apta_n
 };
 
 void count_driven::reset(state_merger *merger){
-  num_merges = 0;
-  evaluation_function::reset(merger);
-  compute_before_merge=false;
+    evaluation_function::reset(merger);
+    num_merges = 0;
+    evaluation_function::reset(merger);
+    compute_before_merge=false;
 };
 
 

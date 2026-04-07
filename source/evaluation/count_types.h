@@ -112,6 +112,29 @@ public:
     bool is_low_count_sink();
 };
 
+class count_guard_data : public evaluation_guard_data {
+
+protected:
+    REGISTER_DEC_GUARDDATATYPE(count_guard_data);
+
+public:
+    num_map path_counts;
+    int total_paths;
+
+    count_guard_data();
+    virtual ~count_guard_data(){ };
+
+    /** Set values from input string */
+    virtual void add_tail(tail* t);
+    virtual void del_tail(tail* t);
+    /** Update values when merging */
+    virtual void update(evaluation_guard_data* other);
+    /** Undo updates when undoing merge */
+    virtual void undo(evaluation_guard_data* other);
+
+    virtual void initialize();
+};
+
 class count_driven: public evaluation_function {
 
 protected:

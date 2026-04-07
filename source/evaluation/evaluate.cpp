@@ -4,14 +4,13 @@
 #include "apta.h"
 
 evaluation_data::evaluation_data(){
-    node_type = -1;
-    undo_pointer = 0;
-    undo_consistent = false;
+    initialize();
 };
 
 void evaluation_data::initialize(){
     node_type = -1;
-    undo_pointer = 0;
+    undo_pointer = nullptr;
+    undo_tail_pointer = nullptr;
     undo_consistent = false;
 };
 
@@ -20,9 +19,17 @@ void evaluation_data::set_context(apta_node* n){
 };
 
 void evaluation_data::add_tail(tail* t){
+    if(node_type == -1){
+        node_type = t->get_type();
+        undo_tail_pointer = t;
+    }
 };
 
 void evaluation_data::del_tail(tail* t){
+    if (undo_tail_pointer == t) {
+        node_type = -1;
+        undo_tail_pointer = nullptr;
+    }
 };
 
 void evaluation_data::update(evaluation_data* right){
@@ -78,10 +85,6 @@ void evaluation_data::print_transition_properties(std::iostream& output, int sym
 
 // this should have a pair, set<pair<int, eval_data*>>
 void evaluation_data::print_transition_style(std::iostream& output, std::set<int> symbols){
-};
-
-int evaluation_data::sink_type(){
-    return -1;
 };
 
 bool evaluation_data::sink_consistent(int type){   
@@ -161,6 +164,89 @@ tail* evaluation_data::sample_tail() {
     return mem_store::create_tail(nullptr);
 }
 
+evaluation_guard_data::evaluation_guard_data(){
+    initialize();
+};
+
+/** Set values from input string */
+void evaluation_guard_data::add_tail(tail* t) {
+    if (guard_type == -1) {
+        guard_type = t->get_symbol_type();
+        undo_tail_pointer = t;
+    }
+};
+
+void evaluation_guard_data::del_tail(tail* t) {
+    if (undo_tail_pointer == t) {
+        guard_type = -1;
+        undo_tail_pointer = nullptr;
+    }
+};
+
+/** Update values when merging */
+void evaluation_guard_data::update(evaluation_guard_data* other) {
+    if(guard_type == -1){
+        guard_type = other->guard_type;
+        undo_pointer = other;
+    }
+};
+
+/** Undo updates when undoing merge */
+void evaluation_guard_data::undo(evaluation_guard_data* other) {
+    if(undo_pointer == other) {
+        guard_type = -1;
+        undo_pointer = nullptr;
+    }
+};
+
+/** Update values when splitting */
+void evaluation_guard_data::split_update(evaluation_guard_data* other) {
+    undo(other);
+};
+
+/** Undo updates when undoing a split */
+void evaluation_guard_data::split_undo(evaluation_guard_data* other) {
+    update(other);
+};
+
+/** Printing of nodes and transitions in dot output */
+void evaluation_guard_data::print_transition_label(std::iostream& output, int symbol) {
+
+};
+
+void evaluation_guard_data::print_transition_style(std::iostream& output, std::set<int> symbols) {
+
+};
+
+/** Printing of nodes and transitions in json output */
+void evaluation_guard_data::print_transition_label_json(std::iostream& output, int symbol) {
+
+};
+
+/** Print state/transition properties  */
+void evaluation_guard_data::print_transition_properties(std::iostream&, int symbol) {
+
+};
+
+void evaluation_guard_data::initialize() {
+    guard_type = -1;
+    undo_pointer = 0;
+    undo_tail_pointer = nullptr;
+    undo_consistent = false;
+};
+
+void evaluation_guard_data::read_json(json& node) {
+
+};
+
+void evaluation_guard_data::write_json(json& node) {
+
+};
+
+void set_context(apta_guard *g) {
+
+};
+
 /* defa */ 
 evaluation_function::evaluation_function() {
     compute_before_merge = false;
@@ -216,12 +302,29 @@ bool evaluation_function::consistent(state_merger *merger, apta_node* left, apta
   return true;
 };
 
+bool evaluation_function::consistent(state_merger *merger, apta_guard* left, apta_guard* right){
+    if(inconsistency_found) return false;
+
+    if(left->get_data()->guard_type != -1 && right->get_data()->guard_type != -1 && left->get_data()->guard_type != right->get_data()->guard_type){
+        inconsistency_found = true;
+        return false;
+    }
+
+    return true;
+};
+
 void evaluation_function::update_score(state_merger *merger, apta_node* left, apta_node* right){
     num_merges += 1;
     merged_left_states.insert(left);
 };
 
+void evaluation_function::update_score(state_merger *merger, apta_guard* left, apta_guard* right){
+};
+
 void evaluation_function::update_score_after(state_merger *merger, apta_node* left, apta_node* right){
+};
+
+void evaluation_function::update_score_after(state_merger *merger, apta_guard* left, apta_guard* right){
 };
 
 void evaluation_function::update_score_after_recursion(state_merger *merger, apta_node* left, apta_node* right){
@@ -310,6 +413,12 @@ bool is_low_count_sink(apta_node* node){
     node = node->find();
     return node->get_size() < SINK_COUNT;
 }
+
+int evaluation_data::sink_type(){
+    if(!USE_SINKS) return -1;
+    if(SINK_COUNT > 0 && is_low_count_sink(this->node)) return 0;
+    return -1;
+};
 
 bool evaluation_data::sink_consistent(apta_node* node, int type){
     if(!USE_SINKS) return true;

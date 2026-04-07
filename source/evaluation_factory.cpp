@@ -5,4 +5,4 @@
 
 map_type* BaseFactory::map = NULL;
 map_datatype* BaseDataFactory::map = NULL;
-
+map_guarddatatype* BaseGuardDataFactory::map = NULL;

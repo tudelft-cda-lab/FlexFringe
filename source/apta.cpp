@@ -310,19 +310,35 @@ void apta::read_json(std::istream& input_stream){
 apta_guard::apta_guard(){
     undo_split = nullptr;
     target = nullptr;
+    data = nullptr;
+    try {
+        data = (DerivedGuardDataRegister<evaluation_guard_data>::getMap())->at("count_guard_data")();
+        data->guard = this;
+    } catch(const std::out_of_range& oor ) {
+        std::cerr << "No data type found..." << std::endl;
+    }
 }
 
 apta_guard::apta_guard(apta_guard* g){
     undo_split = nullptr;
     target = nullptr;
+    data = nullptr;
 
     min_attribute_values = bound_map(g->min_attribute_values);
     max_attribute_values = bound_map(g->max_attribute_values);
+
+    try {
+        data = (DerivedGuardDataRegister<evaluation_guard_data>::getMap())->at("count_guard_data")();
+        data->guard = this;
+    } catch(const std::out_of_range& oor ) {
+        std::cerr << "No data type found..." << std::endl;
+    }
 }
 
 void apta_guard::initialize(apta_guard* g){
     undo_split = nullptr;
     target = nullptr;
+    data->initialize();
 
     min_attribute_values.clear();
     max_attribute_values.clear();

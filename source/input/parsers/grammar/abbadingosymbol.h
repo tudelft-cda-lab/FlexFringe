@@ -23,6 +23,7 @@
 
 struct abbadingo_symbol_info {
     std::string_view name;
+    std::optional<std::string_view> type;
     std::optional<std::vector<std::string_view>> attribute_values;
     std::optional<std::string_view> data;
 
@@ -96,6 +97,11 @@ namespace {
             static constexpr auto value = lexy::as_string<std::string_view>;
         };
 
+        struct stype {
+            static constexpr auto rule = LEXY_LIT("/") + dsl::identifier(dsl::ascii::alpha_digit_underscore);
+            static constexpr auto value = lexy::as_string<std::string_view>;
+        };
+
         // Attribute value - convert to double
         struct attr_val_double {
             static constexpr auto rule = dsl::capture(dsl::digits<>) + dsl::period + dsl::capture(dsl::digits<>);
@@ -140,25 +146,28 @@ namespace {
                 static constexpr auto name = "Expected data string";
             };
             static constexpr auto rule = [] {
-                auto data_rule = LEXY_LIT("/") + dsl::identifier(dsl::ascii::alpha_digit_underscore);
+                auto data_rule = LEXY_LIT("|") + dsl::identifier(dsl::ascii::alpha_digit_underscore);
                 return dsl::peek(data_rule) >> data_rule | dsl::error<data_error>;
             }();
             static constexpr auto value = lexy::as_string<std::string_view>;
         };
 
-        // The actual symbols in the trace: symbol_name:1.0,2.0/foo
+        // The actual symbols in the trace: symbol/type:1.0,2.0|eval
         struct symbol {
             static constexpr auto rule = [] {
+                auto lookahead_symb = dsl::lookahead(LEXY_LIT("/"), dsl::literal_set(LEXY_LIT(" "), LEXY_LIT("\n")));
                 auto lookahead_attr = dsl::lookahead(LEXY_LIT(":"), dsl::literal_set(LEXY_LIT(" "), LEXY_LIT("\n")));
-                auto lookahead_data = dsl::lookahead(LEXY_LIT("/"), dsl::literal_set(LEXY_LIT(" "), LEXY_LIT("\n")));
+                auto lookahead_data = dsl::lookahead(LEXY_LIT("|"), dsl::literal_set(LEXY_LIT(" "), LEXY_LIT("\n")));
                 return  (dsl::p<name>
+                        + (lookahead_symb >> dsl::p<stype> | dsl::else_ >> dsl::nullopt)
                         + (lookahead_attr >> dsl::p<attr_val_list> | dsl::else_ >> dsl::nullopt)
                         + (lookahead_data >> dsl::p<data> | dsl::else_ >> dsl::nullopt));
             }();
 
-            static constexpr auto value = lexy::callback<abbadingo_symbol_info>([](auto name, auto attr_val_list, auto data) {
+            static constexpr auto value = lexy::callback<abbadingo_symbol_info>([](auto name, auto stype, auto attr_val_list, auto data) {
                 return abbadingo_symbol_info {
                     .name = name,
+                    .type = stype,
                     .attribute_values = attr_val_list,
                     .data = data
                 };

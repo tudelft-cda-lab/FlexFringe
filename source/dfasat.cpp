@@ -1002,7 +1002,7 @@ dfasat::dfasat(state_merger* m, int best_solution){
     state_set *all_states = merger->get_all_states();
     ag = new apta_graph(all_states);
     ag->add_conflicts(merger);
-    //ag->extract_types(50);
+    //ag->extract_types(10);
 
     alphabet_size = inputdata_locator::get()->get_alphabet_size();
 

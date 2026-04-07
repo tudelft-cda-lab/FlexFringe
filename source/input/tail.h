@@ -12,6 +12,7 @@ class tail_data{
 public:
     int index;
     int symbol;
+    int type;
     std::unique_ptr<double[]> attr;
 
     std::string data;
@@ -48,6 +49,7 @@ public:
 
     int get_index();
     int get_type();
+    int get_symbol_type();
     int get_length();
     int get_sequence();
     int get_symbol();

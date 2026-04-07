@@ -1,14 +1,10 @@
 #ifndef __APTA_H__
 #define __APTA_H__
 
-#include <iostream>
 #include <fstream>
-#include <vector>
 #include <set>
 #include <list>
 #include <map>
-#include <unordered_map>
-#include <string>
 #include <queue>
 
 #include "input/trace.h"
@@ -46,7 +42,6 @@ typedef std::map<int, double> bound_map;
 typedef std::list< std::pair< tail*, int > > split_list;
 
 class apta_guard{
-private:
     /** the target of the transition guard */
     apta_node* target;
     /** the guard bounds (attribute, value) pairs */
@@ -57,8 +52,12 @@ private:
      * this stores the original target to undo the operation */
     apta_node* undo_split;
 
+    /** data on transitions that may be used by evaluation functions
+     * for instance used to infer Mealy machines */
+    evaluation_guard_data* data;
+
 public:
-    inline apta_node* get_target(){ return target; }
+    apta_node* get_target() const { return target; }
 
     /** constructors and initializer */
     apta_guard();
@@ -78,6 +77,8 @@ public:
     friend class tail_iterator;
     friend class inputdata;
     friend class state_merger;
+
+    evaluation_guard_data* get_data() const { return data; }
 };
 
 /** iterators for the APTA and merged APTA nodes, performs breadth-first traversal
@@ -89,6 +90,8 @@ public:
  * - nodes in such a tree can be merged, but the result must be a tree */
 class APTA_iterator {
 public:
+    virtual ~APTA_iterator() = default;
+
     apta_node* base;
     apta_node* current;
 
@@ -104,6 +107,8 @@ public:
 
 class merged_APTA_iterator {
 public:
+    virtual ~merged_APTA_iterator() = default;
+
     apta_node* base;
     apta_node* current;
 
@@ -119,7 +124,6 @@ public:
 
 class blue_state_iterator : public merged_APTA_iterator {
 public:
-    
     blue_state_iterator(apta_node* start);
 
     virtual void increment();
@@ -145,6 +149,8 @@ public:
 
 class tail_iterator {
 public:
+    virtual ~tail_iterator() = default;
+
     apta_node* base;
     apta_node* current;
     tail* current_tail;
@@ -161,8 +167,6 @@ public:
 
 typedef std::set<apta_node*, size_compare> state_set;
 
-#include "evaluate.h"
-
 /** 
  * @brief Data structure for the  prefix tree.
  *
@@ -172,17 +176,17 @@ typedef std::set<apta_node*, size_compare> state_set;
  */
 
 class apta{
-private:
     state_merger* merger; /**< merger context for convenience */
     apta_node* root; /**< root of the tree */
 
 public:
-    inline apta_node* get_root(){ return root; }
-    inline state_merger* get_context(){ return merger; }
+    apta_node* get_root() const { return root; }
+    state_merger* get_context() const { return merger; }
 
     apta();
     ~apta();
-    inline void set_context(state_merger* m){ merger = m; }
+
+    void set_context(state_merger* m){ merger = m; }
 
     /** reading and writing an apta to and from file */
     void print_dot(std::iostream& output);
@@ -215,7 +219,6 @@ public:
  * of apta_nodes.
  */
 class apta_node{
-private:
     /** access trace for reaching a state from the root
      * depending on parameters, either stores entire trace or last tail */
     trace* access_trace;
@@ -261,21 +264,21 @@ private:
     evaluation_data* data;
 
 public:
-    inline trace* get_access_trace(){ return access_trace; }
-    inline apta_node* get_source(){ return source; }
-    inline apta_node* get_merged_head(){ return representative_of; }
-    inline apta_node* get_next_merged(){ return next_merged_node; }
-    inline evaluation_data* get_data(){ return data; }
-    inline int get_number(){ return number; }
-    inline int get_size(){ return size; }
-    inline int get_final(){ return final; }
-    inline int get_depth(){ return depth; }
-    inline double get_score(){ return merge_score; }
-    inline void set_score(double m){  merge_score = m; }
-    inline void set_red(bool b){ red = b; };
-    inline apta_node* rep(){ return representative; }
+    trace* get_access_trace(){ return access_trace; }
+    apta_node* get_source(){ return source; }
+    apta_node* get_merged_head(){ return representative_of; }
+    apta_node* get_next_merged(){ return next_merged_node; }
+    evaluation_data* get_data(){ return data; }
+    int get_number(){ return number; }
+    int get_size(){ return size; }
+    int get_final(){ return final; }
+    int get_depth(){ return depth; }
+    double get_score(){ return merge_score; }
+    void set_score(double m){  merge_score = m; }
+    void set_red(bool b){ red = b; };
+    apta_node* rep(){ return representative; }
 
-    inline int compute_depth(){
+    int compute_depth(){
         apta_node* s = source;
         int d = 0;
         while(s != nullptr){
@@ -286,7 +289,7 @@ public:
     }
 
     /** this gets merged with node, replacing head of list */
-    inline void merge_with(apta_node* node){
+    void merge_with(apta_node* node){
         assert(this->representative == nullptr);
         this->representative = node;
         this->next_merged_node = node->representative_of;
@@ -296,26 +299,27 @@ public:
         node->final += this->final;
     };
     /** undo_merge this gets merged with node, resetting head of list */
-    inline void undo_merge_with(apta_node* node){
+    void undo_merge_with(apta_node* node){
         assert(this->representative == node);
-        this->representative = 0;
+        this->representative = nullptr;
         node->representative_of = this->next_merged_node;
-        this->next_merged_node = 0;
+        this->next_merged_node = nullptr;
 
         node->size -= this->size;
         node->final -= this->final;
     };
 
     /** FIND/UNION functions, returns head of representative list */
-    inline apta_node* find(){
-        apta_node* rep = this;
-        while(rep->representative != 0) rep = rep->representative;
+    apta_node* find(){
+        auto rep = this;
+        while(rep->representative != nullptr) rep = rep->representative;
         return rep;
     };
+
     /** FIND/UNION functions, returns rep that has node as representative */
-    inline apta_node* find_until(apta_node* node){
-        apta_node* rep = this;
-        while(rep->representative != 0 && rep->representative != node){
+    apta_node* find_until(const apta_node* node){
+        auto rep = this;
+        while(rep->representative != nullptr && rep->representative != node){
             rep = rep->representative;
         }
         return rep;
@@ -328,58 +332,59 @@ public:
     void set_child(tail* t, apta_node* node);
 
     /** getting target states via symbols only */
-    inline apta_node* child(int i){
-        guard_map::iterator it = guards.find(i);
-        if(it != guards.end()) return it->second->target;
-        return 0;
+    apta_node* child(const int i){
+        if(const auto it = guards.find(i); it != guards.end()) return it->second->target;
+        return nullptr;
     };
-    inline apta_node* merged_child(int i){
-        guard_map::iterator it = guards.find(i);
-        if(it != guards.end()) return it->second->target->find();
-        return 0;
+
+    apta_node* merged_child(const int i){
+        if(const auto it = guards.find(i); it != guards.end()) return it->second->target->find();
+        return nullptr;
     };
-    inline apta_guard* guard(int i){
-        guard_map::iterator it = guards.find(i);
-        if(it != guards.end()) return it->second;
-        return 0;
+
+    apta_guard* guard(const int i){
+        if(const auto it = guards.find(i); it != guards.end()) return it->second;
+        return nullptr;
     };
-    inline guard_map::iterator guards_start(){ return guards.begin(); }
-    inline guard_map::iterator guards_end(){ return guards.end(); }
-    inline void set_child(int i, apta_node* node){
-        guard_map::iterator it = guards.find(i);
-        if(it != guards.end()){
-            if(node != 0)
+
+    guard_map::iterator guards_start(){ return guards.begin(); }
+    guard_map::iterator guards_end(){ return guards.end(); }
+
+    void set_child(int i, apta_node* node){
+        if(const auto it = guards.find(i); it != guards.end()){
+            if(node != nullptr)
                 it->second->target = node;
             else
                 guards.erase(it);
         } else {
-            apta_guard* g = new apta_guard();
-            guards.insert(std::pair<int,apta_guard*>(i,g));
+            auto* g = new apta_guard();
+            guards.insert(std::pair(i,g));
             g->target = node;
         }
     };
-    inline apta_node* get_child(int c){
+
+    apta_node* get_child(int c){
         apta_node* rep = find();
-        if(rep->child(c) != 0) return rep->child(c)->find();
-        return 0;
+        if(rep->child(c) != nullptr) return rep->child(c)->find();
+        return nullptr;
     };
 
     /** red, blue, white, and sinks */
 
-    inline bool is_red() const{
+    bool is_red() const{
         return red;
     }
-    inline bool is_blue() const{
-        return source != 0 && is_red() == false && source->find()->is_red();
+    bool is_blue() const{
+        return source != nullptr && is_red() == false && source->find()->is_red();
     }
-    inline bool is_white() const{
-        return source != 0 && is_red() == false && !source->find()->is_red();
+    bool is_white() const{
+        return source != nullptr && is_red() == false && !source->find()->is_red();
     }
-    inline bool is_sink() const{
+    bool is_sink() const{
         if(sink != -1) return true;
         return data->sink_type() != -1;
     }
-    inline int sink_type() const{
+    int sink_type() const{
         if(sink != -1) return sink;
         return data->sink_type();
     }

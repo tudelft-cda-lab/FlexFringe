@@ -244,7 +244,19 @@ bool state_merger::merge(apta_node* left, apta_node* right, int depth, bool eval
             if(perform){
                 left->set_child(i, right_guard->target);
             }
+            if (MERGE_DATA) {
+                left_guard = left->guard(i, it.second);
+                left_guard->data->update(right_guard->data);
+            }
         } else {
+            if (test) {
+                if(evaluate && !eval->consistent(this, left_guard, right_guard)) return false;
+            }
+            if (MERGE_DATA) {
+                left_guard = left->guard(i, it.second);
+                left_guard->data->update(right_guard->data);
+            }
+
             apta_node* right_child = right_guard->target;
             apta_node* left_child = left_guard->target;
             
@@ -294,6 +306,8 @@ void state_merger::undo_merge(apta_node* left, apta_node* right){
         apta_node* right_child = right_guard->target;
         apta_node* left_child = left_guard->target;
 
+        if (MERGE_DATA) left_guard->data->undo(right_guard->data);
+
         if(left_child == right_child){
             left_guard->target = nullptr;
         } else if(left_child != nullptr) {
@@ -321,6 +335,12 @@ bool state_merger::split_single(apta_node* new_node, apta_node* old_node, tail* 
 
     int symbol = t->get_symbol();
     if(symbol == -1) return true;
+
+    apta_guard* old_guard = old_node->guard(symbol);
+    apta_guard* new_guard = new_node->guard(symbol);
+    old_guard->data->del_tail(t);
+    new_guard->data->add_tail(t);
+
     apta_node* old_child = old_node->child(symbol)->find();
     apta_node* new_child = new_node->child(symbol);
     if(new_child == nullptr){
@@ -341,7 +361,7 @@ bool state_merger::split_single(apta_node* new_node, apta_node* old_node, tail* 
     tail* new_tail = mem_store::create_tail(future_tail);
     future_tail->split(new_tail);
     new_child->add_tail(new_tail);
-    new_child->data->add_tail(new_tail);    
+    new_child->data->add_tail(new_tail);
     split_single(new_child, old_child, new_tail, depth+1, evaluate, perform, test);
     
     if(evaluate) eval->split_update_score_after(this, old_child, new_child, t->future());
@@ -354,8 +374,11 @@ void state_merger::undo_split_single(apta_node* new_node, apta_node* old_node, t
 
     int symbol = t->get_symbol();
     apta_node* old_child = old_node->child(symbol);
+    apta_guard* old_guard = old_node->guard(symbol);
     apta_guard* new_guard = new_node->guard(symbol);
     apta_node* new_child = new_node->child(symbol);
+
+    old_guard->data->split_undo(new_guard->data);
 
     if(new_child != nullptr && old_child != nullptr) {
         old_child = old_child->find();
@@ -384,6 +407,8 @@ void state_merger::undo_split_single(apta_node* new_node, apta_node* old_node){
         
         apta_node* new_child = new_guard->target;
         apta_node* old_child = old_guard->target->find();
+
+        old_guard->data->split_undo(new_guard->data);
         
         undo_split_single(new_child, old_child);
 
@@ -458,6 +483,10 @@ bool state_merger::split(apta_node* new_node, apta_node* old_node, int depth, bo
         apta_guard *new_guard = it->second;
         apta_guard *old_guard = old_node->guard(it->first);
 
+        if(perform){
+            old_guard->data->split_update(new_guard->data);
+        }
+
         apta_node* new_child = new_guard->target;
         apta_node* old_child = old_guard->target->find();
 
@@ -501,6 +530,8 @@ void state_merger::undo_split(apta_node* new_node, apta_node* old_node){
         apta_guard* new_guard = it->second;
         apta_node *new_child = new_guard->target;
         apta_guard* old_guard = old_node->guard(i, it->second);
+
+        old_guard->data->split_undo(new_guard->data);
 
         if(old_guard->target == nullptr){
             assert(new_guard->undo_split != nullptr);

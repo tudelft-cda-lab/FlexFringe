@@ -59,11 +59,13 @@ void inputdata::read_slidingwindow(parser *input_parser,
 std::pair<trace *, tail *> inputdata::process_symbol_info(symbol_info &cur_symbol,
                                                           std::unordered_map<std::string, trace *> &trace_map) {
     // Build expected trace / tail strings from symbol info
-    auto id = cur_symbol.get_str("id");
-    auto symbol = cur_symbol.get_str("symb");
-    auto type = cur_symbol.get_str("type");
-    if (type.empty()) type = "0";
-    auto data = cur_symbol.get("eval");
+    auto id = cur_symbol.get_str("ff_id");
+    auto symbol = cur_symbol.get_str("ff_symb");
+    auto ttype = cur_symbol.get_str("ff_ttype");
+    auto stype = cur_symbol.get_str("ff_stype");
+    if (ttype.empty()) ttype = "0";
+    if (stype.empty()) stype = "0";
+    auto data = cur_symbol.get("ff_eval");
 
     // Get or create the trace for this trace id
     if (!trace_map.contains(id)) {
@@ -74,11 +76,11 @@ std::pair<trace *, tail *> inputdata::process_symbol_info(symbol_info &cur_symbo
 
     trace *tr = trace_map.at(id);
     process_trace_attributes(cur_symbol, tr);
-
-    add_type_to_trace(tr, type);
+    add_type_to_trace(tr, ttype);
 
     tail *new_tail = make_tail(symbol, data);
     process_symbol_attributes(cur_symbol, new_tail);
+    add_type_to_symbol(new_tail, stype);
 
     tail *old_tail = tr->end_tail;
     if (old_tail == nullptr) {
@@ -169,6 +171,38 @@ bool inputdata::is_target(int attr) {
     return get_attribute(attr)->target;
 }
 
+bool inputdata::is_trace_splittable(int attr) {
+    return get_trace_attribute(attr)->splittable;
+}
+
+bool inputdata::is_trace_distributionable(int attr) {
+    return get_trace_attribute(attr)->distributionable;
+}
+
+bool inputdata::is_trace_discrete(int attr) {
+    return get_trace_attribute(attr)->discrete;
+}
+
+bool inputdata::is_trace_target(int attr) {
+    return get_trace_attribute(attr)->target;
+}
+
+bool inputdata::is_symbol_splittable(int attr) {
+    return get_symbol_attribute(attr)->splittable;
+}
+
+bool inputdata::is_symbol_distributionable(int attr) {
+    return get_symbol_attribute(attr)->distributionable;
+}
+
+bool inputdata::is_symbol_discrete(int attr) {
+    return get_symbol_attribute(attr)->discrete;
+}
+
+bool inputdata::is_symbol_target(int attr) {
+    return get_symbol_attribute(attr)->target;
+}
+
 int inputdata::get_types_size() {
     return types.size();
 }
@@ -244,6 +278,7 @@ void inputdata::add_trace_to_apta(trace *tr, apta *the_apta) {
                 next_node->depth = depth;
                 next_node->number = ++(this->node_number);
             }
+            node->guard(symbol)->get_data()->add_tail(t);
             node = node->child(symbol)->find();
         }
         t = t->future();
@@ -334,6 +369,16 @@ void inputdata::add_type_to_trace(trace *new_trace,
         types.push_back(type);
     }
     new_trace->type = r_types[type];
+}
+
+void inputdata::add_type_to_symbol(const tail *new_tail,
+                                  const string &type) {
+    // Add to type map
+    if (!r_symbol_types.contains(type)) {
+        r_symbol_types[type] = static_cast<int>(symbol_types.size());
+        symbol_types.push_back(type);
+    }
+    new_tail->td->type = r_symbol_types[type];
 }
 
 void inputdata::process_trace_attributes(symbol_info &symbolinfo, trace *tr) {

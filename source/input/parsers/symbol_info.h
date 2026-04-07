@@ -73,5 +73,4 @@ public:
     }
 };
 
-
 #endif //FLEXFRINGE_SYMBOL_INFO_H

@@ -70,6 +70,8 @@ public:
     void extract_types(int min_bip_size);
 
     void print_dot();
+
+    void print_edge_list();
 };
 
 

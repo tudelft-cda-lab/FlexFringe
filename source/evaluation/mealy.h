@@ -33,7 +33,7 @@ public:
     virtual std::string predict_data(tail*);
 };
 
-class mealy: public evaluation_function {
+class mealy: virtual public evaluation_function {
 
 protected:
   REGISTER_DEC_TYPE(mealy);
@@ -48,9 +48,6 @@ public:
   virtual bool compute_consistency(state_merger *, apta_node* left, apta_node* right);
   virtual double  compute_score(state_merger*, apta_node* left, apta_node* right);
   virtual void reset(state_merger *);
-
-  int num_sink_types();
-
 };
 
 #endif

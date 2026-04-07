@@ -58,7 +58,7 @@ public:
 
 };
 
-class alergia: public count_driven {
+class alergia: virtual public count_driven {
 
 protected:
     REGISTER_DEC_TYPE(alergia);

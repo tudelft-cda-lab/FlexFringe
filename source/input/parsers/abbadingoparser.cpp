@@ -100,8 +100,8 @@ bool abbadingoparser::read_abbadingo_trace() {
     if (trace.symbols.empty()) {
         symbol_info cur_symbol;
 
-        cur_symbol.set("id", std::to_string(num_lines_processed));
-        cur_symbol.set("type", std::string{trace.label});
+        cur_symbol.set("ff_id", std::to_string(num_lines_processed));
+        cur_symbol.set("ff_ttype", std::string{trace.label});
 
         // No symbol attributes possible
         // But we can have trace attributes
@@ -113,9 +113,12 @@ bool abbadingoparser::read_abbadingo_trace() {
         for (const auto &symbol: trace.symbols) {
             symbol_info cur_symbol;
 
-            cur_symbol.set("id", std::to_string(num_lines_processed));
-            cur_symbol.set("symb", std::string{symbol.name});
-            cur_symbol.set("type", std::string{trace.label}); // Not sure if this is the correct place to put this
+            cur_symbol.set("ff_id", std::to_string(num_lines_processed));
+            cur_symbol.set("ff_symb", std::string{symbol.name});
+            cur_symbol.set("ff_ttype", std::string{trace.label}); // Not sure if this is the correct place to put this
+            if (symbol.type.has_value()) {
+                cur_symbol.set("ff_stype", std::string{symbol.type.value()});
+            }
 
             // Construct the symbol attribute info objects if we have any
             if (symbol.attribute_values.has_value()) {
@@ -140,7 +143,7 @@ bool abbadingoparser::read_abbadingo_trace() {
             cur_symbol.set_trace_attr_info(trace_attribute_info);
 
             if (symbol.data.has_value()) {
-                cur_symbol.set("eval", std::string(symbol.data.value()));
+                cur_symbol.set("ff_eval", std::string(symbol.data.value()));
             }
 
             symbols.push_back(cur_symbol);

@@ -9,9 +9,11 @@
 #include "json.hpp"
 
 class evaluation_data;
+class evaluation_guard_data;
 class evaluation_function;
 class apta_node;
 class tail;
+class apta_guard;
 
 #include "evaluation_factory.h"
 #include "utility/loguru.hpp"
@@ -28,6 +30,12 @@ bool is_stream_sink(apta_node*);
 #define REGISTER_DEF_DATATYPE(NAME) \
     DerivedDataRegister<NAME> NAME::reg(#NAME)
 
+// for registering evaluation guard data objects
+#define REGISTER_DEC_GUARDDATATYPE(NAME) \
+    static DerivedGuardDataRegister<NAME> reg
+
+#define REGISTER_DEF_GUARDDATATYPE(NAME) \
+    DerivedGuardDataRegister<NAME> NAME::reg(#NAME)
 
 // for registering evaluation function objects
 #define REGISTER_DEC_TYPE(NAME) \
@@ -72,12 +80,13 @@ public:
 
     int node_type;
     evaluation_data* undo_pointer;
+    tail* undo_tail_pointer;
 
     bool undo_consistent;
     double undo_score;
 
     evaluation_data();
-    virtual ~evaluation_data(){ };
+    virtual ~evaluation_data() = default;
 
 /** Set values from input string */
     virtual void add_tail(tail* t);
@@ -107,7 +116,7 @@ public:
     virtual void print_transition_properties(std::iostream&, int symbol);
 
 /** what to ignore, and why */
-    
+
     virtual bool sink_consistent(int type);
 
 /** Return a sink type, or -1 if no sink
@@ -150,6 +159,63 @@ public:
     bool align_consistent(tail *t);
 };
 
+/**
+ * @brief Extra data attached to each symbol, stored in each transition.
+ *
+ * Stores all the extra data attached to symbols in a transition (guard). The
+ * class is used by the evaluation_function class.
+ * Important: Each evaluation_data type has to be registered by
+ * calling REGISTER_DEF_GUARD_DATATYPE(<unique name>).
+ * @see evaluation_function
+ */
+class evaluation_guard_data {
+
+protected:
+    static DerivedDataRegister<evaluation_guard_data> reg;
+
+public:
+    apta_guard* guard;
+
+    int guard_type;
+    evaluation_guard_data* undo_pointer;
+    tail* undo_tail_pointer;
+
+    bool undo_consistent;
+    double undo_score;
+
+    evaluation_guard_data();
+    virtual ~evaluation_guard_data(){ };
+
+/** Set values from input string */
+    virtual void add_tail(tail* t);
+    virtual void del_tail(tail* t);
+
+/** Update values when merging */
+    virtual void update(evaluation_guard_data* other);
+/** Undo updates when undoing merge */
+    virtual void undo(evaluation_guard_data* other);
+/** Update values when splitting */
+    virtual void split_update(evaluation_guard_data* other);
+/** Undo updates when undoing a split */
+    virtual void split_undo(evaluation_guard_data* other);
+
+/** Printing of nodes and transitions in dot output */
+    virtual void print_transition_label(std::iostream& output, int symbol);
+    virtual void print_transition_style(std::iostream& output, std::set<int> symbols);
+
+/** Printing of nodes and transitions in json output */
+    virtual void print_transition_label_json(std::iostream& output, int symbol);
+
+/** Print state/transition properties  */
+    virtual void print_transition_properties(std::iostream&, int symbol);
+
+    virtual void initialize();
+
+    virtual void read_json(json& node);
+    virtual void write_json(json& node);
+
+    void set_context(apta_guard *g);
+};
 
 /**
  * @brief User-defined merge heuristic function.
@@ -205,6 +271,10 @@ public:
     virtual bool consistent(state_merger*, apta_node* left, apta_node* right);
     virtual void update_score(state_merger*, apta_node* left, apta_node* right);
     virtual void update_score_after(state_merger*, apta_node* left, apta_node* right);
+
+    virtual bool consistent(state_merger*, apta_guard* left, apta_guard* right);
+    virtual void update_score(state_merger*, apta_guard* left, apta_guard* right);
+    virtual void update_score_after(state_merger*, apta_guard* left, apta_guard* right);
 
     virtual bool split_consistent(state_merger*, apta_node* left, apta_node* right);
     virtual void split_update_score_before(state_merger*, apta_node* left, apta_node* right, tail* t);

@@ -28,8 +28,8 @@ std::optional<symbol_info> csv_parser::next() {
 
     // Handle attr columns
     size_t idx{};
-    auto attr_col_names = header_parser->get_names("attr");
-    for (auto col_idx: header_parser->get("attr")) {
+    auto attr_col_names = header_parser->get_names("ff_sattr");
+    for (auto col_idx: header_parser->get("ff_sattr")) {
         cur_symbol.push_symb_attr_info({attr_col_names.at(idx),
                                         row[col_idx].get(),
                                         header_parser->get_col_attr_types(col_idx)});
@@ -38,7 +38,7 @@ std::optional<symbol_info> csv_parser::next() {
 
     // Handle tattr columns
     // Do we have trace attribute info for this trace ID?
-    auto cur_trace_id = cur_symbol.get_str("id");
+    auto cur_trace_id = cur_symbol.get_str("ff_id");
     if (!tattr_info.contains(cur_trace_id)) {
         tattr_info.insert(std::make_pair<>(cur_trace_id, std::make_shared<std::vector<attribute_info>>()));
     }
@@ -46,8 +46,8 @@ std::optional<symbol_info> csv_parser::next() {
     cur_symbol.set_trace_attr_info(cur_trace_attr_info);
     // Fill in the trace attributes for this symbol
     idx = 0;
-    auto tattr_col_names = header_parser->get_names("tattr");
-    for (auto col_idx: header_parser->get("tattr")) {
+    auto tattr_col_names = header_parser->get_names("ff_tattr");
+    for (auto col_idx: header_parser->get("ff_tattr")) {
         auto tattr_value = row[col_idx].get();
         if (!tattr_value.empty()) {
             cur_symbol.push_trace_attr_info({tattr_col_names.at(idx),
@@ -80,12 +80,12 @@ std::vector<std::string> csv_parser::get_vec_from_row(const std::string &label, 
 }
 
 const std::set<std::string> csv_header_parser::default_col_type_names = {
-        "id", "type", "symb", "eval", "attr", "tattr"
+        "ff_id", "ff_ttype", "ff_stype", "ff_symb", "ff_eval", "ff_sattr", "ff_tattr"
 };
 
 // These are special cases, resembling attributes, which need special handling
 const std::set<std::string> csv_header_parser::reserved_col_type_names = {
-        "attr", "tattr"
+        "ff_sattr", "ff_tattr"
 };
 
 csv_header_parser::csv_header_parser(const std::vector<std::string> &headers) {
@@ -132,7 +132,7 @@ void csv_header_parser::parse(const std::vector<std::string> &headers) {
         // CASE 1: If only a name is specified, we check if it's a valid column type name
         if (!parsed_header.type_name.has_value() && !parsed_header.attr_types.has_value()) {
 
-            // If its attr or tattr, we can't parse it without additional information
+            // If its sattr or tattr, we can't parse it without additional information
             if (type_name_attrs.contains(parsed_header.name)) {
                 throw std::runtime_error(fmt::format("Error parsing column header from column {} - {}", idx, header));
             }
@@ -173,8 +173,8 @@ void csv_header_parser::parse(const std::vector<std::string> &headers) {
     }
 
     // Verify that the symbol and trace attribute names are unique
-    check_duplicates("attr");
-    check_duplicates("tattr");
+    check_duplicates("ff_sattr");
+    check_duplicates("ff_tattr");
 }
 
 void csv_header_parser::check_duplicates(const std::string &col_type) const {
