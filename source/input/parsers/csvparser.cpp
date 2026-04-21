@@ -154,7 +154,7 @@ void csv_header_parser::parse(const std::vector<std::string> &headers) {
             col_names.at(type).emplace_back(name);
         }
 
-        // CASE 3: We have a trace or symbol attribute column ({attr,tattr}/{d,s,f,t}+:col_name)
+        // CASE 3: We have a trace or symbol attribute column ({tt_sattr,ff_tattr}:col_name/{d,s,f,t}+)
         if (parsed_header.type_name.has_value() && parsed_header.attr_types.has_value()) {
             const std::string &type = parsed_header.type_name.value();
             const std::string &name = parsed_header.name;

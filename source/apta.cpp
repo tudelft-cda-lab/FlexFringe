@@ -95,10 +95,10 @@ void apta::print_dot(std::iostream& output){
             output << inputdata_locator::get()->get_symbol(it->first) << " ";
             n->data->print_transition_label(output, it->first);
             for(auto & min_attribute_value : g->min_attribute_values){
-                output << "\\n" << inputdata_locator::get()->get_attribute(min_attribute_value.first) << " >= " << min_attribute_value.second;
+                output << "\\n" << inputdata_locator::get()->get_attribute(min_attribute_value.first)->get_name() << " >= " << min_attribute_value.second;
             }
             for(auto & max_attribute_value : g->max_attribute_values){
-                output << "\\n" << inputdata_locator::get()->get_attribute(max_attribute_value.first) << " < " << max_attribute_value.second;
+                output << "\\n" << inputdata_locator::get()->get_attribute(max_attribute_value.first)->get_name() << " < " << max_attribute_value.second;
             }
             output << "\" ";
             //if(child->representative != nullptr) output << ", style=dotted";

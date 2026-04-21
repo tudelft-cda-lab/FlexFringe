@@ -160,7 +160,7 @@ double tail::get_trace_value(int attr){
     return tr->trace_attr[attr];
 }
 double tail::get_value(int attr){
-    int num_trace_attributes = this->tr->inputData->get_num_trace_attributes();
+    int num_trace_attributes = inputdata_locator::get()->get_num_trace_attributes();
     if(attr < num_trace_attributes)
         return tr->trace_attr[attr];
     return td->attr[attr - num_trace_attributes];

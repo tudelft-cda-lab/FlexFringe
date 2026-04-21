@@ -22,9 +22,9 @@ apta_node* mem_store::create_node(apta_node* other_node){
     if(!node_store.empty()){
         node = node_store.front();
         node_store.pop_front();
-        node->initialize(other_node);
     } else { node = new apta_node(); }
     //cerr << "create " << node << endl;
+    node->initialize(other_node);
     return node;
 };
 

@@ -40,14 +40,14 @@ namespace {
 
             static constexpr auto rule = [] {
                 auto word = dsl::identifier(dsl::ascii::word);
-                auto peek = dsl::peek(LEXY_LIT("tattr") | LEXY_LIT("attr"));
+                auto peek = dsl::peek(LEXY_LIT("ff_tattr") | LEXY_LIT("ff_sattr"));
                 return peek >> dsl::error<name_error> | dsl::else_ >> word;
             }();
             static constexpr auto value = lexy::as_string<std::string>;
         };
 
         struct attr_name {
-            static constexpr auto rule = dsl::capture(LEXY_LIT("tattr")) | dsl::capture(LEXY_LIT("attr"));
+            static constexpr auto rule = dsl::capture(LEXY_LIT("ff_tattr")) | dsl::capture(LEXY_LIT("ff_sattr"));
             static constexpr auto value = lexy::as_string<std::string>;
         };
 
@@ -77,7 +77,7 @@ namespace {
             static constexpr auto rule = [] {
                 auto just_name = dsl::p<name>;
                 auto type_w_name = dsl::p<name> + LEXY_LIT(":") + dsl::p<name>;
-                auto attr_w_name = dsl::p<attr_name> + LEXY_LIT("/") + dsl::p<attr_types> + LEXY_LIT(":") + dsl::p<name>;
+                auto attr_w_name = dsl::p<attr_name> + LEXY_LIT(":") + dsl::p<attr_types> + LEXY_LIT("/") + dsl::p<name>;
 
                 return dsl::peek(attr_w_name) >> attr_w_name
                      | dsl::peek(type_w_name) >> dsl::p<name> + LEXY_LIT(":") + dsl::nullopt + dsl::p<name>

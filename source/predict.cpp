@@ -53,7 +53,7 @@ void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
 
     state_set *states = m->get_all_states();
 
-    Q.push(std::pair<double, std::pair<apta_node*, tail *>>(log(1.0),
+    Q.push(std::pair<double, std::pair<apta_node*, tail *>>(0.0,
                                                         std::pair<apta_node*, tail *>(n, t)));
 
     apta_node* next_node = nullptr;
@@ -67,7 +67,7 @@ void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
         next_node = next.second.first;
         next_tail = next.second.second;
 
-        //cerr << score << " " << Q.size() << endl;
+        std::cerr << score << " " << Q.size() << std::endl;
 
         if (next_tail == nullptr) {
             break;
@@ -108,7 +108,8 @@ void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
                 if (jump_child == next_node) continue;
                 if (jump_child->get_data()->align_consistent(next_tail)) {
                     //apta_node *next_child = jump_child->child(next_tail)->find();
-                    //cerr << "jump: " << compute_score(score, next_node, next_tail) << endl;
+                    std::cerr << "jump: " << compute_jump_penalty(next_node, jump_child) << std::endl;
+                    std::cerr << "  state: " << jump_child->get_number() << std::endl;
                     Q.push(std::pair<double, std::pair<apta_node *, tail *>>(
                             update_score(score, next_node, next_tail) *
                                     compute_jump_penalty(next_node, jump_child),
@@ -119,10 +120,10 @@ void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
             // SKIP TO ALIGN
             // UNCLEAR whether this is needed.
             //cerr << "skip: " << compute_score(score, next_node, next_tail) << endl;
-            Q.push(std::pair<double, std::pair<apta_node *, tail *>>(
-                    update_score(score, next_node, next_tail) *
-                        compute_skip_penalty(next_node),
-                    std::pair<apta_node *, tail *>(next_node, next_tail->future())));
+            //Q.push(std::pair<double, std::pair<apta_node *, tail *>>(
+            //        update_score(score, next_node, next_tail) *
+            //            compute_skip_penalty(next_node),
+            //        std::pair<apta_node *, tail *>(next_node, next_tail->future())));
         }
     }
 
@@ -182,12 +183,12 @@ void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
                         double score = update_score(old_score, node, current_tail) *
                                        compute_skip_penalty(node);
                         //cerr << "skip symbol " << old_score << " " << score << endl;
-                        if (score == current_score) {
-                            max_score = old_score;
-                            prev_node = node;
-                            advance = true;
-                            break;
-                        }
+                        //if (score == current_score) {
+                        //    max_score = old_score;
+                        //    prev_node = node;
+                        //    advance = true;
+                        //    break;
+                        //}
                     }
                 }
                 if (vm.find(index+1) != vm.end() && !current_tail->is_final()){

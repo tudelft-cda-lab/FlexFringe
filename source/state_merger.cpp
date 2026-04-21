@@ -336,11 +336,6 @@ bool state_merger::split_single(apta_node* new_node, apta_node* old_node, tail* 
     int symbol = t->get_symbol();
     if(symbol == -1) return true;
 
-    apta_guard* old_guard = old_node->guard(symbol);
-    apta_guard* new_guard = new_node->guard(symbol);
-    old_guard->data->del_tail(t);
-    new_guard->data->add_tail(t);
-
     apta_node* old_child = old_node->child(symbol)->find();
     apta_node* new_child = new_node->child(symbol);
     if(new_child == nullptr){
@@ -350,6 +345,11 @@ bool state_merger::split_single(apta_node* new_node, apta_node* old_node, tail* 
         new_child->source = new_node;
         new_child->depth = new_node->depth + 1;
     }
+
+    apta_guard* old_guard = old_node->guard(symbol);
+    apta_guard* new_guard = new_node->guard(symbol);
+    old_guard->data->del_tail(t);
+    new_guard->data->add_tail(t);
 
     if(evaluate) eval->split_update_score_before(this, old_child, new_child, t->future());
     new_child->size++;
