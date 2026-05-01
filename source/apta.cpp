@@ -371,7 +371,7 @@ apta_node::apta_node(){
     performed_splits = nullptr;
     tails_head = nullptr;
     access_trace = nullptr;
-    number = -1;
+    number = inputdata_locator::get()->node_number++;
     size = 0;
     final = 0;
     depth = 0;
@@ -395,7 +395,7 @@ void apta_node::initialize(apta_node* n){
     tails_head = nullptr;
     access_trace = nullptr;
     // keep the old node number
-    // number = -1;
+    number = inputdata_locator::get()->node_number++;
     size = 0;
     final = 0;
     depth = 0;

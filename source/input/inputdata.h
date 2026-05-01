@@ -43,7 +43,6 @@ protected:
 
     int max_sequences {};
     int num_sequences {};
-    int node_number {};
     int num_tails {};
 
     tail *make_tail(const std::string &symbol,
@@ -63,6 +62,8 @@ private:
     void process_symbol_attributes(symbol_info &symbolinfo, tail* t);
 
 public:
+    int node_number {};
+
     using Iterator = std::list<trace*>::iterator;
 
 

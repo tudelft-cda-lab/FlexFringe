@@ -12,18 +12,29 @@ protected:
   REGISTER_DEC_DATATYPE(mse_data);
   
 public:
-    /* occurences of this state */
-    double_list occs;
-    double mean;
-    double_list::iterator merge_point;
+    double undo_rss_before;
+    double undo_rss_after;
+    double undo_num_points;
+    double undo_total_merges;
+
+  /* occurences of this state */
+    double num_tails;
+    std::vector<double> sums;
+    std::vector<double> sum_squares;
+
+  void print_state_label(std::iostream &output);
 
     mse_data();
 
-    virtual void add_tail(tail* t);
-    virtual void update(evaluation_data* right);
-    virtual void undo(evaluation_data* right);
+  virtual void initialize();
 
-    virtual std::string predict_data(tail *);
+
+    virtual void add_tail(tail* t);
+
+  void del_tail(tail *t);
+
+  virtual void update(evaluation_data* right);
+    virtual void undo(evaluation_data* right);
 };
 
 class mse_error: public evaluation_function{
@@ -42,10 +53,20 @@ public:
   double prev_AIC = 0;
   
   virtual bool consistent(state_merger *merger, apta_node* left, apta_node* right);
-  virtual void data_update_score(mse_data* l, mse_data* r);
   virtual void update_score(state_merger *merger, apta_node* left, apta_node* right);
   virtual double  compute_score(state_merger*, apta_node* left, apta_node* right);
+
+  bool compute_consistency(state_merger *merger, apta_node *left, apta_node *right);
+
   virtual void reset(state_merger *merger);
+
+  void split_update_score_before(state_merger *merger, apta_node *left, apta_node *right, tail *t);
+
+  void split_update_score_after(state_merger *merger, apta_node *left, apta_node *right, tail *t);
+
+  bool split_compute_consistency(state_merger*, apta_node *left, apta_node *right);
+
+  double split_compute_score(state_merger*, apta_node *left, apta_node *right);
 
   virtual int sink_type(apta_node* node);
   virtual bool sink_consistent(apta_node* node, int type);

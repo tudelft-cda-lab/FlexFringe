@@ -11,7 +11,6 @@ protected:
   REGISTER_DEC_DATATYPE(rtiplus_data);
 
 public:
-
     quantile_map quantile_counts;
     double loglikelihood;
     

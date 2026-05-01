@@ -179,7 +179,7 @@ int state_merger::get_num_red_transitions() const{
 void state_merger::pre_split(apta_node* left, apta_node* right, int depth, bool evaluate, bool perform, bool test){
     if(left->performed_splits == nullptr) return;
     for(auto it = left->performed_splits->rbegin(); it != left->performed_splits->rend(); ++it){
-        split_init(right, it->first, it->second, depth, evaluate, true, test);
+        split_init(right, it->first, it->second, depth, false, true, false);
     }
 }
 
@@ -220,10 +220,8 @@ bool state_merger::merge(apta_node* left, apta_node* right, int depth, bool eval
         if(early_stop_merge(left, right, depth, early_stop)) return early_stop;
         if(evaluate && !eval->consistent(this, left, right)) return false;
     }
-    
-    if(perform){
-        pre_split(left, right, depth, evaluate, perform, test);
-    }
+
+    pre_split(left, right, depth, evaluate, perform, test);
     if(evaluate){
         eval->update_score(this, left, right);
     }
@@ -272,7 +270,7 @@ bool state_merger::merge(apta_node* left, apta_node* right, int depth, bool eval
     if(evaluate) {
         eval->update_score_after_recursion(this, left, right);
     }
-    return true;
+    return result;
 }
 
 bool state_merger::merge(apta_node* left, apta_node* right) {
@@ -716,6 +714,7 @@ refinement* state_merger::test_split(apta_node* red, tail* t, int attr){
 void state_merger::perform_split(apta_node* red, tail* t, int attr){
     num_merges++;
     split_init(red, t, attr, 0, false, true, false);
+
 }
 
 void state_merger::undo_perform_split(apta_node* red, tail* t, int attr){
@@ -896,6 +895,7 @@ refinement* state_merger::test_splits(apta_node* blue){
         for(auto & sorted_tail : sorted_tails){
             if(sorted_tail.first > prev_val){
                 score = eval->split_compute_score(this, blue, new_node);
+
                 if(eval->split_compute_consistency(this, blue, new_node) && (score > best_score || result == nullptr)){
                     if(result != nullptr) result->erase();
                     result = mem_store::create_split_refinement(this, score, blue->source->find(), sorted_tail.second->past_tail, attr);
@@ -991,12 +991,12 @@ refinement_set* state_merger::get_possible_refinements(){
 
             refinement* ref = test_merge(red,blue);
 
-            if(ref != nullptr){
+            if(ref != nullptr) {
                 result->insert(ref);
                 found = true;
             }
         }
-        
+
         if(MERGE_BLUE_BLUE){
             for(auto blue2 : blue_its){
                 if(blue == blue2) continue;

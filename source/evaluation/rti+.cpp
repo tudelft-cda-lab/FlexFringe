@@ -88,12 +88,17 @@ void rtiplus_data::del_tail(tail* t){
 
 void rtiplus_data::print_state_label(std::iostream& output){
     likelihood_data::print_state_label(output);
-     for(int i = 0; i < quantile_counts.size(); ++i) {
-        output << "attr(" << i << "):[";
-        for(int j = 0; j < rtiplus::attribute_quantiles[i].size()+1; ++j){
-            output << quantile_counts[i][j] << ",";
+    int attr = 0;
+    for(int i = 0; i < inputdata_locator::get()->get_num_attributes(); ++i) {
+        if(!inputdata_locator::get()->is_distributionable(i)) continue;
+
+        output << "\n" << inputdata_locator::get()->get_attribute(i)->get_name() + ":[";
+        for(int j = 0; j < rtiplus::attribute_quantiles[attr].size()+1; ++j){
+            output << quantile_counts[attr][j];
+            if(j < rtiplus::attribute_quantiles[attr].size()) output << ",";
         }
         output << "]" << std::endl;
+        attr++;
     }
 };
 

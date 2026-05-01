@@ -328,6 +328,7 @@ tail *inputdata::access_tail(tail *t) {
         res->td->attr[i] = t->td->attr[i];
     }
     res->td->data = t->td->data;
+    res->tr = t->tr;
     return res;
 }
 
