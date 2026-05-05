@@ -14,6 +14,7 @@
 #include "common.h"
 
 #include <queue>
+#include <chrono>
 
 using namespace std;
 
@@ -160,7 +161,8 @@ void change_refinement_list(state_merger* merger, refinement_list* new_list){
 }
 
 int search_mode::run(){
-	start_size = merger->get_final_apta_size();
+    auto time_start = std::chrono::high_resolution_clock::now();
+    start_size = merger->get_final_apta_size();
     best_solution = -1;
     current_run = new refinement_list();
 
@@ -177,19 +179,23 @@ int search_mode::run(){
         MERGE_SINKS_WITH_CORE = temp_merge_sinks_core;
     }
 
-	add_to_q(merger);
+    add_to_q(merger);
 
     cerr << Q.size() << endl;
 	
-	while(!Q.empty()){
-		pair<double, refinement_list*> next_refinements = Q.top();
-		change_refinement_list(merger, next_refinements.second);
-		Q.pop();
+    while(!Q.empty()){
+	pair<double, refinement_list*> next_refinements = Q.top();
+	change_refinement_list(merger, next_refinements.second);
+	Q.pop();
 
-		cerr << Q.size() << " " << current_refinements->size() << " " << next_refinements.first << endl;
+	cerr << Q.size() << " " << current_refinements->size() << " " << next_refinements.first << endl;
 
         add_to_q(merger);
-	}
+
+        if (SEARCH_TIME_OUT != -1 && std::chrono::high_resolution_clock::now() - time_start > std::chrono::seconds(SEARCH_TIME_OUT)) {
+            break;
+        }
+    }
 
     return EXIT_SUCCESS;
 }

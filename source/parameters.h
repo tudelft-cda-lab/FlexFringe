@@ -198,4 +198,6 @@ extern int DFA_SIZE_BOUND;
 extern int APTA_SIZE_BOUND;
 extern bool SAT_RUN_GREEDY;
 
+extern int SEARCH_TIME_OUT;
+
 #endif
