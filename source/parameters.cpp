@@ -169,3 +169,5 @@ std::string POSTGRESQL_TBLNAME = "";
 bool POSTGRESQL_DROPTBLS = true;
 
 std::string PRINT_MODEL_PREFIX = ""; // TODO: delete this one
+
+int SEARCH_TIME_OUT = 600;

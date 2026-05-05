@@ -162,6 +162,7 @@ int main(int argc, char *argv[]){
     app.add_option("--searchlocal", SEARCH_LOCAL, "Search using the local heuristic from the evaluation function. Default=0.");
     app.add_option("--searchglobal", SEARCH_GLOBAL, "Search using the global heuristic from the evaluation function. Default=0.");
     app.add_option("--searchpartial", SEARCH_PARTIAL, "Search using the partial heuristic from the evaluation function. Default=0.");
+    app.add_option("--searchtimeout", SEARCH_TIME_OUT, "Timeout in seconds for the search process. When exceeded, the search will finish the current run and return the best discovered solution. Default=600. Set to -1 to use no timeout.");
 
     app.add_option("--predictreset", PREDICT_RESET, "When predicting and there is no outgoing transition, the model is reset to the root state. This works well when using sliding windows. Default=0.");
     app.add_option("--predictremain", PREDICT_REMAIN, "When predicting and there is no outgoing transition, the model is looped back into the current state. Default=0.");
