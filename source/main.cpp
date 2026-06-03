@@ -222,8 +222,6 @@ void run() {
             std::ofstream output(res_stream.str().c_str());
             std::fstream output2(res_stream.str().c_str(), std::ios_base::out);
 
-            //the_apta->print_dot(output2);
-
             // We stream the to predict traces into inputdata one by one to save memory
             // Set up the parser for the input stream
             std::ifstream input_stream(INPUT_FILE);
@@ -248,6 +246,8 @@ void run() {
 
             predict(merger, idat, output);
             //predict_streaming(merger, *parser, *strategy, output);
+            print_current_automaton(merger, OUTPUT_FILE, ".post_predict");
+
         } else {
             std::cerr << "require a json formatted apta file to make predictions" << std::endl;
         }
@@ -410,7 +410,7 @@ int main(int argc, char *argv[]){
     app.add_option("--predicttypepath", PREDICT_TYPE_PATH, "Predictings are made based on paths in addition to final states (if implemented by evaluation function). Default=0.");
     app.add_option("--predictsymbol", PREDICT_SYMBOL, "Predicting calls the predict symbol functions from the evaluation function. Default=0.");
     app.add_option("--predicttrace", PREDICT_TRACE, "Predicting calls the predict trace functions from the evaluation function. Default=1.");
-    app.add_option("--predictdata", PREDICT_TRACE, "Predicting calls the predict data functions from the evaluation function. Default=0.");
+    app.add_option("--predictdata", PREDICT_DATA, "Predicting calls the predict data functions from the evaluation function. Default=0.");
 
     app.add_option("--aligndistancepenalty", ALIGN_DISTANCE_PENALTY, "A penalty for jumping during alignment multiplied by the merged prefix tree distance. Default: 0.0.");
     app.add_option("--alignskippenalty", ALIGN_SKIP_PENALTY, "A penalty for skipping during alignment. Default: 0.0.");

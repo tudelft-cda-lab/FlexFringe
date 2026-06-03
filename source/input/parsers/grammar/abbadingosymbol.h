@@ -20,7 +20,6 @@
 #include <fmt/ostream.h>
 #include <fmt/ranges.h>
 
-
 struct abbadingo_symbol_info {
     std::string_view name;
     std::optional<std::string_view> type;
@@ -102,13 +101,29 @@ namespace {
             static constexpr auto value = lexy::as_string<std::string_view>;
         };
 
+        struct fraction {
+            static constexpr auto rule  = dsl::capture(dsl::digits<>);
+            static constexpr auto value = lexy::as_string<std::string>;
+        };
+
         // Attribute value - convert to double
         struct attr_val_double {
-            static constexpr auto rule = dsl::capture(dsl::digits<>) + dsl::period + dsl::capture(dsl::digits<>);
-            static constexpr auto value = lexy::callback<double>([](auto integer, auto decimal) {
+            struct attr_val_error {
+                static constexpr auto name = "Expected attribute value";
+            };
+            static constexpr auto rule = [] {
+                auto dec_number = dsl::capture(dsl::digits<>) +
+                    (dsl::peek(dsl::period) >> dsl::period + dsl::capture(dsl::digits<>) |
+                        dsl::else_ >> dsl::nullopt);
+                return dsl::peek(dec_number) >> dec_number | dsl::error<attr_val_error>;
+            }();
+
+            static constexpr auto value = lexy::callback<std::string_view>([](auto integer,  std::optional<lexy::lexeme<lexy::_prd>> decimal) {
                 std::string tmp(integer.begin(), integer.end());
-                tmp.append(".");
-                tmp.append(decimal.begin(), decimal.end());
+                if (decimal.has_value()) {
+                    tmp.append(".");
+                    tmp.append(decimal.value().begin(), decimal.value().end());
+                }
                 return std::stod(tmp);
             });
         };
@@ -119,17 +134,28 @@ namespace {
                 static constexpr auto name = "Expected attribute value";
             };
             static constexpr auto rule = [] {
-                auto dec_number = dsl::capture(dsl::digits<>) + dsl::period + dsl::capture(dsl::digits<>);
+                auto dec_number = dsl::capture(dsl::digits<>) +
+                    (dsl::peek(dsl::period) >> dsl::period + dsl::capture(dsl::digits<>) |
+                        dsl::else_ >> dsl::nullopt);
                 return dsl::peek(dec_number) >> dec_number | dsl::error<attr_val_error>;
             }();
-            static constexpr auto value = lexy::callback<std::string_view>([](auto integer, auto decimal) {
+
+            static constexpr auto value = lexy::callback<std::string_view>([](auto integer,  std::optional<lexy::lexeme<lexy::_prd>> decimal) {
                 // Workaround for apple clang not implementing string_view correctly:
                 // std::string_view tmp(integer.begin(), decimal.end());
+                    std::cerr << "parsing attribute value" << std::endl;
                 size_t count = 0;
-                for (auto i = integer.begin(); i != decimal.end(); i++) {
-                    count += 1;
+                if (decimal.has_value()) {
+                    for (auto i = integer.begin(); i != decimal.value().end(); i++) {
+                        count += 1;
+                    }
+                } else {
+                    for (auto i = integer.begin(); i != integer.end(); i++) {
+                        count += 1;
+                    }
                 }
                 std::string_view tmp(integer.begin(), count);
+                    std::cerr << "parsing attribute value " + std::string(tmp) << std::endl;
                 return tmp;
             });
         };

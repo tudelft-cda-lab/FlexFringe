@@ -25,8 +25,11 @@ public:
 
     std::string name;
 
+    explicit attribute();
     explicit attribute(const std::string& input);
     explicit attribute(const attribute_info& input);
+
+    void from_string(const std::string &input);
 
     double get_value(const std::string& val){
         if(discrete){
@@ -47,6 +50,15 @@ public:
 
     std::string get_name(){
         return name;
+    };
+    std::string to_string(){
+        std::string result = std::string("") +
+            (splittable ? "s" : "") +
+            (distributionable ? "f" : "") +
+            (discrete ? "d" : "") +
+            (target ? "t" : "") + "/" +
+            name;
+        return result;
     };
 };
 

@@ -18,8 +18,30 @@ void mse_data::print_state_label(std::iostream& output){
         output << "\n" << inputdata_locator::get()->get_attribute(attr)->get_name() << " : " << (sums[attr_index] / num_tails) << " " << (sum_squares[attr_index] / num_tails);
         output << "\n" << " error : " << sum_squares[attr] - num_tails*((sums[attr_index] / num_tails)*(sums[attr_index] / num_tails));
 
-        attr_index++;
+        ++attr_index;
     }
+};
+
+void mse_data::read_json(json& data){
+    evaluation_data::read_json(data);
+
+    num_tails = data["num"];
+    sums.clear();
+    for (double i : data["sums"]) {
+        sums.push_back(i);
+    }
+    sum_squares.clear();
+    for (double i : data["sums_sq"]) {
+        sum_squares.push_back(i);
+    }
+};
+
+void mse_data::write_json(json& data){
+    evaluation_data::write_json(data);
+
+    data["num"] = num_tails;
+    data["sums"] = sums;
+    data["sums_sq"] = sum_squares;
 };
 
 
@@ -156,10 +178,6 @@ void mse_error::update_score(state_merger *merger, apta_node* left, apta_node* r
         double error_right = r->sum_squares[i] - r->num_tails*(mean_right * mean_right);
         double error_total = (l->sum_squares[i] + r->sum_squares[i]) - (l->num_tails + r->num_tails)*(mean_total * mean_total);
 
-        std::cerr << "error_left " << error_left << std::endl;
-        std::cerr << "error_right " << error_right << std::endl;
-        std::cerr << "error_total " << error_total << std::endl;
-
         if(already_merged){
             RSS_before += error_right;
             RSS_after  += error_total - error_left;
@@ -200,7 +218,6 @@ void mse_error::update_score(state_merger *merger, apta_node* left, apta_node* r
 // };
 
 double mse_error::compute_score(state_merger *merger, apta_node* left, apta_node* right){
-    std::cerr << "computed merge " << num_points << " " << RSS_before << " " << RSS_after << std::endl;
     if (num_points == 0){ return -1.0; }
     if (RSS_before == 0 && RSS_after != 0){ return -1.0; }
     if (RSS_after == 0){ return 0.0; }
@@ -246,7 +263,6 @@ void mse_error::split_update_score_after(state_merger* merger, apta_node* left, 
 };
 
 double mse_error::split_compute_score(state_merger *, apta_node* left, apta_node* right){
-    std::cerr << "computed split " << num_points << " " << RSS_before << " " << RSS_after << std::endl;
     if (num_points == 0){ return -1.0; }
     if (RSS_before == 0 && RSS_after != 0){ return 0.0; }
     if (RSS_after == 0){ return -1.0; }
@@ -282,4 +298,26 @@ bool mse_error::sink_consistent(apta_node* node, int type){
 int mse_error::num_sink_types(){
     if(!USE_SINKS) return 0;
     return 1;
+};
+
+double mse_data::predict_data_score(tail* t) {
+    int attr_index = 0;
+    double result = 0.0;
+    for(int attr = 0; attr < inputdata_locator::get()->get_num_attributes(); ++attr) {
+        if(!inputdata_locator::get()->is_target(attr)) continue;
+        const double prediction = sums[attr_index] / num_tails;
+        const double value = t->get_value(attr);
+
+        result += (prediction - value) * (prediction - value);
+        ++attr_index;
+    }
+    return sqrt(result);
+};
+
+double mse_data::predict_data_score(std::string s) {
+    return 0.0;
+};
+
+std::string mse_data::predict_data(tail* t){
+    return "";
 };

@@ -26,6 +26,7 @@ double compute_jump_penalty(apta_node* old_node, apta_node* new_node){
 double compute_score(apta_node* next_node, tail* next_tail){
     //if(PREDICT_ALIGN){ cerr << next_node->get_data()->align_score(next_tail) << endl; }
     if(PREDICT_ALIGN){ return next_node->get_data()->align_score(next_tail); }
+    if(PREDICT_DATA){ return next_node->get_data()->predict_data_score(next_tail); }
     return next_node->get_data()->predict_score(next_tail);
 }
 
@@ -39,7 +40,9 @@ std::list<int> state_sequence;
 std::list<double> score_sequence;
 std::list<bool> align_sequence;
 apta_node* ending_state = nullptr;
+apta_node* pre_ending_state = nullptr;
 tail* ending_tail = nullptr;
+tail* pre_ending_tail = nullptr;
 
 void align(state_merger* m, tail* t, bool always_follow, double lower_bound) {
     apta_node *n = m->get_aut()->get_root();
@@ -300,6 +303,8 @@ void predict_trace_update_sequences(state_merger* m, tail* t){
     double score = 0.0;
 
     for(int j = 0; j < t->get_length(); j++){
+        pre_ending_state = n;
+        pre_ending_tail = t;
         score = compute_score(n, t);
         score_sequence.push_back(score);
 
@@ -323,7 +328,7 @@ void predict_trace_update_sequences(state_merger* m, tail* t){
 
     ending_state = n;
     ending_tail = t;
-    if(ending_tail->is_final()) ending_tail = ending_tail->past();
+    //if(ending_tail->is_final()) ending_tail = ending_tail->past();
 }
 
 template <typename T>
@@ -351,6 +356,8 @@ void predict_trace(state_merger* m, std::ofstream& output, trace* tr){
     align_sequence.clear();
     ending_state = nullptr;
     ending_tail = nullptr;
+    pre_ending_state = nullptr;
+    pre_ending_tail = nullptr;
 
     if(PREDICT_ALIGN) {
         align(m, tr->get_head(), true, 1.0);
@@ -465,14 +472,14 @@ void predict_trace(state_merger* m, std::ofstream& output, trace* tr){
         }
 
         if(PREDICT_DATA) {
-            if (ending_tail != nullptr) {
-                output << "; " << ending_tail->get_data();
-                output << "; " << ending_state->get_data()->predict_data_score(ending_tail);
+            if (pre_ending_tail != nullptr) {
+                output << "; " << pre_ending_tail->get_data();
+                output << "; " << pre_ending_state->get_data()->predict_data_score(pre_ending_tail);
             } else output << "; 0; 0";
 
-            std::string data_predict = ending_state->get_data()->predict_data(ending_tail);
+            std::string data_predict = pre_ending_state->get_data()->predict_data(pre_ending_tail);
             output << "; " << data_predict;
-            output << "; " << ending_state->get_data()->predict_data_score(data_predict);
+            output << "; " << pre_ending_state->get_data()->predict_data_score(data_predict);
         }
     }
     else{
@@ -496,7 +503,8 @@ void predict(state_merger* m, inputdata& idat, std::ofstream& output){
     if(PREDICT_ALIGN) output << "; alignment; num misaligned";
     if(PREDICT_TRACE) output << "; sum scores; mean scores; min score";
     if(PREDICT_TYPE) output << "; trace type; type probability; predicted trace type; predicted type probability";
-    if(PREDICT_SYMBOL) output << "; next trace symbol; next symbol probability; predicted symbol; predicted symbol probability";
+    if(PREDICT_SYMBOL) output << "; next symbol; next symbol probability; predicted symbol; predicted symbol probability";
+    if(PREDICT_DATA) output << "; next data; next data probability; predicted data; predicted data probability";
     output << std::endl;
 
     for (auto trace: idat) {
@@ -512,7 +520,8 @@ void predict_streaming(state_merger* m, parser& parser, reader_strategy& strateg
     if(PREDICT_ALIGN) output << "; alignment; num misaligned";
     if(PREDICT_TRACE) output << "; sum scores; mean scores; min score";
     if(PREDICT_TYPE) output << "; trace type; type probability; predicted trace type; predicted type probability";
-    if(PREDICT_SYMBOL) output << "; next trace symbol; next symbol probability; predicted symbol; predicted symbol probability";
+    if(PREDICT_SYMBOL) output << "; next symbol; next symbol probability; predicted symbol; predicted symbol probability";
+    if(PREDICT_DATA) output << "; next data; next data probability; predicted data; predicted data probability";
     output << std::endl;
 
     inputdata idat = inputdata::with_alphabet_from(*inputdata_locator::get());

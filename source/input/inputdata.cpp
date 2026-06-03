@@ -203,11 +203,15 @@ bool inputdata::is_symbol_target(int attr) {
     return get_symbol_attribute(attr)->target;
 }
 
-int inputdata::get_types_size() {
+int inputdata::get_types_size() const {
     return types.size();
 }
 
-int inputdata::get_alphabet_size() {
+int inputdata::get_symbol_types_size() const {
+    return symbol_types.size();
+}
+
+int inputdata::get_alphabet_size() const {
     return alphabet.size();
 }
 
@@ -233,8 +237,20 @@ int inputdata::type_from_string(std::string type) {
     return r_types[type];
 }
 
+int inputdata::symbol_type_from_string(std::string type) {
+    if (r_symbol_types.find(type) == r_symbol_types.end()) {
+        r_symbol_types[type] = symbol_types.size();
+        symbol_types.push_back(type);
+    }
+    return r_symbol_types[type];
+}
+
 std::string inputdata::string_from_type(int type) {
     return types[type];
+}
+
+std::string inputdata::string_from_symbol_type(int type) {
+    return symbol_types[type];
 }
 
 void inputdata::add_traces_to_apta(apta *the_apta) {
@@ -459,6 +475,13 @@ inputdata inputdata::with_alphabet_from(inputdata &other) {
     return new_inputdata;
 }
 
+void inputdata::add_trace_attribute(attribute tattr) {
+    trace_attributes.emplace_back(tattr);
+}
+
+void inputdata::add_symbol_attribute(attribute tattr) {
+    symbol_attributes.emplace_back(tattr);
+}
 
 
 

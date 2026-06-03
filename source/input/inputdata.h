@@ -81,6 +81,10 @@ public:
 
     static inputdata with_alphabet_from(inputdata& other);
 
+    void add_trace_attribute(attribute tattr);
+
+    void add_symbol_attribute(attribute tattr);
+
     void add_traces_to_apta(apta *the_apta);
     void add_trace_to_apta(trace *tr, apta *the_apta);
 
@@ -125,14 +129,17 @@ public:
      * the number of distinct sequence types
      * the size of the input data
      * */
-    int get_types_size();
-    int get_alphabet_size();
+    int get_types_size() const;
+    int get_symbol_types_size() const;
+    int get_alphabet_size() const;
 
     int symbol_from_string(std::string symbol);
 
     std::string string_from_symbol(int symbol);
     int type_from_string(std::string type);
     std::string string_from_type(int type);
+    int symbol_type_from_string(std::string type);
+    std::string string_from_symbol_type(int type);
 
     trace* access_trace(tail *t);
     tail* access_tail(tail *t);

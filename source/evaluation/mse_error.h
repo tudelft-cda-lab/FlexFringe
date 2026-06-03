@@ -24,6 +24,10 @@ public:
 
   void print_state_label(std::iostream &output);
 
+  void read_json(json &data);
+
+  void write_json(json &data);
+
     mse_data();
 
   virtual void initialize();
@@ -35,6 +39,12 @@ public:
 
   virtual void update(evaluation_data* right);
     virtual void undo(evaluation_data* right);
+
+  double predict_data_score(tail *t);
+
+  double predict_data_score(std::string s);
+
+  std::string predict_data(tail*);
 };
 
 class mse_error: public evaluation_function{

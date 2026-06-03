@@ -120,7 +120,6 @@ void csv_header_parser::parse(const std::vector<std::string> &headers) {
 
     int idx = 0;
     for (const auto &header: headers) {
-
         // Parse the current column header with lexy
         auto input = lexy::string_input(header);
         auto result = lexy::parse<csv_header_grammar::col_name>(input, lexy_ext::report_error);
@@ -175,6 +174,7 @@ void csv_header_parser::parse(const std::vector<std::string> &headers) {
     // Verify that the symbol and trace attribute names are unique
     check_duplicates("ff_sattr");
     check_duplicates("ff_tattr");
+
 }
 
 void csv_header_parser::check_duplicates(const std::string &col_type) const {

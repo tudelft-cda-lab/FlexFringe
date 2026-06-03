@@ -3,6 +3,15 @@
 
 using namespace std;
 
+attribute::attribute() {
+    discrete = false;
+    splittable = false;
+    distributionable = false;
+    target = false;
+
+    name = "";
+}
+
 /* attribute constructor from string
  * if it contains d -> attribute is discrete
  * if it contains s -> attribute can be used to infer guards
@@ -18,8 +27,8 @@ attribute::attribute(const string& input){
     stringstream cs(input);
     string attr_name;
     string attr_types;
-    std::getline(cs,attr_name, '=');
-    std::getline(cs,attr_types);
+    std::getline(cs,attr_types, '/');
+    std::getline(cs,attr_name);
 
     if(attr_types.find('d') != std::string::npos) discrete = true;
     if(attr_types.find('s') != std::string::npos) splittable = true;
@@ -37,4 +46,25 @@ attribute::attribute(const attribute_info &input) {
     distributionable = input.is_distributionable();
     target = input.is_target();
     name = input.get_name();
+}
+
+void attribute::from_string(const string& input){
+    discrete = false;
+    splittable = false;
+    distributionable = false;
+    target = false;
+
+    stringstream cs(input);
+    string attr_name;
+    string attr_types;
+    std::getline(cs,attr_types, '/');
+    std::getline(cs,attr_name);
+
+    if(attr_types.find('d') != std::string::npos) discrete = true;
+    if(attr_types.find('s') != std::string::npos) splittable = true;
+    if(attr_types.find('f') != std::string::npos) distributionable = true;
+    if(attr_types.find('t') != std::string::npos) target = true;
+
+    name = attr_name;
+    cs.clear();
 }

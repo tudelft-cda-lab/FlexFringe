@@ -10,10 +10,12 @@
 #include "parameters.h"
 #include "evaluation_factory.h"
 #include "evaluate.h"
+#include "fmt/ranges.h"
 #include "utility/loguru.hpp"
 #include "input/abbadingoreader.h"
 #include "input/inputdatalocator.h"
 #include "input/parsers/abbadingoparser.h"
+#include "input/parsers/csvparser.h"
 
 /*inline void apta_node::set_child(tail* t, apta_node* node){
     set_child(t->get_symbol(), node);
@@ -129,7 +131,7 @@ void apta_node::print_json(json& nodes){
     output["isred"] = is_red();
     output["isblue"] = is_blue();
     output["issink"] = is_sink();
-    output["trace"] = access_trace->to_string();
+    //output["trace"] = access_trace->to_string();
     if(DEBUGGING){
         if(representative != nullptr){
             output["representative"] = representative->number;
@@ -156,6 +158,9 @@ void apta_node::print_json_transitions(json& edges){
         else output["target"] = child->find()->number;
 
         output["label"] = inputdata_locator::get()->get_symbol(guard.first);
+
+        output["min_guards"] = guard.second->min_attribute_values;
+        output["max_guards"] = guard.second->max_attribute_values;
         edges.push_back(output);
     }
 }
@@ -167,17 +172,61 @@ void apta::print_json(std::iostream& outio){
 
     json output;
 
-    std::list<std::string> types;
+    /*std::list<std::string> header;
     for (int i = 0; i < inputdata_locator::get()->get_types_size(); ++i) {
-        types.push_back(inputdata_locator::get()->string_from_type(i));
+        header.push_back("ff_ttype:" + inputdata_locator::get()->string_from_type(i));
     }
-    output["types"] = types;
+    for (int i = 0; i < inputdata_locator::get()->get_symbol_types_size(); ++i) {
+        header.push_back("ff_stype:" + inputdata_locator::get()->string_from_symbol_type(i));
+    }
+    for (int i = 0; i < inputdata_locator::get()->get_num_trace_attributes(); ++i) {
+        attribute* attr = inputdata_locator::get()->get_attribute(i);
+        header.push_back(std::string("ff_tattr:") +
+            (attr->splittable ? "s" : "") +
+            (attr->distributionable ? "f" : "") +
+            (attr->discrete ? "d" : "") +
+            (attr->target ? "t" : "") + "/" +
+            attr->get_name());
+    }
+    for (int i = 0; i < inputdata_locator::get()->get_num_symbol_attributes(); ++i) {
+        attribute* attr = inputdata_locator::get()->get_symbol_attribute(i);
+        header.push_back(std::string("ff_sattr:") +
+            (attr->splittable ? "s" : "") +
+            (attr->distributionable ? "f" : "") +
+            (attr->discrete ? "d" : "") +
+            (attr->target ? "t" : "") + "/" +
+            attr->get_name());    }
+    output["header"] = header;*/
 
     std::list<std::string> alphabet;
     for (int i = 0; i < inputdata_locator::get()->get_alphabet_size(); ++i) {
         alphabet.push_back(inputdata_locator::get()->string_from_symbol(i));
     }
     output["alphabet"] = alphabet;
+
+    std::list<std::string> types;
+    for (int i = 0; i < inputdata_locator::get()->get_types_size(); ++i) {
+        types.push_back(inputdata_locator::get()->string_from_type(i));
+    }
+    output["types"] = types;
+
+    std::list<std::string> symbol_types;
+    for (int i = 0; i < inputdata_locator::get()->get_symbol_types_size(); ++i) {
+        symbol_types.push_back(inputdata_locator::get()->string_from_symbol_type(i));
+    }
+    output["symbol_types"] = symbol_types;
+
+    std::list<std::string> tattr;
+    for (int i = 0; i < inputdata_locator::get()->get_num_trace_attributes(); ++i) {
+        tattr.push_back(inputdata_locator::get()->get_trace_attribute(i)->to_string());
+    }
+    output["trace_attributes"] = tattr;
+
+    std::list<std::string> sattr;
+    for (int i = 0; i < inputdata_locator::get()->get_num_symbol_attributes(); ++i) {
+        sattr.push_back(inputdata_locator::get()->get_symbol_attribute(i)->to_string());
+    }
+    output["symbol_attributes"] = sattr;
 
     json nodes;
     for(merged_APTA_iterator Ait = merged_APTA_iterator(root); *Ait != nullptr; ++Ait) {
@@ -236,13 +285,27 @@ void apta::read_json(std::istream& input_stream){
     // abbadingo_inputdata idat;
 
     std::map<int, apta_node*> states;
-    //for each json line
-    for (auto & i : read_apta["types"]) {
-        inputdata_locator::get()->type_from_string(i);
-    }
+
     for (auto & i : read_apta["alphabet"]) {
         inputdata_locator::get()->symbol_from_string(i);
     }
+    for (auto & i : read_apta["types"]) {
+         inputdata_locator::get()->type_from_string(i);
+    }
+    for (auto & i : read_apta["symbol_types"]) {
+         inputdata_locator::get()->symbol_type_from_string(i);
+    }
+    for (auto & i : read_apta["trace_attributes"]) {
+         attribute attr;
+         attr.from_string(i);
+         inputdata_locator::get()->add_trace_attribute(attr);
+    }
+    for (auto & i : read_apta["symbol_attributes"]) {
+        attribute attr;
+        attr.from_string(i);
+        inputdata_locator::get()->add_symbol_attribute(attr);
+    }
+
     for (int i = 0; i < read_apta["nodes"].size(); ++i) {
         json n = read_apta["nodes"][i];
         auto *node = new apta_node();
@@ -256,7 +319,7 @@ void apta::read_json(std::istream& input_stream){
         node->size = n["size"];
         node->data->read_json(n["data"]);
         node->source = states[n["source"]];
-        std::string trace = n["trace"];
+        /*std::string trace = n["trace"];
         std::istringstream trace_stream(trace);
         node->access_trace = mem_store::create_trace();
 
@@ -265,7 +328,7 @@ void apta::read_json(std::istream& input_stream){
         auto trace_maybe = inputdata_locator::get()->read_trace(parser, strategy);
         if (trace_maybe.has_value()) {
             node->access_trace = trace_maybe.value();
-        }
+        }*/
     }
     for (int i = 1; i < read_apta["nodes"].size(); ++i) {
         json n = read_apta["nodes"][i];
@@ -288,20 +351,31 @@ void apta::read_json(std::istream& input_stream){
         int source_nr = e["source"];
         int target_nr = e["target"];
 
-        if(states.find(source_nr) == states.end()) continue;
-        if(states.find(target_nr) == states.end()) continue;
+        if(!states.contains(source_nr)) continue;
+        if(!states.contains(target_nr)) continue;
 
         apta_node* source = states[source_nr];
         apta_node* target = states[target_nr];
 
+        auto* guard = new apta_guard();
+        auto attr_list = e["min_guards"];
+        for (auto min_val : attr_list) {
+            guard->min_attribute_values[min_val[0]] = min_val[1];
+        }
+        attr_list = e["max_guards"];
+        for (auto max_val : attr_list) {
+            guard->max_attribute_values[max_val[0]] = max_val[1];
+        }
+        source->guards.insert(std::pair<int, apta_guard*>(symbol_nr, guard));
+
         if(target->source == source) {
-            source->set_child(symbol_nr, target);
+            guard->target = target;
         } else {
             auto* new_target = new apta_node();
             new_target->source = source;
             new_target->red = false;
             new_target->size = 0;
-            source->set_child(symbol_nr, new_target);
+            guard->target = new_target;
             new_target->merge_with(target);
         }
     }

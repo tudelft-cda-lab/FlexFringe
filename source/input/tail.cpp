@@ -106,6 +106,9 @@ string tail::to_string(){
 
     while(t != this->future() && !t->is_final()){
         ostr << inputdata->get_symbol(t->get_symbol());
+        if(t->get_symbol_type() > -1) {
+            ostr << "/" << inputdata->get_type(t->get_symbol_type());
+        }
         if(inputdata->get_num_symbol_attributes() > 0){
             ostr << ":";
             for(int i = 0; i < inputdata->get_num_symbol_attributes(); i++){
@@ -132,8 +135,6 @@ tail::~tail(){
     }
     //if(future_tail != nullptr) delete future_tail;
 }
-
-
 
 int tail::get_index(){
     return td->index;
