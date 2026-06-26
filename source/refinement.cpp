@@ -196,7 +196,11 @@ inline bool merge_refinement::testref(state_merger* m){
 
 inline void merge_refinement::erase(){
     refs -= 1;
-    if(refs == 0) mem_store::delete_merge_refinement(this);
+    if(refs == 0) {
+        red_trace->erase();
+        blue_trace->erase();
+        mem_store::delete_merge_refinement(this);
+    }
 };
 
 inline void split_refinement::print() const{
@@ -256,9 +260,11 @@ inline bool split_refinement::testref(state_merger* m){
 
 inline void split_refinement::erase(){
     refs -= 1;
-    if(refs == 0) mem_store::delete_split_refinement(this);
+    if(refs == 0) {
+        red_trace->erase();
+        mem_store::delete_split_refinement(this);
+    }
 };
-
 inline void extend_refinement::print() const{
     if(STORE_ACCESS_STRINGS)
         cout << "extend( " << score << " " << red_trace->to_string() << " )" << endl;
@@ -306,9 +312,11 @@ inline bool extend_refinement::testref(state_merger* m){
 
 inline void extend_refinement::erase(){
     refs -= 1;
-    if(refs == 0) mem_store::delete_extend_refinement(this);
+    if(refs == 0) {
+        red_trace->erase();
+        mem_store::delete_extend_refinement(this);
+    }
 };
-
 void refinement::print_refinement_list_json(iostream& output, refinement_list* list){
     output << "[\n";
 

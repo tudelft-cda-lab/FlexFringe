@@ -82,11 +82,12 @@ tail::tail(tail* ot){
 }
 
 void tail::initialize(tail* ot){
-    if(ot != nullptr){
+    if (ot != nullptr) {
         td = ot->td;
         tr = ot->tr;
     } else {
-        td = std::make_shared<tail_data>();
+        if (td != nullptr && td.use_count() == 1) td->initialize();
+        else td = std::make_shared<tail_data>();
         tr = nullptr;
     }
     past_tail = nullptr;
@@ -194,11 +195,12 @@ tail_data::tail_data() {
 tail_data::~tail_data() = default;
 
 void tail_data::initialize() {
-    auto inputdata = inputdata_locator::get();
     index = -1;
     symbol = -1;
-    attr = std::make_unique<double[]>(inputdata->get_num_symbol_attributes());
-    for(int i = 0; i < inputdata->get_num_symbol_attributes(); ++i){
+    // reuse existing array instead of reallocating
+    auto inputdata = inputdata_locator::get();
+    int n = inputdata->get_num_symbol_attributes();
+    for(int i = 0; i < n; ++i){
         attr[i] = 0.0;
     }
     data = "";

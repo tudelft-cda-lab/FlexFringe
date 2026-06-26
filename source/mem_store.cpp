@@ -13,12 +13,13 @@ std::list< extend_refinement* > mem_store::extendref_store;
 
 void mem_store::delete_node(apta_node* node){
     assert(node != nullptr);
+    node->set_access_trace(nullptr);
+    node->erase_guards();
     node_store.push_front(node);
-    //cerr << "delete " << node << endl;
-    //delete node;
 };
+
 apta_node* mem_store::create_node(apta_node* other_node){
-    apta_node* node = 0;
+    apta_node* node = nullptr;
     if(!node_store.empty()){
         node = node_store.front();
         node_store.pop_front();
@@ -33,7 +34,7 @@ void mem_store::delete_guard(apta_guard* guard){
     guard_store.push_front(guard);
 };
 apta_guard* mem_store::create_guard(apta_guard* other_guard){
-    apta_guard* guard = 0;
+    apta_guard* guard = nullptr;
     if(!guard_store.empty()){
         guard = guard_store.front();
         guard_store.pop_front();
@@ -41,43 +42,6 @@ apta_guard* mem_store::create_guard(apta_guard* other_guard){
     } else { guard = new apta_guard(other_guard); }
     return guard;
 };
-//
-//void mem_store::delete_tail(tail* t){
-//    assert(t != nullptr);
-//    tail_store.push_front(t);
-//};
-//tail* mem_store::create_tail(tail* other_tail){
-//    tail* t = 0;
-//    if(!tail_store.empty()){
-//        tail* t2 = tail_store.front();
-//        if(t2->next_in_list == 0) { tail_store.pop_front(); t = t2; }
-//        else { t = t2->next_in_list; t2->next_in_list = t->next_in_list; }
-//        t->initialize(other_tail);
-//    } else { t = new tail(other_tail); }
-//    return t;
-//};
-
-//void mem_store::delete_trace(trace* tr){
-//    assert(tr != nullptr);
-//    tail* t = tr->head;
-//    while(t != 0){
-//        mem_store::delete_tail(t);
-//        tail* t2 = t;
-//        t = t2->future();
-//    }
-//    trace_store.push_front(tr);
-//};
-//trace* mem_store::create_trace(){
-//    trace* t;
-//    if(!trace_store.empty()){
-//        t = trace_store.front();
-//        trace_store.pop_front();
-//        t->initialize();
-//    } else {
-//        t = new trace();
-//    }
-//    return t;
-//};
 
 void mem_store::delete_merge_refinement(merge_refinement* ref){
     assert(ref != nullptr);
@@ -178,6 +142,9 @@ trace *mem_store::create_trace(inputdata* inputData) {
 
 void mem_store::delete_tail(tail * t) {
     assert(t != nullptr);
+    for (tail *t2 = t; t2 != nullptr; t2 = t2->next_in_list) {
+        if (t2->td != nullptr && t2->td.use_count() > 1) t2->td = nullptr;
+    }
     tail_store.push_front(t);
 }
 

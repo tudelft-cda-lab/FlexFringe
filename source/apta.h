@@ -266,6 +266,14 @@ class apta_node{
 
 public:
     trace* get_access_trace(){ return access_trace; }
+
+    void set_access_trace(trace* t) {
+        if(access_trace != nullptr) access_trace->erase();
+        access_trace = t;
+    }
+
+    void erase_guards();
+
     apta_node* get_source(){ return source; }
     apta_node* get_merged_head(){ return representative_of; }
     apta_node* get_next_merged(){ return next_merged_node; }
@@ -351,18 +359,7 @@ public:
     guard_map::iterator guards_start(){ return guards.begin(); }
     guard_map::iterator guards_end(){ return guards.end(); }
 
-    void set_child(int i, apta_node* node){
-        if(const auto it = guards.find(i); it != guards.end()){
-            if(node != nullptr)
-                it->second->target = node;
-            else
-                guards.erase(it);
-        } else {
-            auto* g = new apta_guard();
-            guards.insert(std::pair(i,g));
-            g->target = node;
-        }
-    };
+    void set_child(int i, apta_node* node);
 
     apta_node* get_child(int c){
         apta_node* rep = find();
