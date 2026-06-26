@@ -48,8 +48,8 @@ apta_node* state_merger::get_state_from_trace(trace* t) const{
  * @param n 
  * @return tail* 
  */
-trace* state_merger::get_trace_from_state(apta_node* n){
-    return n->access_trace;
+trace *state_merger::get_trace_from_state(apta_node *n) {
+    return n->get_access_trace();
 }
 
 /* --------------------------------- Special state sets, used by red blue framework -----------------------------*/
@@ -428,8 +428,8 @@ bool state_merger::split(apta_node* new_node, apta_node* old_node, int depth, bo
 
     tail_iterator it = tail_iterator(old_node);
     tail* t = *it;
-    new_node->access_trace = inputdata_locator::get()->access_trace(new_node->tails_head->past());
-    if(t != nullptr) old_node->access_trace = inputdata_locator::get()->access_trace(t->past());
+    new_node->set_access_trace(inputdata_locator::get()->access_trace(new_node->tails_head->past()));
+    if (t != nullptr) old_node->set_access_trace(inputdata_locator::get()->access_trace(t->past()));
 
     if(test) {
         // test early stopping conditions

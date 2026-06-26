@@ -311,6 +311,7 @@ apta_guard::apta_guard(){
     undo_split = nullptr;
     target = nullptr;
     data = nullptr;
+
     try {
         data = (DerivedGuardDataRegister<evaluation_guard_data>::getMap())->at("count_guard_data")();
         data->guard = this;
@@ -324,8 +325,11 @@ apta_guard::apta_guard(apta_guard* g){
     target = nullptr;
     data = nullptr;
 
-    min_attribute_values = bound_map(g->min_attribute_values);
-    max_attribute_values = bound_map(g->max_attribute_values);
+    if (g!= nullptr)
+    {
+        min_attribute_values = bound_map(g->min_attribute_values);
+        max_attribute_values = bound_map(g->max_attribute_values);
+    }
 
     try {
         data = (DerivedGuardDataRegister<evaluation_guard_data>::getMap())->at("count_guard_data")();
@@ -343,8 +347,11 @@ void apta_guard::initialize(apta_guard* g){
     min_attribute_values.clear();
     max_attribute_values.clear();
 
-    min_attribute_values.insert(g->min_attribute_values.begin(), g->min_attribute_values.end());
-    max_attribute_values.insert(g->max_attribute_values.begin(), g->max_attribute_values.end());
+    if (g!= nullptr)
+    {
+        min_attribute_values.insert(g->min_attribute_values.begin(), g->min_attribute_values.end());
+        max_attribute_values.insert(g->max_attribute_values.begin(), g->max_attribute_values.end());
+    }
 }
 
 void apta_node::add_tail(tail* t){
@@ -355,9 +362,9 @@ void apta_node::add_tail(tail* t){
 
     if(access_trace == nullptr){
         if(t->past() != nullptr)
-            access_trace = inputdata_locator::get()->access_trace(t->past());
+            set_access_trace(inputdata_locator::get()->access_trace(t->past()));
         else
-            access_trace = mem_store::create_trace();
+            set_access_trace(mem_store::create_trace());
     }
 }
 
@@ -408,6 +415,14 @@ void apta_node::initialize(apta_node* n){
     guards.clear();
     if(performed_splits != nullptr) performed_splits->clear();
 }
+
+void apta_node::erase_guards() {
+    for (auto& guard: guards) {
+        mem_store::delete_guard(guard.second);
+    }
+    guards.clear();
+}
+
 
 apta_node* apta_node::child(tail* t){
         int symbol = t->get_symbol();
@@ -472,23 +487,32 @@ apta_guard* apta_node::guard(tail* t){
     return nullptr;
 }
 
-void apta_node::set_child(tail* t, apta_node* node){
-    int symbol = t->get_symbol();
-    auto it = guards.lower_bound(symbol);
+void apta_node::set_child(int i, apta_node* node) {
+    if (const auto it = guards.find(i); it != guards.end()) {
+        if (node != nullptr) it->second->target = node;
+        else guards.erase(it);
+    } else {
+        auto* g = mem_store::create_guard(nullptr);
+        guards.insert(std::pair(i, g));
+        g->target = node;
+    }
+};
+
+void apta_node::set_child(tail* t, apta_node* node) {
+    int  symbol = t->get_symbol();
+    auto it     = guards.lower_bound(symbol);
     auto it_end = guards.upper_bound(symbol);
-    for(;it != it_end; ++it){
-        if(it->second->bounds_satisfy(t)){
+    for (; it != it_end; ++it) {
+        if (it->second->bounds_satisfy(t)) {
             break;
         }
     }
-    if(it != guards.end()){
-        if(node != 0)
-            it->second->target = node;
-        else
-            guards.erase(it);
+    if (it != guards.end()) {
+        if (node != 0) it->second->target = node;
+        else guards.erase(it);
     } else {
-        apta_guard* g = new apta_guard();
-        guards.insert(std::pair<int,apta_guard*>(t->get_symbol(),g));
+        apta_guard* g = mem_store::create_guard(nullptr);
+        guards.insert(std::pair<int, apta_guard*>(t->get_symbol(), g));
         g->target = node;
     }
 };
@@ -639,7 +663,7 @@ void tail_iterator::next_node(){
 void tail_iterator::increment() {
     current_tail = current_tail->next_in_list;
     while(current_tail != nullptr && current_tail->split_to != nullptr) current_tail = current_tail->next_in_list;
-    
+
     while(current_tail == nullptr){
         if(current == nullptr) return;
         next_node();
