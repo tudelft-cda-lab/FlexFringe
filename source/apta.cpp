@@ -10,7 +10,6 @@
 #include "parameters.h"
 #include "evaluation_factory.h"
 #include "evaluate.h"
-#include "fmt/ranges.h"
 #include "utility/loguru.hpp"
 #include "input/abbadingoreader.h"
 #include "input/inputdatalocator.h"
@@ -579,6 +578,16 @@ std::set<apta_node*>* apta_node::get_sources(){
         }
     }
     return sources;
+}
+
+int apta_node::sink_type() const {
+    if(sink != -1) return sink;
+    return data->sink_type();
+}
+
+bool apta_node::is_sink() const {
+    if(sink != -1) return true;
+    return data->sink_type() != -1;
 }
 
 /* iterators for the APTA and merged APTA */

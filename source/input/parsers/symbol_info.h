@@ -13,6 +13,7 @@
 #include <memory>
 #include <algorithm>
 #include <fmt/core.h>
+#include <fmt/format.h>
 #include "attribute_info.h"
 
 /**

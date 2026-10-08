@@ -2,7 +2,7 @@
 #define __ALERGIA__
 
 #include "evaluate.h"
-#include "count_types.h"
+#include "counttypes.h"
 
 /* The data contained in every node of the prefix tree or DFA */
 class alergia_data: public count_data {

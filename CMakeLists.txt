@@ -19,7 +19,7 @@ endif()
 option(COMPILE_DOCS "This is settable from the command line" OFF)
 
 add_subdirectory(source/utility/lexy)
-add_subdirectory(source/utility/fmt-11.0.2)
+add_subdirectory(source/utility/fmt-12.2)
 
 if (MSVC)
     add_compile_options("/W4" "$<$<CONFIG:RELEASE>:/O2>")
@@ -37,12 +37,14 @@ include_directories("${PROJECT_SOURCE_DIR}"
                     "${PROJECT_SOURCE_DIR}/source/evaluation"
                     "${PROJECT_SOURCE_DIR}/source/utility"
                     "${PROJECT_SOURCE_DIR}/source/utility/lexy/include"
-                    "${PROJECT_SOURCE_DIR}/source/utility/fmt-11.0.2/include")
+                    "${PROJECT_SOURCE_DIR}/source/utility/fmt-12.2/include")
 
 add_subdirectory(source)
 
 add_executable(flexfringe source/main.cpp
-        source/evaluation/evaluate.h)
+        source/evaluation/evaluate.h
+        source/evaluation/conflictdriven.h
+        source/evaluation/conflictdriven.cpp)
 
 
 # Need this so the plugin registration does not get stripped out

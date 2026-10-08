@@ -1,7 +1,7 @@
 #ifndef __EVIDENCE__
 #define __EVIDENCE__
 
-#include "count_types.h"
+#include "counttypes.h"
 
 /* The data contained in every node of the prefix tree or DFA */
 class edsm_data: public count_data {
