@@ -127,3 +127,6 @@ int DFA_SIZE_BOUND = -1;
 int APTA_SIZE_BOUND = -1;
 bool SAT_RUN_GREEDY = false;
 
+bool SAT_SOLVE = true;
+bool SAT_PRINT = true;
+

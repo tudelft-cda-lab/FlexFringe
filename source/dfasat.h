@@ -72,6 +72,9 @@ public:
     int print_clause(bool v1, int l1, bool v2, int l2, bool v3, int l3, bool v4, int l4);
     int print_clause(bool v1, int l1, bool v2, int l2, bool v3, int l3);
     int print_clause(bool v1, int l1, bool v2, int l2);
+
+    int print_comment(const char *text);
+
     bool always_true(int number, bool flag);
     void print_lit(int number, bool flag);
     void print_clause_end();

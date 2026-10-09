@@ -22,41 +22,77 @@
 #include "input/inputdatalocator.h"
 
 void dfasat::reset_literals(bool init){
-    int v, i, j, a, t; // TODO: aren't there better names for those?
+    int v, i, j, a, t;
 
     literal_counter = 1;
     for(v = 0; v < num_states; ++v)
         for(i = 0; i < dfa_size; ++i)
             if(init || x[v][i] > 0) x[v][i] = literal_counter++;
+
+    std::string str = "state v has color i - until ";
+    str = str + std::to_string(literal_counter);
+    print_comment(str.c_str());
     
     for(a = 0; a < alphabet_size; ++a)
         for(i = 0; i < dfa_size; ++i)
             for(j = 0; j < dfa_size; ++j)
                 if(init || y[a][i][j] > 0) y[a][i][j] = literal_counter++;
 
-    for(a = 0; a < alphabet_size; ++a)
-        for(i = 0; i < dfa_size; ++i)
-            for(j = 0; j < sinks_size; ++j)
-                if(init || sy[a][i][j] > 0) sy[a][i][j] = literal_counter++;
+    str = "color i has a transition to state j with label a - until ";
+    str = str + std::to_string(literal_counter);
+    print_comment(str.c_str());
 
-    for(i = 0; i < num_states; ++i)
-        if(init || sp[i] > 0) sp[i] = literal_counter++;
+    if (USE_SINKS) {
+        for(a = 0; a < alphabet_size; ++a)
+            for(i = 0; i < dfa_size; ++i)
+                for(j = 0; j < sinks_size; ++j)
+                    if(init || sy[a][i][j] > 0) sy[a][i][j] = literal_counter++;
+
+        str = "state i has a transition to sink j with label a - until ";
+        str = str + std::to_string(literal_counter);
+        print_comment(str.c_str());
+
+        for(i = 0; i < num_states; ++i)
+            if(init || sp[i] > 0) sp[i] = literal_counter++;
     
+        str = "sink nodes, node i is a (child of a) sink - until ";
+        str = str + std::to_string(literal_counter);
+        print_comment(str.c_str());
+    }
+
     for(i = 0; i < dfa_size; ++i)
         for(t = 0; t < num_types; ++t)
             if(init || z[i][t] > 0) z[i][t] = literal_counter++;
 
-    for(i = 0; i < dfa_size; ++i)
-        for(j = 0; j < new_states; ++j)
-            if(init || yt[i][j] > 0) yt[i][j] = literal_counter++;
-    
-    for(i = 0; i < dfa_size; ++i)
-        for(j = 0; j < new_states; ++j)
-            if(init || yp[i][j] > 0) yp[i][j] = literal_counter++;
-    
-    for(a = 0; a < alphabet_size; ++a)
-        for(i = 0; i < new_states; ++i)
-            if(init || ya[a][i] > 0) ya[a][i] = literal_counter++;
+    str = "color i is an accepting state - until ";
+    str = str + std::to_string(literal_counter);
+    print_comment(str.c_str());
+
+    if (SYMMETRY_BREAKING) {
+        for(i = 0; i < dfa_size; ++i)
+            for(j = 0; j < new_states; ++j)
+                if(init || yt[i][j] > 0) yt[i][j] = literal_counter++;
+
+        str = "symmetry breaking - until ";
+        str = str + std::to_string(literal_counter);
+        print_comment(str.c_str());
+
+        for(i = 0; i < dfa_size; ++i)
+            for(j = 0; j < new_states; ++j)
+                if(init || yp[i][j] > 0) yp[i][j] = literal_counter++;
+
+        str = "symmetry breaking - until ";
+        str = str + std::to_string(literal_counter);
+        print_comment(str.c_str());
+
+        for(a = 0; a < alphabet_size; ++a)
+            for(i = 0; i < new_states; ++i)
+                if(init || ya[a][i] > 0) ya[a][i] = literal_counter++;
+
+        str = "symmetry breaking - until ";
+        str = str + std::to_string(literal_counter);
+        print_comment(str.c_str());
+    }
 }
 
 /**
@@ -89,12 +125,22 @@ void dfasat::create_literals(){
 
     //SP(STATE)
     sp = (int*) malloc( sizeof(int) * num_states);
-    
+
     //Z(COLOR)
     z = (int**) malloc( sizeof(int*) * dfa_size);
     for(i = 0; i < dfa_size; ++i){
         z[ i ] = (int*) malloc( sizeof(int) * num_types);
     }
+    //SY(LABEL,COLOR,SINK)
+    sy = (int***) malloc( sizeof(int**) * alphabet_size);
+    for(a = 0; a < alphabet_size; ++a){
+        sy[ a ] = (int**) malloc( sizeof(int*) * dfa_size);
+        for(i = 0; i < dfa_size; ++i)
+            sy[ a ][ i ]  = (int*) malloc( sizeof(int) * sinks_size);
+    }
+
+    //SP(STATE)
+    sp = (int*) malloc( sizeof(int) * num_states);
 
     //YT(COLOR,COLOR)
     yt = (int**) malloc( sizeof(int*) * dfa_size);
@@ -283,6 +329,12 @@ int dfasat::print_clause(bool v1, int l1, bool v2, int l2){
     return 1;
 }
 
+int dfasat::print_comment(const char* text){
+    if(computing_header) return 1;
+    sat_stream << "c " << text << "\n";
+    return 1;
+}
+
 bool dfasat::always_true(int number, bool flag){
     if(number == -1 && flag == true)  return true;
     if(number == -2 && flag == false) return true;
@@ -402,6 +454,7 @@ int dfasat::set_symmetry(){
 
 int dfasat::print_symmetry(){
     int num = 0;
+    print_comment("symmetry breaking, forces state order, if new state k has color i, then new state l > k cannot have color j < i");
     for(int i = 0; i < dfa_size; ++i){
         for(int k = 0; k < new_states; ++k){
             for(int j = 0; j < i; ++j){
@@ -411,6 +464,7 @@ int dfasat::print_symmetry(){
             }
         }
     }
+    print_comment("symmetry breaking, forces lexicographical order, if new state k has color i, and new state l > k has color i, and new state k is reached by label a, then new state l > k cannot be reached by label b < a");
     for(int i = 0; i < dfa_size; ++i){
         for(int k = 0; k < new_states; ++k){
             for(int l = k + 1; l < new_states; l++){
@@ -469,6 +523,7 @@ int dfasat::print_colours(){
     int num = 0;
     bool altr = false;
     // at least one
+    print_comment("state nr has at least one color k");
     for(state_set::iterator it = non_red_states->begin(); it != non_red_states->end(); ++it){
         apta_node* node = *it;
         int nr = state_number[node];
@@ -487,6 +542,7 @@ int dfasat::print_colours(){
         }
     }
     // at most one
+    print_comment("state nr has at most one color k");
     for(state_set::iterator it = non_red_states->begin(); it != non_red_states->end(); ++it){
         apta_node* node = *it;
         int nr = state_number[node];
@@ -508,6 +564,7 @@ int dfasat::print_colours(){
  */
 int dfasat::print_conflicts(){
     int num = 0;
+    print_comment("state left and right have a conflict, and cannot have the same color k");
     for(state_set::iterator it = non_red_states->begin(); it != non_red_states->end(); ++it){
         apta_node* left = *it;
         state_set::iterator it2 = it;
@@ -552,6 +609,7 @@ int dfasat::print_conflicts(){
  */
 int dfasat::print_accept(){
     int num = 0;
+    print_comment("accepting/rejecting, if accepting/rejecting state nr has color k, color k is accepting/rejecting");
     for(state_set::iterator it = non_red_states->begin(); it != non_red_states->end(); ++it){
         apta_node* node = *it;
         int nr = state_number[node];
@@ -582,6 +640,7 @@ int dfasat::print_accept(){
  */
 int dfasat::print_transitions(){
     int num = 0;
+    print_comment("transitions, the transition from state i with label a has at most one target h");
     for(int a = 0; a < alphabet_size; ++a)
         for(int i = 0; i < dfa_size; ++i)
             for(int j = 0; j < dfa_size; ++j)
@@ -592,6 +651,7 @@ int dfasat::print_transitions(){
 
 int dfasat::print_sink_transitions(){
     int num = 0;
+    print_comment("transitions to sinks, ...");
     for(int a = 0; a < alphabet_size; ++a)
         for(int i = 0; i < dfa_size; ++i)
             for(int j = 0; j < sinks_size; ++j)
@@ -608,6 +668,7 @@ int dfasat::print_sink_transitions(){
 /* print transitions for any label yt */
 int dfasat::print_t_transitions(){
     int num = 0;
+    print_comment("force new states to have each transition");
     for(int i = 0; i < dfa_size; ++i)
         for(int j = 0; j < new_states; ++j)
             for(int a = 0; a < alphabet_size; ++a)
@@ -637,6 +698,7 @@ int dfasat::print_t_transitions(){
 /* print BFS tree transitions */
 int dfasat::print_p_transitions(){
     int num = 0;
+    print_comment("force transitions in BFS order...");
     for(int i = 0; i < dfa_size; ++i){
         for(int j = 0; j < new_states; ++j){
             for(int k = 0; k < i; ++k){
@@ -665,6 +727,7 @@ int dfasat::print_p_transitions(){
 /* print BFS tree labels */
 int dfasat::print_a_transitions(){
     int num = 0;
+    print_comment("force labels in BFS order...");
     for(int i = 0; i < new_states; ++i){
         for(int a = 0; a < alphabet_size; ++a){
             for(int j = 0; j < dfa_size; ++j){
@@ -697,6 +760,7 @@ int dfasat::print_a_transitions(){
 int dfasat::print_forcing_transitions(){
     int num = 0;
     bool altr = false;
+    print_comment("force each state to have a transition for each label...");
     for (int label = 0; label < alphabet_size; ++label) {
         state_set label_states;
         for (state_set::iterator it = red_states->begin(); it != red_states->end(); ++it) {
@@ -758,6 +822,7 @@ int dfasat::print_forcing_transitions(){
 /* print de determinization constraint */
 int dfasat::print_paths(){
     int num = 0;
+    print_comment("determinization clauses, if state nr has a transition to state tnr with label a, state nr has color i, and state tnr has color j, then there is a transition from color i to color j with label a");
     for (state_set::iterator it = red_states->begin(); it != red_states->end(); ++it) {
         apta_node* source = *it;
         int nr = state_number[source];
@@ -790,6 +855,7 @@ int dfasat::print_paths(){
 /* print sink paths */
 int dfasat::print_sink_paths(){
     int num = 0;
+    print_comment("sink determinization clauses");
     bool altr = false;
     for (state_set::iterator it = red_states->begin(); it != red_states->end(); ++it) {
         apta_node* source = *it;
@@ -1106,6 +1172,8 @@ void dfasat::translate(FILE* sat_file) {
     computing_header = false;
     sat_stream.clear();
 
+    reset_literals(false);
+
     //fprintf(sat_stream, "p cnf %i %i\n", literal_counter - 1, clause_counter);
     sat_stream << "p cnf " << literal_counter - 1 << " " << clause_counter << "\n";
 
@@ -1113,6 +1181,7 @@ void dfasat::translate(FILE* sat_file) {
     print_conflicts();
     print_accept();
     print_transitions();
+    print_paths();
     if(SYMMETRY_BREAKING){
         print_symmetry();
         print_t_transitions();
@@ -1122,7 +1191,6 @@ void dfasat::translate(FILE* sat_file) {
     if(FORCING){
         print_forcing_transitions();
     }
-    print_paths();
     if(USE_SINKS) {
         print_sink_transitions();
         print_sink_paths();
@@ -1130,8 +1198,6 @@ void dfasat::translate(FILE* sat_file) {
 
     fprintf(sat_file, "%s", sat_stream.str().c_str());
     fclose(sat_file);
-
-    std::cerr << "sent problem to SAT solver" << std::endl;
 }
 
 void dfasat::perform_sat_merges(state_merger* m) {
@@ -1318,29 +1384,41 @@ void run_dfasat(state_merger* m, std::string sat_program, int best_solution) {
             close(pipefromsat[1]);
 
             start_sat_solver(sat_program);
-        }
-            else {
-            FILE *sat_file = (FILE *) fdopen(pipetosat[1], "w");
-            //FILE* sat_file = (FILE*) fopen("test.out", "w");
-            if (sat_file == 0) {
-                std::cerr << "Cannot open pipe to SAT solver: " << strerror(errno) << std::endl;
-                exit(1);
+        } else {
+            if (SAT_PRINT) {
+                FILE* sat_file = (FILE*) fopen("dfasat.cnf", "w");
+                if (sat_file == 0) {
+                    std::cerr << "Cannot open SAT file for printing: " << strerror(errno) << std::endl;
+                    exit(1);
+                }
+                sat_object.translate(sat_file);
+                fclose(sat_file);
+           }
+
+            if (SAT_SOLVE) {
+                FILE *sat_pipe = (FILE *) fdopen(pipetosat[1], "w");
+                if (sat_pipe == 0) {
+                    std::cerr << "Cannot open pipe to SAT solver: " << strerror(errno) << std::endl;
+                    exit(1);
+                }
+
+                std::cerr << "sending problem...." << std::endl;
+
+                sat_object.translate(sat_pipe);
+
+                close(pipetosat[0]);
+                close(pipefromsat[1]);
+
+                time_t begin_time = time(nullptr);
+                fclose(sat_pipe);
+
+                sat_pipe = (FILE *) fdopen(pipefromsat[0], "r");
+
+                sat_object.read_solution(sat_pipe, best_solution, m);
+
+                std::cerr << "solving took " << (time(nullptr) - begin_time) << " seconds" << std::endl;
+                fclose(sat_pipe);
             }
-
-            std::cerr << "sending problem...." << std::endl;
-
-            sat_object.translate(sat_file);
-
-            close(pipetosat[0]);
-            close(pipefromsat[1]);
-
-            time_t begin_time = time(nullptr);
-
-            sat_file = (FILE *) fdopen(pipefromsat[0], "r");
-
-            sat_object.read_solution(sat_file, best_solution, m);
-
-            std::cerr << "solving took " << (time(nullptr) - begin_time) << " seconds" << std::endl;
         }
 #endif // WIN32
 };

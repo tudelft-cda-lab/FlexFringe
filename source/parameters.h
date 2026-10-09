@@ -143,4 +143,7 @@ extern int DFA_SIZE_BOUND;
 extern int APTA_SIZE_BOUND;
 extern bool SAT_RUN_GREEDY;
 
+extern bool SAT_SOLVE;
+extern bool SAT_PRINT;
+
 #endif

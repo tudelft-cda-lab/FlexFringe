@@ -1,0 +1,117 @@
+:root > * {
+  --md-primary-fg-color: #0050D0;
+}
+
+.md-grid {
+  max-width: 960px;
+}
+
+@media (min-width: 400px) {
+  .md-tabs {
+    display: block;
+  }
+}
+
+.docblock {
+  border-left: .05rem solid var(--md-primary-fg-color);
+}
+
+.docblock-desc {
+  margin-left: 1em;
+}
+
+code,
+pre > code.decl {
+  white-space: pre-wrap;
+}
+
+
+code.decl > div {
+  text-indent: -2ch; /* Negative indent to counteract the indent on the first line */
+  padding-left: 2ch; /* Add padding to the left to create an indent */
+}
+
+.features-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center; /* Center the items horizontally */
+}
+
+.feature {
+  flex: 1 1 calc(50% - 20px); /* Two columns with space between */
+  max-width: 600px; /* Set the maximum width for the feature boxes */
+  box-sizing: border-box;
+  padding: 10px;
+  overflow: hidden; /* Hide overflow content */
+  text-overflow: ellipsis; /* Handle text overflow */
+  white-space: normal; /* Allow text wrapping */
+}
+
+.feature h2 {
+  margin-top: 0px;
+  font-weight: bold;
+}
+
+@media (max-width: 768px) {
+  .feature {
+      flex: 1 1 100%; /* Stack columns on smaller screens */
+      max-width: 100%; /* Allow full width on smaller screens */
+      white-space: normal; /* Allow text wrapping on smaller screens */
+  }
+}
+
+/* HLJS Overrides for Material Theme */
+
+.hljs {
+  color: var(--md-code-fg-color);
+  background: var(--md-code-bg-color);
+}
+.hljs-comment,
+.hljs-quote {
+  color: var(--md-code-hl-comment-color);
+}
+.hljs-doctag,
+.hljs-keyword,
+.hljs-formula {
+  color: var(--md-code-hl-keyword-color);
+}
+.hljs-string,
+.hljs-regexp,
+.hljs-addition,
+.hljs-attribute,
+.hljs-meta-string {
+  color: var(--md-code-hl-string-color);
+}
+.hljs-number,
+.hljs-literal {
+  color: var(--md-code-hl-number-color);
+}
+.hljs-built_in,
+.hljs-class .hljs-title,
+.hljs-code {
+  color: var(--md-code-hl-function-color);
+}
+.hljs-symbol,
+.hljs-bullet,
+.hljs-link,
+.hljs-meta,
+.hljs-selector-id,
+.hljs-title,
+.hljs-section {
+  color: var(--md-code-hl-special-color);
+}
+.hljs-attr,
+.hljs-variable,
+.hljs-template-variable,
+.hljs-type,
+.hljs-selector-class,
+.hljs-selector-attr,
+.hljs-selector-pseudo,
+.hljs-template-tag,
+.hljs-deletion {
+  color: var(--md-code-hl-constant-color);
+}
+.hljs-subst {
+  color: var(--md-code-fg-color);
+}
