@@ -387,6 +387,8 @@ int main(int argc, char *argv[]){
     app.add_option("--satgreedy", SAT_RUN_GREEDY, "Run the greedy process before starting the SAT solver, default=0.");
     app.add_option("--aptabound", APTA_SIZE_BOUND, "Lower bound on the APTA (entire data tree) size. When reached by greedy, no more merges will be performed. Default=0.");
     app.add_option("--dfabound", DFA_SIZE_BOUND, "Upper bound on the Automaton (only red states) size. When reached by greedy, no more merges will be performed. Default=0.");
+    app.add_option("--satprint", SAT_PRINT, "Print the SAT formula to a file named dfasat.cnf before solving.");
+    app.add_option("--satsolve", SAT_SOLVE, "Actually run the sat solver (turn off if only interested in the cnf file).");
 
     app.add_option("--printblue", PRINT_BLUE, "Print blue states in the .dot file? Default 1 (true).");
     app.add_option("--printwhite", PRINT_WHITE, "Print white states in the .dot file? These are typically sinks states, i.e., states that have not been considered for merging. Default 0 (false).");
