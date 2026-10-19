@@ -32,3 +32,17 @@ void evidence_driven::reset(state_merger *merger){
   num_pos = 0;
   num_neg = 0;
 };
+
+// TODO: update this function
+double evidence_driven::get_score(apta* aut, apta_node* left, apta_node* right){
+  edsm_data* l = (edsm_data*) left->get_data();
+  edsm_data* r = (edsm_data*) right->get_data();
+
+  double num_pos = 0;
+  double num_neg = 0;
+
+  if(l->pos_final() > 0 && r->pos_final() > 0) num_pos += 1;
+  if(l->neg_final() > 0 && r->neg_final() > 0) num_neg += 1;
+
+  return num_pos + num_neg;
+}

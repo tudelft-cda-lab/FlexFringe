@@ -1,0 +1,5 @@
+The picture shows how the regexbuilder works.
+Keep in mind that this is incomplete.
+The final node should have 2 self loops with A and B.
+This results in the regex with:
+^(BB|(A|BA)(BA)*(A|BB))(A|B)*$

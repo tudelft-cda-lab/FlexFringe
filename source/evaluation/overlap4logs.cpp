@@ -238,7 +238,7 @@ void overlap4logs_data::undo(evaluation_data* right){
 };
 
 /*** Merge consistency ***/
-bool overlap4logs::consistent(state_merger *merger, apta_node* left, apta_node* right){
+bool overlap4logs::consistent(state_merger *merger, apta_node* left, apta_node* right, int depth){
     overlap4logs_data* l = (overlap4logs_data*) left->get_data();
     overlap4logs_data* r = (overlap4logs_data*) right->get_data();
 

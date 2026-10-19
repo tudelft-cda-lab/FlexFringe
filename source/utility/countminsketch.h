@@ -25,128 +25,125 @@
 #include <type_traits>
 #include <functional>
 
-template<typename T>
 class CountMinSketch{
   private:
     const int width, depth;
     int size;
     std::vector<int> row_sizes;
+    int terminationCounts;
+
     std::vector< std::vector<unsigned int> > counts; // counts stored in table
 
-    inline static HashFunction<int> indexHasher;
+    inline static std::vector< HashFunction<int> > indexHasher;
+    inline static std::set<int> seenSymbols;
+
+    inline static bool initialized = false;
 
   public:
     CountMinSketch() = delete;
     CountMinSketch(const int depth, const int width);
 
-    void operator+(const CountMinSketch<T>& other);
-    void operator-(const CountMinSketch<T>& other);
+    void operator+(const CountMinSketch& other);
+    void operator-(const CountMinSketch& other);
 
-    static float sinusSimilarity(const CountMinSketch<T>& c1, const CountMinSketch<T>& c2);
-    static float cosineSimilarity(const CountMinSketch<T>& c1, const CountMinSketch<T>& c2);
-    static float klDivergence(const CountMinSketch<T>& c1, const CountMinSketch<T>& c2);
-    static float chiSquareTest(const CountMinSketch<T>& c1, const CountMinSketch<T>&c2);
-    static float zTest(const CountMinSketch<T>& c1, const CountMinSketch<T>&c2);
+    void store(const int symbol) noexcept;
+    const unsigned int getCount(const int symbol) const;
+    static double cosineSimilarity(const CountMinSketch& c1, const CountMinSketch& c2);
+    static double cosineSimilarity(const CountMinSketch& c1, const CountMinSketch& c2, const std::set<int>& symbols);
 
-    static bool hoeffding(const CountMinSketch<T>& c1, const CountMinSketch<T>&c2, const float alpha);
-    static bool hoeffdingWithPooling(const CountMinSketch<T>& c1, const CountMinSketch<T>&c2, const float alpha, const int statecount, const int symbolcount, const int correction);
-    static float hoeffdingScore(const CountMinSketch<T>& c1, const CountMinSketch<T>&c2, const float alpha);
+    const std::vector<double> getDistribution() const;
+    const std::vector<double> getDistribution(const std::set<int>& symbols) const;
+    const std::pair< std::vector<double>, std::vector<double> > getPooledDistributions(const CountMinSketch& other) const;
 
-    void store(const T data, const int row, const int limit) noexcept;
-    void storeAt(const int index, const int row) noexcept;
-    void printHashes() const noexcept;
-    const unsigned int getCount(const T data);
+    static bool hoeffding(const CountMinSketch& c1, const CountMinSketch&c2);
+    static bool hoeffding(const CountMinSketch& c1, const CountMinSketch&c2, const std::set<int>& symbols);
+    static bool hoeffdingWithPooling(const CountMinSketch& c1, const CountMinSketch&c2);
 
     inline const auto& getSketch() const noexcept {
       return counts;
     }
 
-    inline const auto getWidth() const noexcept {
+    const auto getWidth() const noexcept {
       return width;
     }
 
-    inline const auto getDepth() const noexcept {
+    const auto getDepth() const noexcept {
       return depth;
     }
 
-    inline int getSize() const noexcept {
+    int getSize() const noexcept {
       return size;
     }
 
-    inline int getZeroSize() const noexcept {
-      return row_sizes[0];
+    const int getFinalCounts() const noexcept {
+      return terminationCounts;
     }
 
-    /**
-     * @brief Reset the counts to zero.
-     * 
-     */
-    inline void reset() noexcept {
-      for(auto& row: this->counts){
-        for(int i = 0; i < width; ++i){
-          row[i] = 0;
-        }
-      }
+    static const int getAlphabetSize() noexcept {
+      return seenSymbols.size();
     }
 };
 
 /*--------------------------------- Implementations ------------------------------------*/
 
 /**
- * @brief Construct a new Count Min Sketch<T>:: Count Min Sketch object
+ * @brief Construct a new Count Min Sketch:: Count Min Sketch object
  * 
- * @tparam T The type of the class.
  * @param width The width of the sketch.
  * @param depth The depth of the sketch, which corresponds to the number of hash-functions used.
  */
-template<typename T>
-inline CountMinSketch<T>::CountMinSketch(const int depth, const int width) : depth(depth), width(width) {
+inline CountMinSketch::CountMinSketch(const int depth, const int width) : depth(depth), width(width) {
   for(int i = 0; i < depth; ++i){
-    counts.push_back(std::vector<unsigned int>(width));
-    row_sizes.push_back(0);
+    counts.push_back(std::vector<unsigned int>(width)); // INVARIANT: the last row is for the termination symbol
   }
   size = 0;
+  terminationCounts = 0;
+
+  if(!initialized){
+    int seed = 42;
+    for(int i = 0; i < depth; ++i){
+      indexHasher.push_back(HashFunction<int>(seed)); // TODO: truly randomize the seed
+      seed = seed + 2001;
+    }
+  }
 }
 
 /**
  * @brief Store a count of data in data structure.
  * 
- * @tparam T Type of data to be stored.
  * @param data The data to store.
  */
-template<typename T>
-void CountMinSketch<T>::store(const T data, const int row, const int limit) noexcept {
-    const int index = indexHasher.hash(data) % limit;
-    counts[row][index] += 1;
-    ++size;
-    row_sizes[row] += 1;
-}
+void CountMinSketch::store(const int symbol) noexcept {
+  ++size;
+  if(symbol == -1){
+    // we do not want the final symbol to be in seenSymbols, as this would skew the distribution
+    this->terminationCounts += 1;
+    return;
+  }
+  for(int row=0; row<depth; ++row){
+      const int index = indexHasher[row].hash(symbol) % width;
+      counts[row][index] += 1;
+  }
 
-/**
- * @brief Store a count of data in data structure.
- * 
- * @tparam T Type of data to be stored.
- * @param data The data to store.
- */
-template<typename T>
-void CountMinSketch<T>::storeAt(const int index, const int row) noexcept {
-    counts[row][index] += 1;
-    ++size;
-    row_sizes[row] += 1;
+  if(this->seenSymbols.count(symbol) == 0){
+    this->seenSymbols.insert(symbol);
+  }
 }
 
 /**
  * @brief Retrieve count of data in data structure.
  * 
- * @tparam T Type of data to be stored.
  * @param data The already hashed data.
  */
-template<typename T>
-inline const unsigned int CountMinSketch<T>::getCount(const T data){
+inline const unsigned int CountMinSketch::getCount(const int symbol) const{
+  if(symbol==-1){
+    return terminationCounts;
+  }
+
   unsigned int minVal = std::numeric_limits<unsigned int>::max();
   
   for(int i = 0; i < depth; ++i){
-    const auto hashedIndex = indexHasher.hash(data) % width; // TODO: not really useful
+    const auto hashedIndex = indexHasher[i].hash(symbol) % width; // TODO: not really useful
     minVal = std::min(minVal, counts[i][hashedIndex]);
   }
 
@@ -154,44 +151,111 @@ inline const unsigned int CountMinSketch<T>::getCount(const T data){
 }
 
 /**
+ * @brief Gets the entire distribution over each ever seen symbol for this sketch.
+ * 
+ * @return const vector<double> The distribution as a vector.
+ */
+const std::vector<double> CountMinSketch::getDistribution() const {
+  std::vector<double> res;
+  for(const auto& symbol: this->seenSymbols){
+    const double count = static_cast<double>(getCount(symbol));
+    res.push_back(count / this->size);
+  }
+
+  res.push_back(static_cast<double>(this->terminationCounts) / this->size);
+  return res;
+}
+
+const std::vector<double> CountMinSketch::getDistribution(const std::set<int>& symbols) const {
+  std::vector<double> res;
+  for(const auto& symbol: symbols){
+    const double count = static_cast<double>(getCount(symbol));
+    res.push_back(count / this->size);
+  }
+
+  res.push_back(static_cast<double>(this->terminationCounts) / this->size);
+  return res;
+}
+
+/**
+ * @brief Get a pair of distributions, this time pooled.
+ * 
+ * @param other The other sketch. We need to know this one to make sure we pool the same counts.
+ * @return const pair< vector<double>, vector<double> > Pair of the two distribions, in order <this, other>
+ */
+const std::pair< std::vector<double>, std::vector<double> > CountMinSketch::getPooledDistributions(const CountMinSketch& other) const {
+  std::vector<double> this_d, other_d;
+  double this_pool_1 = 0, this_pool_2 = 0;
+  double other_pool_1 = 0, other_pool_2 = 0;
+
+  for(const auto& symbol: this->seenSymbols){
+    const auto this_count = static_cast<double>(getCount(symbol));
+    const auto other_count = static_cast<double>(other.getCount(symbol));
+
+    if(this_count <= SYMBOL_COUNT){
+      this_pool_1 += this_count;
+      other_pool_1 += other_count;
+    }
+
+    if(other_count <= SYMBOL_COUNT){
+      this_pool_2 += this_count;
+      other_pool_2 += other_count;
+    }
+
+    if(this_count > SYMBOL_COUNT && other_count > SYMBOL_COUNT){
+      this_d.push_back(this_count / this->size);
+      other_d.push_back(other_count / other.size);
+    }
+  }
+
+  this_d.push_back(this_pool_1 / this->size);
+  this_d.push_back(this_pool_2 / this->size);
+
+  other_d.push_back(other_pool_1 / other.size);
+  other_d.push_back(other_pool_2 / other.size);
+
+  this_d.push_back(static_cast<double>(this->terminationCounts) / this->size);
+  other_d.push_back(static_cast<double>(other.terminationCounts) / other.size);
+
+  return make_pair(this_d, other_d);
+}
+
+
+/**
  * @brief Adds the two count-min-sketches. Can only be done when sizes equal.
  * 
- * @tparam T Type. 
  * @param other The other cms.
- * @return CountMinSketch<T> The result.
+ * @return CountMinSketch The result.
  */
-template<typename T>
-inline void CountMinSketch<T>::operator+(const CountMinSketch<T>& other){
+inline void CountMinSketch::operator+(const CountMinSketch& other){
   assert(this->width == other.width && this->depth == other.depth);
 
 	for(int i = 0; i < depth; ++i){
     for(int j = 0; j < width; ++j){
       this->counts[i][j] += other.counts[i][j];
     }
-    this->row_sizes[i] += other.row_sizes[i];
   }
 
+  this->terminationCounts += other.terminationCounts;
   this->size += other.size;
 }
  
  /**
  * @brief Subtracts the two count-min-sketches. Can only be done when sizes equal.
  * 
- * @tparam T Type. 
  * @param other The other cms.
- * @return CountMinSketch<T> The result.
+ * @return CountMinSketch The result.
  */
-template<typename T>
-inline void CountMinSketch<T>::operator-(const CountMinSketch<T>& other){
+inline void CountMinSketch::operator-(const CountMinSketch& other){
   assert(this->width == other.width && this->depth == other.depth);
 
 	for(int i = 0; i < depth; ++i){
     for(int j = 0; j < width; ++j){
       this->counts[i][j] -= other.counts[i][j];
     }
-    this->row_sizes[i] -= other.row_sizes[i];
   }
 
+  this->terminationCounts -= other.terminationCounts;
   this->size -= other.size;
 }
 
@@ -200,180 +264,57 @@ inline void CountMinSketch<T>::operator-(const CountMinSketch<T>& other){
  * 
  * @param c1 Sketch 1.
  * @param c2 Sketch 2.
- * @return float The average similarity.
+ * @return double The average similarity.
  */
-template <typename T>
-inline float CountMinSketch<T>::cosineSimilarity(const CountMinSketch<T>& c1, const CountMinSketch<T>&c2){
-  assert(c1.width == c2.width && c1.depth == c2.depth);
-  float res = 0;
-
-  for(int i = 0; i < c1.depth; ++i){
-    const auto& v1 = c1.counts[i];
-    const auto& v2 = c2.counts[i];
-
-    float dot = 0, absolute1 = 0, absolute2 = 0;
-    for(int j = 0; j < c2.width; ++j){
-      dot += v1[j] * v2[j];
-      absolute1 += pow(v1[j], 2);
-      absolute2 += pow(v2[j], 2);
-    }
-    absolute1 = sqrt(absolute1);
-    absolute2 = sqrt(absolute2);
-
-    if(absolute1 == 0 && absolute2 == 0){
-      //res += 1; // both are zero, but equal
-      //continue;
-      return 1;
-    }
-    
-    res += dot / (absolute1 * absolute2 + 1e-6);
-  }
-
-  return res / c1.depth;
-}
-
-/**
- * @brief Computes average sinus similarity among two sketches.
- * 
- * @param c1 Sketch 1.
- * @param c2 Sketch 2.
- * @return float The average similarity.
- */
-template <typename T>
-inline float CountMinSketch<T>::sinusSimilarity(const CountMinSketch<T>& c1, const CountMinSketch<T>&c2){
-  const auto cosine = CountMinSketch<T>::cosineSimilarity(c1, c2);
-  return sqrt(1 - cosine * cosine);
-}
-
-/**
- * @brief Computes average Kullback-Leiber-Divergence among two sketches.
- * 
- * @param c1 Sketch 1.
- * @param c2 Sketch 2.
- * @return float The average klDivergence.
- */
-template <typename T>
-inline float CountMinSketch<T>::klDivergence(const CountMinSketch<T>& c1, const CountMinSketch<T>&c2){
-  assert(c1.width == c2.width && c1.depth == c2.depth);
-  float res = 0.0;
-
-  auto count = 0;
-  for(int i = 0; i < c1.depth; ++i){
-    const auto& v1 = c1.counts[i];
-    const auto& v2 = c2.counts[i];
-
-    const float sum1 = std::accumulate(v1.begin(), v1.end(), 0.0f);
-    const float sum2 = std::accumulate(v2.begin(), v2.end(), 0.0f);
-
-    for (int j = 0; j < c1.width; ++j) {
-      const float x1 = static_cast<float>(v1[j]) / (sum1 + 1e-3);
-      const float x2 = static_cast<float>(v2[j]) / (sum2 + 1e-3);
-      if (x1 != 0 && x2 != 0){
-        res += x1 * log(x1 / x2);
-        ++count;
-      }
-      else if (x1 != 0 && x2 == 0){
-        res += x1 * log(x1 / 1);
-        ++count;
-      }
-    }
-  }
-
-  return res / count;
-}
-
-/**
- * @brief Performs a chi-square test on the two sketches.
- * 
- * Treat each row of a sketch as a distribution. Then, compute the average of the test on the rows,
- * this is our result. Test for significance needs to be performed externally.
- * 
- * @param c1 Sketch 1.
- * @param c2 Sketch 2.
- * @return float The average similarity.
- */
-template <typename T>
-inline float CountMinSketch<T>::chiSquareTest(const CountMinSketch<T>& c1, const CountMinSketch<T>&c2){
+inline double CountMinSketch::cosineSimilarity(const CountMinSketch& c1, const CountMinSketch&c2){
   assert(c1.width == c2.width && c1.depth == c2.depth);
 
-  double result = 0;
+  double denominator = 0;
+  double absolute1 = 0, absolute2 = 0;
 
-  for(int i = 0; i < c1.depth; ++i){
-    // get the sums of the two columns and rows
-    std::vector<int> colSum(c1.width);
-    double rowSum1 = 0, rowSum2 = 0;
-    for(int j = 0; j < c1.width; ++j){
-      colSum[j] = c1.counts[i][j] + c2.counts[i][j];
-      rowSum1 += c1.counts[i][j];
-      rowSum2 += c2.counts[i][j];
-    }
+  const auto distribution1 = c1.getDistribution();
+  const auto distribution2 = c2.getDistribution();
 
-    if(rowSum1 == 0 || rowSum2 == 0) return 10e6;
+  for(int i=0; i<distribution1.size(); ++i){
+    const auto f1 = distribution1[i];
+    const auto f2 = distribution2[i];
 
-    double chiSquare = 0;
-    const double totalSum = rowSum1 + rowSum2 + 10e-3;
-    for(int j = 0; j < c1.width; ++j){
-      if(colSum[j] == 0) continue;
+    denominator += f1 * f2;
 
-      colSum[j] = (colSum[j] / totalSum) * 400; // normalize
-      double e1 = (colSum[j] * /*rowSum1*/ 200) / 400/*totalSum*/; // normalize
-      double e2 = (colSum[j] * /*rowSum2*/ 200) / 400/*totalSum*/; // normalize
-
-      //chiSquare += pow(c1.counts[i][j] - e1, 2) / (e1 + 1e-3);
-      //chiSquare += pow(c2.counts[i][j] - e2, 2) / (e2 + 1e-3);
-      chiSquare += pow( (c1.counts[i][j] / rowSum1 * 200) - e1, 2) / (e1 + 1e-3); // normalize
-      chiSquare += pow( (c2.counts[i][j] / rowSum2 * 200) - e2, 2) / (e2 + 1e-3); // normalize
-    }
-
-    result += chiSquare;
+    absolute1 += pow(f1, 2);
+    absolute2 += pow(f2, 2);
   }
 
-  return static_cast<float>(result / c1.depth);
+  absolute1 = sqrt(absolute1);
+  absolute2 = sqrt(absolute2);
+
+  return denominator / (absolute1 * absolute2 + 1e-6);
 }
 
-/**
- * @brief Performs a z test on the two sketches.
- * 
- * Treat each row of a sketch as a distribution. Then, compute the average of the test on the rows,
- * this is our result. Test for significance needs to be performed externally.
- * 
- * @param c1 Sketch 1.
- * @param c2 Sketch 2.
- * @return float The average similarity.
- */
-template <typename T>
-inline float CountMinSketch<T>::zTest(const CountMinSketch<T>& c1, const CountMinSketch<T>&c2){
+inline double CountMinSketch::cosineSimilarity(const CountMinSketch& c1, const CountMinSketch&c2, const std::set<int>& symbols){
   assert(c1.width == c2.width && c1.depth == c2.depth);
 
-  double z = 0;
+  double denominator = 0;
+  double absolute1 = 0, absolute2 = 0;
 
-  for(int i = 0; i < c1.depth; ++i){
-    double m1 = 0, m2 = 0, s1 = 0, s2 = 0; // the means and standard deviations respectively
-    int n1 = 0, n2 = 0; // count the samples
-    for(int j = 0; j < c1.width; ++j){
-      m1 += c1.counts[i][j] * (j + 1);
-      m2 += c2.counts[i][j] * (j + 1);
+  const auto distribution1 = c1.getDistribution(symbols);
+  const auto distribution2 = c2.getDistribution(symbols);
 
-      n1 += c1.counts[i][j];
-      n2 += c2.counts[i][j];
-    }
-    m1 /= n1;
-    m2 /= n2;
+  for(int i=0; i<distribution1.size(); ++i){
+    const auto f1 = distribution1[i];
+    const auto f2 = distribution2[i];
 
-    // now the deviations
-    for(int j = 0; j < c1.width; ++j){
-      s1 += pow(c1.counts[i][j] * (j + 1) - m1, 2);
-      s2 += pow(c2.counts[i][j] * (j + 1) - m2, 2);
-    }
-    s1 = sqrt(s1 / (n1 - 1)); // -1 for unbiased estimator
-    s2 = sqrt(s2 / (n2 - 1)); // -1 for unbiased estimator
+    denominator += f1 * f2;
 
-    z += abs(m1 - m2) / sqrt(s1 + s2);
+    absolute1 += pow(f1, 2);
+    absolute2 += pow(f2, 2);
   }
 
-  return static_cast<float>(z / c1.depth);
-}
+  absolute1 = sqrt(absolute1);
+  absolute2 = sqrt(absolute2);
 
+  return denominator / (absolute1 * absolute2 + 1e-6);
+}
 
 /**
  * @brief Performs a Hoeffding-bound test on the two sketches.
@@ -384,38 +325,87 @@ inline float CountMinSketch<T>::zTest(const CountMinSketch<T>& c1, const CountMi
  * @param c1 Sketch 1.
  * @param c2 Sketch 2.
  * @param alpha Parameter for hoeffding-bound.
- * @return float The average similarity.
+ * @return double The average similarity.
  */
-template <typename T>
-inline bool CountMinSketch<T>::hoeffding(const CountMinSketch<T>& c1, const CountMinSketch<T>&c2, const float alpha){
+inline bool CountMinSketch::hoeffding(const CountMinSketch& c1, const CountMinSketch&c2){
   assert(c1.width == c2.width && c1.depth == c2.depth);
 
-  for(int i = 0; i < c1.depth; ++i){
+  const auto distribution1 = c1.getDistribution();
+  const auto distribution2 = c2.getDistribution();
 
-    // count the samples
-    int n1 = 0, n2 = 0;
-    for(int j = 0; j < c1.width; ++j){
-      n1 += c1.counts[i][j];
-      n2 += c2.counts[i][j];
-    }
+  const double n1 = static_cast<double>(c1.size);
+  const double n2 = static_cast<double>(c2.size);
 
-    float rhs = sqrt(0.5 * log(2 / alpha)) * ((1 / sqrt(n1)) + (1 / sqrt(n2)));
+  double rhs = sqrt(0.5 * log(2 / CHECK_PARAMETER)) * ((1 / sqrt(n1)) + (1 / sqrt(n2)));
 
-    // perform the test
-    for(int j = 0; j < c1.width; ++j){
-      float f1 = c1.counts[i][j];
-      float f2 = c2.counts[i][j];
+  for(int i=0; i<distribution1.size(); ++i){
+    const auto f1 = distribution1[i];
+    const auto f2 = distribution2[i];
 
-      float lhs = abs((f1 / n1) - (f2 /n2));
-      
-      if(lhs >= rhs) return false;
-    }
+    double lhs = abs(f1 - f2);
+    if(lhs >= rhs) return false;
+  }
+
+  return true;
+}
+
+inline bool CountMinSketch::hoeffding(const CountMinSketch& c1, const CountMinSketch&c2, const std::set<int>& symbols){
+  assert(c1.width == c2.width && c1.depth == c2.depth);
+
+  const auto distribution1 = c1.getDistribution(symbols);
+  const auto distribution2 = c2.getDistribution(symbols);
+
+  const double n1 = static_cast<double>(c1.size);
+  const double n2 = static_cast<double>(c2.size);
+
+  double rhs = sqrt(0.5 * log(2 / CHECK_PARAMETER)) * ((1 / sqrt(n1)) + (1 / sqrt(n2)));
+
+  for(int i=0; i<distribution1.size(); ++i){
+    const auto f1 = distribution1[i];
+    const auto f2 = distribution2[i];
+
+    double lhs = abs(f1 - f2);
+    if(lhs >= rhs) return false;
   }
 
   return true;
 }
 
 /**
+ * @brief Hoeffding bound, but this time with pooling.
+ * 
+ * @param c1 Sketch 1 
+ * @param c2 Sketch 2
+ * @return true 
+ * @return false 
+ */
+bool CountMinSketch::hoeffdingWithPooling(const CountMinSketch& c1, const CountMinSketch&c2) {
+  assert(c1.width == c2.width && c1.depth == c2.depth);
+
+  const auto dists = c1.getPooledDistributions(c2);
+
+  const auto distribution1 = get<0>(dists);
+  const auto distribution2 = get<1>(dists);
+
+  const double n1 = static_cast<double>(c1.size);
+  const double n2 = static_cast<double>(c2.size);
+
+  double rhs = sqrt(0.5 * log(2 / CHECK_PARAMETER)) * ((1 / sqrt(n1)) + (1 / sqrt(n2)));
+
+  // TODO: flexfringe has more to offer for pooling than just this
+  for(int i=0; i<distribution1.size(); ++i){
+    const auto f1 = distribution1[i];
+    const auto f2 = distribution2[i];
+
+    double lhs = abs(f1 - f2);
+    if(lhs >= rhs) return false;
+  }
+
+  return true;
+}
+
+
+/**
  * @brief Performs a Hoeffding-bound test on the two sketches.
  * 
  * Treat each row of a sketch as a distribution. Then, compute the average of the test on the rows,
@@ -424,13 +414,12 @@ inline bool CountMinSketch<T>::hoeffding(const CountMinSketch<T>& c1, const Coun
  * @param c1 Sketch 1.
  * @param c2 Sketch 2.
  * @param alpha Parameter for hoeffding-bound.
- * @return float The average similarity.
+ * @return double The average similarity.
  */
-template <typename T>
-inline float CountMinSketch<T>::hoeffdingScore(const CountMinSketch<T>& c1, const CountMinSketch<T>&c2, const float alpha){
+/* inline double CountMinSketch::hoeffdingScore(const CountMinSketch& c1, const CountMinSketch&c2, const double alpha){
   assert(c1.width == c2.width && c1.depth == c2.depth);
 
-  float res = 0;
+  double res = 0;
   for(int i = 0; i < c1.depth; ++i){
 
     // count the samples
@@ -444,11 +433,11 @@ inline float CountMinSketch<T>::hoeffdingScore(const CountMinSketch<T>& c1, cons
 
     // perform the test
     for(int j = 0; j < c1.width; ++j){
-      float f1 = c1.counts[i][j];
-      float f2 = c2.counts[i][j];
+      double f1 = c1.counts[i][j];
+      double f2 = c2.counts[i][j];
 
-      float lhs = abs((f1 / n1) - (f2 /n2));
-      float rhs = sqrt(0.5 * log(2 / alpha)) * ((1 / sqrt(n1)) + (1 / sqrt(n2)));
+      double lhs = abs((f1 / n1) - (f2 /n2));
+      double rhs = sqrt(0.5 * log(2 / alpha)) * ((1 / sqrt(n1)) + (1 / sqrt(n2)));
 
       if(lhs >= rhs) return -1;
       res += rhs - lhs;
@@ -456,7 +445,7 @@ inline float CountMinSketch<T>::hoeffdingScore(const CountMinSketch<T>& c1, cons
   }
 
   return res;
-}
+} */
 
 /**
  * @brief Performs a Hoeffding-bound test on the two sketches.
@@ -468,10 +457,9 @@ inline float CountMinSketch<T>::hoeffdingScore(const CountMinSketch<T>& c1, cons
  * @param c2 Sketch 2.
  * @param alpha Parameter for hoeffding-bound.
  * @param t Upper threshold for pooling. STATE_COUNT in flexfringe
- * @return float The average similarity.
+ * @return double The average similarity.
  */
-template <typename T>
-inline bool CountMinSketch<T>::hoeffdingWithPooling(const CountMinSketch<T>& c1, const CountMinSketch<T>&c2, const float alpha, const int statecount, const int symbolcount, const int correction){
+/* inline bool CountMinSketch::hoeffdingWithPooling(const CountMinSketch& c1, const CountMinSketch&c2, const double alpha, const int statecount, const int symbolcount, const int correction){
   assert(c1.width == c2.width && c1.depth == c2.depth);
   if(c1.size < statecount || c2.size < statecount) return true;
 
@@ -480,13 +468,13 @@ inline bool CountMinSketch<T>::hoeffdingWithPooling(const CountMinSketch<T>& c1,
 
     int divider1 = 0, divider2 = 0;
     int matching2 = 0; // only for c2
-    std::vector<float> pool1(2);
-    std::vector<float> pool2(2);
+    std::vector<double> pool1(2);
+    std::vector<double> pool2(2);
 
     // prepare the pools and dividers
     for(int j = 0; j < c1.width; ++j){
-      float f1 = c1.counts[i][j];
-      float f2 = c2.counts[i][j];
+      double f1 = c1.counts[i][j];
+      double f2 = c2.counts[i][j];
       if(f1 == 0) continue;
 
       matching2 += f2;
@@ -522,28 +510,28 @@ inline bool CountMinSketch<T>::hoeffdingWithPooling(const CountMinSketch<T>& c1,
 
     // perform the test
     for(int j = 0; j < c1.width; ++j){
-      float f1 = c1.counts[i][j];
-      float f2 = c2.counts[i][j];
+      double f1 = c1.counts[i][j];
+      double f2 = c2.counts[i][j];
       if(f1 == 0 || (f1<symbolcount && f2<symbolcount)) continue;
 
-      float lhs = abs(((f1 + correction) / divider1) - ((f2  + correction) /divider2));
-      float rhs = sqrt(0.5 * log(2 / alpha)) * ((1 / sqrt(divider1)) + (1 / sqrt(divider2)));
+      double lhs = abs(((f1 + correction) / divider1) - ((f2  + correction) /divider2));
+      double rhs = sqrt(0.5 * log(2 / alpha)) * ((1 / sqrt(divider1)) + (1 / sqrt(divider2)));
 
       if(lhs > rhs) return false;
     }
 
     for(int j = 0; j < 2; ++j){
-      float f1 = c1.counts[i][j];
-      float f2 = c2.counts[i][j];
+      double f1 = c1.counts[i][j];
+      double f2 = c2.counts[i][j];
       if(f1 == 0 || (f1 < symbolcount && f2 < symbolcount)) continue;
 
-      float lhs = abs(((f1 + correction) / divider1) - ((f2  + correction) /divider2));
-      float rhs = sqrt(0.5 * log(2 / alpha)) * ((1 / sqrt(divider1)) + (1 / sqrt(divider2)));
+      double lhs = abs(((f1 + correction) / divider1) - ((f2  + correction) /divider2));
+      double rhs = sqrt(0.5 * log(2 / alpha)) * ((1 / sqrt(divider1)) + (1 / sqrt(divider2)));
 
       if(lhs > rhs) return false;
     }
   }
 
   return true;
-}
+}  */
 #endif

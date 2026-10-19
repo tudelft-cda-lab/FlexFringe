@@ -3,6 +3,7 @@
 
 //#import "inputdata.h"
 #include <string>
+#include <vector>
 
 class inputdata;
 class tail;
@@ -12,11 +13,12 @@ private:
     friend class tail;
     friend class apta_node;
 
-    inputdata* inputData;
+    inputdata* inputData; // TODO: why is this here?
 
     // Only mem store is allowed to create and destroy
     friend class mem_store;
     explicit trace(inputdata*);
+    explicit trace(inputdata*, trace*); // copy another trace
     ~trace();
 
 public:
@@ -33,7 +35,7 @@ public:
     tail* head;
     tail* end_tail;
 
-    void initialize(inputdata *inputData);
+    void initialize(inputdata *inputData, trace* other_trace = nullptr);
     void finalize();
     bool is_finalized();
 
@@ -45,10 +47,13 @@ public:
     inline void inc_refs(){ ++refs; }
     void erase();
 
+    std::string get_mapped_type(int t) const;
     std::string to_string();
 
     void reverse();
     void pop_front();
+
+    const std::vector<int> get_input_sequence(const bool is_access_trace=false, const bool prepare_empty_slot=false) const;
 };
 
 

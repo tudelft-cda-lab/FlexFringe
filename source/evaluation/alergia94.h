@@ -4,7 +4,7 @@
 #include "evaluate.h"
 #include "alergia.h"
 
-typedef std::map<int, int> num_map;
+typedef std::unordered_map<int, int> num_map;
 
 /* The data contained in every node of the prefix tree or DFA */
 class alergia94_data: public alergia_data {
@@ -27,7 +27,7 @@ public:
   static int EVAL_TYPE;
 
   virtual bool data_consistent(alergia94_data* l, alergia94_data* r);
-  virtual bool consistent(state_merger *merger, apta_node* left, apta_node* right);
+  virtual bool consistent(state_merger *merger, apta_node* left, apta_node* right, int depth);
 };
 
 #endif

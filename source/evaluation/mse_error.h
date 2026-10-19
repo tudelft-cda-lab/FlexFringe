@@ -41,10 +41,10 @@ public:
   int total_merges = 0;
   double prev_AIC = 0;
   
-  virtual bool consistent(state_merger *merger, apta_node* left, apta_node* right);
+  virtual bool consistent(state_merger *merger, apta_node* left, apta_node* right, int depth);
   virtual void data_update_score(mse_data* l, mse_data* r);
   virtual void update_score(state_merger *merger, apta_node* left, apta_node* right);
-  virtual double  compute_score(state_merger*, apta_node* left, apta_node* right);
+  virtual double compute_score(state_merger*, apta_node* left, apta_node* right);
   virtual void reset(state_merger *merger);
 
   virtual int sink_type(apta_node* node);

@@ -1,0 +1,1 @@
+When comparing two nodes, those nodes may have non-overlapping suffix trees. Overlap_fill tries to overcome this by asking a SUL questions to add the missing states to the apta. More knowledge is paid by potentially adding many states to the APTA, therefore this method should be handled with care and needs refinement. Currently not used.  

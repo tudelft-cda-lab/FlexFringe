@@ -1,10 +1,19 @@
 # IDE / output / build stuff
 .idea/
 cmake-build-*/
-build/
+*build*/*
+*.vscode*
+*__pycache__*
 test-reports/
 *.o
 *.a
+data/*
+!data/active_learning/test_dfas/*
+*ipynb*
+*.tu-*
+*.tu*
+tags
+source/utility/fmt-11.0.2/support/*
 
 # Binaries
 runtests
@@ -19,32 +28,10 @@ tests/tests
 *.log
 *.result
 *.png
+*.pdf
+*.dat
 
 # Generated files
 source/gitversion.cpp
 source/evaluators.h
 CMakeFiles/
-data/mtg_tokenised/creature_traces_v1.txt
-source/evaluation/alergia.h
-data/mtg_tokenised/creature_traces_v2.txt
-data/mtg_tokenised/creature_traces_v3.txt
-data/mtg_tokenised/creature_traces_v4.txt
-data/mtg_tokenised/inst_sorc_traces_v2.txt
-data/mtg_tokenised/inst_sorc_traces_v3.txt
-data/mtg_tokenised/inst_sorc_traces_v4.txt
-data/mtg_tokenised/inst_sorc_traces.txt
-source/utility/fmt-11.0.2/support/.gradle/vcs-1/gc.properties
-source/utility/fmt-11.0.2/support/.gradle/buildOutputCleanup/cache.properties
-source/utility/fmt-11.0.2/support/.gradle/buildOutputCleanup/buildOutputCleanup.lock
-source/utility/fmt-11.0.2/support/.gradle/9.8.1/fileHashes/fileHashes.lock
-source/utility/fmt-11.0.2/support/.gradle/9.8.1/fileHashes/fileHashes.bin
-source/utility/fmt-11.0.2/support/.gradle/9.8.1/fileChanges/last-build.bin
-source/utility/fmt-11.0.2/support/.gradle/9.8.1/checksums/checksums.lock
-source/utility/fmt-11.0.2/support/.gradle/9.8.1/gc.properties
-source/utility/fmt-11.0.2/support/.gradle/8.9/fileHashes/fileHashes.lock
-source/utility/fmt-11.0.2/support/.gradle/8.9/fileChanges/last-build.bin
-source/utility/fmt-11.0.2/support/.gradle/8.9/dependencies-accessors/gc.properties
-source/utility/fmt-11.0.2/support/.gradle/8.9/checksums/sha1-checksums.bin
-source/utility/fmt-11.0.2/support/.gradle/8.9/checksums/md5-checksums.bin
-source/utility/fmt-11.0.2/support/.gradle/8.9/checksums/checksums.lock
-source/utility/fmt-11.0.2/support/.gradle/8.9/gc.properties

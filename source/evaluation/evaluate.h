@@ -13,6 +13,7 @@ class evaluation_function;
 class apta_node;
 class tail;
 
+#include "misc/printutil.h"
 #include "evaluation_factory.h"
 #include "utility/loguru.hpp"
 #include "state_merger.h"
@@ -202,7 +203,7 @@ public:
 * compute the local consistency of a merge and update stored data values
 *
 * huge influence on performance, needs to be simple */
-    virtual bool consistent(state_merger*, apta_node* left, apta_node* right);
+    virtual bool consistent(state_merger*, apta_node* left, apta_node* right, int depth);
     virtual void update_score(state_merger*, apta_node* left, apta_node* right);
     virtual void update_score_after(state_merger*, apta_node* left, apta_node* right);
 
@@ -259,6 +260,5 @@ public:
 
     virtual bool pre_consistent(state_merger *merger, apta_node *left, apta_node *right);
 };
-
 
 #endif /* _EVALUATE_H_ */

@@ -1,4 +1,4 @@
-#include "dfasat.h"
+#include "dfasat_mode.h"
 #include "state_merger.h"
 #include "evaluate.h"
 #include "evaluation_factory.h"

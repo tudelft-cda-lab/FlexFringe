@@ -1,0 +1,1 @@
+This is an experimental set of helper data structures. They were implemented to read in a particular [dataset](https://automata.cs.ru.nl/), however due to their size we never used them.
