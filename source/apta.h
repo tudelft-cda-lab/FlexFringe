@@ -364,14 +364,8 @@ public:
     inline bool is_white() const{
         return source != 0 && is_red() == false && !source->find()->is_red();
     }
-    inline bool is_sink() const{
-        if(sink != -1) return true;
-        return data->sink_type() != -1;
-    }
-    inline int sink_type() const{
-        if(sink != -1) return sink;
-        return data->sink_type();
-    }
+    bool is_sink() const;
+    int sink_type() const;
 
     /** constructors and intializers */
     apta_node();
@@ -379,8 +373,8 @@ public:
     void initialize(apta_node* n);
 
     /** print to json output, use later in predict functions */
-    void print_json(json &output);
-    void print_json_transitions(json &output);
+    void print_json(nlohmann::json &output);
+    void print_json_transitions(nlohmann::json &output);
     void print_dot(std::iostream& output);
 
     /** below are functions use by special heuristics/settings and output printing */

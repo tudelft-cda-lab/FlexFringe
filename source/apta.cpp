@@ -674,6 +674,16 @@ apta_node::~apta_node(){
     delete data;
 }
 
+bool apta_node::is_sink() const {
+    if(sink != -1) return true;
+    return data->sink_type() != -1;
+}
+
+int apta_node::sink_type() const {
+    if(sink != -1) return sink;
+    return data->sink_type();
+}
+
 void apta::set_json_depths(){
     for(merged_APTA_iterator Ait = merged_APTA_iterator(root); *Ait != nullptr; ++Ait) {
         apta_node *n = *Ait;
