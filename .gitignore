@@ -13,6 +13,7 @@ data/*
 *.tu-*
 *.tu*
 tags
+source/utility/fmt-11.0.2/support/*
 
 # Binaries
 runtests

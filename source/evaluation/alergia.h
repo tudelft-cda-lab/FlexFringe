@@ -80,7 +80,7 @@ public:
     virtual double compute_score(state_merger*, apta_node* left, apta_node* right);
     virtual void reset(state_merger *merger);
 
-    static double alergia_check(double right_count, double left_count, double right_total, double left_total);
+    virtual double alergia_check(double right_count, double left_count, double right_total, double left_total);
 
     bool compute_tests(num_map& left_map, int left_total, int left_final, num_map& right_map, int right_total, int right_final);
 };

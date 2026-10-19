@@ -27,6 +27,8 @@ add_library(Evaluation STATIC
             edsm.cpp
             evaluate.h
             evaluate.cpp
+            fastalergia.h
+            fastalergia.cpp
             gini.h
             gini.cpp
             kldistance.h
