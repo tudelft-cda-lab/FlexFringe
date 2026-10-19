@@ -398,8 +398,8 @@ public:
     void initialize(apta_node* n);
 
     /** print to json output, use later in predict functions */
-    void print_json(nlohmann::json &output);
-    void print_json_transitions(nlohmann::json &output);
+    void print_json(std::iostream &output);
+    void print_json_transitions(std::iostream &output);
 
     /** below are functions use by special heuristics/settings and output printing */
 
