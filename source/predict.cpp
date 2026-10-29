@@ -12,6 +12,7 @@ struct tail_state_compare{ bool operator()(const std::pair<double, std::pair<apt
 int rownr = 0;
 std::map<int,double> sw_score_per_symbol;
 std::map<tail*,double> sw_individual_tail_score;
+std::map<apta_node*, int> state_visits;
 
 double compute_skip_penalty(apta_node* node){
     if(ALIGN_SKIP_PENALTY != 0) return 1.0 + ALIGN_SKIP_PENALTY;
@@ -27,6 +28,7 @@ double compute_score(apta_node* next_node, tail* next_tail){
     //if(PREDICT_ALIGN){ cerr << next_node->get_data()->align_score(next_tail) << endl; }
     if(PREDICT_ALIGN){ return next_node->get_data()->align_score(next_tail); }
     if(PREDICT_DATA){ return next_node->get_data()->predict_data_score(next_tail); }
+    if(PREDICT_VISITS){ return state_visits.contains(next_node) ? state_visits[next_node] : 1; }
     return next_node->get_data()->predict_score(next_tail);
 }
 
@@ -291,9 +293,20 @@ double add_visits(state_merger* m, trace* tr){
     double score = 0.0;
 
     for(int j = 0; j < t->get_length(); j++){
+        if (!state_visits.contains(n))
+            state_visits[n] = 1;
+        else
+            state_visits[n] = state_visits[n] + 1;
+
         n = single_step(n, t, m->get_aut());
         if(n == nullptr) break;
         t = t->future();
+    }
+    if(n != nullptr) {
+        if (!state_visits.contains(n))
+            state_visits[n] = 1;
+        else
+            state_visits[n] = state_visits[n] + 1;
     }
     return score;
 }
@@ -444,7 +457,7 @@ void predict_trace(state_merger* m, std::ofstream& output, trace* tr){
             for(auto val : score_sequence) sum += val;
             output << "; " << sum << "; " << (sum / (double)score_sequence.size());
 
-            double min = 0.0;
+            double min = sum;
             for(auto val : score_sequence) if(val < min) min = val;
             output << "; " << min;
         }

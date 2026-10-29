@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <string>
 #include <iterator>
+#include "mem_store.h"
 
 #include "parameters.h"
 #include "evaluation_factory.h"
@@ -29,6 +30,20 @@ bool apta_guard::bounds_satisfy(tail* t){
     }
     return true;
 }
+
+void apta_node::set_child(int i, apta_node* node){
+    if(const auto it = guards.find(i); it != guards.end()){
+        if(node != nullptr)
+            it->second->target = node;
+        else
+            guards.erase(it);
+    } else {
+        auto* g = mem_store::create_guard(nullptr);
+        guards.insert(std::pair(i,g));
+        g->target = node;
+    }
+};
+
 
 /* constructors and destructors */
 apta::apta(){
@@ -307,7 +322,7 @@ void apta::read_json(std::istream& input_stream){
 
     for (int i = 0; i < read_apta["nodes"].size(); ++i) {
         json n = read_apta["nodes"][i];
-        auto *node = new apta_node();
+        auto *node = mem_store::create_node(nullptr);
         states[n["id"]] = node;
         int r = n["isred"];
         node->red = r;
@@ -356,7 +371,7 @@ void apta::read_json(std::istream& input_stream){
         apta_node* source = states[source_nr];
         apta_node* target = states[target_nr];
 
-        auto* guard = new apta_guard();
+        auto* guard = mem_store::create_guard(nullptr);
         auto attr_list = e["min_guards"];
         for (auto min_val : attr_list) {
             guard->min_attribute_values[min_val[0]] = min_val[1];
@@ -370,7 +385,7 @@ void apta::read_json(std::istream& input_stream){
         if(target->source == source) {
             guard->target = target;
         } else {
-            auto* new_target = new apta_node();
+            auto* new_target = mem_store::create_node(nullptr);
             new_target->source = source;
             new_target->red = false;
             new_target->size = 0;
@@ -397,8 +412,10 @@ apta_guard::apta_guard(apta_guard* g){
     target = nullptr;
     data = nullptr;
 
-    min_attribute_values = bound_map(g->min_attribute_values);
-    max_attribute_values = bound_map(g->max_attribute_values);
+    if (g != nullptr) {
+        min_attribute_values = bound_map(g->min_attribute_values);
+        max_attribute_values = bound_map(g->max_attribute_values);
+    }
 
     try {
         data = (DerivedGuardDataRegister<evaluation_guard_data>::getMap())->at("count_guard_data")();
@@ -416,8 +433,10 @@ void apta_guard::initialize(apta_guard* g){
     min_attribute_values.clear();
     max_attribute_values.clear();
 
-    min_attribute_values.insert(g->min_attribute_values.begin(), g->min_attribute_values.end());
-    max_attribute_values.insert(g->max_attribute_values.begin(), g->max_attribute_values.end());
+    if (g != nullptr) {
+        min_attribute_values.insert(g->min_attribute_values.begin(), g->min_attribute_values.end());
+        max_attribute_values.insert(g->max_attribute_values.begin(), g->max_attribute_values.end());
+    }
 }
 
 void apta_node::add_tail(tail* t){
@@ -560,7 +579,7 @@ void apta_node::set_child(tail* t, apta_node* node){
         else
             guards.erase(it);
     } else {
-        apta_guard* g = new apta_guard();
+        apta_guard* g = mem_store::create_guard(nullptr);
         guards.insert(std::pair<int,apta_guard*>(t->get_symbol(),g));
         g->target = node;
     }

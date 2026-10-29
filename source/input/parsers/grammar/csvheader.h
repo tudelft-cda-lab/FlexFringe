@@ -39,7 +39,7 @@ namespace {
             };
 
             static constexpr auto rule = [] {
-                auto word = dsl::identifier(dsl::ascii::word);
+                auto word = dsl::opt(dsl::identifier(dsl::ascii::word));
                 auto peek = dsl::peek(LEXY_LIT("ff_tattr") | LEXY_LIT("ff_sattr"));
                 return peek >> dsl::error<name_error> | dsl::else_ >> word;
             }();

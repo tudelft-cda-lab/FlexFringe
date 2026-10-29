@@ -53,8 +53,19 @@ class apta_graph{
 public:
 	ordered_node_set nodes;
 	std::map<apta_node*, graph_node*> node_map;
-	inline graph_node* get_node(apta_node* n){
+
+	graph_node* get_node(apta_node* n){
 	    return node_map[n];
+	}
+
+	bool add_conflict(apta_node* l, apta_node* r) {
+		graph_node* gl = node_map[l];
+		graph_node* gr = node_map[r];
+		if (gl != nullptr && gr != nullptr) {
+			gl->neighbors.insert(gr);
+			gr->neighbors.insert(gl);
+		}
+		return false;
 	}
 
 	int num_types;

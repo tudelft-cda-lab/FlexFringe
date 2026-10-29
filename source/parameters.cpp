@@ -108,6 +108,7 @@ bool PREDICT_TYPE_PATH = false;
 bool PREDICT_SYMBOL = false;
 bool PREDICT_TRACE = true;
 bool PREDICT_DATA = false;
+bool PREDICT_VISITS = false;
 
 // the count-min-sketches
 int NROWS_SKETCHES = 0;

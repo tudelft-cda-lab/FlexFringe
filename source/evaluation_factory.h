@@ -8,7 +8,7 @@
     DerivedDataRegister<NAME> NAME::reg(#NAME)
 
 #define REGISTER_DEF_GUARDDATATYPE(NAME) \
-    DerivedDataRegister<NAME> NAME::reg(#NAME)
+    DerivedGuardDataRegister<NAME> NAME::reg(#NAME)
 
 // shorthands for data and evaluation function objects
 template<typename T> evaluation_data * createDataT() { return new T; }

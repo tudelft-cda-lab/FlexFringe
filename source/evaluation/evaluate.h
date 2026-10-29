@@ -34,8 +34,8 @@ bool is_stream_sink(apta_node*);
 #define REGISTER_DEC_GUARDDATATYPE(NAME) \
     static DerivedGuardDataRegister<NAME> reg
 
-#define REGISTER_DEF_GUARDDATATYPE(NAME) \
-    DerivedGuardDataRegister<NAME> NAME::reg(#NAME)
+//#define REGISTER_DEF_GUARDDATATYPE(NAME) \
+//    DerivedGuardDataRegister<NAME> NAME::reg(#NAME)
 
 // for registering evaluation function objects
 #define REGISTER_DEC_TYPE(NAME) \

@@ -92,6 +92,8 @@ void likelihoodratio::update_score(state_merger *merger, apta_node* left, apta_n
         if(r->num_paths() < STATE_COUNT || l->num_paths() < STATE_COUNT) return;
     }
 
+    extra_parameters += 1;
+
         /* computing the dividers (denominator) */
         double left_divider = 0.0;
         double right_divider = 0.0;
@@ -207,7 +209,7 @@ double likelihoodratio::split_compute_score(state_merger *, apta_node* left, apt
     double test_statistic = 2.0 * (loglikelihood_orig - loglikelihood_merged);
     double p_value = 1.0 - stats::pchisq(test_statistic, extra_parameters, false);
 
-    return 1.0 + CHECK_PARAMETER - p_value;
+    return 1.0 - p_value;
 };
 
 void likelihoodratio::reset(state_merger *merger){

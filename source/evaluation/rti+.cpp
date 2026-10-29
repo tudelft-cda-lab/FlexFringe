@@ -300,7 +300,7 @@ double rtiplus::split_compute_score(state_merger *, apta_node* left, apta_node* 
     double test_statistic = 2.0 * (loglikelihood_orig - loglikelihood_merged);
     double p_value = 1.0 - stats::pchisq(test_statistic, extra_parameters, false);
 
-    return 1.0 + CHECK_PARAMETER - p_value;
+    return 1.0 - p_value;
 };
 
 void rtiplus::initialize_after_adding_traces(state_merger* merger){
@@ -312,7 +312,7 @@ void rtiplus::initialize_after_adding_traces(state_merger* merger){
 };
 
 void rtiplus::initialize_before_adding_traces(){
-    CORRECTION = 0.0;
+    //CORRECTION = 0.0;
     for(int a = 0; a < merger->get_dat()->get_num_attributes(); ++a){
         if(!merger->get_dat()->is_distributionable(a)) continue;
         rtiplus::attribute_quantiles.push_back(std::vector<double>(3,0.0));

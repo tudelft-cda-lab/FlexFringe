@@ -413,6 +413,7 @@ int main(int argc, char *argv[]){
     app.add_option("--predictsymbol", PREDICT_SYMBOL, "Predicting calls the predict symbol functions from the evaluation function. Default=0.");
     app.add_option("--predicttrace", PREDICT_TRACE, "Predicting calls the predict trace functions from the evaluation function. Default=1.");
     app.add_option("--predictdata", PREDICT_DATA, "Predicting calls the predict data functions from the evaluation function. Default=0.");
+    app.add_option("--predictvisits", PREDICT_VISITS, "Predicting keeps track of state visits and returns the number of visits, can be used as an inverse novelty score. Default=0.");
 
     app.add_option("--aligndistancepenalty", ALIGN_DISTANCE_PENALTY, "A penalty for jumping during alignment multiplied by the merged prefix tree distance. Default: 0.0.");
     app.add_option("--alignskippenalty", ALIGN_SKIP_PENALTY, "A penalty for skipping during alignment. Default: 0.0.");

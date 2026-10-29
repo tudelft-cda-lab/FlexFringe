@@ -61,6 +61,7 @@ extern bool PREDICT_RESET;
 extern bool PREDICT_REMAIN;
 extern bool PREDICT_ALIGN;
 extern bool PREDICT_MINIMUM;
+extern bool PREDICT_VISITS;
 
 extern double RANDOMIZE_SCORES;
 

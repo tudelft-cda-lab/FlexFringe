@@ -351,18 +351,7 @@ public:
     guard_map::iterator guards_start(){ return guards.begin(); }
     guard_map::iterator guards_end(){ return guards.end(); }
 
-    void set_child(int i, apta_node* node){
-        if(const auto it = guards.find(i); it != guards.end()){
-            if(node != nullptr)
-                it->second->target = node;
-            else
-                guards.erase(it);
-        } else {
-            auto* g = new apta_guard();
-            guards.insert(std::pair(i,g));
-            g->target = node;
-        }
-    };
+    void set_child(int i, apta_node* node);
 
     apta_node* get_child(int c){
         apta_node* rep = find();
