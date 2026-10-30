@@ -242,6 +242,10 @@ void apta::print_json(std::iostream& outio){
     }
     output["symbol_attributes"] = sattr;
 
+    json eval_json;
+    merger->get_eval()->write_json(eval_json);
+    output["eval"] = eval_json;
+
     json nodes;
     for(merged_APTA_iterator Ait = merged_APTA_iterator(root); *Ait != nullptr; ++Ait) {
         apta_node *n = *Ait;
@@ -319,6 +323,7 @@ void apta::read_json(std::istream& input_stream){
         attr.from_string(i);
         inputdata_locator::get()->add_symbol_attribute(attr);
     }
+    merger->get_eval()->read_json(read_apta["eval"]);
 
     for (int i = 0; i < read_apta["nodes"].size(); ++i) {
         json n = read_apta["nodes"][i];

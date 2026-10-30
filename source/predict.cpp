@@ -5,6 +5,8 @@
 #include "predict.h"
 #include "dfa_properties.h"
 #include <queue>
+
+#include "catch.hpp"
 #include "input/inputdatalocator.h"
 
 struct tail_state_compare{ bool operator()(const std::pair<double, std::pair<apta_node*, tail*>> &a, const std::pair<double, std::pair<apta_node*, tail*>> &b) const{ return a.first < b.first; } };
@@ -521,6 +523,7 @@ void predict(state_merger* m, inputdata& idat, std::ofstream& output){
     output << std::endl;
 
     for (auto trace: idat) {
+        std::cerr << trace->to_string() << std::endl;
         predict_trace(m, output, trace);
         add_visits(m, trace);
     }

@@ -354,3 +354,11 @@ void rtiplus::reset_split(state_merger *merger, apta_node* node){
        
     return;
 };
+
+void rtiplus::read_json(json& js) {
+    attribute_quantiles = js["attr_quantiles"].get<std::vector<std::vector<double>>>();
+};
+
+void rtiplus::write_json(json& js) {
+    js["attr_quantiles"] = attribute_quantiles;
+};

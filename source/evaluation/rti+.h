@@ -55,6 +55,10 @@ public:
   virtual void initialize_after_adding_traces(state_merger* merger);
   virtual void initialize_before_adding_traces();
   virtual void reset_split(state_merger *, apta_node *);
+
+  void read_json(json &js);
+
+  void write_json(json &js);
 };
 
 #endif

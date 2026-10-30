@@ -242,7 +242,11 @@ void run() {
             }
 
             inputdata idat = inputdata::with_alphabet_from(*inputdata_locator::get());
-            idat.read(parser.get());
+            if (SLIDING_WINDOW) {
+                idat.read_slidingwindow(parser.get());
+            } else {
+                idat.read(parser.get());
+            }
 
             predict(merger, idat, output);
             //predict_streaming(merger, *parser, *strategy, output);
