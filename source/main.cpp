@@ -7,6 +7,8 @@
 #include "evaluate.h"
 #include "dfasat.h"
 #include <iostream>
+#include <random>
+
 #include "evaluation_factory.h"
 #include <string>
 #include "stream.h"
@@ -132,6 +134,7 @@ void run() {
     inputdata_locator::provide(&id);
 
     if(OPERATION_MODE != "streaming" && OPERATION_MODE != "predict"){
+        LOG_S(INFO) << "reading input file " << INPUT_FILE << std::endl;
         read_input_file(&id);
     }
 
@@ -357,6 +360,7 @@ int main(int argc, char *argv[]){
     app.add_option("--mergeroot", MERGE_ROOT, "Allow merges with the root? Default: 1 (true).");
     app.add_option("--testmerge", MERGE_WHEN_TESTING, "When set to 0, merge tries in order to compute the evaluation scores do not actually perform the merges themselves. Thus the consistency and score evaluation for states in merges that add recursive loops are uninfluenced by earlier merges; default=1. Advice: setting this to 0 reduces run-time and can be useful when learning models using statistical evaluation functions, but can lead to inconsistencies when learning from labeled data.");
     app.add_option("--mergedata", MERGE_DATA, "Whether to update data during the merging process (1) or keep the counts from the prefix tree intact (0). Default=1.");
+    app.add_option("--nomergegreedy", RUN_GREEDY_UNTIL_FIRST_MERGE, "When set to 1, stops the greedy process before the first merge. This can be useful for finding the number of red states purely based on the input, this for instance reduces the encoding of the SAT formula.");
 
     app.add_option("--sinkson", USE_SINKS, "Set to 1 to use sink states; default=1. Advice: leads to much more concise and easier to visualize models, but can cost predictive performance depending on the sink definitions.");
     app.add_option("--sinkcount", SINK_COUNT, "The maximum number of occurrences of a state for it to be a low count sink (see evaluation functions); default=10.");
@@ -407,6 +411,7 @@ int main(int argc, char *argv[]){
     app.add_option("--searchlocal", SEARCH_LOCAL, "Search using the local heuristic from the evaluation function. Default=0.");
     app.add_option("--searchglobal", SEARCH_GLOBAL, "Search using the global heuristic from the evaluation function. Default=0.");
     app.add_option("--searchpartial", SEARCH_PARTIAL, "Search using the partial heuristic from the evaluation function. Default=0.");
+    app.add_option("--timeout", RUN_TIMEOUT, "Set a timeout to limit the amount of time searching, in seconds.");
 
     app.add_option("--predictreset", PREDICT_RESET, "When predicting and there is no outgoing transition, the model is reset to the root state. This works well when using sliding windows. Default=0.");
     app.add_option("--predictremain", PREDICT_REMAIN, "When predicting and there is no outgoing transition, the model is looped back into the current state. Default=0.");

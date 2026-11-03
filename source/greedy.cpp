@@ -14,6 +14,11 @@ void greedy_run(state_merger* merger){
     int num = 1;
 
     while( best_ref != nullptr ){
+        if (RUN_GREEDY_UNTIL_FIRST_MERGE && dynamic_cast<merge_refinement*>(best_ref) != nullptr) {
+            delete best_ref;
+            break;
+        }
+
         std::cout << " ";
         best_ref->print_short();
         std::cout << " ";

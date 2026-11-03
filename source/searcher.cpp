@@ -1,6 +1,7 @@
 #include <queue>
 #include "searcher.h"
 #include "parameters.h"
+#include "fmt/chrono.h"
 
 using namespace std;
 
@@ -9,10 +10,26 @@ struct refinement_list_compare{ bool operator()(const pair<double, refinement_li
 priority_queue< pair<double, refinement_list*>, vector< pair<double, refinement_list*> >, refinement_list_compare> Q;
 refinement_list* current_refinements;
 refinement_list* current_run;
+refinement_list* best_run;
 
 double best_solution = -1;
 int start_size = 0;
 int nr = 0;
+
+void change_best_run(refinement_list* refs) {
+    best_run = new refinement_list();
+    for(refinement_list::iterator new_it = current_refinements->begin(); new_it != current_refinements->end(); new_it++) {
+        best_run->push_back(*new_it);
+    }
+    if (refs != nullptr){
+        for(refinement_list::iterator new_it = refs->begin(); new_it != refs->end(); new_it++) {
+            best_run->push_back(*new_it);
+        }
+    }
+    for(refinement_list::iterator new_it = best_run->begin(); new_it != best_run->end(); new_it++) {
+        (*new_it)->increfs();
+    }
+}
 
 int greedy(state_merger* merger, int depth, bool undo){
     int result = depth;
@@ -30,7 +47,7 @@ int greedy(state_merger* merger, int depth, bool undo){
         }
     }
     while(top_ref != nullptr){
-        refs.push_front(top_ref);
+        refs.push_back(top_ref);
         nr++;
 
         top_ref->doref(merger);
@@ -53,14 +70,15 @@ int greedy(state_merger* merger, int depth, bool undo){
     result = merger->get_eval()->compute_global_score(merger);
 
     if(best_solution == -1.0 || result < best_solution){
-        cerr << "*** current best *** " << result << endl;
+        cerr << "*** current best - greedy *** " << result << endl;
         best_solution = result;
-        merger->print_dot("search" + to_string(result) + ".dot");
-        merger->print_json("search" + to_string(result) + ".json");
+        //merger->print_dot("search" + to_string(result) + ".dot");
+        //merger->print_json("search" + to_string(result) + ".json");
+        change_best_run(&refs);
     }
 
     if(undo){
-        for(refinement_list::iterator it = refs.begin(); it != refs.end(); ++it){
+        for(refinement_list::reverse_iterator it = refs.rbegin(); it != refs.rend(); ++it){
             current_run->push_front(*it);
             nr++;
             (*it)->undo(merger);
@@ -80,9 +98,10 @@ double compute_score(state_merger* merger){
 void add_to_q(state_merger* merger){
     double result = merger->get_eval()->compute_partial_score(merger);
     if(best_solution != -1.0 && result >= best_solution){
-        cerr << "solution > best q_size: " << Q.size() << endl;
+        //cerr << "solution > best q_size: " << Q.size() << endl;
         return;
     }
+    if (check_timeout()) return;
 
     refinement_set* refs = merger->get_possible_refinements();
 
@@ -92,10 +111,10 @@ void add_to_q(state_merger* merger){
         if(best_solution == -1.0 || result < best_solution){
             cerr << "*** current best *** " << result << endl;
             best_solution = result;
-            merger->print_dot("search" + to_string(result) + ".dot");
-            merger->print_json("search" + to_string(result) + ".json");
+            //merger->print_dot("search" + to_string(result) + ".dot");
+            //merger->print_json("search" + to_string(result) + ".json");
+            change_best_run(nullptr);
         }
-
         delete refs;
         return;
     }
@@ -105,8 +124,10 @@ void add_to_q(state_merger* merger){
 	for(refinement_set::iterator it = refs->begin(); it != refs->end(); ++it){
         refinement* ref = *it;
 	    ref->doref(merger);
+	    current_refinements->push_back(ref);
 		double score = compute_score(merger);
         ref->undo(merger);
+	    current_refinements->pop_back();
 
         refinement_list* new_list = new refinement_list(*current_refinements);
 
@@ -155,17 +176,22 @@ void bestfirst(state_merger* merger){
         MERGE_SINKS_WITH_CORE = temp_merge_sinks_core;
     }
 
+    set_starttime();
+
 	add_to_q(merger);
 
-    cerr << Q.size() << endl;
-	
+    //cerr << Q.size() << endl;
+
 	while(!Q.empty()){
 		pair<double, refinement_list*> next_refinements = Q.top();
 		change_refinement_list(merger, next_refinements.second);
 		Q.pop();
 
-		cerr << Q.size() << " " << current_refinements->size() << " " << next_refinements.first << endl;
+		//cerr << Q.size() << " " << current_refinements->size() << " " << next_refinements.first << endl;
 
         add_to_q(merger);
 	}
+
+    if (best_run != nullptr) change_refinement_list(merger, best_run);
+    //merger->print_dot("after_search_do_best.dot");
 }

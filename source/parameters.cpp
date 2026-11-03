@@ -1,9 +1,31 @@
 #include "parameters.h"
+
+#include <iostream>
+#include <ostream>
 #include <random>
 
-std::uniform_real_distribution<double> unif(0.0, 1.0);
-std::default_random_engine re;
-double random_double(){ return unif(re); }
+thread_local std::random_device rd;
+thread_local std::mt19937 gen(rd());
+thread_local std::uniform_real_distribution<double> unif(0.0, 1.0);
+
+std::chrono::time_point<std::chrono::steady_clock> startTime;
+
+void set_starttime() {
+    startTime = std::chrono::steady_clock::now();
+}
+bool check_timeout() {
+    if (RUN_TIMEOUT != -1){
+        auto current = std::chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(current - startTime);
+        if (elapsed >= std::chrono::seconds(RUN_TIMEOUT)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+double random_double(){ return unif(gen); }
+double timeout_check(){ return unif(gen); }
 
 std::string HEURISTIC_NAME = "alergia";
 std::string DATA_NAME = "default";
@@ -131,3 +153,6 @@ bool SAT_RUN_GREEDY = false;
 bool SAT_SOLVE = true;
 bool SAT_PRINT = true;
 
+bool RUN_GREEDY_UNTIL_FIRST_MERGE = false;
+
+int RUN_TIMEOUT = -1;

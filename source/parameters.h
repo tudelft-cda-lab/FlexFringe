@@ -5,6 +5,8 @@
 #include <vector>
 
 double random_double();
+bool check_timeout();
+void set_starttime();
 
 extern bool MERGE_SINKS;
 extern int STATE_COUNT;
@@ -146,5 +148,9 @@ extern bool SAT_RUN_GREEDY;
 
 extern bool SAT_SOLVE;
 extern bool SAT_PRINT;
+
+extern bool RUN_GREEDY_UNTIL_FIRST_MERGE;
+
+extern int RUN_TIMEOUT;
 
 #endif
