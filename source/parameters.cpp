@@ -105,6 +105,8 @@ int EXTRA_STATES = 0;
 bool TARGET_REJECTING = 0;
 bool SYMMETRY_BREAKING = 0;
 bool FORCING = 0;
+int SAT_BICLIQUE = -1;
+bool SAT_LOOP = false;
 
 bool PRINT_WHITE = false;
 bool PRINT_BLUE = false;

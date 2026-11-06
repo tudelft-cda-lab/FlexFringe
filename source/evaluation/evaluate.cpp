@@ -19,7 +19,7 @@ void evaluation_data::set_context(apta_node* n){
 };
 
 void evaluation_data::add_tail(tail* t){
-    if(node_type == -1){
+    if(node_type == -1 && t->is_final()){
         node_type = t->get_type();
         undo_tail_pointer = t;
     }
@@ -293,8 +293,8 @@ bool evaluation_function::pre_consistent(state_merger *merger, apta_node* left, 
 
 bool evaluation_function::consistent(state_merger *merger, apta_node* left, apta_node* right){
   if(inconsistency_found) return false;
-  
-  if(left->get_data()->node_type != -1 && right->get_data()->node_type != -1 && left->get_data()->node_type != right->get_data()->node_type){
+
+    if(left->get_data()->node_type != -1 && right->get_data()->node_type != -1 && left->get_data()->node_type != right->get_data()->node_type){
       inconsistency_found = true;
       return false;
   }

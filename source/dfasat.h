@@ -17,7 +17,7 @@
  */
 class dfasat {
 public:
-    dfasat(state_merger *m, int best_solution);
+    dfasat(state_merger *m, apta_graph* ag, int best_solution);
 
 // apta/input state i has color j
     int **x;
@@ -99,13 +99,13 @@ public:
 
     void compute_header();
 
-    void read_solution(FILE *sat_file, int best_solution, state_merger*);
+    bool read_solution(FILE *sat_file, int best_solution, state_merger *);
 
     void translate(FILE *sat_file);
 
     void perform_sat_merges(state_merger*);
 };
 
-void run_dfasat(state_merger* m, std::string sat_program, int best_solution);
+void run_dfasat(state_merger *m, std::string sat_program, int best_solution);
 
 #endif /* _DFASAT_H_ */

@@ -14,7 +14,16 @@ void apta_graph::add_conflicts(state_merger* merger){
             graph_node *right = get_node(*it2);
             ++it2;
 
-			if(right->anode->is_red() == true) continue;
+			if(left->anode->is_red() == true && right->anode->is_red() == true) {
+				left->neighbors.insert(right);
+				right->neighbors.insert(left);
+				continue;
+			}
+			if(left->anode->is_red() == false && right->anode->is_red() == true) {
+				graph_node *temp = left;
+				left = right;
+				right = temp;
+			}
             if(right == left) continue;
 
             if(merger->sink_type(right->anode) != -1) continue;
@@ -183,8 +192,6 @@ std::pair<node_set*, node_set*> apta_graph::find_bipartite(){
 
     ordered_node_set ordered_nodes = ordered_node_set(nodes);
 
-    std::cerr << "bipartite: " << ordered_nodes.size() << endl;
-
 	node_set* left_result = new node_set();
     node_set* right_result = new node_set();
 
@@ -206,9 +213,12 @@ std::pair<node_set*, node_set*> apta_graph::find_bipartite(){
     left_result->insert(left_head);
     right_result->insert(right_head);
 
+	ordered_node_set left_neighbors = ordered_node_set(left_head->neighbors.begin(), left_head->neighbors.end());
+	ordered_node_set right_neighbors = ordered_node_set(right_head->neighbors.begin(), right_head->neighbors.end());
+
     while(true){
         graph_node* right_node = nullptr;
-        for(node_set::iterator it = left_head->neighbors.begin(); it != left_head->neighbors.end(); ++it) {
+        for(node_set::iterator it = left_neighbors.begin(); it != left_neighbors.end(); ++it) {
             graph_node* node = *it;
             if(right_result->contains(node)) continue;
             //std::cerr << "\ttrying: " << node->anode->get_number() << endl;
@@ -226,7 +236,7 @@ std::pair<node_set*, node_set*> apta_graph::find_bipartite(){
             }
         }
         graph_node* left_node = nullptr;
-        for(node_set::iterator it = right_head->neighbors.begin(); it != right_head->neighbors.end(); ++it) {
+        for(node_set::iterator it = right_neighbors.begin(); it != right_neighbors.end(); ++it) {
             graph_node* node = *it;
             if(left_result->contains(node)) continue;
             //std::cerr << "\ttrying: " << node->anode->get_number() << endl;

@@ -209,6 +209,7 @@ bool state_merger::early_stop_merge(apta_node* left, apta_node* right, int depth
     return false;
 }
 
+int try_counter = 1;
 bool state_merger::merge(apta_node* left, apta_node* right, int depth, bool evaluate, bool perform, bool test){
     if(left == nullptr || right == nullptr) return true;
 
@@ -218,7 +219,9 @@ bool state_merger::merge(apta_node* left, apta_node* right, int depth, bool eval
         bool early_stop = false;
 
         if(early_stop_merge(left, right, depth, early_stop)) return early_stop;
-        if(evaluate && !eval->consistent(this, left, right)) return false;
+        if(evaluate && !eval->consistent(this, left, right)) {
+            return false;
+        }
     }
 
     pre_split(left, right, depth, evaluate, perform, test);
@@ -858,6 +861,7 @@ refinement* state_merger::test_merge(apta_node* left, apta_node* right){
         if(MERGE_WHEN_TESTING) merge_result = merge(left,right);
         else merge_result = merge_test(left,right);
     }
+
     if(merge_result && !eval->compute_before_merge) score_result = eval->compute_score(this, left, right);
     if(USE_LOWER_BOUND && score_result < LOWER_BOUND) merge_result = false;
     if((merge_result && !eval->compute_consistency(this, left, right))) merge_result = false;

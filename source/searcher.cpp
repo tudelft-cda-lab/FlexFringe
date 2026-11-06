@@ -98,7 +98,6 @@ double compute_score(state_merger* merger){
 void add_to_q(state_merger* merger){
     double result = merger->get_eval()->compute_partial_score(merger);
     if(best_solution != -1.0 && result >= best_solution){
-        //cerr << "solution > best q_size: " << Q.size() << endl;
         return;
     }
     if (check_timeout()) return;
@@ -184,7 +183,9 @@ void bestfirst(state_merger* merger){
 
 	while(!Q.empty()){
 		pair<double, refinement_list*> next_refinements = Q.top();
-		change_refinement_list(merger, next_refinements.second);
+	    //std::cerr << " current score " << next_refinements.first << endl;
+
+	    change_refinement_list(merger, next_refinements.second);
 		Q.pop();
 
 		//cerr << Q.size() << " " << current_refinements->size() << " " << next_refinements.first << endl;

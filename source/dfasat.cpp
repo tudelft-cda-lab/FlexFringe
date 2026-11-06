@@ -330,7 +330,7 @@ int dfasat::print_clause(bool v1, int l1, bool v2, int l2){
 }
 
 int dfasat::print_comment(const char* text){
-    if(computing_header) return 1;
+    if(computing_header || true) return 1;
     sat_stream << "c " << text << "\n";
     return 1;
 }
@@ -355,7 +355,6 @@ void dfasat::print_lit(int number, bool flag){
 
 void dfasat::print_clause_end(){
     if(computing_header) return;
-    //fprintf(sat_stream, " 0\n");
     sat_stream << " 0\n";
 }
 
@@ -1063,17 +1062,13 @@ void dfasat::print_aut_output(const char* aut_output){
     fclose(output);
 }
 
-dfasat::dfasat(state_merger* m, int best_solution){
+dfasat::dfasat(state_merger* m, apta_graph* agraph, int best_solution){
     merger = m;
-    state_set *all_states = merger->get_all_states();
-    ag = new apta_graph(all_states);
-    ag->add_conflicts(merger);
-    ag->extract_types(25);
-
-    alphabet_size = inputdata_locator::get()->get_alphabet_size();
-
+    this->ag = agraph;
     red_states = merger->get_red_states();
     non_red_states = merger->get_candidate_states();
+
+    alphabet_size = inputdata_locator::get()->get_alphabet_size();
     sink_states = merger->get_sink_states();
 
     if(best_solution != -1)
@@ -1147,7 +1142,7 @@ void dfasat::compute_header() {
     clause_counter += print_conflicts();
     clause_counter += print_accept();
     clause_counter += print_transitions();
-    std::cerr << "total clauses before symmetry: " << clause_counter << std::endl;
+    //std::cerr << "total clauses before symmetry: " << clause_counter << std::endl;
     if (SYMMETRY_BREAKING) {
         std::cerr << "Breaking symmetry in SAT" << std::endl;
         clause_counter += print_t_transitions();
@@ -1266,10 +1261,11 @@ void dfasat::perform_sat_merges(state_merger* m) {
     }
 }
 
-void dfasat::read_solution(FILE* sat_file, int best_solution, state_merger* merger) {
+bool dfasat::read_solution(FILE *sat_file, int best_solution, state_merger *merger) {
     trueliterals = std::set<int>();
 
     char line[5000];
+    bool result = false;
 
     bool improved = false;
     bool read_v = false;
@@ -1281,6 +1277,7 @@ void dfasat::read_solution(FILE* sat_file, int best_solution, state_merger* merg
             pch = strtok(NULL, " ");
             std::cerr << pch << std::endl;
             if (strcmp(pch, "SATISFIABLE\n") == 0) {
+                result = true;
                 std::cerr << "new solution, size = " << dfa_size << std::endl;
                 if (best_solution == -1 || best_solution > dfa_size) {
                     std::cerr << "new best solution, size = " << dfa_size << std::endl;
@@ -1311,11 +1308,12 @@ void dfasat::read_solution(FILE* sat_file, int best_solution, state_merger* merg
                 }
         }
     }
-    perform_sat_merges(merger);
+    if (result == true) perform_sat_merges(merger);
     //print_dot_output("satout.dot");
     fclose(sat_file);
 
     delete_literals();
+    return result;
 }
 
 void start_sat_solver(std::string sat_program){
@@ -1350,7 +1348,7 @@ void start_sat_solver(std::string sat_program){
  * translate result to a DFA
  * print result
  * */
-void run_dfasat(state_merger* m, std::string sat_program, int best_solution) {
+void run_dfasat(state_merger *m, std::string sat_program, int best_solution) {
 #ifdef _WIN32
     std::cerr << "DFASAT does not work under Windows OS" << std::endl;
 #else
@@ -1359,12 +1357,23 @@ void run_dfasat(state_merger* m, std::string sat_program, int best_solution) {
         sat_program = "./glucose -model";
     }
 
-    std::cerr << "calling " << sat_program << std::endl;
+    state_set *all_states = m->get_all_states();
+    apta_graph* ag = new apta_graph(all_states);
+    ag->add_conflicts(m);
+    if (SAT_BICLIQUE != -1) {
+        ag->extract_types(SAT_BICLIQUE);
+    }
+    auto clique = ag->find_clique();
+    std::cerr << "clique size: " << clique->size() << std::endl;
 
-    dfasat sat_object = dfasat(m, best_solution);
-    sat_object.compute_header();
+    bool result = false;
+    while (SAT_LOOP && result == false) {
+        std::cerr << "calling " << sat_program << std::endl;
 
-    /* CODE TO RUN SATSOLVER AND CONNECT USING PIPES, ONLY WORKS UNDER LINUX */
+        dfasat sat_object = dfasat(m, ag, best_solution);
+        sat_object.compute_header();
+
+        /* CODE TO RUN SATSOLVER AND CONNECT USING PIPES, ONLY WORKS UNDER LINUX */
 
         int pipetosat[2];
         int pipefromsat[2];
@@ -1414,12 +1423,14 @@ void run_dfasat(state_merger* m, std::string sat_program, int best_solution) {
 
                 sat_pipe = (FILE *) fdopen(pipefromsat[0], "r");
 
-                sat_object.read_solution(sat_pipe, best_solution, m);
+                result = sat_object.read_solution(sat_pipe, best_solution, m);
 
                 std::cerr << "solving took " << (time(nullptr) - begin_time) << " seconds" << std::endl;
                 fclose(sat_pipe);
             }
         }
+        OFFSET++;
+    }
 #endif // WIN32
 };
 
