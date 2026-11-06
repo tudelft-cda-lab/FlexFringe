@@ -1367,7 +1367,7 @@ void run_dfasat(state_merger *m, std::string sat_program, int best_solution) {
     std::cerr << "clique size: " << clique->size() << std::endl;
 
     bool result = false;
-    while (SAT_LOOP && result == false) {
+    while (result == false) {
         std::cerr << "calling " << sat_program << std::endl;
 
         dfasat sat_object = dfasat(m, ag, best_solution);
@@ -1429,6 +1429,7 @@ void run_dfasat(state_merger *m, std::string sat_program, int best_solution) {
                 fclose(sat_pipe);
             }
         }
+        if (!SAT_LOOP) break;
         OFFSET++;
     }
 #endif // WIN32
