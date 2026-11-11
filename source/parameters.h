@@ -155,4 +155,10 @@ extern bool RUN_GREEDY_UNTIL_FIRST_MERGE;
 
 extern int RUN_TIMEOUT;
 
+extern int SAT_PROPAGATETYPES;
+extern int SAT_PROPAGATEGRAPH;
+extern bool SAT_FINDCLIQUE;
+extern bool SAT_BUILDCONFLICTGRAPH;
+extern int SAT_MAX_STATES;
+
 #endif

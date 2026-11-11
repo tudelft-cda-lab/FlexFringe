@@ -51,6 +51,7 @@ typedef std::set<graph_node*, neighbor_compare> ordered_node_set;
 
 class apta_graph{
 public:
+	node_set clique;
 	ordered_node_set nodes;
 	std::map<apta_node*, graph_node*> node_map;
 
@@ -71,8 +72,8 @@ public:
 	int num_types;
 
 	apta_graph(state_set* states);
-  
-	node_set* find_clique();
+
+	void find_clique();
 	node_set* find_clique_converge();
 	void remove_edges(int);
 	void add_conflicts(state_merger* merger);
@@ -80,7 +81,13 @@ public:
     std::pair<node_set*, node_set*> find_bipartite();
     void extract_types(int min_bip_size);
 
-    void print_dot();
+	void propagate_determinize(std::pair<node_set *, node_set *> bip, int min_bip_size);
+
+	void propagate_types(int min_bip_size);
+
+	void propagate_graph(int min_bip_size);
+
+	void print_dot();
 
     void print_edge_list();
 };

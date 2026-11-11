@@ -105,7 +105,7 @@ int EXTRA_STATES = 0;
 bool TARGET_REJECTING = 0;
 bool SYMMETRY_BREAKING = 0;
 bool FORCING = 0;
-int SAT_BICLIQUE = -1;
+int SAT_BICLIQUE = 0;
 bool SAT_LOOP = false;
 
 bool PRINT_WHITE = false;
@@ -154,6 +154,13 @@ bool SAT_RUN_GREEDY = false;
 
 bool SAT_SOLVE = true;
 bool SAT_PRINT = true;
+
+int SAT_PROPAGATETYPES = -1;
+int SAT_PROPAGATEGRAPH = -1;
+bool SAT_FINDCLIQUE = false;
+bool SAT_BUILDCONFLICTGRAPH = true;
+int SAT_MAX_STATES = -1;
+
 
 bool RUN_GREEDY_UNTIL_FIRST_MERGE = false;
 

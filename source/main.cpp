@@ -388,6 +388,7 @@ int main(int argc, char *argv[]){
     app.add_option("--typeconsistent", TYPE_CONSISTENT, "Whether to enforce type consistency for states, i.e., to not merge positive states with negative ones. Default=1.");
 
     app.add_option("--satoffset", OFFSET, "DFASAT runs a SAT solver to find a solution of size at most the size of the partially learned DFA + E; default=5. Advice: larger values greatly increases run-time. Setting it to 0 is frequently sufficient (when the merge heuristic works well).");
+    app.add_option("--satmaxstates", SAT_MAX_STATES, "Overrides OFFSET. DFASAT runs a SAT solver to find a solution of size at most value; default=-1 (off).");
     app.add_option("--satplus", EXTRA_STATES, "With every iteration, DFASAT tries to find solutions of size at most the best solution found + P, default=0. Advice: current setting only searches for better solutions. If a few extra states is OK, set it higher.");
     app.add_option("--satfinalred", TARGET_REJECTING, "Make all transitions from red states without any occurrences force to have 0 occurrences (similar to targeting a rejecting sink), (setting 0 or 1) before sending the problem to the SAT solver; default=0. Advice: the same as finalred but for the SAT solver. Setting it to 1 greatly improves solving speed.");
     app.add_option("--symmetry", SYMMETRY_BREAKING, "Add symmetry breaking predicates to the SAT encoding (setting 0 or 1), based on Ulyantsev et al. BFS symmetry breaking; default=1. Advice: in our experience this only improves solving speed.");
@@ -399,6 +400,10 @@ int main(int argc, char *argv[]){
     app.add_option("--satprint", SAT_PRINT, "Print the SAT formula to a file named dfasat.cnf before solving.");
     app.add_option("--satsolve", SAT_SOLVE, "Actually run the sat solver (turn off if only interested in the cnf file).");
     app.add_option("--satloop", SAT_LOOP, "Run a loop around the SAT solver, increasing the offset by 1 until the result is SAT.");
+    app.add_option("--satptypes", SAT_PROPAGATETYPES, "Propagate types of nodes backwards through the APTA to build z variables, the value if the minimum size of a type set, default=-1.");
+    app.add_option("--satpgraph", SAT_PROPAGATEGRAPH, "Propagate edges in the conflict graph backwards through the APTA to build z variables, the value if the minimum size of a type set, default=-1.");
+    app.add_option("--satclique", SAT_FINDCLIQUE, "Whether to try finding a clique in the conflict graph, only works if build conflict graph is set to 1.");
+    app.add_option("--satcgraph", SAT_BUILDCONFLICTGRAPH, "Whether to build a conflict graph using state merging, default=1.");
 
     app.add_option("--printblue", PRINT_BLUE, "Print blue states in the .dot file? Default 1 (true).");
     app.add_option("--printwhite", PRINT_WHITE, "Print white states in the .dot file? These are typically sinks states, i.e., states that have not been considered for merging. Default 0 (false).");

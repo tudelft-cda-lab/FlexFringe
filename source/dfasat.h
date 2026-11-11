@@ -76,8 +76,10 @@ public:
     int print_comment(const char *text);
 
     bool always_true(int number, bool flag);
-    void print_lit(int number, bool flag);
-    void print_clause_end();
+
+    int print_lit(int number, bool flag);
+
+    int print_clause_end();
     void fix_red_values();
     void fix_sink_values();
     int set_symmetry();

@@ -1,5 +1,7 @@
 
 #include "conflict_graph.h"
+
+#include "input/inputdatalocator.h"
 using std::cout;
 using std::endl;
 
@@ -74,12 +76,12 @@ void apta_graph::remove_edges(int size){
 node_set *apta_graph::find_clique_converge() {
 	int size = 0;
 	while(true){
-		node_set* result = find_clique();
-		if(result->size() > size){
-			remove_edges( result->size() );
-			size = result->size();
+		find_clique();
+		if(clique.size() > size){
+			remove_edges( clique.size() );
+			size = clique.size();
 		} else {
-			return result;
+			return &clique;
 		}
 	}
 }
@@ -118,10 +120,10 @@ void apta_graph::print_edge_list() {
     }
 }
 
-node_set *apta_graph::find_clique(){
-	node_set* result = new node_set();
+void apta_graph::find_clique(){
+	if( nodes.empty() ) return;
 
-	if( nodes.empty() ) return result;
+	clique.clear();
 
 	graph_node* head = NULL;
 	int max_degree = -1;
@@ -135,7 +137,7 @@ node_set *apta_graph::find_clique(){
 		}
 	}
 
-	result->insert(head);
+	clique.insert(head);
 
 	node_set intersection = head->neighbors;
 
@@ -151,7 +153,7 @@ node_set *apta_graph::find_clique(){
 	}
 
 	while(!intersection.empty()){
-		result->insert(head);
+		clique.insert(head);
 		intersection.erase(head);
 		node_set new_intersection = node_set(intersection);
 		for(node_set::iterator it = intersection.begin();
@@ -183,8 +185,6 @@ node_set *apta_graph::find_clique(){
 			}
 		}
 	}
-
-	return result;
 }
 
 std::pair<node_set*, node_set*> apta_graph::find_bipartite(){
@@ -196,6 +196,8 @@ std::pair<node_set*, node_set*> apta_graph::find_bipartite(){
     node_set* right_result = new node_set();
 
     graph_node* left_head = *(ordered_nodes.begin());
+	if (left_head->neighbors.empty()){ return std::pair<node_set*, node_set*>(nullptr, nullptr); }
+
     graph_node* right_head = NULL;
     int max_size = 0;
     for(node_set::iterator it = left_head->neighbors.begin(); it != left_head->neighbors.end(); ++it) {
@@ -206,7 +208,7 @@ std::pair<node_set*, node_set*> apta_graph::find_bipartite(){
         }
     }
 
-    std::cerr << "left head: " << left_head->anode->get_number() << "\tright head: " << right_head->anode->get_number() << endl;
+    //std::cerr << "left head: " << left_head->anode->get_number() << "\tright head: " << right_head->anode->get_number() << endl;
 
     if(right_head == NULL) return std::pair<node_set*, node_set*>(left_result, right_result);
 
@@ -273,7 +275,7 @@ std::pair<node_set*, node_set*> apta_graph::find_bipartite(){
         }
     }
 
-    std::cerr << "bipartite subgraph: " << left_result->size() << " " << right_result->size() << endl;
+    //std::cerr << "bipartite subgraph: " << left_result->size() << " " << right_result->size() << endl;
 
     return std::pair<node_set*, node_set*>(left_result, right_result);
 
@@ -329,12 +331,13 @@ std::pair<node_set*, node_set*> apta_graph::find_bipartite(){
 void apta_graph::extract_types(int min_bip_size){
     while(true){
         std::pair<node_set*, node_set*> bip = find_bipartite();
-        if(bip.first == NULL || bip.second == NULL) break;
+        if(bip.first == nullptr || bip.second == nullptr) break;
         if(bip.first->size() + bip.second->size() < min_bip_size){
             delete bip.first;
             delete bip.second;
             break;
         }
+		std::cerr << "bipartite subgraph: " << bip.first->size() << " " << bip.second->size() << std::endl;
         for(node_set::iterator it = bip.first->begin(); it != bip.first->end(); ++it) {
             (*it)->pos_types.insert(num_types);
         }
@@ -354,3 +357,77 @@ void apta_graph::extract_types(int min_bip_size){
     print_dot();
 }
 
+void apta_graph::propagate_determinize(std::pair<node_set*, node_set*> bip, int min_bip_size) {
+	if(bip.first->size() == 0 || bip.second->size() == 0 ||
+		bip.first->size() + bip.second->size() < min_bip_size){
+		return;
+	}
+	std::cerr << "propagate types: " << bip.first->size() << " " << bip.second->size() << std::endl;
+	for(node_set::iterator it = bip.first->begin(); it != bip.first->end(); ++it) {
+		(*it)->pos_types.insert(num_types);
+	}
+	for(node_set::iterator it = bip.second->begin(); it != bip.second->end(); ++it) {
+		(*it)->neg_types.insert(num_types);
+	}
+	for(node_set::iterator it = bip.first->begin(); it != bip.first->end(); ++it){
+		for(node_set::iterator it2 = bip.second->begin(); it2 != bip.second->end(); ++it2) {
+			(*it)->neighbors.erase((*it2));
+			(*it2)->neighbors.erase((*it));
+		}
+	}
+
+	num_types++;
+	for (int symb = 0; symb < inputdata_locator::get()->get_alphabet_size(); symb++) {
+		node_set left;
+		node_set right;
+		for (auto it = bip.first->begin(); it != bip.first->end(); ++it) {
+			graph_node* gn = *it;
+			if (gn->anode->get_source() != nullptr &&
+				gn->anode->get_access_trace()->end_tail->get_symbol() == symb) {
+				left.insert(node_map[gn->anode->get_source()->find()]);
+			}
+		}
+		for (auto it = bip.second->begin(); it != bip.second->end(); ++it) {
+			graph_node* gn = *it;
+			if (gn->anode->get_source() != nullptr &&
+				gn->anode->get_access_trace()->end_tail->get_symbol() == symb) {
+				right.insert(node_map[gn->anode->get_source()->find()]);
+			}
+		}
+		propagate_determinize(std::pair<node_set*, node_set*>(&left, &right), min_bip_size);
+	}
+}
+
+void apta_graph::propagate_types(int min_bip_size) {
+	std::map<int, node_set> types;
+	for (auto it = nodes.begin(); it != nodes.end(); ++it) {
+		int t = (*it)->anode->get_data()->node_type;
+		if (t != -1) types[t].insert(*it);
+	}
+	for (auto it = types.begin(); it != types.end(); ++it) {
+		auto it2 = it;
+		++it2;
+		while (it2 != types.end()) {
+			propagate_determinize(std::pair<node_set*, node_set*>(&it->second, &it2->second), min_bip_size);
+			++it2;
+		}
+	}
+	return;
+}
+
+
+void apta_graph::propagate_graph(int min_bip_size){
+	while(true){
+		std::pair<node_set*, node_set*> bip = find_bipartite();
+		if(bip.first == nullptr || bip.second == nullptr) break;
+		if(bip.first->size() + bip.second->size() < min_bip_size){
+			delete bip.first;
+			delete bip.second;
+			break;
+		}
+		propagate_determinize(bip, min_bip_size);
+		delete bip.first;
+		delete bip.second;
+	}
+	print_dot();
+}

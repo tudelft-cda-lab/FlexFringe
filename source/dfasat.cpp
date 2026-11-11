@@ -330,7 +330,7 @@ int dfasat::print_clause(bool v1, int l1, bool v2, int l2){
 }
 
 int dfasat::print_comment(const char* text){
-    if(computing_header || true) return 1;
+    if(computing_header) return 1;
     sat_stream << "c " << text << "\n";
     return 1;
 }
@@ -341,21 +341,23 @@ bool dfasat::always_true(int number, bool flag){
     return false;
 }
 
-void dfasat::print_lit(int number, bool flag){
-    if(computing_header) return;
-    if(number < 0) return;
-    
+int dfasat::print_lit(int number, bool flag){
+    if(number < 0) return 0;
+    if(computing_header) return 1;
+
     /*
     if(flag == true) fprintf(sat_stream, "%i ", number);
     else fprintf(sat_stream, "-%i ", number);
     */
     if(flag == true) sat_stream << number << " ";
     else sat_stream << -number << " ";
+    return 1;
 }
 
-void dfasat::print_clause_end(){
-    if(computing_header) return;
+int dfasat::print_clause_end(){
+    if(computing_header) return 1;
     sat_stream << " 0\n";
+    return 1;
 }
 
 /** fix values for red states -2 = false, -1 = true */
@@ -435,7 +437,7 @@ int dfasat::set_symmetry(){
         for(int a = 0; a < alphabet_size; ++a){
 
             apta_node* child = node->get_child(a);
-            if(child != 0 && child->is_red()){
+            if(child != 0 && !child->is_red()){
                 int nr = state_number[child];
 
                 if(MERGE_SINKS_PRESOLVE && sink_states->find(child) != sink_states->end())
@@ -533,11 +535,11 @@ int dfasat::print_colours(){
             altr = always_true(x[nr][k], true);
         }
         if(altr == false){
+            int res = 0;
             for(int k = 0; k < dfa_size; ++k)
-                print_lit(x[nr][k], true);
+                res += print_lit(x[nr][k], true);
             //print_lit(sp[nr], true);
-            print_clause_end();
-            num += 1;
+            if (res != 0) num += print_clause_end();
         }
     }
     // at most one
@@ -680,11 +682,12 @@ int dfasat::print_t_transitions(){
                 if(y[a][i][new_init+j] == -1) altr = true;
             if(!altr){
                 if(!computing_header){
-                    print_lit(yt[i][j], false);
+                    int res = 0;
+                    res += print_lit(yt[i][j], false);
                     for(int a = 0; a < alphabet_size; ++a){
-                        print_lit(y[a][i][new_init+j], true);
+                        res += print_lit(y[a][i][new_init+j], true);
                     }
-                    print_clause_end();
+                    if (res != 0) print_clause_end();
                 }
                 num++;
             }
@@ -712,10 +715,11 @@ int dfasat::print_p_transitions(){
             if(yp[j][i] == -1) altr = true;
         if(!altr){
             if(!computing_header){
+                int res = 0;
                 for(int j = 0; j < new_init+i; ++j){
-                    print_lit(yp[j][i], true);
+                    res += print_lit(yp[j][i], true);
                 }
-                print_clause_end();
+                if (res != 0) print_clause_end();
             }
             num++;
         }
@@ -744,10 +748,11 @@ int dfasat::print_a_transitions(){
         }
         if(!altr){
             if(!computing_header){
+                int res = 0;
                 for(int a = 0; a < alphabet_size; ++a){
-                    print_lit(ya[a][i], true);
+                    res += print_lit(ya[a][i], true);
                 }
-                print_clause_end();
+                if (res != 0) print_clause_end();
             }
             num++;
         }
@@ -781,14 +786,14 @@ int dfasat::print_forcing_transitions(){
                     altr = always_true(x[nr][i], true);
                 }
                 if(altr == false){
+                    int res = 0;
                     for (state_set::iterator it = label_states.begin(); it != label_states.end(); ++it) {
                         apta_node* source = *it;
                         int nr = state_number[source];
-                        print_lit(x[nr][i], true);
+                        res += print_lit(x[nr][i], true);
                     }
-                    print_lit(y[label][i][j], false);
-                    print_clause_end();
-                    num += 1;
+                    res += print_lit(y[label][i][j], false);
+                    if (res != 0) num += print_clause_end();
                 }
             }
         }
@@ -803,14 +808,14 @@ int dfasat::print_forcing_transitions(){
                     altr = always_true(x[nr][i], true);
                 }
                 if(altr == false){
+                    int res = 0;
                     for (state_set::iterator it = label_states.begin(); it != label_states.end(); ++it) {
                         apta_node* source = *it;
                         int nr = state_number[source];
-                        print_lit(x[nr][i], true);
+                        res += print_lit(x[nr][i], true);
                     }
-                    print_lit(sy[label][i][j], false);
-                    print_clause_end();
-                    num += 1;
+                    res += print_lit(sy[label][i][j], false);
+                    if (res != 0) num += print_clause_end();
                 }
             }
         }
@@ -877,12 +882,13 @@ int dfasat::print_sink_paths(){
                     }
                     
                     if(altr == false){
+                        int res = 0;
                         for(int j = 0; j < sinks_size; ++j)
-                            if(merger->sink_consistent(target, j) == true) print_lit(sy[label][i][j], true);
-                        print_lit(x[nr][i], false);
-                        print_lit(sp[tnr], false);
-                        print_clause_end();
-                        num += 1;
+                            if(merger->sink_consistent(target, j) == true)
+                                res += print_lit(sy[label][i][j], true);
+                        res += print_lit(x[nr][i], false);
+                        res += print_lit(sp[tnr], false);
+                        if (res != 0) num += print_clause_end();
                     }
                 }
                 num += print_clause(false, sp[nr], true, sp[tnr]);
@@ -909,12 +915,13 @@ int dfasat::print_sink_paths(){
                     }
                     
                     if(altr == false){
+                        int res = 0;
                         for(int j = 0; j < sinks_size; ++j)
-                            if(merger->sink_consistent(target, j) == true) print_lit(sy[label][i][j], true);
-                        print_lit(x[nr][i], false);
-                        print_lit(sp[tnr], false);
-                        print_clause_end();
-                        num += 1;
+                            if(merger->sink_consistent(target, j) == true)
+                                res += print_lit(sy[label][i][j], true);
+                        res += print_lit(x[nr][i], false);
+                        res += print_lit(sp[tnr], false);
+                        if (res != 0) num += print_clause_end();
                     }
                 }
                 num += print_clause(false, sp[nr], true, sp[tnr]);
@@ -1067,14 +1074,27 @@ dfasat::dfasat(state_merger* m, apta_graph* agraph, int best_solution){
     this->ag = agraph;
     red_states = merger->get_red_states();
     non_red_states = merger->get_candidate_states();
+    if (SAT_FINDCLIQUE && ag->clique.size() > red_states->size()) {
+        std::cerr << "clique size: " << ag->clique.size() << std::endl;
+        red_states = new state_set();
+        for (auto it = ag->clique.begin(); it != ag->clique.end(); ++it) {
+            red_states->insert((*it)->anode);
+        }
+        non_red_states = merger->get_all_states();
+        for (auto it = red_states->begin(); it != red_states->end(); ++it) {
+            non_red_states->erase(*it);
+        }
+    }
 
     alphabet_size = inputdata_locator::get()->get_alphabet_size();
     sink_states = merger->get_sink_states();
 
-    if(best_solution != -1)
+    if(best_solution != -1) {
         dfa_size = best_solution - 1;
-    else
+    } else {
         dfa_size = red_states->size() + OFFSET;
+        if (SAT_MAX_STATES != -1) dfa_size = SAT_MAX_STATES;
+    }
 
     sinks_size = 0;
     if (USE_SINKS) sinks_size = merger->get_aut()->get_root()->get_data()->num_sink_types();
@@ -1191,6 +1211,7 @@ void dfasat::translate(FILE* sat_file) {
         print_sink_paths();
     }
 
+    sat_stream << std::flush;
     fprintf(sat_file, "%s", sat_stream.str().c_str());
     fclose(sat_file);
 }
@@ -1359,12 +1380,21 @@ void run_dfasat(state_merger *m, std::string sat_program, int best_solution) {
 
     state_set *all_states = m->get_all_states();
     apta_graph* ag = new apta_graph(all_states);
-    ag->add_conflicts(m);
+    if (SAT_BUILDCONFLICTGRAPH) {
+        ag->add_conflicts(m);
+    }
+    if (SAT_FINDCLIQUE != -1) {
+        ag->find_clique();
+    }
+    if (SAT_PROPAGATETYPES != -1) {
+        ag->propagate_types(SAT_PROPAGATETYPES);
+    }
+    if (SAT_PROPAGATEGRAPH != -1) {
+        ag->propagate_graph(SAT_PROPAGATEGRAPH);
+    }
     if (SAT_BICLIQUE != -1) {
         ag->extract_types(SAT_BICLIQUE);
     }
-    auto clique = ag->find_clique();
-    std::cerr << "clique size: " << clique->size() << std::endl;
 
     bool result = false;
     while (result == false) {
