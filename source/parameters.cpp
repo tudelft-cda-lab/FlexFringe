@@ -1,5 +1,6 @@
 #include "parameters.h"
 
+#include <chrono>
 #include <iostream>
 #include <ostream>
 #include <random>
