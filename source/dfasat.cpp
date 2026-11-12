@@ -11,6 +11,7 @@
 #include <set>
 #include <vector>
 #include <ctime>
+#include <chrono>
 
 #ifndef _WIN32
 #include <sys/wait.h>
@@ -374,7 +375,7 @@ void dfasat::fix_red_values(){
         
         for(int label = 0; label < alphabet_size; ++label){
             apta_node* target = node->get_child(label);
-            if(target != nullptr && target->is_red() == true){
+            if(target != nullptr && red_states->contains(target)){
                 int tcr = state_colour[target];
 
                 for(int i = 0; i < dfa_size; ++i) y[label][cr][i] = -2;
@@ -422,12 +423,15 @@ void dfasat::fix_sink_values(){
 
 /**
  * @brief Erase possible colors due to symmetry reduction.
- * Should be compatible with BFS symmetry breaking, unchecked
+ * The k-th blue child of the red states (in colour and label order) can only have a red colour or one of the
+ * first k+1 new colours, as implied by BFS symmetry breaking. Stops at the first missing child.
  * 
  * @return int 
  */
 int dfasat::set_symmetry(){
     int num = 0;
+    // set_symmetry assumes that red_states is the (prefix-closed) red set of the merger
+    if (clique_reds) return num;
     int max_value = new_init;
     for(state_set::iterator it = red_states->begin(); it != red_states->end(); ++it){
         if(max_value + 1>= dfa_size)
@@ -437,7 +441,10 @@ int dfasat::set_symmetry(){
         for(int a = 0; a < alphabet_size; ++a){
 
             apta_node* child = node->get_child(a);
-            if(child != 0 && !child->is_red()){
+            // A missing child leaves this transition free, so it may lead to a new state that BFS numbers before
+            // the later blue children; the bounds below are then no longer implied by the BFS order.
+            if(child == 0) return num;
+            if(!child->is_red()){
                 int nr = state_number[child];
 
                 if(MERGE_SINKS_PRESOLVE && sink_states->find(child) != sink_states->end())
@@ -539,7 +546,8 @@ int dfasat::print_colours(){
             for(int k = 0; k < dfa_size; ++k)
                 res += print_lit(x[nr][k], true);
             //print_lit(sp[nr], true);
-            if (res != 0) num += print_clause_end();
+            // if every colour is excluded, this is the empty clause and the formula is UNSAT
+            num += print_clause_end();
         }
     }
     // at most one
@@ -566,6 +574,11 @@ int dfasat::print_colours(){
 int dfasat::print_conflicts(){
     int num = 0;
     print_comment("state left and right have a conflict, and cannot have the same color k");
+    // without conflict-graph edges (e.g. satcgraph=0) no clause is printed: skip the O(n^2) loop
+    bool any_edge = false;
+    for(state_set::iterator it = non_red_states->begin(); it != non_red_states->end() && !any_edge; ++it)
+        any_edge = !ag->get_node(*it)->neighbors.empty();
+    if(!any_edge) return num;
     for(state_set::iterator it = non_red_states->begin(); it != non_red_states->end(); ++it){
         apta_node* left = *it;
         state_set::iterator it2 = it;
@@ -583,7 +596,8 @@ int dfasat::print_conflicts(){
             graph_node* l = ag->get_node(left);
             graph_node* r = ag->get_node(right);
 
-            if(l->neighbors.find(r) != l->neighbors.end() || l->type_consistent(r) == false){
+            // pairs with inconsistent types are covered by the z literals (print_accept)
+            if(l->neighbors.find(r) != l->neighbors.end()){
                 for(int k = 0; k < dfa_size; ++k)
                     num += print_clause(false, x[left_nr][k], false, x[right_nr][k]);
             }
@@ -1084,6 +1098,13 @@ dfasat::dfasat(state_merger* m, apta_graph* agraph, int best_solution){
         for (auto it = red_states->begin(); it != red_states->end(); ++it) {
             non_red_states->erase(*it);
         }
+        clique_reds = true;
+    }
+    // BFS symmetry breaking numbers the new states in BFS order starting from the fixed (red) colours. This is
+    // only sound when every state is reachable from the fixed colours, i.e., when the root is one of them.
+    use_symmetry = SYMMETRY_BREAKING && red_states->contains(merger->get_aut()->get_root());
+    if (SYMMETRY_BREAKING && !use_symmetry) {
+        std::cerr << "root is not among the fixed states, symmetry breaking disabled" << std::endl;
     }
 
     alphabet_size = inputdata_locator::get()->get_alphabet_size();
@@ -1163,7 +1184,7 @@ void dfasat::compute_header() {
     clause_counter += print_accept();
     clause_counter += print_transitions();
     //std::cerr << "total clauses before symmetry: " << clause_counter << std::endl;
-    if (SYMMETRY_BREAKING) {
+    if (use_symmetry) {
         std::cerr << "Breaking symmetry in SAT" << std::endl;
         clause_counter += print_t_transitions();
         clause_counter += print_p_transitions();
@@ -1185,6 +1206,7 @@ void dfasat::compute_header() {
 
 void dfasat::translate(FILE* sat_file) {
     computing_header = false;
+    sat_stream.str("");
     sat_stream.clear();
 
     reset_literals(false);
@@ -1197,7 +1219,7 @@ void dfasat::translate(FILE* sat_file) {
     print_accept();
     print_transitions();
     print_paths();
-    if(SYMMETRY_BREAKING){
+    if(use_symmetry){
         print_symmetry();
         print_t_transitions();
         print_p_transitions();
@@ -1213,7 +1235,7 @@ void dfasat::translate(FILE* sat_file) {
 
     sat_stream << std::flush;
     fprintf(sat_file, "%s", sat_stream.str().c_str());
-    fclose(sat_file);
+    fflush(sat_file);
 }
 
 void dfasat::perform_sat_merges(state_merger* m) {
@@ -1285,19 +1307,23 @@ void dfasat::perform_sat_merges(state_merger* m) {
 bool dfasat::read_solution(FILE *sat_file, int best_solution, state_merger *merger) {
     trueliterals = std::set<int>();
 
-    char line[5000];
     bool result = false;
-
     bool improved = false;
-    bool read_v = false;
-    char* broken_val = nullptr;
-    while (fgets(line, sizeof line, sat_file) != NULL) {
-        //std::cerr << line << std::endl;
-        char *pch = strtok(line, " ");
-        if (strcmp(pch, "s") == 0) {
-            pch = strtok(NULL, " ");
-            std::cerr << pch << std::endl;
-            if (strcmp(pch, "SATISFIABLE\n") == 0) {
+    // Read the solver output line by line; only "s" and "v" lines are relevant ("c" lines may contain numbers).
+    std::string line;
+    char buffer[4096];
+    while (fgets(buffer, sizeof buffer, sat_file) != NULL) {
+        line += buffer;
+        if (line.empty() || line.back() != '\n') continue; // line longer than the buffer, keep reading
+        std::istringstream tokens(line);
+        line.clear();
+        std::string kind;
+        if (!(tokens >> kind)) continue;
+        if (kind == "s") {
+            std::string status;
+            tokens >> status;
+            std::cerr << status << std::endl;
+            if (status == "SATISFIABLE") {
                 result = true;
                 std::cerr << "new solution, size = " << dfa_size << std::endl;
                 if (best_solution == -1 || best_solution > dfa_size) {
@@ -1306,32 +1332,15 @@ bool dfasat::read_solution(FILE *sat_file, int best_solution, state_merger *merg
                     improved = true;
                 }
             }
-        } else if (read_v || strcmp(pch, "v") == 0) {
-                read_v = true;
-                //std::cerr << pch << std::endl;
-                pch = strtok(NULL, " ");
-                if(broken_val != nullptr){
-                    std::string combined = std::string(broken_val) + std::string(pch);
-                    int val = atoi(pch);
-                    if (val > 0) trueliterals.insert(val);
-                    pch = strtok(NULL, " ");
-                }
-                int prev_val = 0;
-                while (pch != NULL) {
-                    int val = atoi(pch);
-                    if (abs(prev_val) > abs(val)){
-                        broken_val = pch;
-                    } else {
-                        if (val > 0) trueliterals.insert(val);
-                    }
-                    pch = strtok(NULL, " ");
-                    prev_val = val;
-                }
+        } else if (kind == "v") {
+            int val;
+            while (tokens >> val) {
+                if (val > 0) trueliterals.insert(val);
+            }
         }
     }
     if (result == true) perform_sat_merges(merger);
     //print_dot_output("satout.dot");
-    fclose(sat_file);
 
     delete_literals();
     return result;
@@ -1353,10 +1362,9 @@ void start_sat_solver(std::string sat_program){
     free(pch);
     args.push_back((char*)NULL);
     execvp(args[0], &args[0]);
-    std::cerr << "finished SAT solver" << std::endl;
-    for(int argi = 0; argi < args.size(); ++argi) free(args[argi]);
-    int status;
-    wait(&status);
+    // only reached when execvp fails; do not continue running flexfringe in the child process
+    std::cerr << "Unable to start SAT solver " << sat_program << ": " << strerror(errno) << std::endl;
+    _exit(127);
     //WIFEXITED(&status);
 #endif // WIN32
 }
@@ -1383,7 +1391,7 @@ void run_dfasat(state_merger *m, std::string sat_program, int best_solution) {
     if (SAT_BUILDCONFLICTGRAPH) {
         ag->add_conflicts(m);
     }
-    if (SAT_FINDCLIQUE != -1) {
+    if (SAT_FINDCLIQUE) {
         ag->find_clique();
     }
     if (SAT_PROPAGATETYPES != -1) {
@@ -1448,15 +1456,32 @@ void run_dfasat(state_merger *m, std::string sat_program, int best_solution) {
                 close(pipetosat[0]);
                 close(pipefromsat[1]);
 
-                time_t begin_time = time(nullptr);
+                auto begin_time = std::chrono::steady_clock::now();
                 fclose(sat_pipe);
 
                 sat_pipe = (FILE *) fdopen(pipefromsat[0], "r");
 
                 result = sat_object.read_solution(sat_pipe, best_solution, m);
 
-                std::cerr << "solving took " << (time(nullptr) - begin_time) << " seconds" << std::endl;
+                std::cerr << "solving took " << std::chrono::duration<double>(std::chrono::steady_clock::now() - begin_time).count() << " seconds" << std::endl;
                 fclose(sat_pipe);
+            } else {
+                close(pipetosat[0]);
+                close(pipetosat[1]);
+                close(pipefromsat[0]);
+                close(pipefromsat[1]);
+            }
+            int status;
+            waitpid(pid, &status, 0);
+            if (!SAT_SOLVE) break;
+            if (WIFEXITED(status) && WEXITSTATUS(status) == 127) {
+                std::cerr << "SAT solver could not be started" << std::endl;
+                exit(1);
+            }
+            if (!result && !(WIFEXITED(status) && WEXITSTATUS(status) == 20)) {
+                // the solver neither found a model nor proved unsatisfiability (exit code 20)
+                std::cerr << "SAT solver failed, exit status " << status << std::endl;
+                exit(1);
             }
         }
         if (!SAT_LOOP) break;

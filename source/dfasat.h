@@ -41,6 +41,10 @@ public:
     int alphabet_size = 0;
 
     bool computing_header = true;
+    // red_states is a clique of the conflict graph instead of the red states of the merger
+    bool clique_reds = false;
+    // whether BFS symmetry breaking clauses are added (see constructor)
+    bool use_symmetry = false;
 
     apta_graph* ag;
     state_merger* merger;
