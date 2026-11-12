@@ -423,7 +423,8 @@ void dfasat::fix_sink_values(){
 
 /**
  * @brief Erase possible colors due to symmetry reduction.
- * Should be compatible with BFS symmetry breaking, unchecked
+ * The k-th blue child of the red states (in colour and label order) can only have a red colour or one of the
+ * first k+1 new colours, as implied by BFS symmetry breaking. Stops at the first missing child.
  * 
  * @return int 
  */
@@ -440,7 +441,10 @@ int dfasat::set_symmetry(){
         for(int a = 0; a < alphabet_size; ++a){
 
             apta_node* child = node->get_child(a);
-            if(child != 0 && !child->is_red()){
+            // A missing child leaves this transition free, so it may lead to a new state that BFS numbers before
+            // the later blue children; the bounds below are then no longer implied by the BFS order.
+            if(child == 0) return num;
+            if(!child->is_red()){
                 int nr = state_number[child];
 
                 if(MERGE_SINKS_PRESOLVE && sink_states->find(child) != sink_states->end())
@@ -542,7 +546,8 @@ int dfasat::print_colours(){
             for(int k = 0; k < dfa_size; ++k)
                 res += print_lit(x[nr][k], true);
             //print_lit(sp[nr], true);
-            if (res != 0) num += print_clause_end();
+            // if every colour is excluded, this is the empty clause and the formula is UNSAT
+            num += print_clause_end();
         }
     }
     // at most one
