@@ -83,7 +83,10 @@ evaluation_function* get_evaluation(){
 }
 
 void read_input_file(inputdata* id) {
-    std::ifstream input_stream(INPUT_FILE);
+    // CSV files must be opened in binary mode: csv::CSVReader's stream parser computes chunk offsets in bytes,
+    // and Windows text-mode CRLF translation makes reads shorter than requested, which makes it loop forever on
+    // files larger than one chunk (10MB).
+    std::ifstream input_stream(INPUT_FILE, INPUT_FILE.ends_with(".csv") ? std::ios::in | std::ios::binary : std::ios::in);
 
     if(!input_stream) {
         LOG_S(ERROR) << "Input file not found, aborting";
@@ -227,7 +230,8 @@ void run() {
 
             // We stream the to predict traces into inputdata one by one to save memory
             // Set up the parser for the input stream
-            std::ifstream input_stream(INPUT_FILE);
+            // Binary mode for CSV, see read_input_file()
+            std::ifstream input_stream(INPUT_FILE, INPUT_FILE.ends_with(".csv") ? std::ios::in | std::ios::binary : std::ios::in);
             std::unique_ptr<parser> parser;
             if(INPUT_FILE.ends_with(".csv")) {
                 parser = std::make_unique<csv_parser>(input_stream, csv::CSVFormat().trim({' '}));

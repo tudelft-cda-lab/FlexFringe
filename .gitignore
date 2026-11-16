@@ -1,5 +1,7 @@
 # IDE / output / build stuff
 .idea/
+.vs/
+dist/
 cmake-build-*/
 build/
 test-reports/
@@ -23,4 +25,5 @@ tests/tests
 # Generated files
 source/gitversion.cpp
 source/evaluators.h
+source/evaluation/CMakeLists.txt
 CMakeFiles/

@@ -6987,6 +6987,12 @@ namespace csv {
             this->quote_escape = false;
             this->data_pos = 0;
             this->current_row_start() = 0;
+            // FlexFringe fix: also reset per-field state. Otherwise a row that was cut off at the end of the
+            // previous chunk leaves a stale field_start behind, and the first field of the next chunk gets
+            // field_length = data_pos - field_start (size_t underflow), i.e. a field spanning the whole chunk.
+            this->field_start = UNINITIALIZED_FIELD;
+            this->field_length = 0;
+            this->field_has_double_quote = false;
             this->trim_utf8_bom();
 
             auto& in = this->data_ptr->data;

@@ -118,7 +118,7 @@ namespace {
                 return dsl::peek(dec_number) >> dec_number | dsl::error<attr_val_error>;
             }();
 
-            static constexpr auto value = lexy::callback<std::string_view>([](auto integer,  std::optional<lexy::lexeme<lexy::_prd>> decimal) {
+            static constexpr auto value = lexy::callback<double>([](auto integer,  std::optional<lexy::lexeme<lexy::_prd>> decimal) {
                 std::string tmp(integer.begin(), integer.end());
                 if (decimal.has_value()) {
                     tmp.append(".");
@@ -204,7 +204,7 @@ namespace {
         struct trace_specifier {
             static constexpr auto rule = [] {
                 auto lookahead_attr = dsl::lookahead(LEXY_LIT(":"), dsl::literal_set(LEXY_LIT(" "), LEXY_LIT("\n")));
-                auto lookahead_data = dsl::lookahead(LEXY_LIT("/"), dsl::literal_set(LEXY_LIT(" "), LEXY_LIT("\n")));
+                auto lookahead_data = dsl::lookahead(LEXY_LIT("|"), dsl::literal_set(LEXY_LIT(" "), LEXY_LIT("\n")));
                 return  (dsl::p<number>
                          + (lookahead_attr >> dsl::p<attr_val_list> | dsl::else_ >> dsl::nullopt)
                          + (lookahead_data >> dsl::p<data> | dsl::else_ >> dsl::nullopt));

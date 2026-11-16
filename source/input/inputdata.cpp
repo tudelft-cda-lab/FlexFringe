@@ -399,7 +399,7 @@ void inputdata::add_type_to_symbol(const tail *new_tail,
 }
 
 void inputdata::process_trace_attributes(symbol_info &symbolinfo, trace *tr) {
-    auto trace_id = symbolinfo.get_str("id");
+    auto trace_id = symbolinfo.get_str("ff_id");
     if (processed_trace_ids.contains(trace_id)) {
         return;
     }

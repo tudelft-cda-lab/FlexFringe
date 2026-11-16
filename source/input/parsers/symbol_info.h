@@ -49,7 +49,7 @@ public:
         if (existing_attr != trace_attribute_info->end()) {
             throw std::runtime_error(fmt::format(
                     "Error: duplicate trace attribute value \"{}\" specified for trace with id: {}",
-                    tattr.get_name(), get_str("id")
+                    tattr.get_name(), get_str("ff_id")
                     ));
         }
         else {

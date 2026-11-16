@@ -103,7 +103,7 @@ TEST_CASE("abbadingo symbol parser", "[parsing]") {
 }
 
 TEST_CASE("abbadingo symbol parser 1", "[parsing]") {
-    auto input = lexy::zstring_input("10:1.23/asdf");
+    auto input = lexy::zstring_input("10:1.23|asdf");
     auto result = lexy::parse<symbol_grammar::symbol>(input, lexy_ext::report_error);
     REQUIRE(result.has_value());
     auto value = result.value();
@@ -123,7 +123,7 @@ TEST_CASE("abbadingo symbol parser: only attr", "[parsing]") {
 }
 
 TEST_CASE("abbadingo symbol parser: only data", "[parsing]") {
-    auto input = lexy::zstring_input("10/blabla");
+    auto input = lexy::zstring_input("10|blabla");
     auto result = lexy::parse<symbol_grammar::symbol>(input, lexy_ext::report_error);
     REQUIRE(result.has_value());
     auto value = result.value();
@@ -167,7 +167,7 @@ TEST_CASE("abbadingo trace parser 2", "[parsing]") {
 }
 
 TEST_CASE("abbadingo trace parser 3", "[parsing]") {
-    auto input = lexy::zstring_input("label 3:1.0/bar a:2.0 b:3.0 c:4.0/foo");
+    auto input = lexy::zstring_input("label 3:1.0|bar a:2.0 b:3.0 c:4.0|foo");
     auto result = lexy::parse<symbol_grammar::abbadingo_trace>(input, lexy_ext::report_error);
     REQUIRE(result.has_value());
     auto value = result.value();
@@ -227,24 +227,24 @@ TEST_CASE("abbadingo_parser: smoke test", "[parsing]") {
     auto parser = abbadingoparser(inputstream);
 
     auto first = parser.next().value();
-    REQUIRE(first.get("id") == std::vector<std::string> {"0"});
-    REQUIRE(first.get("symb") == std::vector<std::string> {"a"});
-    REQUIRE(first.get("type") == std::vector<std::string> {"0"});
+    REQUIRE(first.get("ff_id") == std::vector<std::string> {"0"});
+    REQUIRE(first.get("ff_symb") == std::vector<std::string> {"a"});
+    REQUIRE(first.get("ff_ttype") == std::vector<std::string> {"0"});
 
     auto second = parser.next().value();
-    REQUIRE(second.get("id") == std::vector<std::string> {"0"});
-    REQUIRE(second.get("symb") == std::vector<std::string> {"b"});
-    REQUIRE(second.get("type") == std::vector<std::string> {"0"});
+    REQUIRE(second.get("ff_id") == std::vector<std::string> {"0"});
+    REQUIRE(second.get("ff_symb") == std::vector<std::string> {"b"});
+    REQUIRE(second.get("ff_ttype") == std::vector<std::string> {"0"});
 
     auto third = parser.next().value();
-    REQUIRE(third.get("id") == std::vector<std::string> {"1"});
-    REQUIRE(third.get("symb") == std::vector<std::string> {"c"});
-    REQUIRE(third.get("type") == std::vector<std::string> {"1"});
+    REQUIRE(third.get("ff_id") == std::vector<std::string> {"1"});
+    REQUIRE(third.get("ff_symb") == std::vector<std::string> {"c"});
+    REQUIRE(third.get("ff_ttype") == std::vector<std::string> {"1"});
 
     auto fourth = parser.next().value();
-    REQUIRE(fourth.get("id") == std::vector<std::string> {"1"});
-    REQUIRE(fourth.get("symb") == std::vector<std::string> {"d"});
-    REQUIRE(fourth.get("type") == std::vector<std::string> {"1"});
+    REQUIRE(fourth.get("ff_id") == std::vector<std::string> {"1"});
+    REQUIRE(fourth.get("ff_symb") == std::vector<std::string> {"d"});
+    REQUIRE(fourth.get("ff_ttype") == std::vector<std::string> {"1"});
 }
 
 TEST_CASE("abbadingo_parser: smoke test with trace attributes", "[parsing]") {
@@ -257,30 +257,30 @@ TEST_CASE("abbadingo_parser: smoke test with trace attributes", "[parsing]") {
 
     auto first = parser.next().value();
     auto first_trace_attr_info = first.get_trace_attr_info();
-    REQUIRE(first.get("id") == std::vector<std::string> {"0"});
-    REQUIRE(first.get("symb") == std::vector<std::string> {"a"});
-    REQUIRE(first.get("type") == std::vector<std::string> {"0"});
+    REQUIRE(first.get("ff_id") == std::vector<std::string> {"0"});
+    REQUIRE(first.get("ff_symb") == std::vector<std::string> {"a"});
+    REQUIRE(first.get("ff_ttype") == std::vector<std::string> {"0"});
 
 
     auto second = parser.next().value();
     auto second_trace_attr_info = second.get_trace_attr_info();
-    REQUIRE(second.get("id") == std::vector<std::string> {"0"});
-    REQUIRE(second.get("symb") == std::vector<std::string> {"b"});
-    REQUIRE(second.get("type") == std::vector<std::string> {"0"});
+    REQUIRE(second.get("ff_id") == std::vector<std::string> {"0"});
+    REQUIRE(second.get("ff_symb") == std::vector<std::string> {"b"});
+    REQUIRE(second.get("ff_ttype") == std::vector<std::string> {"0"});
 
     REQUIRE(first_trace_attr_info == second_trace_attr_info);
 
     auto third = parser.next().value();
     auto third_trace_attr_info = third.get_trace_attr_info();
-    REQUIRE(third.get("id") == std::vector<std::string> {"1"});
-    REQUIRE(third.get("symb") == std::vector<std::string> {"c"});
-    REQUIRE(third.get("type") == std::vector<std::string> {"1"});
+    REQUIRE(third.get("ff_id") == std::vector<std::string> {"1"});
+    REQUIRE(third.get("ff_symb") == std::vector<std::string> {"c"});
+    REQUIRE(third.get("ff_ttype") == std::vector<std::string> {"1"});
 
     auto fourth = parser.next().value();
     auto fourth_trace_attr_info = fourth.get_trace_attr_info();
-    REQUIRE(fourth.get("id") == std::vector<std::string> {"1"});
-    REQUIRE(fourth.get("symb") == std::vector<std::string> {"d"});
-    REQUIRE(fourth.get("type") == std::vector<std::string> {"1"});
+    REQUIRE(fourth.get("ff_id") == std::vector<std::string> {"1"});
+    REQUIRE(fourth.get("ff_symb") == std::vector<std::string> {"d"});
+    REQUIRE(fourth.get("ff_ttype") == std::vector<std::string> {"1"});
 
     REQUIRE(third_trace_attr_info == fourth_trace_attr_info);
 
@@ -324,9 +324,9 @@ TEST_CASE("abbadingo_parser: smoke test with symbol attributes", "[parsing]") {
 
     auto first = parser.next().value();
     auto first_sattr_info = first.get_symb_attr_info();
-    REQUIRE(first.get("id") == std::vector<std::string> {"0"});
-    REQUIRE(first.get("symb") == std::vector<std::string> {"a"});
-    REQUIRE(first.get("type") == std::vector<std::string> {"0"});
+    REQUIRE(first.get("ff_id") == std::vector<std::string> {"0"});
+    REQUIRE(first.get("ff_symb") == std::vector<std::string> {"a"});
+    REQUIRE(first.get("ff_ttype") == std::vector<std::string> {"0"});
     REQUIRE(first_sattr_info.size() == 1);
     REQUIRE(first_sattr_info.at(0).get_value() == "1.0");
     REQUIRE(first_sattr_info.at(0).is_discrete());
@@ -336,9 +336,9 @@ TEST_CASE("abbadingo_parser: smoke test with symbol attributes", "[parsing]") {
 
     auto second = parser.next().value();
     auto second_sattr_info = second.get_symb_attr_info();
-    REQUIRE(second.get("id") == std::vector<std::string> {"0"});
-    REQUIRE(second.get("symb") == std::vector<std::string> {"b"});
-    REQUIRE(second.get("type") == std::vector<std::string> {"0"});
+    REQUIRE(second.get("ff_id") == std::vector<std::string> {"0"});
+    REQUIRE(second.get("ff_symb") == std::vector<std::string> {"b"});
+    REQUIRE(second.get("ff_ttype") == std::vector<std::string> {"0"});
     REQUIRE(second_sattr_info.size() == 1);
     REQUIRE(second_sattr_info.at(0).get_value() == "2.0");
     REQUIRE(second_sattr_info.at(0).is_discrete());
@@ -348,9 +348,9 @@ TEST_CASE("abbadingo_parser: smoke test with symbol attributes", "[parsing]") {
 
     auto third = parser.next().value();
     auto third_sattr_info = third.get_symb_attr_info();
-    REQUIRE(third.get("id") == std::vector<std::string> {"1"});
-    REQUIRE(third.get("symb") == std::vector<std::string> {"c"});
-    REQUIRE(third.get("type") == std::vector<std::string> {"1"});
+    REQUIRE(third.get("ff_id") == std::vector<std::string> {"1"});
+    REQUIRE(third.get("ff_symb") == std::vector<std::string> {"c"});
+    REQUIRE(third.get("ff_ttype") == std::vector<std::string> {"1"});
     REQUIRE(third_sattr_info.size() == 1);
     REQUIRE(third_sattr_info.at(0).get_value() == "3.0");
     REQUIRE(third_sattr_info.at(0).is_discrete());
@@ -360,9 +360,9 @@ TEST_CASE("abbadingo_parser: smoke test with symbol attributes", "[parsing]") {
 
     auto fourth = parser.next().value();
     auto fourth_sattr_info = fourth.get_symb_attr_info();
-    REQUIRE(fourth.get("id") == std::vector<std::string> {"1"});
-    REQUIRE(fourth.get("symb") == std::vector<std::string> {"d"});
-    REQUIRE(fourth.get("type") == std::vector<std::string> {"1"});
+    REQUIRE(fourth.get("ff_id") == std::vector<std::string> {"1"});
+    REQUIRE(fourth.get("ff_symb") == std::vector<std::string> {"d"});
+    REQUIRE(fourth.get("ff_ttype") == std::vector<std::string> {"1"});
     REQUIRE(fourth_sattr_info.size() == 1);
     REQUIRE(fourth_sattr_info.at(0).get_value() == "4.0");
     REQUIRE(fourth_sattr_info.at(0).is_discrete());
