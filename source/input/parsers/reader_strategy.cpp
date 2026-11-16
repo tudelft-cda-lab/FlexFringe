@@ -49,8 +49,8 @@ std::optional<trace *> sentinel_symbol::read(parser &input_parser, inputdata &id
         auto cur_symbol = cur_symbol_maybe.value();
 
         // If it's a sentinel symbol, we are done with the trace it belongs to
-        if (cur_symbol.get_str("symb") == sentinel) {
-            return trace_map.at((cur_symbol.get_str("id")));
+        if (cur_symbol.get_str("ff_symb") == sentinel) {
+            return trace_map.at((cur_symbol.get_str("ff_id")));
         }
 
         // Otherwise, process it!
@@ -79,7 +79,7 @@ std::optional<trace *> in_order::read(parser &input_parser, inputdata &idata) {
         }
 
         auto cur_symbol = cur_symbol_maybe.value();
-        auto cur_id = cur_symbol.get_str("id");
+        auto cur_id = cur_symbol.get_str("ff_id");
 
         // Start of the first trace
         if (!last_id.has_value()) {

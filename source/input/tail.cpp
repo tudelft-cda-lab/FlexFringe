@@ -107,7 +107,8 @@ string tail::to_string(){
     while(t != this->future() && !t->is_final()){
         ostr << inputdata->get_symbol(t->get_symbol());
         if(t->get_symbol_type() > -1) {
-            ostr << "/" << inputdata->get_type(t->get_symbol_type());
+            const std::string stype = inputdata->string_from_symbol_type(t->get_symbol_type());
+            if(stype != "0") ostr << "/" << stype;
         }
         if(inputdata->get_num_symbol_attributes() > 0){
             ostr << ":";
