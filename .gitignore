@@ -25,4 +25,5 @@ tests/tests
 # Generated files
 source/gitversion.cpp
 source/evaluators.h
+source/evaluation/CMakeLists.txt
 CMakeFiles/
