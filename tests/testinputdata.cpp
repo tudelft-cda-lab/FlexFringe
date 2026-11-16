@@ -46,7 +46,7 @@ TEST_CASE("CSVReader: smoke test", "[parsing]") {
     // does not break things, as it caused issues recognizing the special column types before
     // (e.g. [timestamp, id, symb] vs [timestamp,id,symb])
 
-    std::string input_whitespace = "id, symb\n"
+    std::string input_whitespace = "ff_id, ff_symb\n"
                                    "670edd27, Received symbol b\n"
                                    "670edd27, Received symbol b\n"
                                    "670edd28, Received symbol b";
@@ -77,7 +77,7 @@ TEST_CASE("CSVReader: smoke test", "[parsing]") {
 TEST_CASE("CSVReader: Special characters", "[parsing]") {
     // check if we can parse csv files with the abbadingo delimiter symbols
 
-    std::string input_whitespace = "id, symb\n"
+    std::string input_whitespace = "ff_id, ff_symb\n"
                                    "1, msg: b\n"
                                    "1, msg: b\n"
                                    "2, msg: a/b";
@@ -105,7 +105,7 @@ TEST_CASE("CSVReader: Special characters", "[parsing]") {
 }
 
 TEST_CASE("CSVReader: Sliding window csv", "[parsing]") {
-    std::string input_whitespace = "id, symb\n"
+    std::string input_whitespace = "ff_id, ff_symb\n"
                                    "1, a\n"
                                    "1, b\n"
                                    "1, c\n"
@@ -159,7 +159,7 @@ TEST_CASE("CSVReader: Sliding window abbadingo", "[parsing]") {
 
 
 TEST_CASE("CSVReader: symbol attributes", "[parsing]") {
-    std::string input_whitespace = "id, symb, attr/s:test\n"
+    std::string input_whitespace = "ff_id, ff_symb, ff_sattr:s/test\n"
                                    "1, a, 1.0\n"
                                    "1, b, 2.0\n"
                                    "2, c, 3.0";
@@ -188,7 +188,7 @@ TEST_CASE("CSVReader: symbol attributes", "[parsing]") {
 }
 
 TEST_CASE("CSVReader: sliding window", "[parsing]") {
-    std::string input_whitespace = "symb\n"
+    std::string input_whitespace = "ff_symb\n"
                                    "a\n"
                                    "b\n"
                                    "c\n"
@@ -223,7 +223,7 @@ TEST_CASE("CSVReader: sliding window", "[parsing]") {
 
 
 TEST_CASE("Inputdata: read trace from CSV with sentinel symbol", "[parsing]") {
-    std::string input_whitespace = "symb\n"
+    std::string input_whitespace = "ff_symb\n"
                                    "a\n"
                                    "b\n"
                                    "x\n"

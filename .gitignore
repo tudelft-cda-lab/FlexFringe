@@ -1,5 +1,7 @@
 # IDE / output / build stuff
 .idea/
+.vs/
+dist/
 cmake-build-*/
 build/
 test-reports/
